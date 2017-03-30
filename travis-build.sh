@@ -1,4 +1,6 @@
 #!/bin/bash
 dotnet restore
 
-dotnet build -c Release --version-suffix $TRAVIS_BUILD_NUMBER
+VERSION = $(printf "v%50g" $TRAVIS_BUILD_NUMBER)
+
+dotnet build -c Release --version-suffix $VERSION
