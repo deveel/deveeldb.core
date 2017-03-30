@@ -2,5 +2,5 @@
 
 for projFile in ./test/**/*.csproj;
 do
-	dotnet test "$projFile"
+	dotnet test "$projFile" --no-build
 done
