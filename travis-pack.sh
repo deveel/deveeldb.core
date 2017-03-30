@@ -1,9 +1,9 @@
 #!/bin/bash
+VERSION = $(printf "v%05d" $TRAVIS_BUILD_NUMBER)
+
 if [ ! -d ./packages/$TRAVIS_BUILD_NUMBER ]; then
   mkdir -p ./packages/$TRAVIS_BUILD_NUMBER;
 fi
-
-VERSION = $(printf "v%50g" $TRAVIS_BUILD_NUMBER)
 
 for f in ./test/**/*.csproj;
 do
