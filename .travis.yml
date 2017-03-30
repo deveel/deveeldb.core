@@ -13,5 +13,5 @@ addons:
     - dotnet-dev-1.0.1
 
 script:
-  - ./build.sh --quiet verify
-  - ./test.sh
+  - sudo ./build.sh --quiet verify
+  - sudo ./test.sh
