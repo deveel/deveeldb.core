@@ -1,0 +1,16 @@
+version: 1.0.0-{build}
+image: Visual Studio 2017
+init:
+- ps: $env:LABEL = "r" + $Env:APPVEYOR_BUILD_NUMBER.PadLeft(5, "0")
+environment:
+  COVERALLS_REPO_TOKEN:
+    secure: iSIyjsIT4wQjKMwiLmW9v6LF1KWA9GDQR9vLlfYlg+R3RKeWhNWIgZmQ3g93mVRz
+before_build:
+- ps: dotnet restore
+build:
+  parallel: true
+  verbosity: minimal
+test_script:
+- .\scripts\appveyor-tests.bat
+ after_test:
+ - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:".\scripts\appveyor-tests.bat" -searchdirs:".\test\**" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[Deveel.Data*]* -[*Tests]* -[*Benchmark]*"')
