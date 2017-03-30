@@ -1,1 +1,1 @@
-dotnet test %APPVEYOR_BUILD_FOLDER%\test\DeveelDb.Core.Tests
+dotnet test %APPVEYOR_BUILD_FOLDER%\test\DeveelDb.Core.Tests\DeveelDb.Core.Tests.csproj
