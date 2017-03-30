@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 FILES = ./test/**/*.csproj
 for f in $FILES
 do

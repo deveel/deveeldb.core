@@ -12,6 +12,10 @@ addons:
     packages:
     - dotnet-dev-1.0.1
 
+before_script:
+  - chmod a+x ./build.sh
+  - chmod a+x ./tests.sh
+
 script:
-  - sudo ./build.sh --quiet verify
-  - sudo ./test.sh
+  - ./build.sh
+  - ./test.sh
