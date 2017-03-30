@@ -14,7 +14,7 @@ addons:
 
 before_script:
   - chmod a+x ./build.sh
-  - chmod a+x ./tests.sh
+  - chmod a+x ./test.sh
 
 script:
   - ./build.sh
