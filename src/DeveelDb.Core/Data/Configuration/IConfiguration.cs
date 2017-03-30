@@ -1,4 +1,21 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Collections.Generic;
 
 namespace Deveel.Data.Configuration {
@@ -15,17 +32,6 @@ namespace Deveel.Data.Configuration {
 	/// </para>
 	/// </remarks>
 	public interface IConfiguration : IEnumerable<KeyValuePair<string, object>> {
-		/// <summary>
-		/// Gets or sets an optional source of the configuration object
-		/// </summary>
-		/// <remarks>
-		/// This property is optional and it is convenient when it is
-		/// required to save or reload the values to/from the source, retaining
-		/// a reference to the origin.
-		/// </remarks>
-		/// <seealso cref="IConfigurationSource"/>
-		IConfigurationSource Source { get; set; }
-
 		/// <summary>
 		/// Gets or sets an optional parent object of this configuration.
 		/// </summary>

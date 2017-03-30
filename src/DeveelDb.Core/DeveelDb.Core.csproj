@@ -18,8 +18,4 @@
     <DocumentationFile>bin\Debug\netstandard1.3\DeveelDb.Core.xml</DocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.ComponentModel" Version="4.3.0" />
-  </ItemGroup>
-
 </Project>
