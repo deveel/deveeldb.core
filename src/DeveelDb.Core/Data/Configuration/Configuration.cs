@@ -26,6 +26,7 @@ namespace Deveel.Data.Configuration {
 	public class Configuration : IConfiguration {
 		private readonly bool isRoot;
 		private readonly Dictionary<string, object> values;
+		private readonly Dictionary<string, IConfiguration> childConfigurations;
 
 		/// <summary>
 		/// Constructs the <see cref="Configuration"/>.
@@ -34,6 +35,7 @@ namespace Deveel.Data.Configuration {
 			Parent = null;
 			this.isRoot = isRoot;
 			values = new Dictionary<string, object>();
+			childConfigurations = new Dictionary<string, IConfiguration>();
 		}
 
 		/// <summary>
@@ -106,6 +108,25 @@ namespace Deveel.Data.Configuration {
 				return value;
 
 			return null;
+		}
+
+		public void AddChild(string key, IConfiguration configuration) {
+			if (String.IsNullOrEmpty(key))
+				throw new ArgumentNullException(nameof(key));
+			if (configuration == null)
+				throw new ArgumentNullException(nameof(configuration));
+
+			childConfigurations[key] = configuration;
+		}
+
+		public static IConfiguration Build(Action<IConfigurationBuilder> config) {
+			var builder = new ConfigurationBuilder();
+			config(builder);
+			return builder.Build();
+		}
+
+		public static IConfigurationBuilder Builder() {
+			return new ConfigurationBuilder();
 		}
 	}
 }

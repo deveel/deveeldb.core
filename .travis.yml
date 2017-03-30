@@ -13,11 +13,9 @@ addons:
     - dotnet-dev-1.0.1
 
 before_script:
-  - chmod a+x ./travis-build.sh
-  - chmod a+x ./travis-test.sh
-  - chmod a+x ./travis-pack.sh
+  - chmod a+x ./scripts/travis-build.sh
+  - chmod a+x ./scripts/travis-test.sh
 
 script:
-  - ./travis-build.sh
-  - ./travis-test.sh
-  - ./travis-pack.sh
+  - ./scripts/travis-build.sh
+  - ./scripts/travis-test.sh

@@ -18,9 +18,34 @@
 using System;
 
 namespace Deveel.Data.Configuration {
+	/// <summary>
+	/// Provides a utility to dynamically build a configuration object
+	/// </summary>
 	public interface IConfigurationBuilder {
+		/// <summary>
+		/// Set a single entry in the configuration
+		/// </summary>
+		/// <param name="key">The key of the entry to set</param>
+		/// <param name="value">The value of the entry to set</param>
+		/// <returns>
+		/// Returns an instance of this <see cref="IConfigurationBuilder"/>
+		/// that includes the set of the entry
+		/// </returns>
+		/// <exception cref="ArgumentNullException">If the provided <paramref name="key"/>
+		/// is <c>null</c></exception>
 		IConfigurationBuilder WithSetting(string key, object value);
 
+
+		IConfigurationBuilder WithSection(string key, Action<IConfigurationBuilder> configuration);
+
+		/// <summary>
+		/// Constructs a new configuration object using
+		/// the information collected by this builder-
+		/// </summary>
+		/// <returns>
+		/// Returns an instance of <see cref="IConfiguration"/> that
+		/// provides the configurations collected from this builder
+		/// </returns>
 		IConfiguration Build();
 	}
 }

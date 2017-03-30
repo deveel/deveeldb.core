@@ -9,7 +9,7 @@ if [ ! -d $PACKAGES ]; then
   mkdir -p $PACKAGES;
 fi
 
-for f in ./test/**/*.csproj;
+for f in ./src/**/*.csproj;
 do
 	dotnet pack $f -c release --version-suffix $VERSION -o $PACKAGES
 done

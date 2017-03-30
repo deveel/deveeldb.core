@@ -94,5 +94,16 @@ namespace Deveel.Data.Configuration {
 		/// if the key was not found in this or in the parent context.
 		/// </returns>
 		object GetValue(string key);
+
+		/// <summary>
+		/// Adds a child configuration to this one
+		/// </summary>
+		/// <param name="key">The key used to identify the child configuration</param>
+		/// <param name="child">The configuration object</param>
+		/// <remarks>
+		/// When this method returns the <see cref="Parent"/> of the
+		/// passed <paramref name="child"/> will be set to this object
+		/// </remarks>
+		void AddChild(string key, IConfiguration child);
 	}
 }
