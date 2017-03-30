@@ -1,6 +1,6 @@
 #!/bin/bash
-FILES = ./test/**/*.csproj
-for f in $FILES
+
+for projFile in ./test/**/*.csproj;
 do
-	dotnet test f
+	dotnet test "$projFile"
 done
