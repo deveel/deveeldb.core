@@ -25,4 +25,9 @@
     <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="DryIoc.dll" Version="2.10.4" />
+    <PackageReference Include="System.ComponentModel" Version="4.3.0" />
+  </ItemGroup>
+
 </Project>

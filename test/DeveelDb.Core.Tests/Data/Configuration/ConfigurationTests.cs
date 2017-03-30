@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using Xunit;
 
@@ -99,11 +100,41 @@ namespace Deveel.Data.Configuration {
 			Assert.Equal(expected, configValue);
 		}
 
-		public enum TestEnum
-		{
+		public enum TestEnum {
 			One = 1,
 			Two = 2,
 			Default = 0
+		}
+
+		[Fact]
+		public void GetAllKeysFromRoot() {
+			var config = new Configuration();
+			config.SetValue("a", 22);
+			config.SetValue("b", new DateTime(2001, 02, 01));
+
+			var keys = config.GetKeys();
+
+			Assert.NotNull(keys);
+			Assert.NotEmpty(keys);
+			Assert.Contains("a", keys);
+		}
+
+		[Fact]
+		public void GetAllKeysFromTree() {
+			var config = new Configuration();
+			config.SetValue("a", 22);
+			config.SetValue("b", new DateTime(2001, 02, 01));
+
+			var child = new Configuration(config);
+			child.SetValue("a", 56);
+			config.SetValue("c", "test");
+
+			var keys = child.GetKeys();
+
+			Assert.NotNull(keys);
+			Assert.NotEmpty(keys);
+			Assert.Contains("a", keys);
+			Assert.Equal(1, keys.Where(x => x == "a").Count());
 		}
 	}
 }
