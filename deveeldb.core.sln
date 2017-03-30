@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeveelDb.Core", "src\DeveelDb.Core\DeveelDb.Core.csproj", "{5C572627-002C-4720-8F14-752A417354CD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5C572627-002C-4720-8F14-752A417354CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C572627-002C-4720-8F14-752A417354CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C572627-002C-4720-8F14-752A417354CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C572627-002C-4720-8F14-752A417354CD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

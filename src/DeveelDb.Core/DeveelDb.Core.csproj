@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <RootNamespace>Deveel</RootNamespace>
+    <AssemblyName>deveeldb.core</AssemblyName>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Company>Deveel</Company>
+    <Authors>deveel</Authors>
+    <Copyright>(c) 2016-2017 Deveel</Copyright>
+    <PackageProjectUrl>http://github.com/deveel/deveeldb.core</PackageProjectUrl>
+    <RepositoryUrl>http://github.com/deveel/deveeldb.core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>deveel core sql db database embedded deveeldb sql-99</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard1.3\DeveelDb.Core.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>
