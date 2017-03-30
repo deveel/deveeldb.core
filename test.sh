@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-FILES = /test/**/*.csproj
+FILES = ./test/**/*.csproj
 for f in $FILES
 do
 	dotnet test f
