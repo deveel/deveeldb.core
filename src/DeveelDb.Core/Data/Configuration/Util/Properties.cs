@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Deveel.Data.Util {
+namespace Deveel.Data.Configuration.Util {
 	class Properties : Dictionary<string, string> {
 
 		/// <summary>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-using Deveel.Data.Util;
+using Deveel.Data.Configuration.Util;
 
 namespace Deveel.Data.Configuration {
 	public sealed class PropertiesFormatter : IConfigurationFormatter {
