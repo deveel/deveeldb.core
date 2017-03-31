@@ -51,5 +51,128 @@ namespace Deveel.Data.Diagnostics {
 		public static void Register<TEvent>(this IContextEventRegistry registry, params object[] args)
 			where TEvent : class, IEvent
 			=> ((IEventRegistry) registry).Register(typeof(TEvent), registry.EventSource, args);
+
+		#region Messages
+
+		public static void RegisterMessage(this IEventRegistry registry,
+			IEventSource source,
+			int eventId,
+			MessageLevel level,
+			string text)
+			=> RegisterMessage(registry, source, eventId, level, text, null);
+
+		public static void RegisterMessage(this IEventRegistry registry,
+			IEventSource source,
+			int eventId,
+			MessageLevel level,
+			string text,
+			Exception error)
+			=> registry.Register<MessageEvent>(source, eventId, level, text, error);
+
+		public static void Trace(this IEventRegistry registry, IEventSource source, int eventId, string message)
+			=> registry.RegisterMessage(source, eventId, MessageLevel.Trace, message);
+
+		public static void Information(this IEventRegistry registry, IEventSource source, int eventId, string message)
+			=> registry.RegisterMessage(source, eventId, MessageLevel.Information, message);
+
+		public static void Debug(this IEventRegistry registry, IEventSource source, int eventId, string message)
+			=> registry.RegisterMessage(source, eventId, MessageLevel.Debug, message);
+
+		public static void Warning(this IEventRegistry registry, IEventSource source, int eventId, Exception error) {
+			Warning(registry, source, eventId, null, error);
+		}
+
+		public static void Warning(this IEventRegistry registry, IEventSource source, int eventId, string message) {
+			Warning(registry, source, eventId, message, null);
+		}
+
+		public static void Warning(this IEventRegistry registry,
+			IEventSource source,
+			int eventId,
+			string message,
+			Exception error)
+			=> registry.RegisterMessage(source, eventId, MessageLevel.Warning, message, error);
+
+		public static void Error(this IEventRegistry registry, IEventSource source, int eventId, Exception error) {
+			Error(registry, source, eventId, null, error);
+		}
+
+		public static void Error(this IEventRegistry registry, IEventSource source, int eventId, string message) {
+			Error(registry, source, eventId, message, null);
+		}
+
+		public static void Error(this IEventRegistry registry,
+			IEventSource source,
+			int eventId,
+			string message,
+			Exception error)
+			=> registry.RegisterMessage(source, eventId, MessageLevel.Error, message, error);
+
+		public static void Fatal(this IEventRegistry registry, IEventSource source, int eventId, Exception error) {
+			Fatal(registry, source, eventId, null, error);
+		}
+
+		public static void Fatal(this IEventRegistry registry, IEventSource source, int eventId, string message) {
+			Fatal(registry, source, eventId, message, null);
+		}
+
+		public static void Fatal(this IEventRegistry registry, IEventSource source, int eventId, string message, Exception error)
+			=> registry.RegisterMessage(source, eventId, MessageLevel.Fatal, message, error);
+
+
+		// withouth source
+
+		public static void RegisterMessage(this IContextEventRegistry registry, int eventId, MessageLevel level, string text)
+			=> registry.RegisterMessage(eventId, level, text, null);
+
+		public static void RegisterMessage(this IContextEventRegistry registry,
+			int eventId,
+			MessageLevel level,
+			string text,
+			Exception error)
+			=> (registry as IEventRegistry).Register<MessageEvent>(registry.EventSource, eventId, level, text, error);
+
+		public static void Trace(this IContextEventRegistry registry, int eventId, string message)
+			=> registry.RegisterMessage(eventId, MessageLevel.Trace, message);
+
+		public static void Information(this IContextEventRegistry registry, int eventId, string message)
+			=> registry.RegisterMessage(eventId, MessageLevel.Information, message);
+
+		public static void Debug(this IContextEventRegistry registry, int eventId, string message)
+			=> registry.RegisterMessage(eventId, MessageLevel.Debug, message);
+
+		public static void Warning(this IContextEventRegistry registry, int eventId, Exception error)
+			=> registry.Warning(eventId, null, error);
+
+		public static void Warning(this IContextEventRegistry registry, int eventId, string message)
+			=> registry.Warning(eventId, message, null);
+
+		public static void Warning(this IContextEventRegistry registry, int eventId, string message, Exception error)
+			=> registry.RegisterMessage(eventId, MessageLevel.Warning, message, error);
+
+		public static void Error(this IContextEventRegistry registry, int eventId, Exception error) {
+			Error(registry, eventId, null, error);
+		}
+
+		public static void Error(this IContextEventRegistry registry, int eventId, string message) {
+			Error(registry, eventId, message, null);
+		}
+
+		public static void Error(this IContextEventRegistry registry, int eventId, string message, Exception error)
+			=> registry.RegisterMessage(eventId, MessageLevel.Error, message, error);
+
+		public static void Fatal(this IContextEventRegistry registry, int eventId, Exception error) {
+			Fatal(registry, eventId, null, error);
+		}
+
+		public static void Fatal(this IContextEventRegistry registry, int eventId, string message) {
+			Fatal(registry, eventId, message, null);
+		}
+
+		public static void Fatal(this IContextEventRegistry registry, int eventId, string message, Exception error)
+			=> registry.RegisterMessage(eventId, MessageLevel.Fatal, message, error);
+
+
+		#endregion
 	}
 }

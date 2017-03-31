@@ -48,36 +48,5 @@ namespace Deveel.Data.Diagnostics {
 			Assert.IsType<EnvironmentEventSource>(@event.EventSource);
 			Assert.Equal(-1, @event.EventId);
 		}
-
-		[Fact]
-		public void RegisterCreatedEventToPlainRegistry() {
-			var events = new List<IEvent>();
-
-			var registryMock = new Mock<IEventRegistry>();
-			registryMock.Setup(x => x.Register(It.IsAny<IEvent>()))
-				.Callback<IEvent>(@event => events.Add(@event));
-
-			var registry = registryMock.Object;
-
-			registry.Register(new Event(new EnvironmentEventSource(), -1));
-
-			Assert.NotEmpty(events);
-			Assert.Equal(1, events.Count);
-		}
-
-		[Fact]
-		public void RegisterEventToBeBuiltToPlainRegistry() {
-			var events = new List<IEvent>();
-
-			var registryMock = new Mock<IEventRegistry>();
-			registryMock.Setup(x => x.Register(It.IsAny<IEvent>()))
-				.Callback<IEvent>(@event => events.Add(@event));
-
-			var registry = registryMock.Object;
-			registry.Register<Event>(new EnvironmentEventSource(), -1);
-
-			Assert.NotEmpty(events);
-			Assert.Equal(1, events.Count);
-		}
 	}
 }
