@@ -9,22 +9,21 @@ namespace Deveel.Data.Configuration {
 		public void DefaultConfig() {
 			IConfiguration config = new Configuration();
 			Assert.NotNull(config);
-			Assert.Null(config.Parent);
 		}
 
 		[Fact]
 		public void GetValuesFromRoot() {
 			IConfiguration config = new Configuration();
 			Assert.NotNull(config);
-			config.SetValue("test.oneKey", 54);
-			config.SetValue("test.twoKeys", null);
+			config.SetValue("oneKey", 54);
+			config.SetValue("twoKeys", null);
 
-			var value1 = config.GetValue("test.oneKey");
+			var value1 = config.GetValue("oneKey");
 			Assert.NotNull(value1);
 			Assert.IsType<int>(value1);
 			Assert.Equal(54, value1);
 
-			var value2 = config.GetValue("test.twoKeys");
+			var value2 = config.GetValue("twoKeys");
 			Assert.Null(value2);
 		}
 
@@ -33,36 +32,37 @@ namespace Deveel.Data.Configuration {
 			IConfiguration config = new Configuration();
 			Assert.NotNull(config);
 
-			config.SetValue("test.oneKey", "one");
+			config.SetValue("oneKey", "one");
 
-			IConfiguration child = new Configuration(config);
-			Assert.NotNull(child);
-			Assert.NotNull(child.Parent);
+			IConfiguration child = new Configuration();
+			config.AddChild("child", child);
 
-			child.SetValue("test.oneKey", 45);
+			child.SetValue("oneKey", 45);
 
-			var value = child.GetValue("test.oneKey");
+			var value = child.GetValue("oneKey");
 			Assert.NotNull(value);
 			Assert.IsType<int>(value);
 			Assert.Equal(45, value);
 
-			value = config.GetValue("test.oneKey");
+			value = config.GetValue("child.oneKey");
 			Assert.NotNull(value);
-			Assert.IsType<string>(value);
-			Assert.Equal("one", value);
+			Assert.IsType<int>(value);
+			Assert.Equal(45, value);
 		}
 
-		[Fact]
-		public void GetValueAsInt32() {
+		[Theory]
+		[InlineData("test.oneKey", 22, 22)]
+		[InlineData("test.oneKey", "334", 334)]
+		public void GetValueAsInt32(string key, object input, int expected) {
 			IConfiguration config = new Configuration();
 			Assert.NotNull(config);
 
-			config.SetValue("test.oneKey", "22");
+			config.SetValue(key, input);
 
-			object value = config.GetInt32("test.oneKey");
+			object value = config.GetInt32(key);
 			Assert.NotNull(value);
 			Assert.IsType<int>(value);
-			Assert.Equal(22, value);
+			Assert.Equal(expected, value);
 		}
 
 		[Theory]
@@ -111,7 +111,7 @@ namespace Deveel.Data.Configuration {
 			config.SetValue("a", 22);
 			config.SetValue("b", new DateTime(2001, 02, 01));
 
-			var keys = config.GetKeys();
+			var keys = config.Keys;
 
 			Assert.NotNull(keys);
 			Assert.NotEmpty(keys);
@@ -124,16 +124,19 @@ namespace Deveel.Data.Configuration {
 			config.SetValue("a", 22);
 			config.SetValue("b", new DateTime(2001, 02, 01));
 
-			var child = new Configuration(config);
+			var child = new Configuration();
 			child.SetValue("a", 56);
+
+			config.AddChild("child", child);
+
 			config.SetValue("c", "test");
 
-			var keys = child.GetKeys();
+			var keys = config.GetAllKeys();
 
 			Assert.NotNull(keys);
 			Assert.NotEmpty(keys);
 			Assert.Contains("a", keys);
-			Assert.Equal(1, keys.Count(x => x == "a"));
+			Assert.Contains("child.a", keys);
 		}
 
 		[Fact]
@@ -151,6 +154,19 @@ namespace Deveel.Data.Configuration {
 
 			var s = config.GetString("b");
 			Assert.Equal("test", s);
+		}
+
+		[Fact]
+		public void ConfigureByBuilder() {
+			var config = Configuration.Builder()
+				.WithSetting("a", 22)
+				.WithSection("child",
+					builder => builder
+						.WithSetting("a1", "6577"))
+				.Build();
+
+			var value = config.GetDouble("a");
+			Assert.Equal(22, value);
 		}
 	}
 }

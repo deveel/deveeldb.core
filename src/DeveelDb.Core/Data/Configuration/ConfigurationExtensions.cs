@@ -21,14 +21,53 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace Deveel.Data.Configuration {
 	public static class ConfigurationExtensions {
-		#region Get Values
+		public static IConfiguration GetChild(this IConfiguration configuration, string key) {
+			var dict = configuration.GetChildren().ToDictionary(x => x.Key, y => y.Value);
 
-		public static IEnumerable<string> GetKeys(this IConfiguration config) {
-			return config.GetKeys(ConfigurationLevel.Current);
+			IConfiguration child;
+			if (!dict.TryGetValue(key, out child))
+				return null;
+
+			return child;
 		}
+
+		public static IEnumerable<string> GetAllKeys(this IConfiguration configuration) {
+			var result = new List<string>();
+			GetKeys(configuration, null, result);
+			return result;
+		}
+
+		private static void GetKeys(IConfiguration configuration, string prefix, List<string> result) {
+			var keys = configuration.Keys.Select(x => {
+				var sb = new StringBuilder();
+				if (!String.IsNullOrEmpty(prefix)) {
+					sb.Append(prefix);
+					sb.Append(Configuration.SectionSeparator);
+				}
+
+				sb.Append(x);
+				return sb.ToString();
+			});
+
+			result.AddRange(keys);
+
+			foreach (var child in configuration.GetChildren()) {
+				var sectionName = new StringBuilder();
+				if (!String.IsNullOrEmpty(prefix)) {
+					sectionName.Append(prefix);
+					sectionName.Append(Configuration.SectionSeparator);
+				}
+				sectionName.Append(child.Key);
+
+				GetKeys(child.Value, sectionName.ToString(), result);
+			}
+		}
+
+		#region Get Values
 
 		#region GetValue(string)
 
@@ -210,10 +249,13 @@ namespace Deveel.Data.Configuration {
 
 #endregion
 
-#endregion
+		#endregion
 
 		public static IConfiguration MergeWith(this IConfiguration configuration, IConfiguration other) {
-			var newConfig = new Configuration(configuration);
+			var newConfig = new Configuration();
+			foreach (var pair in configuration) {
+				newConfig.SetValue(pair.Key, pair.Value);
+			}
 			foreach (var pair in other) {
 				newConfig.SetValue(pair.Key, pair.Value);
 			}

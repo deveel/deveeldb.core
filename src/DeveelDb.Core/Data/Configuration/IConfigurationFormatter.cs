@@ -51,11 +51,8 @@ namespace Deveel.Data.Configuration {
 		/// provided, in the format handled by this interface.
 		/// </summary>
 		/// <param name="config">The source of the configurations to store.</param>
-		/// <param name="level">The level of the configurations to load from
-		/// the source and store.</param>
 		/// <param name="outputStream">The destination stream where the formatter
 		/// saves the configurations retrieved from the source.</param>
-		/// <seealso cref="ConfigurationLevel"/>
 		/// <exception cref="ArgumentException">
 		/// If the provided <paramref name="outputStream"/> cannot be written.
 		/// </exception>
@@ -63,6 +60,6 @@ namespace Deveel.Data.Configuration {
 		/// If either <paramref name="config"/> or <paramref name="outputStream"/>
 		/// are <c>null</c>.
 		/// </exception>
-		void SaveFrom(IConfiguration config, ConfigurationLevel level, Stream outputStream);
+		void SaveFrom(IConfiguration config, Stream outputStream);
 	}
 }

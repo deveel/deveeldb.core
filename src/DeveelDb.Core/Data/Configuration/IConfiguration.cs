@@ -25,43 +25,21 @@ namespace Deveel.Data.Configuration {
 	/// </summary>
 	/// <remarks>
 	/// <para>
-	/// Since the configurations can be structured in <c>nodes</c> of a tree,
-	/// it is possible to define a <see cref="Parent"/>, that will be used
-	/// to resolve a key and value of a setting, if the current node does not
-	/// define it by itself.
+	/// Configurations can be structured in <c>nodes</c> of a tree,
+	/// it is possible to define child sections to a parent, and a descending
+	/// order will be used to resolve a key and value of a setting, if the current 
+	/// node does not define it by itself.
 	/// </para>
 	/// </remarks>
 	public interface IConfiguration : IEnumerable<KeyValuePair<string, object>> {
 		/// <summary>
-		/// Gets or sets an optional parent object of this configuration.
+		/// Enumerates the keys that can be obtained by the object
 		/// </summary>
-		/// <remarks>
-		/// <para>
-		/// The tree structure of a configuration object makes the request
-		/// for a given setting to fallback to parents if the object does
-		/// not define the key itself.
-		/// </para>
-		/// <para>
-		/// A typical example of a parent/child structure is the configuration
-		/// of a database system and the configuration of a single database:
-		/// the system defines default values for all the databases, while a
-		/// single database can override a setting or define new settings.
-		/// </para>
-		/// </remarks>
-		IConfiguration Parent { get; set; }
-
-		/// <summary>
-		/// Enumerates the keys that can be obtained by the object, at
-		/// the given <see cref="ConfigurationLevel"/>.
-		/// </summary>
-		/// <param name="level">The level of definition of the keys to get.</param>
 		/// <returns>
 		/// Returns an enumeration of <see cref="string"/> representing the
-		/// keys that are accessible from this object, depending on the level of 
-		/// nesting given.
+		/// keys that are accessible from this object
 		/// </returns>
-		/// <seealso cref="ConfigurationLevel"/>
-		IEnumerable<string> GetKeys(ConfigurationLevel level);
+		IEnumerable<string> Keys { get; }
 		
 		/// <summary>
 		/// Sets a given value for a key defined by this object.
@@ -105,5 +83,7 @@ namespace Deveel.Data.Configuration {
 		/// passed <paramref name="child"/> will be set to this object
 		/// </remarks>
 		void AddChild(string key, IConfiguration child);
+
+		IEnumerable<KeyValuePair<string, IConfiguration>> GetChildren();
 	}
 }

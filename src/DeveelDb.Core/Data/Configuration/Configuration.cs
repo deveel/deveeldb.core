@@ -24,57 +24,33 @@ using Deveel.Data;
 
 namespace Deveel.Data.Configuration {
 	public class Configuration : IConfiguration {
-		private readonly bool isRoot;
 		private readonly Dictionary<string, object> values;
 		private readonly Dictionary<string, IConfiguration> childConfigurations;
 
 		/// <summary>
-		/// Constructs the <see cref="Configuration"/>.
+		/// A character that separates sections in a configuration context
 		/// </summary>
-		private Configuration(bool isRoot) {
-			Parent = null;
-			this.isRoot = isRoot;
-			values = new Dictionary<string, object>();
-			childConfigurations = new Dictionary<string, IConfiguration>();
-		}
+		public const char SectionSeparator = '.';
 
 		/// <summary>
-		/// Constructs the <see cref="Configuration"/> from the given parent.
+		/// Constructs the <see cref="Configuration"/>.
 		/// </summary>
-		/// <param name="parent">The parent <see cref="Configuration"/> object that
-		/// will provide fallback configurations</param>
-		public Configuration(IConfiguration parent)
-			: this(parent == null) {
-			Parent = parent;
-		}
-
-		public Configuration()
-			: this(true) {
+		public Configuration() {
+			values = new Dictionary<string, object>();
+			childConfigurations = new Dictionary<string, IConfiguration>();
 		}
 
 		/// <inheritdoc/>
 		public IConfiguration Parent { get; set; }
 
 		/// <inheritdoc/>
-		public IEnumerable<string> GetKeys(ConfigurationLevel level) {
-			var returnKeys = new Dictionary<string, string>();
-			if (!isRoot && Parent != null && level == ConfigurationLevel.Deep) {
-				var configKeys = Parent.GetKeys(level);
-				foreach (var pair in configKeys) {
-					returnKeys[pair] = pair;
-				}
-			}
-
-			foreach (var configKey in values.Keys) {
-				returnKeys[configKey] = configKey;
-			}
-
-			return returnKeys.Values.AsEnumerable();
+		public IEnumerable<string> Keys {
+			get { return values.Keys; }
 		}
 
+		/// <inheritdoc/>
 		public IEnumerator<KeyValuePair<string, object>> GetEnumerator() {
-			var keys = GetKeys(ConfigurationLevel.Deep);
-			return keys.Select(key => new KeyValuePair<string, object>(key, GetValue(key))).GetEnumerator();
+			return values.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() {
@@ -85,31 +61,71 @@ namespace Deveel.Data.Configuration {
 		/// <inheritdoc/>
 		public void SetValue(string key, object value) {
 			if (String.IsNullOrEmpty(key))
-				throw new ArgumentNullException("key");
+				throw new ArgumentNullException(nameof(key));
 
-			if (value == null) {
-				values.Remove(key);
+			var parts = key.Split(SectionSeparator);
+			if (parts.Length == 0)
+				throw new ArgumentException();
+
+			if (parts.Length == 1) {
+				if (value == null) {
+					values.Remove(key);
+				} else {
+					values[key] = value;
+				}
 			} else {
-				values[key] = value;
+				IConfiguration config = this;
+				for (int i = 0; i < parts.Length; i++) {
+					var part = parts[i];
+					if (i == parts.Length - 1) {
+						config.SetValue(part, value);
+						return;
+					}
+
+					var child = config.GetChild(part);
+					if (child == null) {
+						child = new Configuration();
+						config.AddChild(part, child);
+					}
+
+					config = child;
+				}
 			}
 		}
 
 		/// <inheritdoc/>
 		public object GetValue(string key) {
 			if (String.IsNullOrEmpty(key))
-				throw new ArgumentNullException("key");
+				throw new ArgumentNullException(nameof(key));
 
-			object value;
-			if (values.TryGetValue(key, out value))
-				return value;
+			var parts = key.Split(SectionSeparator);
+			if (parts.Length == 0)
+				throw new ArgumentException();
 
-			if (!isRoot && Parent != null && 
-				((value = Parent.GetValue(key)) != null))
-				return value;
+			if (parts.Length == 1) {
+				object value;
+				if (values.TryGetValue(key, out value))
+					return value;
+
+				return null;
+			}
+
+			IConfiguration config = this;
+			for (int i = 0; i < parts.Length; i++) {
+				var part = parts[i];
+				if (i == parts.Length - 1)
+					return config.GetValue(part);
+
+				config = config.GetChild(part);
+
+				if (config == null)
+					return null;
+			}
 
 			return null;
 		}
 
+		/// <inheritdoc cref="IConfiguration.AddChild"/>
 		public void AddChild(string key, IConfiguration configuration) {
 			if (String.IsNullOrEmpty(key))
 				throw new ArgumentNullException(nameof(key));
@@ -117,6 +133,11 @@ namespace Deveel.Data.Configuration {
 				throw new ArgumentNullException(nameof(configuration));
 
 			childConfigurations[key] = configuration;
+		}
+
+		/// <inheritdoc cref="IConfiguration.GetChildren"/>
+		public IEnumerable<KeyValuePair<string, IConfiguration>> GetChildren() {
+			return childConfigurations.AsEnumerable();
 		}
 
 		public static IConfiguration Build(Action<IConfigurationBuilder> config) {
