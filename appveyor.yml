@@ -13,5 +13,4 @@ build:
 test_script:
   - .\scripts\appveyor-tests.bat
 after_test:
- - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\OpenCover'))[0].FullName + '\tools\OpenCover.Console.exe' + ' -register:user -target:".\scripts\appveyor-tests.bat" -searchdirs:"$APPVEYOR_BUILD_FOLDER\test\DeveelDb.Core.Tests\bin\Release\netcoreapp1.1" -oldstyle -output:coverage.xml -skipautoprops -returntargetcode -filter:"+[DeveelDb*]* -[*Tests]* -[*Benchmark]*"')
  - ps: iex ((Get-ChildItem ($env:USERPROFILE + '\.nuget\packages\coveralls.io'))[0].FullName + '\tools\coveralls.net.exe' + ' --opencover coverage.xml')

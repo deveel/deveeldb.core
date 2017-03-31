@@ -24,6 +24,40 @@ namespace Deveel.Data.Services {
     /// registered during the build
     /// </summary>
 	public interface IScope : IDisposable {
+	    /// <summary>
+	    /// Registers a service using the specifications for resolution
+	    /// </summary>
+	    /// <param name="registration">The service registration resolution
+	    /// information provided to the registry</param>
+	    /// <exception cref="ArgumentNullException">If the provided <paramref name="registration"/>
+	    /// is <c>null</c></exception>
+	    /// <exception cref="ServiceException">If an error occurred while registering 
+	    /// the service given</exception>
+	    void Register(ServiceRegistration registration);
+
+	    /// <summary>
+	    /// Removes a registered service from the registry
+	    /// </summary>
+	    /// <param name="serviceType">The type of the service to be removed</param>
+	    /// <param name="serviceKey">An optional key to identify the service
+	    /// with the given type to be removed</param>
+	    /// <returns>
+	    /// Returns <c>true</c> if a service with the given type and key
+	    /// was find and removed, otherwise <c>false</c> if it was not found in the
+	    /// underlying registry
+	    /// </returns>
+	    bool Unregister(Type serviceType, object serviceKey);
+
+	    /// <summary>
+	    /// Verifies if a service of the given type with the given
+	    /// key is registered.
+	    /// </summary>
+	    /// <param name="serviceType">The type of the service to verify.</param>
+	    /// <param name="serviceKey">An optional key to identify the service of
+	    /// the given type within the underlying registry</param>
+	    /// <returns></returns>
+	    bool IsRegistered(Type serviceType, object serviceKey);
+
 		/// <summary>
 		/// Opens a child scope of this scope
 		/// </summary>
