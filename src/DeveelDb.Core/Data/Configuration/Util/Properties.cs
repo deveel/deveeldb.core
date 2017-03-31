@@ -24,16 +24,6 @@ using System.Text;
 namespace Deveel.Data.Configuration.Util {
 	class Properties : Dictionary<string, string> {
 
-		/// <summary>
-		/// Creates a new empty property list with no default values.
-		/// </summary>
-		public Properties() {
-		}
-
-		public object SetProperty(String key, String value) {
-			return this[key] = value;
-		}
-
 		///<summary>
 		///</summary>
 		///<param name="inStream"></param>
@@ -182,110 +172,5 @@ namespace Deveel.Data.Configuration.Util {
 			}
 		}
 
-		///<summary>
-		/// Writes the key/value pairs to the given output stream, in a format
-		/// suitable for <see cref="Load"/>.
-		///</summary>
-		///<param name="output">The output stream.</param>
-		///<param name="header">The header written in the first line, may be null.</param>
-		/// <remarks>
-		/// If header is not null, this method writes a comment containing
-		/// the header as first line to the stream.  The next line (or first
-		/// line if header is null) contains a comment with the current date.
-		/// Afterwards the key/value pairs are written to the stream in the
-		/// following format.
-		/// <para>
-		/// Each line has the form <c>key = value</c>. Newlines, Returns 
-		/// and tabs are written as <c>\n,\t,\r</c> resp.
-		/// The characters <c>\, !, #, =</c> and <c>:</c> are preceeded by 
-		/// a backslash.  Spaces are preceded with a backslash, if and only 
-		/// if they are at the beginning of the key.  Characters that are not 
-		/// in the ascii range 33 to 127 are written in the <c>\</c><c>u</c>xxxx 
-		/// Form.
-		/// </para>
-		/// <para>
-		/// Following the listing, the output stream is flushed but left open.
-		/// </para>
-		/// </remarks>
-		/// <exception cref="InvalidCastException">
-		/// If this property contains any key or value that isn't a string.
-		/// </exception>
-		/// <exception cref="IOException">
-		/// If writing to the stream fails.
-		/// </exception>
-		/// <exception cref="ArgumentNullException">
-		/// If <paramref name="output"/> is null.
-		/// </exception>
-		public void Store(Stream output, String header) {
-			// The spec says that the file must be encoded using ISO-8859-1.
-			StreamWriter writer = new StreamWriter(output, Encoding.GetEncoding("ISO-8859-1"));
-			if (header != null)
-				writer.WriteLine("#" + header);
-			writer.WriteLine("#" + DateTime.Now);
-
-			StringBuilder s = new StringBuilder(); // Reuse the same buffer.
-			foreach (var entry in this) {
-				FormatForOutput((String)entry.Key, s, true);
-				s.Append('=');
-				FormatForOutput((String)entry.Value, s, false);
-				writer.WriteLine(s);
-			}
-
-			writer.Flush();
-		}
-
-		/// <summary>
-		/// Formats a key or value for output in a properties file.
-		/// </summary>
-		/// <param name="str">The string to format.</param>
-		/// <param name="buffer">The buffer to add it to.</param>
-		/// <param name="key">True if all ' ' must be escaped for the key, false if only 
-		/// leading spaces must be escaped for the value</param>
-		/// <remarks>
-		/// See <see cref="Store"/> for a description of the format.
-		/// </remarks>
-		private static void FormatForOutput(String str, StringBuilder buffer, bool key) {
-			if (key) {
-				buffer.Length = 0;
-				buffer.EnsureCapacity(str.Length);
-			} else
-				buffer.EnsureCapacity(buffer.Length + str.Length);
-			bool head = true;
-			int size = str.Length;
-			for (int i = 0; i < size; i++) {
-				char c = str[i];
-				switch (c) {
-					case '\n':
-						buffer.Append("\\n");
-						break;
-					case '\r':
-						buffer.Append("\\r");
-						break;
-					case '\t':
-						buffer.Append("\\t");
-						break;
-					case ' ':
-						buffer.Append(head ? "\\ " : " ");
-						break;
-					case '\\':
-					case '!':
-					case '#':
-					case '=':
-					case ':':
-						buffer.Append('\\').Append(c);
-						break;
-					default:
-						if (c < ' ' || c > '~') {
-							String hex = ((int)c).ToString("{0:x4}");
-							buffer.Append("\\u0000".Substring(0, 6 - hex.Length));
-							buffer.Append(hex);
-						} else
-							buffer.Append(c);
-						break;
-				}
-				if (c != ' ')
-					head = key;
-			}
-		}
 	}
 }
