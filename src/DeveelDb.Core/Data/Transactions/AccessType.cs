@@ -17,12 +17,25 @@
 
 using System;
 
-namespace Deveel.Data.Sql {
+namespace Deveel.Data.Transactions {
 	/// <summary>
-	/// Provides a contact for representing an element into
-	/// a proper SQL string
+	/// The access type to a lockable object in a database
 	/// </summary>
-	public interface ISqlFormattable {
-		void AppendTo(SqlStringBuilder builder);
+	[Flags]
+	public enum AccessType {
+		/// <summary>
+		/// The resource is accessed to be read
+		/// </summary>
+		Read = 1,
+
+		/// <summary>
+		/// The resource is accessed to be written
+		/// </summary>
+		Write = 2,
+
+		/// <summary>
+		/// The resource is accessed to be read and written
+		/// </summary>
+		ReadWrite = Read | Write
 	}
 }
