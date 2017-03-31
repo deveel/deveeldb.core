@@ -71,7 +71,7 @@ namespace Deveel.Data {
 		/// The only case in which this value is <c>null</c> is when
 		/// this is the context of a system, that is the root.
 		/// </remarks>
-		IContext Parent { get; }
+		IContext ParentContext { get; }
 
 		/// <summary>
 		/// Gets the name of the context.
@@ -81,7 +81,7 @@ namespace Deveel.Data {
 		/// <see cref="Scope"/>, that is named after this value.
 		/// </remarks>
 		/// <seealso cref="IScope"/>
-		string Name { get; }
+		string ContextName { get; }
 
 		/// <summary>
 		/// Gets a named scope for this context.

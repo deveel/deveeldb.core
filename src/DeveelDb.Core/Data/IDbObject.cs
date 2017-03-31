@@ -1,5 +1,5 @@
 ﻿// 
-//  Copyright 2010-2017 Deveel
+//  Copyright 2010-2016 Deveel
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -19,18 +19,17 @@ using System;
 
 namespace Deveel.Data {
 	/// <summary>
-	/// Marks an element of the system as handler of a context
+	/// Represents a database object, such as a table, a trigger,
+	/// a type or a column.
 	/// </summary>
 	/// <remarks>
-	/// Implementations of this contract provide access to a
-	/// <see cref="IContext"/> object, that handles the contextual
-	/// references to configurations and services.
+	/// Database objects are defined by a set of information
+	/// that shape their behavior within the system (<see cref="IObjectInfo"/>).
 	/// </remarks>
-	/// <seealso cref="IContext"/>
-	public interface IHasContext {
+	public interface IDbObject {
 		/// <summary>
-		/// Gets the context handled by the object.
+		/// Gets the database object information.
 		/// </summary>
-		IContext Context { get; }
+		IObjectInfo ObjectInfo { get; }
 	}
 }
