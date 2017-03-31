@@ -83,7 +83,7 @@ namespace Deveel.Data.Storage {
 
 		/// <inheritdoc/>
 		public override string ToString() {
-			return String.Format("0x{0:X}:{1:X}", StoreId, Id);
+			return String.Format("0x{0:X8}:0x{1:X8}", StoreId, Id);
 		}
 	}
 }
