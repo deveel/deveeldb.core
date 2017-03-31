@@ -110,23 +110,27 @@ namespace Deveel.Data.Services {
 			return scope.Unregister<TService>(null);
 		}
 
-		public static void Replace(this IScope scope, Type serviceType, Type implementationType) {
-			scope.Replace(serviceType, implementationType, null);
+		public static bool Replace(this IScope scope, Type serviceType, Type implementationType) {
+			return scope.Replace(serviceType, implementationType, null);
 		}
 
-		public static void Replace(this IScope scope, Type serviceType, Type implementationType, object serviceKey) {
-			if (scope.Unregister(serviceType, serviceKey))
+		public static bool Replace(this IScope scope, Type serviceType, Type implementationType, object serviceKey) {
+			if (scope.Unregister(serviceType, serviceKey)) {
 				scope.Register(serviceType, implementationType, serviceKey);
+				return true;
+			}
+
+			return false;
 		}
 
-		public static void Replace<TService, TImplementation>(this IScope scope)
+		public static bool Replace<TService, TImplementation>(this IScope scope)
 			where TImplementation : class, TService {
-			scope.Replace<TService, TImplementation>(null);
+			return scope.Replace<TService, TImplementation>(null);
 		}
 
-		public static void Replace<TService, TImplementation>(this IScope scope, object serviceKey)
+		public static bool Replace<TService, TImplementation>(this IScope scope, object serviceKey)
 			where TImplementation : class, TService {
-			scope.Replace(typeof(TService), typeof(TImplementation), serviceKey);
+			return scope.Replace(typeof(TService), typeof(TImplementation), serviceKey);
 		}
 
 		public static bool IsRegistered(this IScope scope, Type serviceType) {

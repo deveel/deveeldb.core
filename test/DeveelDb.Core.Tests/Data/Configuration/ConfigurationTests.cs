@@ -59,8 +59,7 @@ namespace Deveel.Data.Configuration {
 
 			config.SetValue("test.oneKey", "22");
 
-			object value = null;
-			value = config.GetInt32("test.oneKey");
+			object value = config.GetInt32("test.oneKey");
 			Assert.NotNull(value);
 			Assert.IsType<int>(value);
 			Assert.Equal(22, value);
@@ -134,7 +133,24 @@ namespace Deveel.Data.Configuration {
 			Assert.NotNull(keys);
 			Assert.NotEmpty(keys);
 			Assert.Contains("a", keys);
-			Assert.Equal(1, keys.Where(x => x == "a").Count());
+			Assert.Equal(1, keys.Count(x => x == "a"));
+		}
+
+		[Fact]
+		public void ConfigureByBuildConfiguration() {
+			var config = Configuration.Build(builder => {
+				builder.WithSetting("a", 43.01f)
+					.WithSetting("b", "test");
+			});
+
+			Assert.NotEmpty(config);
+			Assert.NotEmpty(config);
+
+			var value = config.GetSingle("a");
+			Assert.Equal(43.01f, value);
+
+			var s = config.GetString("b");
+			Assert.Equal("test", s);
 		}
 	}
 }

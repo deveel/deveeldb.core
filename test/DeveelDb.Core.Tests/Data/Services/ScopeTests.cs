@@ -28,6 +28,20 @@ namespace Deveel.Data.Services {
 			Assert.IsType(implementationType, service);
 		}
 
+		[Theory]
+		[InlineData(typeof(ServiceOne), null)]
+		[InlineData(typeof(ServiceOne), "s1")]
+		public void RegisterAndResolveServiceClass(Type serviceType, object key) {
+			var provider = new ServiceContainer();
+			provider.Register(serviceType, key);
+
+			var service = provider.Resolve(serviceType, key);
+
+			Assert.NotNull(service);
+			Assert.IsType(serviceType, service);
+		}
+
+
 		[Fact]
 		public void OpenScopeAndResolveParent() {
 			var provider = new ServiceContainer();
@@ -113,6 +127,36 @@ namespace Deveel.Data.Services {
 
 			Assert.NotNull(service);
 			Assert.IsType<ServiceOne>(service);
+		}
+
+		[Fact]
+		public void RegisterInstanceExplicit() {
+			var provider = new ServiceContainer();
+			provider.RegisterInstance(typeof(IService), new ServiceOne());
+
+			var service = provider.Resolve<IService>();
+
+			Assert.NotNull(service);
+			Assert.IsType<ServiceOne>(service);
+		}
+
+		[Fact]
+		public void ReplaceService() {
+			var provider = new ServiceContainer();
+			provider.Register<IService, ServiceOne>();
+
+			Assert.True(provider.Replace<IService, ServiceTwo>());
+
+			var service = provider.Resolve<IService>();
+			Assert.NotNull(service);
+			Assert.IsType<ServiceTwo>(service);
+		}
+
+
+		[Fact]
+		public void RegisterNonInstantiable() {
+			var provider = new ServiceContainer();
+			Assert.Throws<ServiceException>(() => provider.Register<IService>());
 		}
 
 		#region IService

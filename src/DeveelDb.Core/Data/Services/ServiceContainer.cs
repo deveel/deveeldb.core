@@ -74,13 +74,17 @@ namespace Deveel.Data.Services {
 
 		public object Resolve(Type serviceType, object name) {
 			if (serviceType == null)
-				throw new ArgumentNullException("serviceType");
+				throw new ArgumentNullException(nameof(serviceType));
 
 			if (container == null)
 				throw new InvalidOperationException("The container was not initialized.");
 
 			lock (this) {
-				return container.Resolve(serviceType, name, IfUnresolved.ReturnDefault);
+				try {
+					return container.Resolve(serviceType, name, IfUnresolved.ReturnDefault);
+				} catch (Exception ex) {
+					throw new ServiceResolutionException(serviceType, "Error when resolving service", ex);
+				}
 			}
 		}
 
@@ -103,7 +107,7 @@ namespace Deveel.Data.Services {
 
 		public void Register(ServiceRegistration registration) {
 			if (registration == null)
-				throw new ArgumentNullException("registration");
+				throw new ArgumentNullException(nameof(registration));
 
 			if (container == null)
 				throw new InvalidOperationException("The container was not initialized.");
@@ -128,8 +132,10 @@ namespace Deveel.Data.Services {
 						container.RegisterInstance(serviceType, service, serviceKey: serviceName, reuse: reuse);
 					}
 				}
+			} catch(ServiceException) {
+				throw;
 			} catch (Exception ex) {
-				throw new Exception("Error when registering service.", ex);
+				throw new ServiceException("Error when registering service.", ex);
 			}
 		}
 
@@ -141,8 +147,12 @@ namespace Deveel.Data.Services {
 				throw new InvalidOperationException("The container was not initialized.");
 
 			lock (this) {
-				container.Unregister(serviceType, serviceName);
-				return true;
+				try {
+					container.Unregister(serviceType, serviceName);
+					return true;
+				} catch (Exception ex) {
+					throw new ServiceException("Error when unregistering service", ex);
+				}
 			}
 		}
 

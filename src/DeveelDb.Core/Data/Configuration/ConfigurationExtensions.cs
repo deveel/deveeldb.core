@@ -30,15 +30,6 @@ namespace Deveel.Data.Configuration {
 			return config.GetKeys(ConfigurationLevel.Current);
 		}
 
-		public static IEnumerable<object> GetValues(this IConfiguration config, ConfigurationLevel level) {
-			var keys = config.GetKeys(level);
-			var values = keys.Select(x => config.GetValue(x))
-				.Where(value => value != null)
-				.ToList();
-
-			return values.ToArray();
-		}
-
 		#region GetValue(string)
 
 		public static object GetValue(this IConfiguration config, string keyName) {
@@ -71,10 +62,14 @@ namespace Deveel.Data.Configuration {
 			if (typeof(T).GetTypeInfo().IsEnum)
 				return ConvertToEnum<T>(value);
 
-			if (!(value is IConvertible))
-				throw new InvalidCastException();
+			var nullableType = Nullable.GetUnderlyingType(typeof(T));
+			if (nullableType == null) {
+				value = (T) Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
+			} else {
+				value = (T) Convert.ChangeType(value, nullableType, CultureInfo.InvariantCulture);
+			}
 
-			return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
+			return (T)value;
 		}
 
 		private static T ConvertToEnum<T>(object value) {
@@ -210,7 +205,7 @@ namespace Deveel.Data.Configuration {
 		}
 
 		public static double GetDouble(this IConfiguration config, string propertyKey, double defaultValue) {
-			return config.GetValue<double>(propertyKey, defaultValue);
+			return config.GetValue(propertyKey, defaultValue);
 		}
 
 #endregion
