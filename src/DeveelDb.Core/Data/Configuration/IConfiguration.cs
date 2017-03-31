@@ -44,36 +44,8 @@ namespace Deveel.Data.Configuration {
 		/// <summary>
 		/// Gets a list of child sections of this configuration object
 		/// </summary>
-		/// <seealso cref="AddSection"/>
 		IEnumerable<KeyValuePair<string, IConfiguration>> Sections { get; }
 
-
-		/// <summary>
-		/// Sets a given value for a key defined by this object.
-		/// </summary>
-		/// <param name="key">The key to set the value for, that was defined before.</param>
-		/// <param name="value">The value to set.</param>
-		/// <remarks>
-		/// <para>
-		/// If the given <paramref name="key"/> was not previously defined,
-		/// this method will add the key at this level of configuration
-		/// </para>
-		/// <para>
-		/// Setting a value for a given <paramref name="key"/> that was already
-		/// defined by a parent object will override that value: a subsequent call
-		/// to <see cref="GetValue"/> will return the current value of the setting,
-		/// without removing the parent value setting.
-		/// </para>
-		/// <para>
-		/// If the key is formed to reference a child section, the value is
-		/// set to the key parented by the referenced section.
-		/// </para>
-		/// </remarks>
-		/// <exception cref="ArgumentNullException">
-		/// If the given <paramref name="key"/> is <c>null</c>.
-		/// </exception>
-		/// <seealso cref="Configuration.SectionSeparator"/>
-		void SetValue(string key, object value);
 
 		/// <summary>
 		/// Gets a configuration setting for the given key.
@@ -91,12 +63,5 @@ namespace Deveel.Data.Configuration {
 		/// </returns>
 		/// <seealso cref="Configuration.SectionSeparator"/>
 		object GetValue(string key);
-
-		/// <summary>
-		/// Adds a child configuration to this one
-		/// </summary>
-		/// <param name="key">The key used to identify the child configuration</param>
-		/// <param name="child">The configuration object</param>
-		void AddSection(string key, IConfiguration child);
 	}
 }

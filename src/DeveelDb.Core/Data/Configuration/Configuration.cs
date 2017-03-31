@@ -58,7 +58,31 @@ namespace Deveel.Data.Configuration {
 		}
 
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Sets a given value for a key defined by this object.
+		/// </summary>
+		/// <param name="key">The key to set the value for, that was defined before.</param>
+		/// <param name="value">The value to set.</param>
+		/// <remarks>
+		/// <para>
+		/// If the given <paramref name="key"/> was not previously defined,
+		/// this method will add the key at this level of configuration
+		/// </para>
+		/// <para>
+		/// Setting a value for a given <paramref name="key"/> that was already
+		/// defined by a parent object will override that value: a subsequent call
+		/// to <see cref="GetValue"/> will return the current value of the setting,
+		/// without removing the parent value setting.
+		/// </para>
+		/// <para>
+		/// If the key is formed to reference a child section, the value is
+		/// set to the key parented by the referenced section.
+		/// </para>
+		/// </remarks>
+		/// <exception cref="ArgumentNullException">
+		/// If the given <paramref name="key"/> is <c>null</c>.
+		/// </exception>
+		/// <seealso cref="SectionSeparator"/>
 		public void SetValue(string key, object value) {
 			if (String.IsNullOrEmpty(key))
 				throw new ArgumentNullException(nameof(key));
@@ -74,7 +98,7 @@ namespace Deveel.Data.Configuration {
 					values[key] = value;
 				}
 			} else {
-				IConfiguration config = this;
+				Configuration config = this;
 				for (int i = 0; i < parts.Length; i++) {
 					var part = parts[i];
 					if (i == parts.Length - 1) {
@@ -86,9 +110,11 @@ namespace Deveel.Data.Configuration {
 					if (child == null) {
 						child = new Configuration();
 						config.AddSection(part, child);
+					} else if (!(child is Configuration)) {
+						throw new NotSupportedException();
 					}
 
-					config = child;
+					config = (Configuration) child;
 				}
 			}
 		}
@@ -125,7 +151,11 @@ namespace Deveel.Data.Configuration {
 			return null;
 		}
 
-		/// <inheritdoc cref="IConfiguration.AddSection"/>
+		/// <summary>
+		/// Adds a child configuration to this one
+		/// </summary>
+		/// <param name="key">The key used to identify the child configuration</param>
+		/// <param name="configuration">The configuration object</param>
 		public void AddSection(string key, IConfiguration configuration) {
 			if (String.IsNullOrEmpty(key))
 				throw new ArgumentNullException(nameof(key));
@@ -135,7 +165,7 @@ namespace Deveel.Data.Configuration {
 			childConfigurations[key] = configuration;
 		}
 
-		/// <inheritdoc cref="IConfiguration.GetChildren"/>
+		/// <inheritdoc cref="IConfiguration.Sections"/>
 		public IEnumerable<KeyValuePair<string, IConfiguration>> Sections {
 			get { return childConfigurations.AsEnumerable(); }
 		}

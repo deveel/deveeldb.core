@@ -14,7 +14,7 @@ namespace Deveel.Data.Configuration {
 
 		[Fact]
 		public void GetValuesFromRoot() {
-			IConfiguration config = new Configuration();
+			var config = new Configuration();
 			Assert.NotNull(config);
 			config.SetValue("oneKey", 54);
 			config.SetValue("twoKeys", null);
@@ -30,12 +30,12 @@ namespace Deveel.Data.Configuration {
 
 		[Fact]
 		public void GetValuesFromChild() {
-			IConfiguration config = new Configuration();
+			var config = new Configuration();
 			Assert.NotNull(config);
 
 			config.SetValue("oneKey", "one");
 
-			IConfiguration child = new Configuration();
+			var child = new Configuration();
 			config.AddSection("child", child);
 
 			child.SetValue("oneKey", 45);
@@ -55,7 +55,7 @@ namespace Deveel.Data.Configuration {
 		[InlineData("test.oneKey", 22, 22)]
 		[InlineData("test.oneKey", "334", 334)]
 		public void GetValueAsInt32(string key, object input, int expected) {
-			IConfiguration config = new Configuration();
+			var config = new Configuration();
 			Assert.NotNull(config);
 
 			config.SetValue(key, input);
@@ -73,7 +73,7 @@ namespace Deveel.Data.Configuration {
 		[InlineData("test", "on", true)]
 		[InlineData("test", "enabled", true)]
 		public void GetBooleanValue(string key, string value, bool expected) {
-			IConfiguration config = new Configuration();
+			var config = new Configuration();
 			Assert.NotNull(config);
 
 			config.SetValue(key, value);
@@ -90,7 +90,7 @@ namespace Deveel.Data.Configuration {
 		[InlineData("TWO", TestEnum.Two)]
 		[InlineData(null, TestEnum.Default)]
 		public void GetEnumValue(object value, TestEnum expected) {
-			IConfiguration config = new Configuration();
+			var config = new Configuration();
 			Assert.NotNull(config);
 
 			config.SetValue("test", value);
