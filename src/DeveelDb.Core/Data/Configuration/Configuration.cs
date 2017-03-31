@@ -85,7 +85,7 @@ namespace Deveel.Data.Configuration {
 					var child = config.GetChild(part);
 					if (child == null) {
 						child = new Configuration();
-						config.AddChild(part, child);
+						config.AddSection(part, child);
 					}
 
 					config = child;
@@ -125,8 +125,8 @@ namespace Deveel.Data.Configuration {
 			return null;
 		}
 
-		/// <inheritdoc cref="IConfiguration.AddChild"/>
-		public void AddChild(string key, IConfiguration configuration) {
+		/// <inheritdoc cref="IConfiguration.AddSection"/>
+		public void AddSection(string key, IConfiguration configuration) {
 			if (String.IsNullOrEmpty(key))
 				throw new ArgumentNullException(nameof(key));
 			if (configuration == null)
@@ -136,8 +136,8 @@ namespace Deveel.Data.Configuration {
 		}
 
 		/// <inheritdoc cref="IConfiguration.GetChildren"/>
-		public IEnumerable<KeyValuePair<string, IConfiguration>> GetChildren() {
-			return childConfigurations.AsEnumerable();
+		public IEnumerable<KeyValuePair<string, IConfiguration>> Sections {
+			get { return childConfigurations.AsEnumerable(); }
 		}
 
 		public static IConfiguration Build(Action<IConfigurationBuilder> config) {

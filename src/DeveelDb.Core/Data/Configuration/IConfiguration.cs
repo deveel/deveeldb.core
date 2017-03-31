@@ -40,7 +40,14 @@ namespace Deveel.Data.Configuration {
 		/// keys that are accessible from this object
 		/// </returns>
 		IEnumerable<string> Keys { get; }
-		
+
+		/// <summary>
+		/// Gets a list of child sections of this configuration object
+		/// </summary>
+		/// <seealso cref="AddSection"/>
+		IEnumerable<KeyValuePair<string, IConfiguration>> Sections { get; }
+
+
 		/// <summary>
 		/// Sets a given value for a key defined by this object.
 		/// </summary>
@@ -57,20 +64,32 @@ namespace Deveel.Data.Configuration {
 		/// to <see cref="GetValue"/> will return the current value of the setting,
 		/// without removing the parent value setting.
 		/// </para>
+		/// <para>
+		/// If the key is formed to reference a child section, the value is
+		/// set to the key parented by the referenced section.
+		/// </para>
 		/// </remarks>
 		/// <exception cref="ArgumentNullException">
 		/// If the given <paramref name="key"/> is <c>null</c>.
 		/// </exception>
+		/// <seealso cref="Configuration.SectionSeparator"/>
 		void SetValue(string key, object value);
 
 		/// <summary>
 		/// Gets a configuration setting for the given key.
 		/// </summary>
 		/// <param name="key">The key that identifies the setting to retrieve.</param>
+		/// <remarks>
+		/// <para>
+		/// If the given key references a value contained in a child section, that
+		/// value will be returned.
+		/// </para>
+		/// </remarks>
 		/// <returns>
 		/// Returns a configuration value if defined by the provided key, or <c>null</c>
-		/// if the key was not found in this or in the parent context.
+		/// if the key was not found in this configuration or in a child section.
 		/// </returns>
+		/// <seealso cref="Configuration.SectionSeparator"/>
 		object GetValue(string key);
 
 		/// <summary>
@@ -78,12 +97,6 @@ namespace Deveel.Data.Configuration {
 		/// </summary>
 		/// <param name="key">The key used to identify the child configuration</param>
 		/// <param name="child">The configuration object</param>
-		/// <remarks>
-		/// When this method returns the <see cref="Parent"/> of the
-		/// passed <paramref name="child"/> will be set to this object
-		/// </remarks>
-		void AddChild(string key, IConfiguration child);
-
-		IEnumerable<KeyValuePair<string, IConfiguration>> GetChildren();
+		void AddSection(string key, IConfiguration child);
 	}
 }

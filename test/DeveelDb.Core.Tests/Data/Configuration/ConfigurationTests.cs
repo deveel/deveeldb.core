@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 
 using Xunit;
 
@@ -35,7 +36,7 @@ namespace Deveel.Data.Configuration {
 			config.SetValue("oneKey", "one");
 
 			IConfiguration child = new Configuration();
-			config.AddChild("child", child);
+			config.AddSection("child", child);
 
 			child.SetValue("oneKey", 45);
 
@@ -127,7 +128,7 @@ namespace Deveel.Data.Configuration {
 			var child = new Configuration();
 			child.SetValue("a", 56);
 
-			config.AddChild("child", child);
+			config.AddSection("child", child);
 
 			config.SetValue("c", "test");
 
@@ -167,6 +168,28 @@ namespace Deveel.Data.Configuration {
 
 			var value = config.GetDouble("a");
 			Assert.Equal(22, value);
+		}
+
+		[Fact]
+		public void ConfigureFromProperties() {
+			var config = Configuration.Builder()
+				.AddPropertiesString(new StringBuilder()
+					.AppendLine("key = 54")
+					.AppendLine("sec.key = port2")
+					.AppendLine("sec.key2 = 122")
+					.ToString())
+				.WithSetting("a", 33)
+				.Build();
+
+			var value = config.GetValue("sec.key");
+			Assert.NotNull(value);
+			Assert.IsType<string>(value);
+
+			var aValue = config.GetInt64("a");
+			Assert.Equal(33L, aValue);
+
+			Assert.NotEmpty(config.Sections);
+			Assert.Equal(1, config.Sections.Count());
 		}
 	}
 }

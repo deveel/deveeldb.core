@@ -26,7 +26,7 @@ using System.Text;
 namespace Deveel.Data.Configuration {
 	public static class ConfigurationExtensions {
 		public static IConfiguration GetChild(this IConfiguration configuration, string key) {
-			var dict = configuration.GetChildren().ToDictionary(x => x.Key, y => y.Value);
+			var dict = configuration.Sections.ToDictionary(x => x.Key, y => y.Value);
 
 			IConfiguration child;
 			if (!dict.TryGetValue(key, out child))
@@ -55,7 +55,7 @@ namespace Deveel.Data.Configuration {
 
 			result.AddRange(keys);
 
-			foreach (var child in configuration.GetChildren()) {
+			foreach (var child in configuration.Sections) {
 				var sectionName = new StringBuilder();
 				if (!String.IsNullOrEmpty(prefix)) {
 					sectionName.Append(prefix);

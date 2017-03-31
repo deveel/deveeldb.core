@@ -38,11 +38,5 @@ namespace Deveel.Data.Configuration {
 		/// configurations.
 		/// </summary>
 		Stream InputStream { get; }
-
-		/// <summary>
-		/// Gets a <see cref="Stream"/> that can be writtern with
-		/// the configurations from a <see cref="IConfiguration"/>.
-		/// </summary>
-		Stream OutputStream { get; }
 	}
 }

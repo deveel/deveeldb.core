@@ -50,7 +50,7 @@ namespace Deveel.Data.Configuration {
 				var builder = new ConfigurationBuilder();
 				child.Value(builder);
 
-				result.AddChild(child.Key, builder.Build());
+				result.AddSection(child.Key, builder.Build());
 			}
 
 			return result;
