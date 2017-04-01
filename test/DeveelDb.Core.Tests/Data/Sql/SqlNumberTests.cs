@@ -79,6 +79,15 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(SqlNumber.NaN, number);
 		}
 
+		[Theory]
+		[InlineData(Double.PositiveInfinity, true)]
+		[InlineData(67784.00033, false)]
+		public static void EqualsToPositiveInfinity(double value, bool expected) {
+			var number = new SqlNumber(value);
+
+			Assert.Equal(expected, number.Equals(SqlNumber.PositiveInfinity));
+		}
+
 		[Fact]
 		public static void Convert_ToBoolean_Success() {
 			var value = SqlNumber.One;

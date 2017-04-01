@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Globalization;
 
 using Deveel.Math;
 
@@ -77,7 +78,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlNumber(double value, int precision)
-			: this(new BigDecimal(value, new MathContext(precision))) {
+			: this(GetNumberState(value), GetNumberState(value) == NumericState.None ? new BigDecimal(value, new MathContext(precision)) : null) {
 		}
 
 		private SqlNumber(BigInteger unscaled, int scale, int precision)
@@ -86,6 +87,19 @@ namespace Deveel.Data.Sql {
 
 
 		private NumericState State { get; }
+
+		private static NumericState GetNumberState(double value) {
+			if (Double.IsPositiveInfinity(value))
+				return NumericState.PositiveInfinity;
+			if (Double.IsNegativeInfinity(value))
+				return NumericState.PositiveInfinity;
+			if (Double.IsNaN(value))
+				return NumericState.NotANumber;
+			if (Double.IsInfinity(value))
+				throw new NotSupportedException();
+
+			return NumericState.None;
+		}
 
 		public bool CanBeInt64 {
 			get { return byteCount <= 8; }
@@ -154,14 +168,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		public bool Equals(SqlNumber other) {
-			if (State == NumericState.NegativeInfinity &&
-			    other.State == NumericState.NegativeInfinity)
-				return true;
-			if (State == NumericState.PositiveInfinity &&
-			    other.State == NumericState.PositiveInfinity)
-				return true;
-			if (State == NumericState.NotANumber &&
-			    other.State == NumericState.NotANumber)
+			if (State != other.State)
+				return false;
+
+			if (State != NumericState.None)
 				return true;
 
 			if (IsNull && other.IsNull)
@@ -337,7 +347,7 @@ namespace Deveel.Data.Sql {
 				return new SqlString(ToString());
 			*/
 
-			throw new InvalidCastException(System.String.Format("Cannot convert NUMERIC to {0}", conversionType));
+			throw new InvalidCastException($"Cannot convert NUMERIC to {conversionType}");
 		}
 
 		public byte[] ToByteArray() {

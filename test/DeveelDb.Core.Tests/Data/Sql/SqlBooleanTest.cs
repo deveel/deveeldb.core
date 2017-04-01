@@ -5,6 +5,56 @@ using Xunit;
 
 namespace Deveel.Data.Sql {
 	public class SqlBooleanTest {
+		[Theory]
+		[InlineData(true, "true")]
+		[InlineData(false, "false")]
+		public void ConvertToString(bool value, string expected) {
+			var b = new SqlBoolean(value);
+
+			var s = Convert.ToString((object)b);
+			Assert.Equal(expected, s);
+		}
+
+		[Theory]
+		[InlineData(true, 1)]
+		[InlineData(false, 0)]
+		public void ConvertToInt32(bool value, int expected) {
+			var b = new SqlBoolean(value);
+
+			var i = Convert.ToInt32(b);
+			Assert.Equal(expected, i);
+		}
+
+		[Theory]
+		[InlineData(true, 1)]
+		[InlineData(false, 0)]
+		public void ConvertToInt16(bool value, short expected) {
+			var b = new SqlBoolean(value);
+
+			var i = Convert.ToInt16(b);
+			Assert.Equal(expected, i);
+		}
+
+		[Theory]
+		[InlineData(true, 1)]
+		[InlineData(false, 0)]
+		public void ConvertToInt64(bool value, long expected) {
+			var b = new SqlBoolean(value);
+
+			var i = Convert.ToInt64(b);
+			Assert.Equal(expected, i);
+		}
+
+		[Theory]
+		[InlineData(true, true)]
+		[InlineData(false, false)]
+		public void ConvertToBoolean(bool value, bool expected) {
+			var b = new SqlBoolean(value);
+
+			var result = Convert.ToBoolean(b);
+			Assert.Equal(expected, result);
+		}
+
 		[Fact]
 		public void CreateFromByte() {
 			var value = new SqlBoolean(1);
@@ -181,7 +231,7 @@ namespace Deveel.Data.Sql {
 			var value1 = (SqlBoolean)b1;
 			var value2 = (SqlBoolean)b2;
 
-			var result = value1.XOr(value2);
+			var result = value1 ^ value2;
 
 			var bResult = (bool)result;
 

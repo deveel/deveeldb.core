@@ -94,7 +94,7 @@ namespace Deveel.Data.Sql {
 				return SqlBoolean.Null;
 
 			var b = (SqlBoolean)value;
-			return b.Not();
+			return !b;
 		}
 
 		public override ISqlValue And(ISqlValue a, ISqlValue b) {
@@ -104,7 +104,7 @@ namespace Deveel.Data.Sql {
 			var b1 = (SqlBoolean)a;
 			var b2 = (SqlBoolean)b;
 
-			return b1.And(b2);
+			return b1 & b2;
 		}
 
 		public override ISqlValue Or(ISqlValue a, ISqlValue b) {
@@ -114,7 +114,7 @@ namespace Deveel.Data.Sql {
 			var b1 = (SqlBoolean)a;
 			var b2 = (SqlBoolean)b;
 
-			return b1.Or(b2);
+			return b1 | b2;
 		}
 
 		public override ISqlValue XOr(ISqlValue a, ISqlValue b) {
@@ -124,7 +124,7 @@ namespace Deveel.Data.Sql {
 			var b1 = (SqlBoolean)a;
 			var b2 = (SqlBoolean)b;
 
-			return b1.XOr(b2);
+			return b1 ^ b2;
 		}
 
 		public override string ToString(ISqlValue obj) {

@@ -169,7 +169,7 @@ namespace Deveel.Data.Sql {
 			return value.Equals(other.value);
 		}
 
-		public SqlBoolean Not() {
+		private SqlBoolean Negate() {
 			if (value == null)
 				return Null;
 
@@ -181,7 +181,7 @@ namespace Deveel.Data.Sql {
 			throw new InvalidOperationException();
 		}
 
-		public SqlBoolean Or(SqlBoolean other) {
+		private SqlBoolean Or(SqlBoolean other) {
 			if (value == null ||
 			    other.IsNull)
 				return Null;
@@ -192,7 +192,7 @@ namespace Deveel.Data.Sql {
 			return False;
 		}
 
-		public SqlBoolean And(SqlBoolean other) {
+		private SqlBoolean And(SqlBoolean other) {
 			if (value == null ||
 			    other.IsNull)
 				return Null;
@@ -203,7 +203,7 @@ namespace Deveel.Data.Sql {
 			return False;
 		}
 
-		public SqlBoolean XOr(SqlBoolean other) {
+		private SqlBoolean XOr(SqlBoolean other) {
 			if (value == null ||
 			    other.IsNull)
 				return Null;
@@ -354,7 +354,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlBoolean operator !(SqlBoolean a) {
-			return a.Not();
+			return a.Negate();
 		}
 
 		/// <summary>

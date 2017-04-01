@@ -18,6 +18,9 @@
 using System;
 
 namespace Deveel.Data.Sql {
+	/// <summary>
+	/// A single parameter value in a <see cref="SqlQuery"/>.
+	/// </summary>
 	public sealed class QueryParameter {
 		public QueryParameter(SqlType sqlType) 
 			: this(sqlType, null) {

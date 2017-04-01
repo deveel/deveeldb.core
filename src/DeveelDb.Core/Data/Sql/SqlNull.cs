@@ -18,7 +18,7 @@
 using System;
 
 namespace Deveel.Data.Sql {
-	public struct SqlNull : ISqlValue, IConvertible {
+	public struct SqlNull : ISqlValue, IConvertible, ISqlFormattable {
 		public static readonly SqlNull Value = new SqlNull();
 
 		int IComparable.CompareTo(object obj) {
@@ -42,6 +42,8 @@ namespace Deveel.Data.Sql {
 				return true;
 			if (obj is ISqlValue)
 				return ((ISqlValue) obj).IsNull;
+			if (obj == null)
+				return true;
 
 			return false;
 		}
@@ -132,7 +134,11 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override string ToString() {
-			return "NULL";
+			return this.ToSqlString();
+		}
+
+		void ISqlFormattable.AppendTo(SqlStringBuilder sql) {
+			sql.Append("NULL");
 		}
 	}
 }

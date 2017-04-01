@@ -1,5 +1,5 @@
 ﻿// 
-//  Copyright 2010-2017 Deveel
+//  Copyright 2010-2016 Deveel
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -16,20 +16,16 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace Deveel.Data.Sql {
-	static class SqlFormattableExtensions {
-		public static void AppendTo<T>(this T obj, SqlStringBuilder builder) where T : ISqlFormattable {
-			if (obj == null)
-				return;
+	public interface ISqlString : ISqlValue, IComparable<ISqlString>, IEnumerable<char> {
+		long Length { get; }
 
-			obj.AppendTo(builder);
-		}
+		char this[long offset] { get; }
 
-		public static string ToSqlString<T>(this T obj) where T : ISqlFormattable {
-			var builder = new SqlStringBuilder();
-			obj.AppendTo(builder);
-			return builder.ToString();
-		}
+		TextReader GetInput(Encoding encoding);
 	}
 }

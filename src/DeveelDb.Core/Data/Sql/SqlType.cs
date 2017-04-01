@@ -196,9 +196,7 @@ namespace Deveel.Data.Sql {
 
 		/// <inheritdoc/>
 		public override string ToString() {
-			var builder = new SqlStringBuilder();
-			AppendTo(builder);
-			return builder.ToString();
+			return this.ToSqlString();
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {

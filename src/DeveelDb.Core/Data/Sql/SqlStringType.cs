@@ -19,11 +19,9 @@ namespace Deveel.Data.Sql {
 		/// Gets the maximum number of characters that strings
 		/// handled by this type can handle.
 		/// </summary>
-		public int MaxSize { get; private set; }
+		public int MaxSize { get; }
 
-		public bool HasMaxSize {
-			get { return MaxSize > 0; }
-		}
+		public bool HasMaxSize => MaxSize > 0;
 
 		/// <summary>
 		/// Gets the locale used to compare string values.
@@ -32,7 +30,7 @@ namespace Deveel.Data.Sql {
 		/// When this value is not specified, the schema or database locale
 		/// is used to compare string values.
 		/// </remarks>
-		public CultureInfo Locale { get; private set; }
+		public CultureInfo Locale { get; }
 
 		private CompareInfo Collator {
 			get {
