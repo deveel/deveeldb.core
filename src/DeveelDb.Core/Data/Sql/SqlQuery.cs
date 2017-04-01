@@ -1,5 +1,5 @@
 ﻿// 
-//  Copyright 2010-2016 Deveel
+//  Copyright 2010-2017 Deveel
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -40,9 +40,9 @@ namespace Deveel.Data.Sql {
 
 		internal void ChangeStyle(QueryParameterStyle style) {
 			if (ParameterStyle != QueryParameterStyle.Default)
-				throw new InvalidOperationException();
+				throw new InvalidOperationException("Cannot change the parameter style if it was not set to default");
 			if (style == QueryParameterStyle.Default)
-				throw new ArgumentException();
+				throw new ArgumentException("Cannot change the parameter style of a query to default");
 
 			ParameterStyle = style;
 		}

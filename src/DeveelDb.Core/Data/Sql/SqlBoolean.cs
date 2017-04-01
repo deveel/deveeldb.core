@@ -1,5 +1,5 @@
 ﻿// 
-//  Copyright 2010-2016 Deveel
+//  Copyright 2010-2017 Deveel
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -94,8 +94,6 @@ namespace Deveel.Data.Sql {
 			}
 
 			SqlBoolean otherBoolean;
-			/*
-			TODO: I will need Deveel.Math to be ported to core before
 			if (other is SqlNumber) {
 				var num = (SqlNumber) other;
 				if (num.IsNull) {
@@ -107,9 +105,7 @@ namespace Deveel.Data.Sql {
 				} else {
 					throw new ArgumentOutOfRangeException("other", "The given numeric value is out of range for a comparison with SQL BOOLEAN.");
 				}
-			} else
-			*/
-			if (other is SqlBoolean) {
+			} else if (other is SqlBoolean) {
 				otherBoolean = (SqlBoolean) other;
 			} else {
 				throw new ArgumentException(String.Format("Object of type {0} cannot be compared to SQL BOOLEAN",
@@ -142,13 +138,10 @@ namespace Deveel.Data.Sql {
 			if (other is SqlBoolean || other is SqlNull)
 				return true;
 
-			/*
-			TODO:
 			if (other is SqlNumber) {
 				var num = (SqlNumber) other;
 				return num == SqlNumber.Zero || num == SqlNumber.One;
 			}
-			*/
 
 			return false;
 		}

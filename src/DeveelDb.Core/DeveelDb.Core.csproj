@@ -26,6 +26,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="dmath.core" Version="1.6.1-r00041" />
     <PackageReference Include="DryIoc.dll" Version="2.10.4" />
     <PackageReference Include="System.ComponentModel" Version="4.3.0" />
   </ItemGroup>

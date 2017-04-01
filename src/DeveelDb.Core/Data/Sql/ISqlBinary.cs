@@ -1,5 +1,5 @@
 ﻿// 
-//  Copyright 2010-2017 Deveel
+//  Copyright 2010-2016 Deveel
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -16,26 +16,26 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
-	/// The value that represents a SQL object value
+	/// Defines the required contract of a SQL <c>BINARY</c> object
 	/// </summary>
-	public interface ISqlValue : IComparable, IComparable<ISqlValue> {
+	public interface ISqlBinary : ISqlValue, IEnumerable<byte> {
 		/// <summary>
-		/// Gets a boolean value indicating if the value is <c>NULL</c>.
+		/// Gets the raw length of the binary object.
 		/// </summary>
-		/// <seealso cref="SqlNull"/>
-		bool IsNull { get; }
+		long Length { get; }
 
 		/// <summary>
-		/// Checks if the current object is comparable with the given one.
+		/// Gets an object used to read the contents of the binary
 		/// </summary>
-		/// <param name="other">The other <see cref="ISqlValue"/> to compare.</param>
 		/// <returns>
-		/// Returns <c>true</c> if the current object is comparable
-		/// with the given one, <c>false</c> otherwise.
+		/// Returns an instance of <see cref="Stream"/> that is a read-only
+		/// interface for accessing the contents handled by this binary.
 		/// </returns>
-		bool IsComparableTo(ISqlValue other);
+		Stream GetInput();
 	}
 }

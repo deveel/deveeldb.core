@@ -5,15 +5,15 @@ using System.Text;
 using Xunit;
 
 namespace Deveel.Data.Configuration {
-	public class ConfigurationTests {
+	public static class ConfigurationTests {
 		[Fact]
-		public void DefaultConfig() {
+		public static void DefaultConfig() {
 			IConfiguration config = new Configuration();
 			Assert.NotNull(config);
 		}
 
 		[Fact]
-		public void GetValuesFromRoot() {
+		public static void GetValuesFromRoot() {
 			var config = new Configuration();
 			Assert.NotNull(config);
 			config.SetValue("oneKey", 54);
@@ -29,7 +29,7 @@ namespace Deveel.Data.Configuration {
 		}
 
 		[Fact]
-		public void GetValuesFromChild() {
+		public static void GetValuesFromChild() {
 			var config = new Configuration();
 			Assert.NotNull(config);
 
@@ -54,7 +54,7 @@ namespace Deveel.Data.Configuration {
 		[Theory]
 		[InlineData("test.oneKey", 22, 22)]
 		[InlineData("test.oneKey", "334", 334)]
-		public void GetValueAsInt32(string key, object input, int expected) {
+		public static void GetValueAsInt32(string key, object input, int expected) {
 			var config = new Configuration();
 			Assert.NotNull(config);
 
@@ -72,7 +72,7 @@ namespace Deveel.Data.Configuration {
 		[InlineData("test", "off", false)]
 		[InlineData("test", "on", true)]
 		[InlineData("test", "enabled", true)]
-		public void GetBooleanValue(string key, string value, bool expected) {
+		public static void GetBooleanValue(string key, string value, bool expected) {
 			var config = new Configuration();
 			Assert.NotNull(config);
 
@@ -89,7 +89,7 @@ namespace Deveel.Data.Configuration {
 		[InlineData("one", TestEnum.One)]
 		[InlineData("TWO", TestEnum.Two)]
 		[InlineData(null, TestEnum.Default)]
-		public void GetEnumValue(object value, TestEnum expected) {
+		public static void GetEnumValue(object value, TestEnum expected) {
 			var config = new Configuration();
 			Assert.NotNull(config);
 
@@ -107,7 +107,7 @@ namespace Deveel.Data.Configuration {
 		}
 
 		[Fact]
-		public void GetAllKeysFromRoot() {
+		public static void GetAllKeysFromRoot() {
 			var config = new Configuration();
 			config.SetValue("a", 22);
 			config.SetValue("b", new DateTime(2001, 02, 01));
@@ -120,7 +120,7 @@ namespace Deveel.Data.Configuration {
 		}
 
 		[Fact]
-		public void GetAllKeysFromTree() {
+		public static void GetAllKeysFromTree() {
 			var config = new Configuration();
 			config.SetValue("a", 22);
 			config.SetValue("b", new DateTime(2001, 02, 01));
@@ -141,7 +141,7 @@ namespace Deveel.Data.Configuration {
 		}
 
 		[Fact]
-		public void ConfigureByBuildConfiguration() {
+		public static void ConfigureByBuildConfiguration() {
 			var config = Configuration.Build(builder => {
 				builder.WithSetting("a", 43.01f)
 					.WithSetting("b", "test");
@@ -158,7 +158,7 @@ namespace Deveel.Data.Configuration {
 		}
 
 		[Fact]
-		public void ConfigureByBuilder() {
+		public static void ConfigureByBuilder() {
 			var config = Configuration.Builder()
 				.WithSetting("a", 22)
 				.WithSection("child",
@@ -171,7 +171,7 @@ namespace Deveel.Data.Configuration {
 		}
 
 		[Fact]
-		public void ConfigureFromProperties() {
+		public static void ConfigureFromProperties() {
 			var config = Configuration.Builder()
 				.AddPropertiesString(new StringBuilder()
 					.AppendLine("key = 54")

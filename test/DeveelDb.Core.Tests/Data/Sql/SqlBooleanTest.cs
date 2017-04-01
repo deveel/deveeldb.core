@@ -91,32 +91,30 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(1, i);
 		}
 
-		/*
-		TODO:
 		[Fact]
 		public void Compare_ToNumber_InRange() {
 			var value1 = SqlBoolean.True;
 			var value2 = SqlNumber.One;
 
-			Assert.IsFalse(value1.IsNull);
-			Assert.IsFalse(value2.IsNull);
+			Assert.False(value1.IsNull);
+			Assert.False(value2.IsNull);
 
-			Assert.IsTrue(value1.IsComparableTo(value2));
+			Assert.True(value1.IsComparableTo(value2));
 
 			int i = -2;
-			Assert.DoesNotThrow(() => i = value1.CompareTo(value2));
-			Assert.AreEqual(0, i);
+			i = value1.CompareTo(value2);
+			Assert.Equal(0, i);
 
 			value2 = SqlNumber.Zero;
 
-			Assert.IsFalse(value1.IsNull);
-			Assert.IsFalse(value2.IsNull);
+			Assert.False(value1.IsNull);
+			Assert.False(value2.IsNull);
 
-			Assert.IsTrue(value1.IsComparableTo(value2));
+			Assert.True(value1.IsComparableTo(value2));
 
 			i = -2;
-			Assert.DoesNotThrow(() => i = value1.CompareTo(value2));
-			Assert.AreEqual(1, i);
+			i = value1.CompareTo(value2);
+			Assert.Equal(1, i);
 		}
 
 		[Fact]
@@ -124,16 +122,15 @@ namespace Deveel.Data.Sql {
 			var value1 = SqlBoolean.True;
 			var value2 = new SqlNumber(21);
 
-			Assert.IsFalse(value1.IsNull);
-			Assert.IsFalse(value2.IsNull);
+			Assert.False(value1.IsNull);
+			Assert.False(value2.IsNull);
 
-			Assert.IsFalse(value1.IsComparableTo(value2));
+			Assert.False(value1.IsComparableTo(value2));
 
 			int i = -2;
 			Assert.Throws<ArgumentOutOfRangeException>(() => i = value1.CompareTo(value2));
-			Assert.AreEqual(-2, i);
+			Assert.Equal(-2, i);
 		}
-		*/
 
 		[Fact]
 		public void Equality_True() {

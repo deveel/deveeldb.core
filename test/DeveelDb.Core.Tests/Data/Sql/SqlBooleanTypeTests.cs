@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http.Headers;
 
 using Xunit;
 
@@ -171,31 +172,20 @@ namespace Deveel.Data.Sql {
 		}
 
 
-		/*
-		TODO:
-		[Fact]
-		public void Compare_BooleanToNumeric() {
-			var type = PrimitiveTypes.Boolean();
-			Assert.NotNull(type);
-
-			Assert.Equal(0, type.Compare(SqlBoolean.True, SqlNumber.One));
-			Assert.Equal(0, type.Compare(SqlBoolean.False, SqlNumber.Zero));
-		}
-
 		[Fact]
 		public void Compare_BooleanToNumeric_Invalid() {
 			var type = PrimitiveTypes.Boolean();
 			Assert.NotNull(type);
-
-			int result = -2;
-			Assert.DoesNotThrow(() => result = type.Compare(SqlBoolean.True, new SqlNumber(22)));
-			Assert.AreEqual(1, result);
+			Assert.Throws<ArgumentException>(() => type.Compare(SqlBoolean.True, new SqlNumber(22)));
 		}
 
-		[TestCase(SqlTypeCode.Bit, true, "1")]
-		[TestCase(SqlTypeCode.Bit, false, "0")]
-		[TestCase(SqlTypeCode.Boolean, true, "true")]
-		[TestCase(SqlTypeCode.Boolean, false, "false")]
+		/*
+		TODO:
+		[Theory]
+		[InlineData(SqlTypeCode.Bit, true, "1")]
+		[InlineData(SqlTypeCode.Bit, false, "0")]
+		[InlineData(SqlTypeCode.Boolean, true, "true")]
+		[InlineData(SqlTypeCode.Boolean, false, "false")]
 		public void CastToString(SqlTypeCode typeCode, bool value, string expected) {
 			var type = PrimitiveTypes.Boolean(typeCode);
 
@@ -203,35 +193,79 @@ namespace Deveel.Data.Sql {
 
 			var casted = type.CastTo(boolean, PrimitiveTypes.String());
 
-			Assert.IsInstanceOf<SqlString>(casted);
-			Assert.AreEqual(expected, casted.ToString());
+			Assert.IsType<SqlString>(casted);
+			Assert.Equal(expected, casted.ToString());
 		}
 
-		[TestCase(true, 1)]
-		[TestCase(false, 0)]
+		[InlineData(true, 1)]
+		[InlineData(false, 0)]
 		public void CastToNumber(bool value, int expected) {
 			var type = PrimitiveTypes.Boolean();
 			var boolean = new SqlBoolean(value);
 
 			var casted = type.CastTo(boolean, PrimitiveTypes.Numeric());
 
-			Assert.IsInstanceOf<SqlNumber>(casted);
-			Assert.AreEqual(expected, ((SqlNumber) casted).ToInt32());
+			Assert.IsType<SqlNumber>(casted);
+			Assert.Equal(expected, ((SqlNumber) casted).ToInt32());
 		}
+		*/
 
-		[TestCase(true, 1)]
-		[TestCase(false, 0)]
+		[Theory]
+		[InlineData(true, 1)]
+		[InlineData(false, 0)]
 		public void CastToBinary(bool value, byte expected) {
 			var type = PrimitiveTypes.Boolean();
 			var boolean = new SqlBoolean(value);
 
-			var casted = type.CastTo(boolean, PrimitiveTypes.Binary());
+			var casted = type.Cast(boolean, PrimitiveTypes.Binary());
 
 			var expectedArray = new[] {expected};
 
-			Assert.IsInstanceOf<SqlBinary>(casted);
-			Assert.AreEqual(expectedArray, ((SqlBinary) casted).ToByteArray());
+			Assert.IsType<SqlBinary>(casted);
+			Assert.Equal(expectedArray, ((SqlBinary) casted).ToByteArray());
 		}
-		*/
+
+		[Theory]
+		[InlineData(true, 1)]
+		[InlineData(false, 0)]
+		public void CastToNumber(bool value, int expected) {
+			var type = PrimitiveTypes.Boolean();
+			var boolean = new SqlBoolean(value);
+
+			Assert.True(type.CanCastTo(PrimitiveTypes.Numeric()));
+			var casted = type.Cast(boolean, PrimitiveTypes.Numeric());
+
+			Assert.IsType<SqlNumber>(casted);
+			Assert.Equal(expected, ((SqlNumber) casted).ToInt32());
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.Bit, "BIT")]
+		[InlineData(SqlTypeCode.Boolean, "BOOLEAN")]
+		public void GetString(SqlTypeCode typeCode, string expected) {
+			var type = new SqlBooleanType(typeCode);
+
+			var s = type.ToString();
+			Assert.Equal(expected, s);
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.Bit, SqlTypeCode.Bit, true)]
+		[InlineData(SqlTypeCode.Boolean, SqlTypeCode.Boolean, true)]
+		[InlineData(SqlTypeCode.Bit, SqlTypeCode.Boolean, true)]
+		public void BooleanTypesEqual(SqlTypeCode typeCode1, SqlTypeCode typeCode2, bool expected) {
+			var type1 = new SqlBooleanType(typeCode1);
+			var type2 = new SqlBooleanType(typeCode2);
+
+			Assert.Equal(expected, type1.Equals(type2));
+		}
+
+		[Fact]
+		public void BooleanTypeNotEqualToOtherType() {
+			var type1 = new SqlBooleanType(SqlTypeCode.Boolean);
+			var type2 = new SqlBinaryType(SqlTypeCode.Binary);
+
+			Assert.False(type1.Equals(type2));
+		}
 	}
 }

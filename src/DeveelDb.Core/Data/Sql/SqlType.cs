@@ -1,4 +1,21 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Collections.Generic;
 
 namespace Deveel.Data.Sql {
@@ -203,12 +220,12 @@ namespace Deveel.Data.Sql {
 		/// <param name="destType">The other type, destination of the cast, to verify.</param>
 		/// <remarks>
 		/// By default, this method returns <c>false</c>, because cast process must be
-		/// specified per type: when overriding the method <see cref="CastTo"/>, pay attention
+		/// specified per type: when overriding the method <see cref="Cast"/>, pay attention
 		/// to also override this method accordingly.
 		/// </remarks>
 		/// <returns>
 		/// </returns>
-		/// <see cref="CastTo"/>
+		/// <see cref="Cast"/>
 		public virtual bool CanCastTo(SqlType destType) {
 			return false;
 		}
@@ -236,7 +253,7 @@ namespace Deveel.Data.Sql {
 		/// Returns an instance of <see cref="ISqlValue"/> that is the result
 		/// of the conversion from this data-type to the other type given.
 		/// </returns>
-		public virtual ISqlValue CastTo(ISqlValue value, SqlType destType) {
+		public virtual ISqlValue Cast(ISqlValue value, SqlType destType) {
 			if (Equals(destType))
 				return value;
 
@@ -386,9 +403,9 @@ namespace Deveel.Data.Sql {
 
 			if (type == typeof(SqlBoolean))
 				return SqlTypeCode.Boolean;
-			/*TODO:
 			if (type == typeof(SqlNumber))
-	return SqlTypeCode.Numeric;
+				return SqlTypeCode.Numeric;
+			/* TODO:
 if (type == typeof(SqlDateTime))
 	return SqlTypeCode.TimeStamp;
 if (type == typeof(SqlString))
