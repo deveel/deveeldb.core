@@ -397,25 +397,28 @@ namespace Deveel.Data.Sql {
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
-			if (IsNull) {
-				builder.Append("NULL");
-			} else {
-				switch (State) {
-					case (NumericState.None):
+			switch (State) {
+				case (NumericState.None): {
+					if (IsNull) {
+						builder.Append("NULL");	
+					} else if (CanBeInt32 || CanBeInt64) {
+						builder.Append(valueAsLong);
+					} else {
 						builder.Append(innerValue.ToString());
-						break;
-					case (NumericState.NegativeInfinity):
-						builder.Append("-Infinity");
-						break;
-					case (NumericState.PositiveInfinity):
-						builder.Append("+Infinity");
-						break;
-					case (NumericState.NotANumber):
-						builder.Append("NaN");
-						break;
-					default:
-						throw new InvalidCastException("Unknown number state");
+					}
+					break;
 				}
+				case (NumericState.NegativeInfinity):
+					builder.Append("-Infinity");
+					break;
+				case (NumericState.PositiveInfinity):
+					builder.Append("+Infinity");
+					break;
+				case (NumericState.NotANumber):
+					builder.Append("NaN");
+					break;
+				default:
+					throw new InvalidCastException("Unknown number state");
 			}
 		}
 
