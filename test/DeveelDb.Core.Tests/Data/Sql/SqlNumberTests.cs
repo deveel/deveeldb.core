@@ -15,7 +15,7 @@ namespace Deveel.Data.Sql {
 			Assert.True(value.CanBeInt64);
 			Assert.Equal(0, value.Scale);
 			Assert.Equal(5, value.Precision);
-			Assert.False(SqlNumber.IsNan(value));
+			Assert.False(SqlNumber.IsNaN(value));
 			Assert.False(SqlNumber.IsNegativeInfinity(value));
 			Assert.False(SqlNumber.IsPositiveInfinity(value));
 			Assert.Equal(1, value.Sign);
@@ -29,7 +29,7 @@ namespace Deveel.Data.Sql {
 			Assert.True(value.CanBeInt64);
 			Assert.Equal(0, value.Scale);
 			Assert.Equal(10, value.Precision);
-			Assert.False(SqlNumber.IsNan(value));
+			Assert.False(SqlNumber.IsNaN(value));
 			Assert.False(SqlNumber.IsNegativeInfinity(value));
 			Assert.False(SqlNumber.IsPositiveInfinity(value));
 			Assert.Equal(1, value.Sign);
@@ -43,7 +43,7 @@ namespace Deveel.Data.Sql {
 			Assert.False(value.CanBeInt64);
 			Assert.Equal(10, value.Scale);
 			Assert.Equal(16, value.Precision);
-			Assert.False(SqlNumber.IsNan(value));
+			Assert.False(SqlNumber.IsNaN(value));
 			Assert.False(SqlNumber.IsNegativeInfinity(value));
 			Assert.False(SqlNumber.IsPositiveInfinity(value));
 			Assert.Equal(1, value.Sign);
@@ -205,7 +205,7 @@ namespace Deveel.Data.Sql {
 			Assert.False(result.IsNull);
 			Assert.True(result.CanBeInt32);
 
-			var intResult = result.ToInt32();
+			var intResult = (int) result;
 
 			Assert.Equal(expected, intResult);
 		}
@@ -222,7 +222,7 @@ namespace Deveel.Data.Sql {
 			Assert.False(result.IsNull);
 			Assert.True(result.CanBeInt32);
 
-			var intResult = result.ToInt32();
+			var intResult = (int) result;
 
 			Assert.Equal(expected, intResult);
 		}
@@ -239,7 +239,7 @@ namespace Deveel.Data.Sql {
 			Assert.False(result.IsNull);
 			Assert.True(result.CanBeInt32);
 
-			var intResult = result.ToInt32();
+			var intResult = (int) result;
 
 			Assert.Equal(expected, intResult);
 		}
@@ -289,7 +289,7 @@ namespace Deveel.Data.Sql {
 			Assert.False(result.IsNull);
 			Assert.True(result.CanBeInt32);
 
-			Assert.Equal(expected, result.ToInt32());
+			Assert.Equal(expected, (int) result);
 		}
 
 		[Theory]
@@ -304,7 +304,7 @@ namespace Deveel.Data.Sql {
 			Assert.False(result.IsNull);
 			Assert.True(result.CanBeInt32);
 
-			Assert.Equal(expected, result.ToInt32());
+			Assert.Equal(expected, (int) result);
 		}
 
 		[Theory]
@@ -373,6 +373,28 @@ namespace Deveel.Data.Sql {
 
 			Assert.NotNull(result);
 			Assert.Equal(expected, (double)result);
+		}
+
+		[Theory]
+		[InlineData(2133, 123, true)]
+		[InlineData(65484.213e21, 54331432.546e121, false)]
+		public static void Operator_Greater(double value1, double value2, bool expected) {
+			var num1 = new SqlNumber(value1);
+			var num2 = new SqlNumber(value2);
+
+			var result = num1 > num2;
+			Assert.Equal(expected, result);
+		}
+
+		[Theory]
+		[InlineData(7484, 1230449, true)]
+		[InlineData(102943e45, 201e12, false)]
+		public static void Operator_Smaller(double value1, double value2, bool expected) {
+			var num1 = new SqlNumber(value1);
+			var num2 = new SqlNumber(value2);
+
+			var result = num1 < num2;
+			Assert.Equal(expected, result);
 		}
 
 		[Theory]

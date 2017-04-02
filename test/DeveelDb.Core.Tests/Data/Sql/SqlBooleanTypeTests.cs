@@ -222,7 +222,7 @@ namespace Deveel.Data.Sql {
 			var casted = type.Cast(boolean, PrimitiveTypes.Numeric());
 
 			Assert.IsType<SqlNumber>(casted);
-			Assert.Equal(expected, ((SqlNumber) casted).ToInt32());
+			Assert.Equal(expected,(int) (SqlNumber) casted);
 		}
 
 		[Theory]

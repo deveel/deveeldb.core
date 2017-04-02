@@ -256,6 +256,7 @@ namespace Deveel.Data.Sql {
 					case SqlTypeCode.Real:
 					case SqlTypeCode.Float:
 					case SqlTypeCode.Double:
+						return ToFloatingPoint(number, destType);
 					case SqlTypeCode.Numeric:
 						return ToDecimal(number, destType);
 				}
@@ -269,7 +270,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber ToDecimal(SqlNumber number, SqlNumericType destType) {
-			if (SqlNumber.IsNan(number))
+			if (SqlNumber.IsNaN(number))
 				return SqlNumber.NaN;
 			if (SqlNumber.IsNegativeInfinity(number))
 				return SqlNumber.NegativeInfinity;
@@ -296,9 +297,21 @@ namespace Deveel.Data.Sql {
 				case SqlTypeCode.SmallInt:
 					return new SqlNumber((short)number);
 				case SqlTypeCode.Integer:
-					return new SqlNumber(number.ToInt32());
+					return new SqlNumber((int)number);
 				case SqlTypeCode.BigInt:
-					return new SqlNumber(number.ToInt64());
+					return new SqlNumber((long) number);
+				default:
+					throw new InvalidCastException();
+			}
+		}
+
+		private SqlNumber ToFloatingPoint(SqlNumber number, SqlNumericType destType) {
+			switch (destType.TypeCode) {
+				case SqlTypeCode.Float:
+				case SqlTypeCode.Real:
+					return new SqlNumber((float)number);
+				case SqlTypeCode.Double:
+					return new SqlNumber((double)number);
 				default:
 					throw new InvalidCastException();
 			}

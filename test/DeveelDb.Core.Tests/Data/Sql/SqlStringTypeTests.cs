@@ -260,7 +260,7 @@ namespace Deveel.Data.Sql {
 			var result = type.Cast(sqlString, destType);
 
 			Assert.IsType<SqlNumber>(result);
-			Assert.Equal(expected, ((SqlNumber)result).ToInt64());
+			Assert.Equal(expected, (long) (SqlNumber)result);
 		}
 
 		[Theory]

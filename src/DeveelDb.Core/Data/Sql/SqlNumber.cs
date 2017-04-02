@@ -151,7 +151,7 @@ namespace Deveel.Data.Sql {
 			return State;
 		}
 
-		public static bool IsNan(SqlNumber number) {
+		public static bool IsNaN(SqlNumber number) {
 			return number.State == NumericState.NotANumber;
 		}
 
@@ -373,7 +373,7 @@ namespace Deveel.Data.Sql {
 			}
 		}
 
-		public float ToSingle() {
+		private float ToSingle() {
 			AssertNotNull();
 
 			switch (State) {
@@ -390,7 +390,7 @@ namespace Deveel.Data.Sql {
 			}
 		}
 
-		public long ToInt64() {
+		private long ToInt64() {
 			AssertNotNull();
 
 			if (CanBeInt64)
@@ -403,7 +403,7 @@ namespace Deveel.Data.Sql {
 			}
 		}
 
-		public int ToInt32() {
+		private int ToInt32() {
 			AssertNotNull();
 
 			if (CanBeInt32)
@@ -833,12 +833,28 @@ namespace Deveel.Data.Sql {
 			return number.ToInt16();
 		}
 
+		public static explicit operator long(SqlNumber number) {
+			return number.ToInt64();
+		}
+
+		public static explicit operator long?(SqlNumber number) {
+			return number.IsNull ? (long?) null : number.ToInt64();
+		}
+
 		public static explicit operator double?(SqlNumber number) {
 			return number.IsNull ? (double?) null : number.ToDouble();
 		}
 
 		public static explicit operator double(SqlNumber number) {
 			return number.ToDouble();
+		}
+
+		public static explicit operator float(SqlNumber number) {
+			return number.ToSingle();
+		}
+
+		public static explicit operator float?(SqlNumber number) {
+			return number.IsNull ? (float?) null : number.ToSingle();
 		}
 
 		#endregion
