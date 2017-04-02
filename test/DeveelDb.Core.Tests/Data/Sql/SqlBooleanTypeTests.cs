@@ -179,36 +179,22 @@ namespace Deveel.Data.Sql {
 			Assert.Throws<ArgumentException>(() => type.Compare(SqlBoolean.True, new SqlNumber(22)));
 		}
 
-		/*
-		TODO:
 		[Theory]
 		[InlineData(SqlTypeCode.Bit, true, "1")]
 		[InlineData(SqlTypeCode.Bit, false, "0")]
-		[InlineData(SqlTypeCode.Boolean, true, "true")]
-		[InlineData(SqlTypeCode.Boolean, false, "false")]
+		[InlineData(SqlTypeCode.Boolean, true, "TRUE")]
+		[InlineData(SqlTypeCode.Boolean, false, "FALSE")]
 		public void CastToString(SqlTypeCode typeCode, bool value, string expected) {
-			var type = PrimitiveTypes.Boolean(typeCode);
+			var type = new SqlBooleanType(typeCode);
 
 			var boolean = new SqlBoolean(value);
 
-			var casted = type.CastTo(boolean, PrimitiveTypes.String());
+			var casted = type.Cast(boolean, PrimitiveTypes.String());
 
 			Assert.IsType<SqlString>(casted);
 			Assert.Equal(expected, casted.ToString());
 		}
 
-		[InlineData(true, 1)]
-		[InlineData(false, 0)]
-		public void CastToNumber(bool value, int expected) {
-			var type = PrimitiveTypes.Boolean();
-			var boolean = new SqlBoolean(value);
-
-			var casted = type.CastTo(boolean, PrimitiveTypes.Numeric());
-
-			Assert.IsType<SqlNumber>(casted);
-			Assert.Equal(expected, ((SqlNumber) casted).ToInt32());
-		}
-		*/
 
 		[Theory]
 		[InlineData(true, 1)]

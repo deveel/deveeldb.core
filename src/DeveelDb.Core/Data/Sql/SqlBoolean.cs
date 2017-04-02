@@ -38,10 +38,14 @@ namespace Deveel.Data.Sql {
 		/// </summary>
 		public static readonly SqlBoolean True = new SqlBoolean(1);
 
+		public static readonly SqlString TrueString = new SqlString("TRUE");
+
 		/// <summary>
 		/// Represents the materialization of a <c>false</c> boolean.
 		/// </summary>
 		public static readonly SqlBoolean False = new SqlBoolean(0);
+
+		public static readonly SqlString FalseString = new SqlString("FALSE");
 
 		/// <summary>
 		/// Defines a <c>null</c> boolean.

@@ -35,7 +35,6 @@ namespace Deveel.Data.Sql {
 			Assert.IsType<SqlBooleanType>(type);
 			Assert.Equal(typeCode, type.TypeCode);
 			Assert.False(type.IsLargeObject);
-			Assert.False(type.IsNull);
 			Assert.False(type.IsReference);
 			Assert.True(type.IsPrimitive);
 			Assert.True(type.IsIndexable);
@@ -57,7 +56,6 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(precision, type.Precision);
 			Assert.Equal(scale, type.Scale);
 			Assert.False(type.IsLargeObject);
-			Assert.False(type.IsNull);
 			Assert.False(type.IsReference);
 			Assert.True(type.IsPrimitive);
 			Assert.True(type.IsIndexable);

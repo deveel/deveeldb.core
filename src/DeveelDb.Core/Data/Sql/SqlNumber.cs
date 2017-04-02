@@ -1,5 +1,5 @@
 ﻿// 
-//  Copyright 2010-2016 Deveel
+//  Copyright 2010-2017 Deveel
 // 
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -351,9 +351,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		public byte[] ToByteArray() {
-			return State == NumericState.None
-				? innerValue.MovePointRight(innerValue.Scale).ToBigInteger().ToByteArray()
-				: new byte[0];
+			if (State != NumericState.None)
+				return new byte[0];
+
+			return innerValue.UnscaledValue.ToByteArray();
 		}
 
 		public override string ToString() {
@@ -687,6 +688,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static bool TryParse(string s, out SqlNumber value) {
+			return TryParse(s, CultureInfo.InvariantCulture, out value);
+		}
+
+		public static bool TryParse(string s, IFormatProvider provider, out SqlNumber value) {
 			if (String.IsNullOrEmpty(s)) {
 				value = Null;
 				return false;
@@ -713,7 +718,7 @@ namespace Deveel.Data.Sql {
 
 			BigDecimal decimalValue;
 
-			if (!BigDecimal.TryParse(s, out decimalValue)) {
+			if (!BigDecimal.TryParse(s, provider, out decimalValue)) {
 				value = Null;
 				return false;
 			}
@@ -723,14 +728,18 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber Parse(string s) {
+			return Parse(s, CultureInfo.InvariantCulture);
+		}
+
+		public static SqlNumber Parse(string s, IFormatProvider formatProvider) {
 			SqlNumber value;
-			if (!TryParse(s, out value))
+			if (!TryParse(s, formatProvider, out value))
 				throw new FormatException(string.Format("Cannot parse the string '{0}' to a valid Numeric object.", s));
 
 			return value;
 		}
 
-				public static SqlNumber operator +(SqlNumber a, SqlNumber b) {
+		public static SqlNumber operator +(SqlNumber a, SqlNumber b) {
 			return a.Add(b);
 		}
 

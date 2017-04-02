@@ -118,14 +118,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		/// <summary>
-		/// Gets a value indicating whether this instance represents the
-		/// <c>NULL</c> type.
-		/// </summary>
-		public bool IsNull {
-			get { return TypeCode == SqlTypeCode.Null; }
-		}
-
-		/// <summary>
 		/// Gets a value indicating whether this instance is reference to another type.
 		/// </summary>
 		/// <value>
@@ -297,18 +289,18 @@ namespace Deveel.Data.Sql {
 			return a.CompareTo(b) != 0;
 		}
 
-		public virtual SqlBoolean Greather(ISqlValue a, ISqlValue b) {
+		public virtual SqlBoolean Greater(ISqlValue a, ISqlValue b) {
 			if (!a.IsComparableTo(b))
 				return SqlBoolean.Null;
 
-			return a.CompareTo(b) > 0;
+			return a.CompareTo(b) < 0;
 		}
 
 		public virtual SqlBoolean Smaller(ISqlValue a, ISqlValue b) {
 			if (!a.IsComparableTo(b))
 				return SqlBoolean.Null;
 
-			return a.CompareTo(b) < 0;
+			return a.CompareTo(b) > 0;
 		}
 
 		public virtual SqlBoolean GreaterOrEqual(ISqlValue a, ISqlValue b) {

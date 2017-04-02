@@ -62,27 +62,49 @@ namespace Deveel.Data.Sql {
 
 			var b = (SqlBoolean) value;
 
-			if (destType is SqlNumericType) {
-				if (b.IsNull)
-					return SqlNumber.Null;
+			if (destType is SqlNumericType)
+				return ToNumber(b);
 
-				return b ? SqlNumber.One : SqlNumber.Zero;
-			}
+			if (destType is SqlBinaryType)
+				return ToBinary(b);
 
-			if (destType is SqlBinaryType) {
-				if (b.IsNull)
-					return SqlBinary.Null;
-
-				var bytes = new[] {b ? (byte) 1 : (byte) 0};
-				return new SqlBinary(bytes);
-			}
-
-			if (destType is SqlStringType) {
-				// TODO:
-				throw new NotImplementedException();
-			}
+			if (destType is SqlStringType)
+				return ToString(b, (SqlStringType) destType);
 
 			return base.Cast(value, destType);
+		}
+
+		private SqlNumber ToNumber(SqlBoolean value) {
+			if (value.IsNull)
+				return SqlNumber.Null;
+
+			return value ? SqlNumber.One : SqlNumber.Zero;
+		}
+
+		private SqlBinary ToBinary(SqlBoolean value) {
+			if (value.IsNull)
+				return SqlBinary.Null;
+
+			var bytes = new[] { value ? (byte)1 : (byte)0 };
+			return new SqlBinary(bytes);
+		}
+
+		private SqlString ToString(SqlBoolean value, SqlStringType destType) {
+			if (value.IsNull) {
+				if (destType.IsLargeObject)
+					throw new NotImplementedException();
+
+				return SqlString.Null;
+			}
+
+			var s = Trim(ToString(value), destType.MaxSize);
+			return new SqlString(s);
+		}
+
+		private string Trim(string source, int maxSize) {
+			if (maxSize > 0 && source.Length > maxSize)
+				source = source.Substring(0, maxSize);
+			return source;
 		}
 
 		public override ISqlValue Reverse(ISqlValue value) {
@@ -131,10 +153,17 @@ namespace Deveel.Data.Sql {
 			var b = (SqlBoolean)obj;
 			if (b.IsNull)
 				return "NULL";
-			if (b == SqlBoolean.True)
-				return "TRUE";
-			if (b == SqlBoolean.False)
-				return "FALSE";
+			if (TypeCode == SqlTypeCode.Bit) {
+				if (b == SqlBoolean.True)
+					return "1";
+				if (b == SqlBoolean.False)
+					return "0";
+			} else {
+				if (b == SqlBoolean.True)
+					return "TRUE";
+				if (b == SqlBoolean.False)
+					return "FALSE";
+			}
 
 			return base.ToString(obj);
 		}
