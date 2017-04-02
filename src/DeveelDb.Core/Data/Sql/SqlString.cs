@@ -199,6 +199,19 @@ namespace Deveel.Data.Sql {
 			return new SqlString(source.PadRight(length, c));
 		}
 
+		public SqlString PadLeft(int length, char c) {
+			if (length < 0)
+				throw new ArgumentException();
+
+			if (IsNull)
+				return Null;
+
+			return new SqlString(source.PadLeft(length, c));
+		}
+
+		public SqlString PadLeft(int length)
+			=> PadLeft(length, ' ');
+
 		public bool Equals(SqlString other) {
 			return Equals(other, false);
 		}

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using Xunit;
 
@@ -22,6 +23,17 @@ namespace Deveel.Data.Sql {
 
 			Assert.Equal(expected, pad);
 		}
+
+		[Theory]
+		[InlineData("foo bar", 12, "     foo bar")]
+		[InlineData("the quick brow fox", 5, "the quick brow fox")]
+		public static void PadLeft(string source, int length, string expected) {
+			var s = new SqlString(source);
+			var pad = s.PadLeft(length);
+
+			Assert.Equal(expected, pad);
+		}
+
 
 		[Theory]
 		[InlineData("foo bar", 4, 'b')]
@@ -108,6 +120,29 @@ namespace Deveel.Data.Sql {
 			var result = s.ToCharArray();
 
 			Assert.Equal(s.Length, result.Length);
+		}
+
+		[Theory]
+		[InlineData("the quick brow fox jumped")]
+		public static void EnumerateCharaters(string source) {
+			var s = new SqlString(source);
+			var chars = s.ToArray();
+			Assert.Equal(s.Length, chars.Length);
+		}
+
+		[Theory]
+		[InlineData("Antonello", "Provenzano", false)]
+		[InlineData("Antonello", "antonello", false)]
+		[InlineData("", "", true)]
+		[InlineData("antonello", "antonello", true)]
+		public static void CompareByHashCode(string s1, string s2, bool expected) {
+			var sqlString1 = new SqlString(s1);
+			var sqlString2 = new SqlString(s2);
+
+			var hashCode1 = sqlString1.GetHashCode();
+			var hashCode2 = sqlString2.GetHashCode();
+
+			Assert.Equal(expected, hashCode1.Equals(hashCode2));
 		}
 	}
 }

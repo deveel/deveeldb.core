@@ -161,7 +161,7 @@ namespace Deveel.Data.Sql {
 			get { return State == NumericState.None && innerValue == null; }
 		}
 
-		private NumericState InverseState() {
+		internal NumericState InverseState() {
 			if (State == NumericState.NegativeInfinity)
 				return NumericState.PositiveInfinity;
 			if (State == NumericState.PositiveInfinity)
@@ -574,86 +574,6 @@ namespace Deveel.Data.Sql {
 			return Null;
 		}
 
-		private SqlNumber Add(SqlNumber value) {
-			if (State == NumericState.None) {
-				if (value.State == NumericState.None) {
-					if (IsNull || value.IsNull)
-						return Null;
-
-					return new SqlNumber(NumericState.None, innerValue.Add(value.innerValue));
-				}
-
-				return new SqlNumber(value.State, null);
-			}
-
-			return new SqlNumber(State, null);
-		}
-
-		private SqlNumber Subtract(SqlNumber value) {
-			if (State == NumericState.None) {
-				if (value.State == NumericState.None) {
-					if (IsNull || value.IsNull)
-						return Null;
-
-					return new SqlNumber(NumericState.None, innerValue.Subtract(value.innerValue));
-				}
-				return new SqlNumber(value.InverseState(), null);
-			}
-			
-			return new SqlNumber(State, null);
-		}
-
-		private SqlNumber Multiply(SqlNumber value) {
-			if (State == NumericState.None) {
-				if (value.State == NumericState.None) {
-					if (IsNull || value.IsNull)
-						return Null;
-
-					return new SqlNumber(NumericState.None, innerValue.Multiply(value.innerValue));
-				}
-
-				return new SqlNumber(value.State, null);
-			}
-
-			return new SqlNumber(State, null);
-		}
-
-		private SqlNumber Divide(SqlNumber value) {
-			if (State == NumericState.None) {
-				if (value.State == NumericState.None) {
-					if (IsNull || value.IsNull)
-						return Null;
-
-					BigDecimal divBy = value.innerValue;
-					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
-						return new SqlNumber(NumericState.None, innerValue.Divide(divBy, 10, RoundingMode.HalfUp));
-					} else {
-						throw new DivideByZeroException();
-					}
-				}
-			}
-
-			// Return NaN if we can't divide
-			return new SqlNumber(NumericState.NotANumber, null);
-		}
-
-		private SqlNumber Modulo(SqlNumber value) {
-			if (State == NumericState.None) {
-				if (value.State == NumericState.None) {
-					if (IsNull || value.IsNull)
-						return Null;
-
-					BigDecimal divBy = value.innerValue;
-					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
-						BigDecimal remainder = innerValue.Remainder(divBy);
-						return new SqlNumber(NumericState.None, remainder);
-					}
-				}
-			}
-
-			return new SqlNumber(NumericState.NotANumber, null);
-		}
-
 		private SqlNumber Negate() {
 			if (State == NumericState.None) {
 				if (IsNull)
@@ -752,23 +672,23 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber operator +(SqlNumber a, SqlNumber b) {
-			return a.Add(b);
+			return SqlMath.Add(a, b);
 		}
 
 		public static SqlNumber operator -(SqlNumber a, SqlNumber b) {
-			return a.Subtract(b);
+			return SqlMath.Subtract(a, b);
 		}
 
 		public static SqlNumber operator *(SqlNumber a, SqlNumber b) {
-			return a.Multiply(b);
+			return SqlMath.Multiply(a, b);
 		}
 
 		public static SqlNumber operator /(SqlNumber a, SqlNumber b) {
-			return a.Divide(b);
+			return SqlMath.Divide(a, b);
 		}
 
 		public static SqlNumber operator %(SqlNumber a, SqlNumber b) {
-			return a.Modulo(b);
+			return SqlMath.Modulo(a, b);
 		}
 
 		public static SqlNumber operator |(SqlNumber a, SqlNumber b) {

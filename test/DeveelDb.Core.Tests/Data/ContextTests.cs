@@ -20,6 +20,11 @@ namespace Deveel.Data {
 			Assert.Null((context as IContext).ContextName);
 		}
 
+		[Fact]
+		public void DisposeContext() {
+			context.Dispose();
+		}
+
 		public void Dispose() {
 			if (context != null)
 				context.Dispose();
