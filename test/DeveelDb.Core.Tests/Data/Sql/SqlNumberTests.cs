@@ -164,14 +164,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Fact]
-		public static void Integer_Greater_True() {
-			var value1 = new SqlNumber(76);
-			var value2 = new SqlNumber(54);
-
-			Assert.True(value1 > value2);
-		}
-
-		[Fact]
 		public static void BigNumber_Greater_True() {
 			var value1 = SqlNumber.Parse("98356278.911288837773848500069994933229238e45789");
 			var value2 = SqlNumber.Parse("348299.01991828833333333333488888388829911182227373738488847112349928");
@@ -227,129 +219,90 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(value, (byte)result);
 		}
 
-		[Theory]
-		[InlineData(466637, 9993, 476630)]
-		public static void Operator_Add(int value1, int value2, int expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
+		#region Operators
 
-			var result = num1 + num2;
+		#region Binary Operators
+
+		private static void BinaryOp(Func<SqlNumber, SqlNumber, SqlNumber> op, double? a, double? b, double? expected) {
+			var num1 = (SqlNumber)a;
+			var num2 = (SqlNumber)b;
+
+			var result = op(num1, num2);
 
 			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-			Assert.True(result.CanBeInt32);
+			var expectedNumber = (SqlNumber)expected;
 
-			var intResult = (int) result;
-
-			Assert.Equal(expected, intResult);
+			Assert.Equal(expectedNumber, result);
 		}
 
-		[Theory]
-		[InlineData(5455261, 119020, 5336241)]
-		public static void Operator_Subtract(int value1, int value2, int expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
+		private static void BinaryOp(Func<SqlNumber, SqlNumber, SqlBoolean> op, double? a, double? b, bool? expected) {
+			var num1 = (SqlNumber)a;
+			var num2 = (SqlNumber)b;
 
-			var result = num1 - num2;
+			var result = op(num1, num2);
 
 			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-			Assert.True(result.CanBeInt32);
+			var expectedResult = (SqlBoolean)expected;
 
-			var intResult = (int) result;
-
-			Assert.Equal(expected, intResult);
-		}
-
-		[Theory]
-		[InlineData(2783, 231, 642873)]
-		public static void Operator_Multiply(int value1, int value2, int expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 * num2;
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-			Assert.True(result.CanBeInt32);
-
-			var intResult = (int) result;
-
-			Assert.Equal(expected, intResult);
+			Assert.Equal(expectedResult, result);
 		}
 
 		[Theory]
 		[InlineData(4533, 90, 33)]
-		public static void Operator_Modulo(int value1, int value2, float expected) {
-			var number1 = new SqlNumber(value1);
-			var number2 = new SqlNumber(value2);
+		[InlineData(6758, null, null)]
+		[InlineData(null, 90334.32e2, null)]
+		[InlineData(Double.NaN, 90332, Double.NaN)]
+		public static void Operator_Modulo(double? value1, double? value2, double? expected) {
+			BinaryOp((x, y) => x % y, value1, value2, expected);
+		}
 
-			var result = number1 % number2;
+		[Theory]
+		[InlineData(466637, 9993, 476630)]
+		[InlineData(7833.432, -23, 7810.432)]
+		[InlineData(0933.42, Double.NegativeInfinity, Double.NegativeInfinity)]
+		[InlineData(122394, null, null)]
+		[InlineData(Double.PositiveInfinity, 344, Double.PositiveInfinity)]
+		[InlineData(null, null, null)]
+		[InlineData(null, 5466.903e3, null)]
+		public static void Operator_Add(double? value1, double? value2, double? expected) {
+			BinaryOp((x, y) => x + y, value1, value2, expected);
+		}
 
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
+		[Theory]
+		[InlineData(5455261, 119020, 5336241)]
+		[InlineData(-45563, 453.332, -46016.332)]
+		[InlineData(-5433, Double.PositiveInfinity, Double.NegativeInfinity)]
+		[InlineData(Double.PositiveInfinity, Double.NegativeInfinity, Double.PositiveInfinity)]
+		[InlineData(4322, null, null)]
+		[InlineData(null, null, null)]
+		public static void Operator_Subtract(double? value1, double? value2, double? expected) {
+			BinaryOp((x, y) => x - y, value1, value2, expected);
+		}
 
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
+		[Theory]
+		[InlineData(2783, 231, 642873)]
+		[InlineData(-9032.654, -45, 406469.43)]
+		[InlineData(434.22, Double.PositiveInfinity, Double.PositiveInfinity)]
+		[InlineData(784.33, null, null)]
+		[InlineData(null, null, null)]
+		public static void Operator_Multiply(double value1, double value2, double expected) {
+			BinaryOp((x, y) => x * y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(1152663, 9929, 116.0905428543)]
 		[InlineData(40, 5, 8)]
-		public static void Operator_Divide(int value1, int value2, double expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 / num2;
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
+		[InlineData(566.499, null, null)]
+		public static void Operator_Divide(double? value1, double? value2, double? expected) {
+			BinaryOp((x, y) => x / y, value1, value2, expected);
 		}
 
 		[Theory]
-		[InlineData(7782, -7782)]
-		[InlineData(-9021, 9021)]
-		public static void Operator_Negate(int value, int expected) {
-			var number = new SqlNumber(value);
+		[InlineData(5663.22)]
+		public static void Operator_DivideByZero(double? value) {
+			var number = (SqlNumber) value;
 
-			var result = -number;
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-			Assert.True(result.CanBeInt32);
-
-			Assert.Equal(expected, (int) result);
-		}
-
-		[Theory]
-		[InlineData(7782, 7782)]
-		[InlineData(-9021, -9021)]
-		public static void Operator_Plus(int value, int expected) {
-			var number = new SqlNumber(value);
-
-			var result = +number;
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-			Assert.True(result.CanBeInt32);
-
-			Assert.Equal(expected, (int) result);
-		}
-
-		[Theory]
-		[InlineData(4599, -4600)]
-		public static void Operator_Not(double value, double expected) {
-			var number = new SqlNumber(value);
-			var result = ~number;
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-			Assert.Equal(expected, (double) result);
+			Assert.Throws<DivideByZeroException>(() => number / SqlNumber.Zero);
 		}
 
 		[Theory]
@@ -358,240 +311,119 @@ namespace Deveel.Data.Sql {
 		[InlineData(4355, Double.PositiveInfinity, Double.PositiveInfinity)]
 		[InlineData(Double.NaN, Double.NaN, Double.NaN)]
 		[InlineData(5455, 211.211, null)]
-		public static void Operator_And(double value1, double value2, double? expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 & num2;
-
-			Assert.NotNull(result);
-
-			var doubleResult = (double?)result;
-
-			Assert.Equal(expected, doubleResult);
+		[InlineData(null, null, null)]
+		[InlineData(445, null, null)]
+		public static void Operator_And(double? value1, double? value2, double? expected) {
+			BinaryOp((x, y) => x & y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(46677, 9982, false)]
 		[InlineData(92677, 92677, true)]
-		public static void Operator_Int32Equal(int value1, int value2, bool expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 == num2;
-
-			Assert.Equal(expected, result);
-		}
-
-		[Fact]
-		public static void Operator_EqualToNull() {
-			var number = new SqlNumber(563663.9920);
-
-			var result = number == null;
-
-			Assert.Equal(false, result);
+		[InlineData(9455, null, false)]
+		[InlineData(null, null, true)]
+		public static void Operator_Equal(double? value1, double? value2, bool? expected) {
+			BinaryOp((x, y) => x == y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(46677, 9982, true)]
 		[InlineData(92677, 92677, false)]
-		public static void Operator_Int32NotEqual(int value1, int value2, bool expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 != num2;
-
-			Assert.Equal(expected, result);
+		[InlineData(84955, null, true)]
+		[InlineData(null, null, false)]
+		[InlineData(null, 89334, true)]
+		public static void Operator_NotEqual(double? value1, double? value2, bool? expected) {
+			BinaryOp((x, y) => x != y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(4785, 112, 4849)]
 		[InlineData(6748, Double.PositiveInfinity, Double.PositiveInfinity)]
 		[InlineData(8944.3223, 334, null)]
-		public static void Operator_Or(double value1, double value2, double? expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 | num2;
-
-			Assert.NotNull(result);
-			Assert.Equal(expected, (double?) result);
+		[InlineData(null, null, null)]
+		public static void Operator_Or(double? value1, double? value2, double? expected) {
+			BinaryOp((x, y) => x|y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(73844, 13, 73849)]
 		[InlineData(566, Double.NaN, Double.NaN)]
 		[InlineData(90445.332, 1123.211, null)]
-		public static void Operator_XOr(double value1, double value2, double? expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 ^ num2;
-
-			Assert.NotNull(result);
-			Assert.Equal(expected, (double?)result);
+		[InlineData(null, null, null)]
+		[InlineData(445, null, null)]
+		public static void Operator_XOr(double? value1, double? value2, double? expected) {
+			BinaryOp((x, y) => x ^ y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(2133, 123, true)]
 		[InlineData(65484.213e21, 54331432.546e121, false)]
-		public static void Operator_Greater(double value1, double value2, bool expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 > num2;
-			Assert.Equal(expected, result);
+		[InlineData(1234, null, null)]
+		[InlineData(null, null, null)]
+		public static void Operator_Greater(double? value1, double? value2, bool? expected) {
+			BinaryOp((x, y) => x > y, value1, value2, expected);
 		}
+
+		[Theory]
+		[InlineData(546649, 2112, true)]
+		[InlineData(4333.678, 4333.678, true)]
+		[InlineData(93445, 1200.345e32, false)]
+		public static void Operator_GreaterOrEqual(double? value1, double? value2, bool? expected) {
+			BinaryOp((x, y) => x >= y, value1, value2, expected);
+		} 
 
 		[Theory]
 		[InlineData(7484, 1230449, true)]
 		[InlineData(102943e45, 201e12, false)]
-		public static void Operator_Smaller(double value1, double value2, bool expected) {
-			var num1 = new SqlNumber(value1);
-			var num2 = new SqlNumber(value2);
-
-			var result = num1 < num2;
-			Assert.Equal(expected, result);
+		public static void Operator_Smaller(double? value1, double? value2, bool? expected) {
+			BinaryOp((x, y) => x < y, value1, value2, expected);
 		}
 
 		[Theory]
-		[InlineData(455, 3, 94196375)]
-		public static void Function_Pow(int value, int exp, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.Pow(number, new SqlNumber(exp));
+		[InlineData(893.33, 322.45e23, true)]
+		[InlineData(2331, 15e3, true)]
+		[InlineData(901.54e123, 901.54e123, true)]
+		[InlineData(9120, 102, false)]
+		public static void Operator_SmallerOrEqual(double? value1, double? value2, bool? expected) {
+			BinaryOp((x, y) => x <= y, value1, value2, expected);
+		}
+
+		#endregion
+
+		private static void UnaryOp(Func<SqlNumber, SqlNumber> op, double? value, double? expected) {
+			var number = (SqlNumber)value;
+
+			var result = op(number);
+			var expectedResult = (SqlNumber) expected;
 
 			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
+			Assert.Equal(expectedResult, result);
 		}
 
 		[Theory]
-		[InlineData(99820, 48993, 1.0659007887179619)]
-		public static void Function_Log(int value, int newBase, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.Log(number, new SqlNumber(newBase));
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
+		[InlineData(7782, -7782)]
+		[InlineData(-9021, 9021)]
+		[InlineData(null, null)]
+		public static void Operator_Negate(double? value, double? expected) {
+			UnaryOp(x => -x, value, expected);
 		}
 
 		[Theory]
-		[InlineData(9963, -0.53211858514845722)]
-		public static void Function_Cos(int value, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.Cos(number);
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
+		[InlineData(7782, 7782)]
+		[InlineData(-9021, -9021)]
+		[InlineData(null, null)]
+		public static void Operator_Plus(double? value, double? expected) {
+			UnaryOp(x => +x, value, expected);
 		}
 
 		[Theory]
-		[InlineData(0.36f, 1.0655028755774869)]
-		public static void Function_CosH(float value, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.CosH(number);
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
+		[InlineData(4599, -4600)]
+		[InlineData(null, null)]
+		public static void Operator_Not(double? value, double? expected) {
+			UnaryOp(x => ~x, value, expected);
 		}
 
-		[Theory]
-		[InlineData(-45636.0003922, 45636.0003922)]
-		public static void Function_Abs(double value, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.Abs(number);
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
-		}
-
-		[Theory]
-		[InlineData(559604.003100, 23.625265230100389)]
-		public static void Function_Tan(double value, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.Tan(number);
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
-		}
-
-		[Theory]
-		[InlineData(89366647.992, 1)]
-		public static void Function_TanH(double value, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.TanH(number);
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
-		}
-
-		[Theory]
-		[InlineData(929928.00111992934, 929928.0011199294)]
-		public static void Function_Round(double value, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.Round(number);
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var expectedNumber = new SqlNumber(expected);
-			Assert.Equal(expectedNumber, result);
-		}
-
-		[Theory]
-		[InlineData(929928.00111992934, 10, 929928.0011)]
-		public static void Function_RoundWithPrecision(double value, int precision, double expected) {
-			var number = new SqlNumber(value);
-			var result = SqlMath.Round(number, precision);
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
-		}
-
-		[Theory]
-		[InlineData(02993011.338, -0.3040696985546506)]
-		public static void Function_Sin(double value, double expected) {
-			var number = new SqlNumber(value);
-			var result =SqlMath.Sin(number);
-
-			Assert.NotNull(result);
-			Assert.False(result.IsNull);
-
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
-		}
+		#endregion
 
 		[Theory]
 		[InlineData(455.331, "455.3310000000000")]
@@ -599,8 +431,8 @@ namespace Deveel.Data.Sql {
 		[InlineData(126477489, "126477489")]
 		[InlineData(-67488493, "-67488493")]
 		[InlineData(Double.NaN, "NaN")]
-		[InlineData(Double.PositiveInfinity, "+Inf")]
-		[InlineData(Double.NegativeInfinity, "-Inf")]
+		[InlineData(Double.PositiveInfinity, "+Infinity")]
+		[InlineData(Double.NegativeInfinity, "-Infinity")]
 		public static void GetString(double value, string expected) {
 			var number = new SqlNumber(value);
 			var s = number.ToString();

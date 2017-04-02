@@ -144,7 +144,8 @@ namespace Deveel.Data.Sql {
 
 			if (other is SqlNumber) {
 				var num = (SqlNumber) other;
-				return num == SqlNumber.Zero || num == SqlNumber.One;
+				return num == SqlNumber.Zero ||
+				       num == SqlNumber.One;
 			}
 
 			return false;
@@ -359,6 +360,17 @@ namespace Deveel.Data.Sql {
 
 		public static SqlBoolean operator !(SqlBoolean a) {
 			return a.Negate();
+		}
+
+		public static bool operator true(SqlBoolean b) {
+			if (b.IsNull)
+				throw new InvalidCastException();
+
+			return (bool) b;
+		}
+
+		public static bool operator false(SqlBoolean b) {
+			return !(b);
 		}
 
 		/// <summary>

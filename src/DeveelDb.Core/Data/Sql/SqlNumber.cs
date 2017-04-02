@@ -21,7 +21,7 @@ using System.Globalization;
 using Deveel.Math;
 
 namespace Deveel.Data.Sql {
-	public struct SqlNumber : ISqlValue, IComparable<SqlNumber>, IEquatable<SqlNumber>, IConvertible {
+	public struct SqlNumber : ISqlValue, IComparable<SqlNumber>, IEquatable<SqlNumber>, IConvertible, ISqlFormattable {
 		internal readonly BigDecimal innerValue;
 		private readonly int byteCount;
 		private readonly long valueAsLong;
@@ -146,14 +146,14 @@ namespace Deveel.Data.Sql {
 			if (!(obj is SqlNumber))
 				throw new ArgumentException();
 
-			return CompareTo((SqlNumber) obj);
+			return CompareToNonNull((SqlNumber) obj);
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
 			if (!(other is SqlNumber))
 				throw new ArgumentException();
 
-			return CompareTo((SqlNumber) other);
+			return CompareToNonNull((SqlNumber) other);
 		}
 
 		public bool IsNull {
@@ -212,7 +212,22 @@ namespace Deveel.Data.Sql {
 			return innerValue.GetHashCode() ^ State.GetHashCode();
 		}
 
-		public int CompareTo(SqlNumber other) {
+		int IComparable<SqlNumber>.CompareTo(SqlNumber other) {
+			return CompareToNonNull(other);
+		}
+
+		private int CompareToNonNull(SqlNumber other) {
+			var result = CompareTo(other);
+			if (result == null)
+				throw new InvalidOperationException("Cannot compare on NULL");
+
+			return (int)result;
+		}
+
+		public int? CompareTo(SqlNumber other) {
+			if (IsNull || other.IsNull)
+				return null;
+
 			if (Equals(this, other))
 				return 0;
 
@@ -371,17 +386,29 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override string ToString() {
-			switch (State) {
-				case (NumericState.None):
-					return innerValue.ToString();
-				case (NumericState.NegativeInfinity):
-					return "-Inf";
-				case (NumericState.PositiveInfinity):
-					return "+Inf";
-				case (NumericState.NotANumber):
-					return "NaN";
-				default:
-					throw new InvalidCastException("Unknown number state");
+			return this.ToSqlString();
+		}
+
+		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
+			if (IsNull) {
+				builder.Append("NULL");
+			} else {
+				switch (State) {
+					case (NumericState.None):
+						builder.Append(innerValue.ToString());
+						break;
+					case (NumericState.NegativeInfinity):
+						builder.Append("-Infinity");
+						break;
+					case (NumericState.PositiveInfinity):
+						builder.Append("+Infinity");
+						break;
+					case (NumericState.NotANumber):
+						builder.Append("NaN");
+						break;
+					default:
+						throw new InvalidCastException("Unknown number state");
+				}
 			}
 		}
 
@@ -494,6 +521,8 @@ namespace Deveel.Data.Sql {
 				return this;
 			if (value.State != NumericState.None)
 				return value;
+			if (IsNull || value.IsNull)
+				return Null;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();
@@ -509,6 +538,8 @@ namespace Deveel.Data.Sql {
 				return this;
 			if (value.State != NumericState.None)
 				return value;
+			if (IsNull || value.IsNull)
+				return Null;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();
@@ -524,6 +555,8 @@ namespace Deveel.Data.Sql {
 				return this;
 			if (value.State != NumericState.None)
 				return value;
+			if (IsNull || value.IsNull)
+				return Null;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();
@@ -585,8 +618,10 @@ namespace Deveel.Data.Sql {
 						return Null;
 
 					BigDecimal divBy = value.innerValue;
-					if (divBy.CompareTo (BigDecimal.Zero) != 0) {
+					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
 						return new SqlNumber(NumericState.None, innerValue.Divide(divBy, 10, RoundingMode.HalfUp));
+					} else {
+						throw new DivideByZeroException();
 					}
 				}
 			}
@@ -613,8 +648,13 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber Negate() {
-			if (State == NumericState.None)
+			if (State == NumericState.None) {
+				if (IsNull)
+					return Null;
+
 				return new SqlNumber(innerValue.Negate());
+			}
+
 			if (State == NumericState.NegativeInfinity ||
 				State == NumericState.PositiveInfinity)
 				return new SqlNumber(InverseState(), null);
@@ -623,8 +663,13 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber Plus() {
-			if (State == NumericState.None)
+			if (State == NumericState.None) {
+				if (IsNull)
+					return Null;
+
 				return new SqlNumber(innerValue.Plus());
+			}
+
 			if (State == NumericState.NegativeInfinity ||
 				State == NumericState.PositiveInfinity)
 				return new SqlNumber(InverseState(), null);
@@ -633,8 +678,13 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber Not() {
-			if (State == NumericState.None)
+			if (State == NumericState.None) {
+				if (IsNull)
+					return Null;
+
 				return new SqlNumber(new BigDecimal(~innerValue.ToBigInteger()));
+			}
+
 			if (State == NumericState.NegativeInfinity ||
 				State == NumericState.PositiveInfinity)
 				return new SqlNumber(InverseState(), null);
@@ -738,29 +788,43 @@ namespace Deveel.Data.Sql {
 			return a.Not();
 		}
 
-		public static bool operator ==(SqlNumber a, SqlNumber b) {				
+		public static SqlBoolean operator ==(SqlNumber a, SqlNumber b) {	
 			return a.Equals(b);
 		}
 
-		public static bool operator !=(SqlNumber a, SqlNumber b) {
+		public static SqlBoolean operator !=(SqlNumber a, SqlNumber b) {
 			return !(a == b);
 		}
 
-		public static bool operator >(SqlNumber a, SqlNumber b) {
-			return a.CompareTo(b) > 0;
-		}
-
-		public static bool operator <(SqlNumber a, SqlNumber b) {
-			return a.CompareTo(b) < 0;
-		}
-
-		public static bool operator >=(SqlNumber a, SqlNumber b) {
+		public static SqlBoolean operator >(SqlNumber a, SqlNumber b) {
 			var i = a.CompareTo(b);
+			if (i == null)
+				return SqlBoolean.Null;
+
+			return i > 0;
+		}
+
+		public static SqlBoolean operator <(SqlNumber a, SqlNumber b) {
+			var i = a.CompareTo(b);
+			if (i == null)
+				return SqlBoolean.Null;
+
+			return i < 0;
+		}
+
+		public static SqlBoolean operator >=(SqlNumber a, SqlNumber b) {
+			var i = a.CompareTo(b);
+			if (i == null)
+				return SqlBoolean.Null;
+
 			return i == 0 || i > 0;
 		}
 
-		public static bool operator <=(SqlNumber a, SqlNumber b) {
+		public static SqlBoolean operator <=(SqlNumber a, SqlNumber b) {
 			var i = a.CompareTo(b);
+			if (i == null)
+				return SqlBoolean.Null;
+
 			return i == 0 || i < 0;
 		}
 
@@ -812,6 +876,14 @@ namespace Deveel.Data.Sql {
 
 		public static explicit operator float?(SqlNumber number) {
 			return number.IsNull ? (float?) null : number.ToSingle();
+		}
+
+		public static explicit operator SqlNumber(double? value) {
+			return value == null ? SqlNumber.Null : new SqlNumber(value.Value);
+		}
+
+		public static explicit operator SqlNumber(double value) {
+			return new SqlNumber(value);
 		}
 
 		#endregion
