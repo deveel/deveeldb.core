@@ -89,7 +89,7 @@ namespace Deveel.Data.Sql {
 		public static void CompareToInvalidState(double value1, double value2, int expected) {
 			var number1 = new SqlNumber(value1);
 			var number2 = new SqlNumber(value2);
-			Assert.Equal(expected, number1.CompareTo(number2));
+			Assert.Equal(expected, (int) number1.CompareTo(number2));
 		}
 
 		[Theory]

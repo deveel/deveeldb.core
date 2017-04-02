@@ -26,7 +26,9 @@ namespace Deveel.Data.Sql {
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			throw new NotSupportedException();
+			if (other == null || other.IsNull)
+				return 0;
+			return 1;
 		}
 
 		public bool IsNull {

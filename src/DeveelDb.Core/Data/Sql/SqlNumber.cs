@@ -28,6 +28,7 @@ namespace Deveel.Data.Sql {
 
 		public static readonly SqlNumber Zero = new SqlNumber(NumericState.None, BigDecimal.Zero);
 		public static readonly SqlNumber One = new SqlNumber(NumericState.None, BigDecimal.One);
+		public static readonly SqlNumber MinusOne = new SqlNumber(NumericState.None, new BigDecimal(-1));
 		public static readonly SqlNumber Null = new SqlNumber(NumericState.None, null);
 
 		public static readonly SqlNumber NaN = new SqlNumber(NumericState.NotANumber, null);
@@ -218,41 +219,41 @@ namespace Deveel.Data.Sql {
 
 		private int CompareToNonNull(SqlNumber other) {
 			var result = CompareTo(other);
-			if (result == null)
+			if (result.IsNull)
 				throw new InvalidOperationException("Cannot compare on NULL");
 
 			return (int)result;
 		}
 
-		public int? CompareTo(SqlNumber other) {
+		public SqlNumber CompareTo(SqlNumber other) {
 			if (IsNull || other.IsNull)
-				return null;
+				return Null;
 
 			if (Equals(this, other))
-				return 0;
+				return Zero;
 
 			// If this is a non-infinity number
 			if (State == NumericState.None) {
 				// If both values can be represented by a long value
 				if (CanBeInt64 && other.CanBeInt64) {
 					// Perform a long comparison check,
-					return valueAsLong.CompareTo(other.valueAsLong);
+					return (SqlNumber) valueAsLong.CompareTo(other.valueAsLong);
 				}
 
 				// And the compared number is non-infinity then use the BigDecimal
 				// compareTo method.
 				if (other.State == NumericState.None)
-					return innerValue.CompareTo(other.innerValue);
+					return (SqlNumber) innerValue.CompareTo(other.innerValue);
 
 				// Comparing a regular number with a NaN number.
 				// If positive infinity or if NaN
 				if (other.State == NumericState.PositiveInfinity ||
 				    other.State == NumericState.NotANumber) {
-					return -1;
+					return MinusOne;
 				}
 					// If negative infinity
 				if (other.State == NumericState.NegativeInfinity)
-					return 1;
+					return One;
 
 				throw new ArgumentException("Unknown number state.");
 			}
@@ -262,12 +263,12 @@ namespace Deveel.Data.Sql {
 			if (other.State == NumericState.None) {
 				// Yes, negative infinity
 				if (State == NumericState.NegativeInfinity)
-					return -1;
+					return MinusOne;
 
 				// positive infinity or NaN
 				if (State == NumericState.PositiveInfinity ||
 				    State == NumericState.NotANumber)
-					return 1;
+					return One;
 
 				throw new ArgumentException("Unknown number state.");
 			}
@@ -275,7 +276,13 @@ namespace Deveel.Data.Sql {
 			// Comparing NaN number with a NaN number.
 			// This compares -Inf less than Inf and NaN and NaN greater than
 			// Inf and -Inf.  -Inf < Inf < NaN
-			return (State - other.State);
+			var c = (State - other.State);
+			if (c == 0)
+				return Zero;
+			if (c < 0)
+				return MinusOne;
+
+			return One;
 		}
 
 		TypeCode IConvertible.GetTypeCode() {
@@ -798,34 +805,34 @@ namespace Deveel.Data.Sql {
 
 		public static SqlBoolean operator >(SqlNumber a, SqlNumber b) {
 			var i = a.CompareTo(b);
-			if (i == null)
+			if (i.IsNull)
 				return SqlBoolean.Null;
 
-			return i > 0;
+			return i.valueAsLong > 0;
 		}
 
 		public static SqlBoolean operator <(SqlNumber a, SqlNumber b) {
 			var i = a.CompareTo(b);
-			if (i == null)
+			if (i.IsNull)
 				return SqlBoolean.Null;
 
-			return i < 0;
+			return i.valueAsLong < 0;
 		}
 
 		public static SqlBoolean operator >=(SqlNumber a, SqlNumber b) {
 			var i = a.CompareTo(b);
-			if (i == null)
+			if (i.IsNull)
 				return SqlBoolean.Null;
 
-			return i == 0 || i > 0;
+			return i.valueAsLong == 0 || i.valueAsLong > 0;
 		}
 
 		public static SqlBoolean operator <=(SqlNumber a, SqlNumber b) {
 			var i = a.CompareTo(b);
-			if (i == null)
+			if (i.IsNull)
 				return SqlBoolean.Null;
 
-			return i == 0 || i < 0;
+			return i.valueAsLong == 0 || i.valueAsLong < 0;
 		}
 
 		#region Explicit Operators
@@ -890,7 +897,7 @@ namespace Deveel.Data.Sql {
 
 		#region NumericState
 
-		internal enum NumericState : byte {
+		internal enum NumericState {
 			None = 0,
 			NegativeInfinity = 1,
 			PositiveInfinity = 2,
