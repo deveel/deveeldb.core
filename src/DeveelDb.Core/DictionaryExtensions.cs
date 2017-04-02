@@ -17,14 +17,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
 namespace Deveel {
-	static class DictionaryExtensions {
-		public static T GetValue<T>(this IEnumerable<KeyValuePair<string, object>> pairs, string key,
-			IFormatProvider provider) {
+	public static class DictionaryExtensions {
+		public static T GetValue<T>(this IEnumerable<KeyValuePair<string, object>> pairs, string key) {
+			return GetValue<T>(pairs, key, CultureInfo.InvariantCulture);
+		}
+
+		public static T GetValue<T>(this IEnumerable<KeyValuePair<string, object>> pairs, string key, IFormatProvider provider) {
 			return pairs.ToDictionary(x => x.Key, y => y.Value).GetValue<T>(key, provider);
+		}
+
+		public static T GetValue<T>(this IDictionary<string, object> dictionary, string key) {
+			return GetValue<T>(dictionary, key, CultureInfo.InvariantCulture);
 		}
 
 		public static T GetValue<T>(this IDictionary<string, object> dictionary, string key, IFormatProvider provider) {

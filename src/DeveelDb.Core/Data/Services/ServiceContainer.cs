@@ -158,7 +158,7 @@ namespace Deveel.Data.Services {
 
 		public bool IsRegistered(Type serviceType, object key) {
 			if (serviceType == null)
-				throw new ArgumentNullException("serviceType");
+				throw new ArgumentNullException(nameof(serviceType));
 
 			if (container == null)
 				throw new InvalidOperationException("The container was not initialized.");

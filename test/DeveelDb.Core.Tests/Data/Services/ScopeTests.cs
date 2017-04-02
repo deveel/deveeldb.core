@@ -41,6 +41,17 @@ namespace Deveel.Data.Services {
 			Assert.IsType(serviceType, service);
 		}
 
+		[Fact]
+		public void RegisterNullService() {
+			var provider = new ServiceContainer();
+			Assert.Throws<ArgumentNullException>(() => provider.Register(null));
+		}
+
+		[Fact]
+		public void RegisterNonInstantiableService() {
+			var provider = new ServiceContainer();
+			Assert.Throws<ServiceException>(() => provider.Register<IService>());
+		}
 
 		[Fact]
 		public void OpenScopeAndResolveParent() {
@@ -105,6 +116,20 @@ namespace Deveel.Data.Services {
 		}
 
 		[Fact]
+		public void ResolveNotRegistered() {
+			var provider = new ServiceContainer();
+			var service = provider.Resolve<IService>();
+
+			Assert.Null(service);
+		}
+
+		[Fact]
+		public void ResolveNullService() {
+			var provider = new ServiceContainer();
+			Assert.Throws<ArgumentNullException>(() => provider.Resolve(null));
+		}
+
+		[Fact]
 		public void RegisterManyAndResolveOne() {
 			var provider = new ServiceContainer();
 			provider.Register<IService, ServiceOne>();
@@ -127,6 +152,12 @@ namespace Deveel.Data.Services {
 
 			Assert.NotNull(service);
 			Assert.IsType<ServiceOne>(service);
+		}
+
+		[Fact]
+		public void RegisterNullInstance() {
+			var provider = new ServiceContainer();
+			Assert.Throws<ArgumentNullException>(() => provider.RegisterInstance<IService>(null));
 		}
 
 		[Fact]
@@ -159,9 +190,65 @@ namespace Deveel.Data.Services {
 			Assert.Throws<ServiceException>(() => provider.Register<IService>());
 		}
 
+		[Fact]
+		public void DisposeProvider() {
+			var provider = new ServiceContainer();
+			provider.Register<IService, DisposableService>();
+
+			var service = provider.Resolve<IService>();
+
+			Assert.IsType<DisposableService>(service);
+
+			var value = service.Do();
+			Assert.Equal("I'm alive!", value);
+
+			provider.Dispose();
+
+			Assert.True(((DisposableService)service).Disposed);
+			Assert.Throws<ObjectDisposedException>(() => service.Do());
+		}
+
+		[Fact]
+		public void ResolveAfterDispose() {
+			var provider = new ServiceContainer();
+			provider.Register<IService, DisposableService>();
+
+			provider.Dispose();
+
+			Assert.Throws<InvalidOperationException>(() => provider.Resolve<IService>());
+		}
+
+		[Fact]
+		public void RegisterAfterDispose() {
+			var provider = new ServiceContainer();
+			provider.Register<IService, DisposableService>();
+
+			provider.Dispose();
+
+			Assert.Throws<InvalidOperationException>(() => provider.Register<IService, ServiceOne>());
+		}
+
+		[Fact]
+		public void IsRegisteredAfterDispose() {
+			var provider = new ServiceContainer();
+			provider.Register<IService, DisposableService>();
+
+			provider.Dispose();
+
+			Assert.Throws<InvalidOperationException>(() => provider.IsRegistered<IService>());
+		}
+
+		[Fact]
+		public void IsRegisteredWithNullService() {
+			var provider = new ServiceContainer();
+			provider.Register<IService, DisposableService>();
+
+			Assert.Throws<ArgumentNullException>(() => provider.IsRegistered(null));
+		}
+
 		#region IService
 
-		private interface IService {
+	private interface IService {
 			object Do();
 		}
 
@@ -182,6 +269,28 @@ namespace Deveel.Data.Services {
 		class ServiceTwo : IService {
 			public object Do() {
 				return "Hello!";
+			}
+		}
+
+		#endregion
+
+		#region DisposableService
+
+		class DisposableService : IService, IDisposable {
+			public bool Disposed { get; private set; }
+
+			private void AssertNotDisposed() {
+				if (Disposed)
+					throw new ObjectDisposedException(GetType().Name);
+			}
+
+			public object Do() {
+				AssertNotDisposed();
+				return "I'm alive!";
+			}
+
+			public void Dispose() {
+				Disposed = true;
 			}
 		}
 

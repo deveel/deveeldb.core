@@ -92,7 +92,7 @@ namespace Deveel.Data.Sql {
 			if (Double.IsPositiveInfinity(value))
 				return NumericState.PositiveInfinity;
 			if (Double.IsNegativeInfinity(value))
-				return NumericState.PositiveInfinity;
+				return NumericState.NegativeInfinity;
 			if (Double.IsNaN(value))
 				return NumericState.NotANumber;
 			if (Double.IsInfinity(value))
@@ -341,9 +341,9 @@ namespace Deveel.Data.Sql {
 				case (NumericState.None):
 					return innerValue.ToString();
 				case (NumericState.NegativeInfinity):
-					return "-Infinity";
+					return "-Inf";
 				case (NumericState.PositiveInfinity):
-					return "Infinity";
+					return "+Inf";
 				case (NumericState.NotANumber):
 					return "NaN";
 				default:
@@ -456,8 +456,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber XOr(SqlNumber value) {
-			if (State == NumericState.NotANumber)
+			if (State != NumericState.None)
 				return this;
+			if (value.State != NumericState.None)
+				return value;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();
@@ -469,8 +471,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber And(SqlNumber value) {
-			if (State == NumericState.NotANumber)
+			if (State != NumericState.None)
 				return this;
+			if (value.State != NumericState.None)
+				return value;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();
@@ -482,8 +486,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber Or(SqlNumber value) {
-			if (State == NumericState.NotANumber)
+			if (State != NumericState.None)
 				return this;
+			if (value.State != NumericState.None)
+				return value;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();

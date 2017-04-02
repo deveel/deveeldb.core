@@ -94,7 +94,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(Double.PositiveInfinity, Double.PositiveInfinity, 0)]
 		[InlineData(Double.PositiveInfinity, 09923, 1)]
 		[InlineData(Double.NaN, Double.PositiveInfinity, 1)]
-		[InlineData(78333.9122, Double.NegativeInfinity, -1)]
+		[InlineData(78333.9122, Double.NegativeInfinity, 1)]
 		public static void CompareToInvalidState(double value1, double value2, int expected) {
 			var number1 = new SqlNumber(value1);
 			var number2 = new SqlNumber(value2);
@@ -120,6 +120,8 @@ namespace Deveel.Data.Sql {
 		[InlineData(93562.9112, typeof(long), 93562L)]
 		[InlineData(234, typeof(byte), (byte) 234)]
 		[InlineData(1, typeof(byte), (byte)1)]
+		[InlineData(4578, typeof(short), (short)4578)]
+		[InlineData(-6734, typeof(short), (short) -6734)]
 		[InlineData(78466373.00091e3, typeof(double), 78466373.00091e3)]
 		[InlineData(455.019, typeof(float), 455.019f)]
 		public static void Convert_ChangeType(double value, Type type, object expected) {
@@ -319,6 +321,25 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData(6532, 112, 0)]
+		[InlineData(Double.NaN, 2003, Double.NaN)]
+		[InlineData(4355, Double.PositiveInfinity, Double.PositiveInfinity)]
+		[InlineData(Double.NaN, Double.NaN, Double.NaN)]
+		[InlineData(5455, 211.211, null)]
+		public static void Operator_And(double value1, double value2, double? expected) {
+			var num1 = new SqlNumber(value1);
+			var num2 = new SqlNumber(value2);
+
+			var result = num1 & num2;
+
+			Assert.NotNull(result);
+
+			var doubleResult = (double?)result;
+
+			Assert.Equal(expected, doubleResult);
+		}
+
+		[Theory]
 		[InlineData(46677, 9982, false)]
 		[InlineData(92677, 92677, true)]
 		public static void Operator_Int32Equal(int value1, int value2, bool expected) {
@@ -353,26 +374,30 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData(4785, 112, 4849)]
-		public static void Operator_Or(double value1, double value2, double expected) {
+		[InlineData(6748, Double.PositiveInfinity, Double.PositiveInfinity)]
+		[InlineData(8944.3223, 334, null)]
+		public static void Operator_Or(double value1, double value2, double? expected) {
 			var num1 = new SqlNumber(value1);
 			var num2 = new SqlNumber(value2);
 
 			var result = num1 | num2;
 
 			Assert.NotNull(result);
-			Assert.Equal(expected, (double) result);
+			Assert.Equal(expected, (double?) result);
 		}
 
 		[Theory]
 		[InlineData(73844, 13, 73849)]
-		public static void Operator_XOr(double value1, double value2, double expected) {
+		[InlineData(566, Double.NaN, Double.NaN)]
+		[InlineData(90445.332, 1123.211, null)]
+		public static void Operator_XOr(double value1, double value2, double? expected) {
 			var num1 = new SqlNumber(value1);
 			var num2 = new SqlNumber(value2);
 
 			var result = num1 ^ num2;
 
 			Assert.NotNull(result);
-			Assert.Equal(expected, (double)result);
+			Assert.Equal(expected, (double?)result);
 		}
 
 		[Theory]
@@ -535,6 +560,20 @@ namespace Deveel.Data.Sql {
 			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
+		}
+
+		[Theory]
+		[InlineData(455.331, "455.3310000000000")]
+		[InlineData(67, "67")]
+		[InlineData(126477489, "126477489")]
+		[InlineData(-67488493, "-67488493")]
+		[InlineData(Double.NaN, "NaN")]
+		[InlineData(Double.PositiveInfinity, "+Inf")]
+		[InlineData(Double.NegativeInfinity, "-Inf")]
+		public static void GetString(double value, string expected) {
+			var number = new SqlNumber(value);
+			var s = number.ToString();
+			Assert.Equal(expected, s);
 		}
 	}
 }
