@@ -21,64 +21,142 @@ using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Deveel.Data.Sql {
+	/// <summary>
+	/// The remote request of a SQL query against a system
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// This object provides two main components for instructing to
+	/// execute a query:
+	/// <list type="buller">
+	///   <listitem>The text of the command</listitem>
+	///   <listitem>An optional list of parameters that will be applied 
+	///   to the command</listitem>
+	/// </list>
+	/// </para>
+	/// <para>
+	/// While the text of the query is a required component of this request,
+	/// the list of parameters is optional, until no parameter references are
+	/// included in the text of the command.
+	/// </para>
+	/// <para>
+	/// When creating a new <see cref="SqlQuery"/> it will be possible to
+	/// specify the <see cref="SqlQueryParameterNaming"/> that will dictate
+	/// the kind of parameter names tha will be accepted by this object, throwing
+	/// an exception if the name of an added parameter does not respect it.
+	/// </para>
+	/// <para>
+	/// If no specific <see cref="SqlQueryParameterNaming"/> is specified at
+	/// construction of this object, the value of <see cref="ParameterNaming"/>
+	/// will be set to <see cref="SqlQueryParameterNaming.Default"/> and the
+	/// system will change it before execution.
+	/// </para>
+	/// <para>
+	/// If the <see cref="ParameterNaming"/> is set to <see cref="SqlQueryParameterNaming.Default"/>,
+	/// when the system will change to the configured default naming, all the parameter
+	/// names contained into this query object will be re-validated.
+	/// </para>
+	/// </remarks>
+	/// <seealso cref="SqlQueryParameterNaming"/>
 	public sealed class SqlQuery {
+		/// <summary>
+		/// Constructs the query object with the given command
+		/// text and the default parameter naming convention.
+		/// </summary>
+		/// <param name="text">The text of the command to be executed</param>
+		/// <exception cref="ArgumentNullException">If the provided
+		/// <paramref name="text"/> is <c>null</c> or empty.</exception>
 		public SqlQuery(string text) 
-			: this(text, QueryParameterStyle.Default) {
+			: this(text, SqlQueryParameterNaming.Default) {
 		}
 
-		public SqlQuery(string text, QueryParameterStyle parameterStyle) {
+		/// <summary>
+		/// Constructs the query object with the given command
+		/// text and a given parameter naming convention.
+		/// </summary>
+		/// <param name="text">The text of the command to be executed</param>
+		/// <param name="naming">The naming convention of the parameters in the query</param>
+		/// <exception cref="ArgumentNullException">If the provided
+		/// <paramref name="text"/> is <c>null</c> or empty.</exception>
+		public SqlQuery(string text, SqlQueryParameterNaming naming) {
+			if (String.IsNullOrEmpty(text))
+				throw new ArgumentNullException(nameof(text));
+
 			Text = text;
-			ParameterStyle = parameterStyle;
+			ParameterNaming = naming;
 			Parameters = new QueryParameterCollection(this);
 		}
 
-		public string Text { get; private set; }
+		/// <summary>
+		/// Gets the text of the SQL command to be executed
+		/// </summary>
+		/// <remarks>
+		/// The text can contain references to paramaters that will
+		/// be extracted and validated, according to the naming
+		/// convention specified.
+		/// </remarks>
+		/// <seealso cref="ParameterNaming"/>
+		public string Text { get; }
 
-		public ICollection<QueryParameter> Parameters { get; private set; }
+		/// <summary>
+		/// Gets a collection of parameters that will be applied to the
+		/// command, according to the references provided in the text
+		/// </summary>
+		public ICollection<SqlQueryParameter> Parameters { get; }
 
-		public QueryParameterStyle ParameterStyle { get; private set; }
+		/// <summary>
+		/// Gets the naming convention of the parameters in this query.
+		/// </summary>
+		public SqlQueryParameterNaming ParameterNaming { get; private set; }
 
-		internal void ChangeStyle(QueryParameterStyle style) {
-			if (ParameterStyle != QueryParameterStyle.Default)
+		internal void ChangeNaming(SqlQueryParameterNaming naming) {
+			if (ParameterNaming != SqlQueryParameterNaming.Default)
 				throw new InvalidOperationException("Cannot change the parameter style if it was not set to default");
-			if (style == QueryParameterStyle.Default)
+			if (naming == SqlQueryParameterNaming.Default)
 				throw new ArgumentException("Cannot change the parameter style of a query to default");
 
-			ParameterStyle = style;
+			ParameterNaming = naming;
+			((QueryParameterCollection)Parameters).ValidateAll();
 		}
 
 		#region QueryParameterCollection
 
-		class QueryParameterCollection : Collection<QueryParameter> {
+		class QueryParameterCollection : Collection<SqlQueryParameter> {
 			private SqlQuery SqlQuery { get; set; }
 
 			public QueryParameterCollection(SqlQuery sqlQuery) {
 				SqlQuery = sqlQuery;
 			}
 
-			private void ValidateParameter(QueryParameter item) {
+			private void ValidateParameter(SqlQueryParameter item, bool preventDuplicate) {
 				if (item == null)
-					throw new ArgumentNullException("item");
+					throw new ArgumentNullException(nameof(item));
 
-				if (SqlQuery.ParameterStyle == QueryParameterStyle.Marker &&
-					!String.Equals(item.Name, QueryParameter.Marker, StringComparison.Ordinal))
+				if (SqlQuery.ParameterNaming == SqlQueryParameterNaming.Marker &&
+					!String.Equals(item.Name, SqlQueryParameter.Marker, StringComparison.Ordinal))
 					throw new ArgumentException(String.Format("The query accepts markers, but the parameter '{0}' is named.", item.Name));
-				if (SqlQuery.ParameterStyle == QueryParameterStyle.Named) {
-					if (item.Name.Equals(QueryParameter.Marker, StringComparison.Ordinal))
+				if (SqlQuery.ParameterNaming == SqlQueryParameterNaming.Named) {
+					if (item.Name.Equals(SqlQueryParameter.Marker, StringComparison.Ordinal))
 						throw new ArgumentException("The query accepts named parameters, but a marker was set.");
 
-					if (Items.Any(x => String.Equals(x.Name, item.Name)))
+					if (preventDuplicate && Items.Any(x => String.Equals(x.Name, item.Name)))
 						throw new ArgumentException(String.Format("A parameter named {0} was already inserted in the query.", item.Name));
 				}
 			}
 
-			protected override void InsertItem(int index, QueryParameter item) {
-				ValidateParameter(item);
+			internal void ValidateAll() {
+				foreach (var parameter in base.Items) {
+					ValidateParameter(parameter, false);
+				}
+			}
+
+			protected override void InsertItem(int index, SqlQueryParameter item) {
+				ValidateParameter(item, true);
 				base.InsertItem(index, item);
 			}
 
-			protected override void SetItem(int index, QueryParameter item) {
-				ValidateParameter(item);
+			protected override void SetItem(int index, SqlQueryParameter item) {
+				ValidateParameter(item, true);
 				base.SetItem(index, item);
 			}
 		}

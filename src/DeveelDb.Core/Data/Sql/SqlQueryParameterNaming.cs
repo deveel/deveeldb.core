@@ -24,8 +24,8 @@ namespace Deveel.Data.Sql {
 	/// server side, defining the identification of
 	/// the single parameters passed.
 	/// </summary>
-	/// <seealso cref="SqlQuery.ParameterStyle"/>
-	public enum QueryParameterStyle {
+	/// <seealso cref="SqlQuery.ParameterNaming"/>
+	public enum SqlQueryParameterNaming {
 		/// <summary>
 		/// No specific form of the parameter was given:
 		/// this default to the system default parameter

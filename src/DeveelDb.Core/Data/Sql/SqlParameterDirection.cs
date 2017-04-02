@@ -19,7 +19,7 @@ using System;
 
 namespace Deveel.Data.Sql {
 	[Flags]
-	public enum QueryParameterDirection {
+	public enum SqlParameterDirection {
 		In = 1,
 		Out = 2,
 		InOut = In | Out
