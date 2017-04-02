@@ -23,11 +23,11 @@ using System.Reflection;
 namespace Deveel {
 	static class DictionaryExtensions {
 		public static T GetValue<T>(this IEnumerable<KeyValuePair<string, object>> pairs, string key,
-			IFormatProvider formatProvider) {
-			return pairs.ToDictionary(x => x.Key, y => y.Value).GetValue<T>(key, formatProvider);
+			IFormatProvider provider) {
+			return pairs.ToDictionary(x => x.Key, y => y.Value).GetValue<T>(key, provider);
 		}
 
-		public static T GetValue<T>(this IDictionary<string, object> dictionary, string key, IFormatProvider formatProvider) {
+		public static T GetValue<T>(this IDictionary<string, object> dictionary, string key, IFormatProvider provider) {
 			if (String.IsNullOrEmpty(key))
 				throw new ArgumentNullException("key");
 
@@ -43,14 +43,14 @@ namespace Deveel {
 				if (value is string &&
 				    typeof(T).GetTypeInfo().IsEnum)
 					return (T) Enum.Parse(typeof(T), (string) value, true);
-				if (formatProvider == null)
-					throw new ArgumentNullException("formatProvider");
+				if (provider == null)
+					throw new ArgumentNullException(nameof(provider));
 
 				var nullableType = Nullable.GetUnderlyingType(typeof(T));
 				if (nullableType != null) {
-					value = Convert.ChangeType(value, nullableType, formatProvider);
+					value = Convert.ChangeType(value, nullableType, provider);
 				} else {
-					value = Convert.ChangeType(value, typeof(T), formatProvider);
+					value = Convert.ChangeType(value, typeof(T), provider);
 				}
 			}
 

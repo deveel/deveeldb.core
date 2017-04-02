@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq.Expressions;
 
 using Xunit;
 
@@ -71,6 +72,20 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData("ereee", "123bd", null, false)]
+		[InlineData("abc1234", "abc1234", null, true)]
+		public static void StringIsGreaterOrEqual(string s1, string s2, string locale, bool expected) {
+			var sqlString1 = new SqlString(s1);
+			var sqlString2 = new SqlString(s2);
+
+			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
+			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+
+			Assert.Equal(expected, (bool)type.GreaterOrEqual(sqlString1, sqlString2));
+		}
+
+
+		[Theory]
 		[InlineData("12345", "12345", null, false)]
 		[InlineData("abc", "cde", null, false)]
 		[InlineData("aaaaaaaabaaa", "aaaaabaaaa", null, false)]
@@ -88,6 +103,18 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData("abc", "cde", null, false)]
+		public static void StringIsSmallerOrEqual(string s1, string s2, string locale, bool expected) {
+			var sqlString1 = new SqlString(s1);
+			var sqlString2 = new SqlString(s2);
+
+			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
+			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+
+			Assert.Equal(expected, (bool)type.SmallerOrEqual(sqlString1, sqlString2));
+		}
+
+		[Theory]
 		[InlineData("abc12345", "abc12345", null, true)]
 		[InlineData("ab12345", "abc12345",  null, false)]
 		[InlineData("the brown\n", "the brown", null, false)]
@@ -100,6 +127,92 @@ namespace Deveel.Data.Sql {
 
 			Assert.Equal(expected, (bool)type.Equal(sqlString1, sqlString2));
 		}
+
+		[Theory]
+		[InlineData("abc12345", "abc12345", null, false)]
+		[InlineData("ab12345", "abc12345", null, true)]
+		public static void StringIsNotEqual(string s1, string s2, string locale, bool expected) {
+			var sqlString1 = new SqlString(s1);
+			var sqlString2 = new SqlString(s2);
+
+			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
+			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+
+			Assert.Equal(expected, (bool)type.NotEqual(sqlString1, sqlString2));
+		}
+
+		[Fact]
+		public static void InvalidXOr() {
+			InvalidOp(type => type.XOr);
+		}
+
+		[Fact]
+		public static void InvalidOr() {
+			InvalidOp(type => type.Or);
+		}
+
+		[Fact]
+		public static void InvalidAnd() {
+			InvalidOp(sqlType => sqlType.And);
+		}
+
+		[Fact]
+		public static void InvalidAdd() {
+			InvalidOp(sqlType => sqlType.And);
+		}
+
+		[Fact]
+		public static void InvalidSubtract() {
+			InvalidOp(sqlType => sqlType.Subtract);
+		}
+
+		[Fact]
+		public static void InvalidMultiply() {
+			InvalidOp(sqlType => sqlType.Multiply);
+		}
+
+		[Fact]
+		public static void InvalidDivide() {
+			InvalidOp(type => type.Divide);
+		}
+
+		[Fact]
+		public static void InvalidModulo() {
+			InvalidOp(type => type.Modulo);
+		}
+
+		[Fact]
+		public static void InvalidNegate() {
+			InvalidOp(type => type.Negate);
+		}
+
+		[Fact]
+		public static void InvalidPlus() {
+			InvalidOp(type => type.UnaryPlus);
+		}
+
+		private static void InvalidOp(Func<SqlType, Func<ISqlValue, ISqlValue, ISqlValue>> selector) {
+			var s1 = new SqlString("ab");
+			var s2 = new SqlString("cd");
+
+			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var op = selector(type);
+			var result = op(s1, s2);
+			Assert.NotNull(result);
+			Assert.IsType<SqlNull>(result);
+		}
+
+		private static void InvalidOp(Func<SqlType, Func<ISqlValue, ISqlValue>> selector) {
+			var s1 = new SqlString("foo");
+
+			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var op = selector(type);
+			var result = op(s1);
+			Assert.NotNull(result);
+			Assert.IsType<SqlNull>(result);
+		}
+
+
 
 		[Theory]
 		[InlineData("true", true)]
@@ -131,7 +244,7 @@ namespace Deveel.Data.Sql {
 			var result = type.Cast(sqlString, PrimitiveTypes.Numeric());
 
 			Assert.IsType<SqlNumber>(result);
-			Assert.Equal(expected, ((SqlNumber) result).ToDouble());
+			Assert.Equal(expected, (double)(SqlNumber) result);
 		}
 
 		[Theory]

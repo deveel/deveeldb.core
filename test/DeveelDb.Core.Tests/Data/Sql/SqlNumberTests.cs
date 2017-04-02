@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 
+using DryIoc;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -88,11 +90,43 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(expected, number.Equals(SqlNumber.PositiveInfinity));
 		}
 
-		[Fact]
-		public static void Convert_ToBoolean_Success() {
-			var value = SqlNumber.One;
-			var b = (SqlBoolean)Convert.ChangeType(value, typeof(SqlBoolean));
-			Assert.True(b);
+		[Theory]
+		[InlineData(Double.PositiveInfinity, Double.PositiveInfinity, 0)]
+		[InlineData(Double.PositiveInfinity, 09923, 1)]
+		[InlineData(Double.NaN, Double.PositiveInfinity, 1)]
+		[InlineData(78333.9122, Double.NegativeInfinity, -1)]
+		public static void CompareToInvalidState(double value1, double value2, int expected) {
+			var number1 = new SqlNumber(value1);
+			var number2 = new SqlNumber(value2);
+			Assert.Equal(expected, number1.CompareTo(number2));
+		}
+
+		[Theory]
+		[InlineData(1, true)]
+		[InlineData(0, false)]
+		public static void Convert_ToSqlBoolean(int i, bool expected) {
+			var value = new SqlNumber(i);
+			var result = Convert.ChangeType(value, typeof(SqlBoolean));
+			Assert.IsType<SqlBoolean>(result);
+			Assert.Equal(expected, (bool)(SqlBoolean)result);
+		}
+
+		[Theory]
+		[InlineData(1, typeof(bool), true)]
+		[InlineData(0, typeof(bool), false)]
+		[InlineData(20117, typeof(int), 20117)]
+		[InlineData(933.3003, typeof(int), 933)]
+		[InlineData(456773838, typeof(long), 456773838L)]
+		[InlineData(93562.9112, typeof(long), 93562L)]
+		[InlineData(234, typeof(byte), (byte) 234)]
+		[InlineData(1, typeof(byte), (byte)1)]
+		[InlineData(78466373.00091e3, typeof(double), 78466373.00091e3)]
+		[InlineData(455.019, typeof(float), 455.019f)]
+		public static void Convert_ChangeType(double value, Type type, object expected) {
+			var number = new SqlNumber(value);
+			var result = Convert.ChangeType(number, type);
+			Assert.IsType(type, result);
+			Assert.Equal(expected, result);
 		}
 
 		[Fact]
@@ -111,6 +145,7 @@ namespace Deveel.Data.Sql {
 			Assert.True(value1 > value2);
 		}
 
+		[Theory]
 		[InlineData(34)]
 		[InlineData(12784774)]
 		public static void Int32_Convert(int value) {
@@ -220,7 +255,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -237,7 +272,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -270,6 +305,17 @@ namespace Deveel.Data.Sql {
 			Assert.True(result.CanBeInt32);
 
 			Assert.Equal(expected, result.ToInt32());
+		}
+
+		[Theory]
+		[InlineData(4599, -4600)]
+		public static void Operator_Not(double value, double expected) {
+			var number = new SqlNumber(value);
+			var result = ~number;
+
+			Assert.NotNull(result);
+			Assert.False(result.IsNull);
+			Assert.Equal(expected, (double) result);
 		}
 
 		[Theory]
@@ -306,6 +352,30 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData(4785, 112, 4849)]
+		public static void Operator_Or(double value1, double value2, double expected) {
+			var num1 = new SqlNumber(value1);
+			var num2 = new SqlNumber(value2);
+
+			var result = num1 | num2;
+
+			Assert.NotNull(result);
+			Assert.Equal(expected, (double) result);
+		}
+
+		[Theory]
+		[InlineData(73844, 13, 73849)]
+		public static void Operator_XOr(double value1, double value2, double expected) {
+			var num1 = new SqlNumber(value1);
+			var num2 = new SqlNumber(value2);
+
+			var result = num1 ^ num2;
+
+			Assert.NotNull(result);
+			Assert.Equal(expected, (double)result);
+		}
+
+		[Theory]
 		[InlineData(455, 3, 94196375)]
 		public static void Function_Pow(int value, int exp, double expected) {
 			var number = new SqlNumber(value);
@@ -314,7 +384,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -328,7 +398,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -342,7 +412,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -356,7 +426,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -370,7 +440,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -384,7 +454,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -398,7 +468,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -412,7 +482,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -426,7 +496,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}
@@ -440,7 +510,7 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = result.ToDouble();
+			var doubleResult = (double) result;
 
 			Assert.Equal(expected, doubleResult);
 		}

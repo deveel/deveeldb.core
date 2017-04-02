@@ -292,9 +292,9 @@ namespace Deveel.Data.Sql {
 
 			switch (destType.TypeCode) {
 				case SqlTypeCode.TinyInt:
-					return new SqlNumber(number.ToByte());
+					return new SqlNumber((byte) number);
 				case SqlTypeCode.SmallInt:
-					return new SqlNumber(number.ToInt16());
+					return new SqlNumber((short)number);
 				case SqlTypeCode.Integer:
 					return new SqlNumber(number.ToInt32());
 				case SqlTypeCode.BigInt:

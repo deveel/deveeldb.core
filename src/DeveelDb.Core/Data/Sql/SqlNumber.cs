@@ -316,36 +316,15 @@ namespace Deveel.Data.Sql {
 		}
 
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider) {
-			if (conversionType == typeof (bool))
-				return ToBoolean();
-			if (conversionType == typeof (byte))
-				return ToByte();
-			if (conversionType == typeof (short))
-				return ToInt16();
-			if (conversionType == typeof (int))
-				return ToInt32();
-			if (conversionType == typeof (long))
-				return ToInt64();
-			if (conversionType == typeof (float))
-				return ToSingle();
-			if (conversionType == typeof (double))
-				return ToDouble();
-
 			if (conversionType == typeof (byte[]))
 				return ToByteArray();
-
-			if (conversionType == typeof (string))
-				return ToString();
 
 			if (conversionType == typeof (SqlBoolean))
 				return new SqlBoolean(ToBoolean());
 			if (conversionType == typeof (SqlBinary))
 				return new SqlBinary(ToByteArray());
-			/*
-			TODO:
 			if (conversionType == typeof (SqlString))
 				return new SqlString(ToString());
-			*/
 
 			throw new InvalidCastException($"Cannot convert NUMERIC to {conversionType}");
 		}
@@ -372,7 +351,14 @@ namespace Deveel.Data.Sql {
 			}
 		}
 
-		public double ToDouble() {
+		private void AssertNotNull() {
+			if (IsNull)
+				throw new InvalidCastException("Cannot convert a null number to the given type");
+		}
+
+		private double ToDouble() {
+			AssertNotNull();
+
 			switch (State) {
 				case (NumericState.None):
 					return innerValue.ToDouble();
@@ -388,6 +374,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		public float ToSingle() {
+			AssertNotNull();
+
 			switch (State) {
 				case (NumericState.None):
 					return innerValue.ToSingle();
@@ -403,6 +391,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		public long ToInt64() {
+			AssertNotNull();
+
 			if (CanBeInt64)
 				return valueAsLong;
 			switch (State) {
@@ -414,6 +404,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		public int ToInt32() {
+			AssertNotNull();
+
 			if (CanBeInt32)
 				return (int)valueAsLong;
 			switch (State) {
@@ -424,7 +416,9 @@ namespace Deveel.Data.Sql {
 			}
 		}
 
-		public short ToInt16() {
+		private short ToInt16() {
+			AssertNotNull();
+
 			if (!CanBeInt32)
 				throw new InvalidCastException("The value of this numeric is over the maximum Int16.");
 
@@ -436,7 +430,9 @@ namespace Deveel.Data.Sql {
 			return (short)value;
 		}
 
-		public byte ToByte() {
+		private byte ToByte() {
+			AssertNotNull();
+
 			if (!CanBeInt32)
 				throw new InvalidCastException("The value of this numeric is over the maximum Byte.");
 
@@ -448,7 +444,9 @@ namespace Deveel.Data.Sql {
 			return (byte)value;
 		}
 
-		public bool ToBoolean() {
+		private bool ToBoolean() {
+			AssertNotNull();
+
 			if (Equals(One))
 				return true;
 			if (Equals(Zero))
@@ -457,7 +455,7 @@ namespace Deveel.Data.Sql {
 			throw new InvalidCastException("The value of this NUMERIC cannot be converted to a boolean.");
 		}
 
-		public SqlNumber XOr(SqlNumber value) {
+		private SqlNumber XOr(SqlNumber value) {
 			if (State == NumericState.NotANumber)
 				return this;
 
@@ -470,7 +468,7 @@ namespace Deveel.Data.Sql {
 			return Null;
 		}
 
-		public SqlNumber And(SqlNumber value) {
+		private SqlNumber And(SqlNumber value) {
 			if (State == NumericState.NotANumber)
 				return this;
 
@@ -483,7 +481,7 @@ namespace Deveel.Data.Sql {
 			return Null;			
 		}
 
-		public SqlNumber Or(SqlNumber value) {
+		private SqlNumber Or(SqlNumber value) {
 			if (State == NumericState.NotANumber)
 				return this;
 
@@ -496,7 +494,7 @@ namespace Deveel.Data.Sql {
 			return Null;
 		}
 
-		public SqlNumber Add(SqlNumber value) {
+		private SqlNumber Add(SqlNumber value) {
 			if (State == NumericState.None) {
 				if (value.State == NumericState.None) {
 					if (IsNull || value.IsNull)
@@ -511,7 +509,7 @@ namespace Deveel.Data.Sql {
 			return new SqlNumber(State, null);
 		}
 
-		public SqlNumber Subtract(SqlNumber value) {
+		private SqlNumber Subtract(SqlNumber value) {
 			if (State == NumericState.None) {
 				if (value.State == NumericState.None) {
 					if (IsNull || value.IsNull)
@@ -525,7 +523,7 @@ namespace Deveel.Data.Sql {
 			return new SqlNumber(State, null);
 		}
 
-		public SqlNumber Multiply(SqlNumber value) {
+		private SqlNumber Multiply(SqlNumber value) {
 			if (State == NumericState.None) {
 				if (value.State == NumericState.None) {
 					if (IsNull || value.IsNull)
@@ -540,7 +538,7 @@ namespace Deveel.Data.Sql {
 			return new SqlNumber(State, null);
 		}
 
-		public SqlNumber Divide(SqlNumber value) {
+		private SqlNumber Divide(SqlNumber value) {
 			if (State == NumericState.None) {
 				if (value.State == NumericState.None) {
 					if (IsNull || value.IsNull)
@@ -557,7 +555,7 @@ namespace Deveel.Data.Sql {
 			return new SqlNumber(NumericState.NotANumber, null);
 		}
 
-		public SqlNumber Modulo(SqlNumber value) {
+		private SqlNumber Modulo(SqlNumber value) {
 			if (State == NumericState.None) {
 				if (value.State == NumericState.None) {
 					if (IsNull || value.IsNull)
@@ -591,7 +589,7 @@ namespace Deveel.Data.Sql {
 			return this;
 		}
 
-		public SqlNumber Negate() {
+		private SqlNumber Negate() {
 			if (State == NumericState.None)
 				return new SqlNumber(innerValue.Negate());
 			if (State == NumericState.NegativeInfinity ||
@@ -601,7 +599,7 @@ namespace Deveel.Data.Sql {
 			return this;
 		}
 
-		public SqlNumber Plus() {
+		private SqlNumber Plus() {
 			if (State == NumericState.None)
 				return new SqlNumber(innerValue.Plus());
 			if (State == NumericState.NegativeInfinity ||
@@ -611,7 +609,7 @@ namespace Deveel.Data.Sql {
 			return this;
 		}
 
-		public SqlNumber Not() {
+		private SqlNumber Not() {
 			if (State == NumericState.None)
 				return new SqlNumber(new BigDecimal(~innerValue.ToBigInteger()));
 			if (State == NumericState.NegativeInfinity ||
@@ -760,6 +758,14 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber operator |(SqlNumber a, SqlNumber b) {
+			return a.Or(b);
+		}
+
+		public static SqlNumber operator &(SqlNumber a, SqlNumber b) {
+			return a.And(b);
+		}
+
+		public static SqlNumber operator ^(SqlNumber a, SqlNumber b) {
 			return a.XOr(b);
 		}
 
@@ -769,6 +775,10 @@ namespace Deveel.Data.Sql {
 
 		public static SqlNumber operator +(SqlNumber a) {
 			return a.Plus();
+		}
+
+		public static SqlNumber operator ~(SqlNumber a) {
+			return a.Not();
 		}
 
 		public static bool operator ==(SqlNumber a, SqlNumber b) {				
@@ -796,6 +806,42 @@ namespace Deveel.Data.Sql {
 			var i = a.CompareTo(b);
 			return i == 0 || i < 0;
 		}
+
+		#region Explicit Operators
+
+		public static explicit operator int?(SqlNumber number) {
+			return number.IsNull ? (int?) null : number.ToInt32();
+		}
+
+		public static explicit operator int(SqlNumber number) {
+			return number.ToInt32();
+		}
+
+		public static explicit operator byte(SqlNumber number) {
+			return number.ToByte();
+		}
+
+		public static explicit operator byte?(SqlNumber number) {
+			return number.IsNull ? (byte?) null : number.ToByte();
+		}
+
+		public static explicit operator short?(SqlNumber number) {
+			return number.IsNull ? (short?) null : number.ToInt16();
+		}
+
+		public static explicit operator short(SqlNumber number) {
+			return number.ToInt16();
+		}
+
+		public static explicit operator double?(SqlNumber number) {
+			return number.IsNull ? (double?) null : number.ToDouble();
+		}
+
+		public static explicit operator double(SqlNumber number) {
+			return number.ToDouble();
+		}
+
+		#endregion
 
 		#region NumericState
 

@@ -248,7 +248,7 @@ namespace Deveel.Data.Sql {
 				return value;
 
 			// TODO: Should we return a null value instead? NULL OF TYPE anyway is still a cast ...
-			throw new NotSupportedException();
+			throw new InvalidCastException($"Cannot cast a value of type {this.ToString()} to type {destType}");
 		}
 
 		public virtual ISqlValue Add(ISqlValue a, ISqlValue b) {
@@ -307,22 +307,22 @@ namespace Deveel.Data.Sql {
 			if (!a.IsComparableTo(b))
 				return SqlBoolean.Null;
 
-			return a.CompareTo(b) >= 0;
+			return a.CompareTo(b) <= 0;
 		}
 
 		public virtual SqlBoolean SmallerOrEqual(ISqlValue a, ISqlValue b) {
 			if (!a.IsComparableTo(b))
 				return SqlBoolean.Null;
 
-			return a.CompareTo(b) <= 0;
+			return a.CompareTo(b) >= 0;
 		}
 
 		public virtual ISqlValue And(ISqlValue a, ISqlValue b) {
-			return SqlBoolean.Null;
+			return SqlNull.Value;
 		}
 
 		public virtual ISqlValue Or(ISqlValue a, ISqlValue b) {
-			return SqlBoolean.Null;
+			return SqlNull.Value;
 		}
 
 		public virtual ISqlValue XOr(ISqlValue x, ISqlValue y) {
@@ -398,9 +398,9 @@ namespace Deveel.Data.Sql {
 			/* TODO:
 if (type == typeof(SqlDateTime))
 	return SqlTypeCode.TimeStamp;
-if (type == typeof(SqlString))
-	return SqlTypeCode.String;
-*/
+	*/
+			if (type == typeof(SqlString))
+				return SqlTypeCode.String;
 
 			throw new NotSupportedException(String.Format("The type '{0}' is not supported.", type));
 		}

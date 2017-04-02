@@ -22,7 +22,7 @@ namespace Deveel.Data.Sql {
 			var number = (SqlNumber) result;
 			Assert.NotNull(number);
 			Assert.False(number.CanBeInt32);
-			Assert.Equal(74445.4656, number.ToDouble());
+			Assert.Equal(74445.4656, (double) number);
 		}
 
 		[Theory]

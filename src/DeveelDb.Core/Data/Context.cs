@@ -86,7 +86,7 @@ namespace Deveel.Data {
 		}
 
 		private void InitScope() {
-			if (ParentContext != null)
+			if (ParentContext != null && ParentContext.Scope != null)
 				scope = ParentContext.Scope.OpenScope(ContextName);
 		}
 

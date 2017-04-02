@@ -48,7 +48,7 @@ namespace Deveel.Data.Sql {
 		/// </summary>
 		public static readonly SqlString Null = new SqlString(null, 0, true);
 
-		private readonly char[] source;
+		private readonly string source;
 
 		private SqlString(char[] chars, int length, bool isNull) : this() {
 			if (chars == null) {
@@ -57,7 +57,7 @@ namespace Deveel.Data.Sql {
 				if (length > MaxLength)
 					throw new ArgumentOutOfRangeException("length");
 
-				source = chars;
+				source = new string(chars, 0, length);
 				Length = chars.Length;
 			}
 
@@ -113,20 +113,20 @@ namespace Deveel.Data.Sql {
 		public bool IsNull { get; private set; }
 
 		public string Value {
-			get { return source == null ? null : new string(source, 0, source.Length); }
+			get { return source; }
 		}
 
 		public char this[long index] {
 			get {
 				if (index > Int32.MaxValue)
-					throw new ArgumentOutOfRangeException("index");
+					throw new ArgumentOutOfRangeException(nameof(index));
 
 				if (source == null)
 					return '\0';
 				if (index >= Length)
-					throw new ArgumentOutOfRangeException("index");
+					throw new ArgumentOutOfRangeException(nameof(index));
 
-				return source[index];
+				return source[(int) index];
 			}
 		}
 
@@ -183,9 +183,7 @@ namespace Deveel.Data.Sql {
 			if (IsNull)
 				return Null;
 
-			var sub = new char[count];
-			Array.Copy(source, offset, sub, 0, count);
-			return new SqlString(sub);
+			return source.Substring(offset, count);
 		}
 
 		public SqlString PadRight(int length)
@@ -198,19 +196,7 @@ namespace Deveel.Data.Sql {
 			if (IsNull)
 				return Null;
 
-			int diff = length - (int) Length;
-			if (diff <= 0)
-				return this;
-
-			var sub = new char[Length + diff];
-			var pad = new char[diff];
-			for (int i = 0; i < diff; i++) {
-				pad[i] = c;
-			}
-			Array.Copy(source, 0, sub, 0, (int)Length);
-			Array.Copy(pad, 0, sub, (int)Length, diff);
-
-			return new SqlString(sub);
+			return new SqlString(source.PadRight(length, c));
 		}
 
 		public bool Equals(SqlString other) {
@@ -228,20 +214,8 @@ namespace Deveel.Data.Sql {
 			if (source.Length != other.source.Length)
 				return false;
 
-			for (int i = 0; i < source.Length; i++) {
-				var c1 =  source[i];
-				var c2 = other.source[i];
-
-				if (ignoreCase) {
-					c1 = Char.ToUpperInvariant(c1);
-					c2 = Char.ToUpperInvariant(c2);
-				}
-
-				if (!c1.Equals(c2))
-					return false;
-			}
-
-			return true;
+			var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+			return source.Equals(other.source, comparison);
 		}
 
 		public override bool Equals(object obj) {
@@ -271,7 +245,7 @@ namespace Deveel.Data.Sql {
 			if (source == null)
 				return new byte[0];
 
-			return (byte[]) source.Clone();
+			return Encoding.Unicode.GetBytes(source);
 		}
 
 		public SqlString Concat(ISqlString other) {
@@ -429,33 +403,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider) {
-			if (conversionType == typeof(bool))
-				return Convert.ToBoolean(Value, provider);
-			if (conversionType == typeof(byte))
-				return Convert.ToByte(Value, provider);
-			if (conversionType == typeof(sbyte))
-				return Convert.ToSByte(Value, provider);
-			if (conversionType == typeof(short))
-				return Convert.ToInt16(Value, provider);
-			if (conversionType == typeof(ushort))
-				return Convert.ToUInt16(Value, provider);
-			if (conversionType == typeof(int))
-				return Convert.ToInt32(Value, provider);
-			if (conversionType == typeof(uint))
-				return Convert.ToUInt32(Value, provider);
-			if (conversionType == typeof(long))
-				return Convert.ToInt64(Value, provider);
-			if (conversionType == typeof(ulong))
-				return Convert.ToUInt64(Value, provider);
-			if (conversionType == typeof(float))
-				return Convert.ToSingle(Value, provider);
-			if (conversionType == typeof(double))
-				return Convert.ToDouble(Value, provider);
-			if (conversionType == typeof(decimal))
-				return Convert.ToDecimal(Value, provider);
-			if (conversionType == typeof(string))
-				return Convert.ToString(Value, provider);
-
 			if (conversionType == typeof(char[]))
 				return ToCharArray();
 
@@ -474,7 +421,7 @@ namespace Deveel.Data.Sql {
 			throw new InvalidCastException(String.Format("Cannot convet SQL STRING to {0}", conversionType.FullName));
 		}
 
-		public SqlBoolean ToBoolean() {
+		private SqlBoolean ToBoolean() {
 			SqlBoolean value;
 			if (!SqlBoolean.TryParse(Value, out value))
 				return SqlBoolean.Null; // TODO: Should we throw an exception?
@@ -482,9 +429,9 @@ namespace Deveel.Data.Sql {
 			return value;
 		}
 
-		public SqlNumber ToNumber(IFormatProvider formatProvider) {
+		private SqlNumber ToNumber(IFormatProvider provider) {
 			SqlNumber value;
-			if (!SqlNumber.TryParse(Value, formatProvider, out value))
+			if (!SqlNumber.TryParse(Value, provider, out value))
 				return SqlNumber.Null; // TODO: Shoudl we throw an exception?
 
 			return value;
@@ -501,7 +448,7 @@ namespace Deveel.Data.Sql {
 		}
 		*/
 
-		public SqlBinary ToBinary() {
+		private SqlBinary ToBinary() {
 			var bytes = ToByteArray();
 			return new SqlBinary(bytes);
 		}
@@ -510,7 +457,7 @@ namespace Deveel.Data.Sql {
 			if (source == null)
 				return new char[0];
 
-			return (char[]) source.Clone();
+			return source.ToCharArray();
 		}
 
 		#region Operators

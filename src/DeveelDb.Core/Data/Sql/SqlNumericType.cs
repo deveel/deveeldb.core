@@ -46,5 +46,21 @@ namespace Deveel.Data.Sql {
 			       typeCode == SqlTypeCode.Decimal ||
 			       typeCode == SqlTypeCode.Numeric;
 		}
+
+		public override SqlBoolean Greater(ISqlValue a, ISqlValue b) {
+			return Compare(a, b) > 0;
+		}
+
+		public override SqlBoolean GreaterOrEqual(ISqlValue a, ISqlValue b) {
+			return Compare(a, b) >= 0;
+		}
+
+		public override SqlBoolean Smaller(ISqlValue a, ISqlValue b) {
+			return Compare(a, b) < 0;
+		}
+
+		public override SqlBoolean SmallerOrEqual(ISqlValue a, ISqlValue b) {
+			return Compare(a, b) <= 0;
+		}
 	}
 }
