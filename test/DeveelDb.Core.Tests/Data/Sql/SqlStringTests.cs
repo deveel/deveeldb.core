@@ -39,8 +39,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData("1", typeof(bool), true)]
 		[InlineData("true", typeof(bool), true)]
+		[InlineData("false", typeof(bool), false)]
 		[InlineData("4556.931", typeof(double), 4556.931)]
 		[InlineData("82211993", typeof(long), 82211993L)]
 		[InlineData("3", typeof(byte), (byte)3)]

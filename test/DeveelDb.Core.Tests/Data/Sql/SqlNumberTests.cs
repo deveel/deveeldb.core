@@ -1,7 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
-
-using DryIoc;
 
 using Xunit;
 
@@ -58,27 +55,21 @@ namespace Deveel.Data.Sql {
 			Assert.True(value.Precision > 40);
 		}
 
-		[Fact]
-		public static void ParseInfinity() {
-			SqlNumber number;
-			Assert.True(SqlNumber.TryParse("+Infinity", out number));
-			Assert.NotNull(number);
-			Assert.False(number.IsNull);
-			Assert.Equal(SqlNumber.PositiveInfinity, number);
+		[Theory]
+		[InlineData("98334454", 98334454, true)]
+		[InlineData("test", null, false)]
+		[InlineData("", null, false)]
+		[InlineData("6785553.89e3", 6785553.89e3, true)]
+		[InlineData("-435", -435, true)]
+		[InlineData("+Inf", Double.PositiveInfinity, true)]
+		[InlineData("-Inf", Double.NegativeInfinity, true)]
+		[InlineData("NaN", Double.NaN, true)]
+		public static void TryParse(string s, double? expected, bool expectedSuccess) {
+			var expectedResult = expected == null ? SqlNumber.Null : new SqlNumber(expected.Value);
 
-			Assert.True(SqlNumber.TryParse("-Infinity", out number));
-			Assert.NotNull(number);
-			Assert.False(number.IsNull);
-			Assert.Equal(SqlNumber.NegativeInfinity, number);
-		}
-
-		[Fact]
-		public static void ParseNaN() {
 			SqlNumber number;
-			Assert.True(SqlNumber.TryParse("NaN", out number));
-			Assert.NotNull(number);
-			Assert.False(number.IsNull);
-			Assert.Equal(SqlNumber.NaN, number);
+			Assert.Equal(expectedSuccess, SqlNumber.TryParse(s, out number));
+			Assert.Equal(expectedResult, number);
 		}
 
 		[Theory]
@@ -109,6 +100,47 @@ namespace Deveel.Data.Sql {
 			var result = Convert.ChangeType(value, typeof(SqlBoolean));
 			Assert.IsType<SqlBoolean>(result);
 			Assert.Equal(expected, (bool)(SqlBoolean)result);
+		}
+
+		[Theory]
+		[InlineData(-346.76672)]
+		[InlineData(543)]
+		[InlineData(322.3223e12)]
+		public static void Convert_ToByteArray(double value) {
+			var number = new SqlNumber(value);
+			var result = Convert.ChangeType(number, typeof(byte[]));
+
+			Assert.NotNull(result);
+			Assert.IsType<byte[]>(result);
+
+			var resultNumber = new SqlNumber((byte[])result);
+			Assert.Equal(number, resultNumber);
+		}
+
+		[Theory]
+		[InlineData(673884.9033)]
+		[InlineData(7448)]
+		[InlineData(-02933)]
+		public static void Convert_ToSqlBinary(double value) {
+			var number = new SqlNumber(value);
+			var result = Convert.ChangeType(number, typeof(SqlBinary));
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlBinary>(result);
+
+			var bytes = ((SqlBinary) result).ToByteArray();
+			var resultNumber = new SqlNumber(bytes);
+			Assert.Equal(number, resultNumber);
+		}
+
+		[Theory]
+		[InlineData(4566, TypeCode.Int32)]
+		[InlineData(67484433323, TypeCode.Int64)]
+		[InlineData(94055332.6557, TypeCode.Object)]
+		public static void Convert_GetTypeCode(double value, TypeCode expected) {
+			var number = new SqlNumber(value);
+			var typeCode = Convert.GetTypeCode(number);
+			Assert.Equal(expected, typeCode);
 		}
 
 		[Theory]
@@ -426,7 +458,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(455, 3, 94196375)]
 		public static void Function_Pow(int value, int exp, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.Pow(new SqlNumber(exp));
+			var result = SqlMath.Pow(number, new SqlNumber(exp));
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
@@ -440,7 +472,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(99820, 48993, 1.0659007887179619)]
 		public static void Function_Log(int value, int newBase, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.Log(new SqlNumber(newBase));
+			var result = SqlMath.Log(number, new SqlNumber(newBase));
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
@@ -454,7 +486,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(9963, -0.53211858514845722)]
 		public static void Function_Cos(int value, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.Cos();
+			var result = SqlMath.Cos(number);
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
@@ -468,7 +500,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(0.36f, 1.0655028755774869)]
 		public static void Function_CosH(float value, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.CosH();
+			var result = SqlMath.CosH(number);
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
@@ -482,7 +514,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(-45636.0003922, 45636.0003922)]
 		public static void Function_Abs(double value, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.Abs();
+			var result = SqlMath.Abs(number);
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
@@ -496,7 +528,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(559604.003100, 23.625265230100389)]
 		public static void Function_Tan(double value, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.Tan();
+			var result = SqlMath.Tan(number);
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
@@ -510,7 +542,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(89366647.992, 1)]
 		public static void Function_TanH(double value, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.TanH();
+			var result = SqlMath.TanH(number);
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
@@ -521,24 +553,23 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(929928.00111992934, 929928.00111992937)]
+		[InlineData(929928.00111992934, 929928.0011199294)]
 		public static void Function_Round(double value, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.Round();
+			var result = SqlMath.Round(number);
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
 
-			var doubleResult = (double) result;
-
-			Assert.Equal(expected, doubleResult);
+			var expectedNumber = new SqlNumber(expected);
+			Assert.Equal(expectedNumber, result);
 		}
 
 		[Theory]
 		[InlineData(929928.00111992934, 10, 929928.0011)]
 		public static void Function_RoundWithPrecision(double value, int precision, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.Round(precision);
+			var result = SqlMath.Round(number, precision);
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);
@@ -552,7 +583,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(02993011.338, -0.3040696985546506)]
 		public static void Function_Sin(double value, double expected) {
 			var number = new SqlNumber(value);
-			var result = number.Sin();
+			var result =SqlMath.Sin(number);
 
 			Assert.NotNull(result);
 			Assert.False(result.IsNull);

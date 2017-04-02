@@ -22,7 +22,7 @@ using Deveel.Math;
 
 namespace Deveel.Data.Sql {
 	public struct SqlNumber : ISqlValue, IComparable<SqlNumber>, IEquatable<SqlNumber>, IConvertible {
-		private readonly BigDecimal innerValue;
+		internal readonly BigDecimal innerValue;
 		private readonly int byteCount;
 		private readonly long valueAsLong;
 
@@ -36,11 +36,11 @@ namespace Deveel.Data.Sql {
 
 		public static readonly SqlNumber PositiveInfinity = new SqlNumber(NumericState.PositiveInfinity, null);
 
-		private SqlNumber(BigDecimal value)
+		internal SqlNumber(BigDecimal value)
 			: this(NumericState.None, value) {
 		}
 
-		private SqlNumber(NumericState state, BigDecimal value)
+		internal SqlNumber(NumericState state, BigDecimal value)
 			: this() {
 			valueAsLong = 0;
 			byteCount = 120;
@@ -65,6 +65,10 @@ namespace Deveel.Data.Sql {
 			: this(new BigDecimal(new BigInteger(bytes), scale, new MathContext(precision))) {
 		}
 
+		public SqlNumber(byte[] bytes)
+			: this(GetUnscaledBytes(bytes), GetScale(bytes), GetPrecision(bytes)) {
+		}
+
 		public SqlNumber(int value)
 			: this(value, 0, value.ToString().Length) {
 		}
@@ -85,8 +89,7 @@ namespace Deveel.Data.Sql {
 			: this(new BigDecimal(unscaled, scale, new MathContext(precision))) {
 		}
 
-
-		private NumericState State { get; }
+		internal NumericState State { get; }
 
 		private static NumericState GetNumberState(double value) {
 			if (Double.IsPositiveInfinity(value))
@@ -99,6 +102,20 @@ namespace Deveel.Data.Sql {
 				throw new NotSupportedException();
 
 			return NumericState.None;
+		}
+
+		private static byte[] GetUnscaledBytes(byte[] bytes) {
+			var result = new byte[bytes.Length - 8];
+			Array.Copy(bytes, 8, result, 0, bytes.Length - 8);
+			return result;
+		}
+
+		private static int GetPrecision(byte[] bytes) {
+			return BitConverter.ToInt32(bytes, 0);
+		}
+
+		private static int GetScale(byte[] bytes) {
+			return BitConverter.ToInt32(bytes, 4);
 		}
 
 		public bool CanBeInt64 {
@@ -117,7 +134,7 @@ namespace Deveel.Data.Sql {
 			get { return State == NumericState.None ? innerValue.Precision : 0; }
 		}
 
-		private MathContext MathContext {
+		internal MathContext MathContext {
 			get { return State == NumericState.None ? new MathContext(Precision) : null; }
 		}
 
@@ -329,11 +346,28 @@ namespace Deveel.Data.Sql {
 			throw new InvalidCastException($"Cannot convert NUMERIC to {conversionType}");
 		}
 
-		public byte[] ToByteArray() {
+		public byte[] ToUnscaledByteArray() {
 			if (State != NumericState.None)
 				return new byte[0];
 
 			return innerValue.UnscaledValue.ToByteArray();
+		}
+
+
+		public byte[] ToByteArray() {
+			if (State != NumericState.None)
+				return new byte[0];
+
+			var unscaled = innerValue.UnscaledValue.ToByteArray();
+			var precision = BitConverter.GetBytes(Precision);
+			var scale = BitConverter.GetBytes(Scale);
+
+			var result = new byte[unscaled.Length + 4 + 4];
+			Array.Copy(precision, 0, result, 0, 4);
+			Array.Copy(scale, 0, result, 4, 4);
+			Array.Copy(unscaled, 0, result, 8, unscaled.Length);
+
+			return result;
 		}
 
 		public override string ToString() {
@@ -578,23 +612,6 @@ namespace Deveel.Data.Sql {
 			return new SqlNumber(NumericState.NotANumber, null);
 		}
 
-		public SqlNumber Abs() {
-			if (State == NumericState.None)
-				return new SqlNumber(NumericState.None, innerValue.Abs());
-			if (State == NumericState.NegativeInfinity)
-				return new SqlNumber(NumericState.PositiveInfinity, null);
-			return new SqlNumber(State, null);
-		}
-
-		[CLSCompliant(false)]
-		public SqlNumber SetScale(int scale, RoundingMode mode) {
-			if (State == NumericState.None)
-				return new SqlNumber(innerValue.SetScale(scale, mode));
-
-			// Can't round -inf, +inf and NaN
-			return this;
-		}
-
 		private SqlNumber Negate() {
 			if (State == NumericState.None)
 				return new SqlNumber(innerValue.Negate());
@@ -623,72 +640,6 @@ namespace Deveel.Data.Sql {
 				return new SqlNumber(InverseState(), null);
 
 			return this;			
-		}
-
-		public SqlNumber Pow(SqlNumber exp) {
-			if (State == NumericState.None)
-				return new SqlNumber(innerValue.Pow(exp.innerValue));
-
-			return this;
-		}
-
-		public SqlNumber Round() {
-			return Round(MathContext.Precision);
-		}
-
-		public SqlNumber Round(int precision) {
-			if (State == NumericState.None)
-				return new SqlNumber(innerValue.Round(new MathContext(precision, RoundingMode.HalfUp)));
-
-			return this;			
-		}
-
-		private SqlNumber DoubleOperation(Func<double, double> op) {
-			if (State != NumericState.None)
-				return this;
-
-			var value = ToDouble();
-			var result = op(value);
-
-			if (Double.IsNaN(result))
-				return NaN;
-			if (Double.IsPositiveInfinity(result))
-				return PositiveInfinity;
-			if (Double.IsNegativeInfinity(result))
-				return NegativeInfinity;
-
-			return new SqlNumber(result);
-		}
-
-		public SqlNumber Log() {
-			return DoubleOperation(System.Math.Log);
-		}
-
-		public SqlNumber Log(SqlNumber newBase) {
-			if (State == NumericState.None)
-				return new SqlNumber(System.Math.Log(ToDouble(), newBase.ToDouble()));
-
-			return this;
-		}
-
-		public SqlNumber Cos() {
-			return DoubleOperation(System.Math.Cos);
-		}
-
-		public SqlNumber CosH() {
-			return DoubleOperation(System.Math.Cosh);
-		}
-
-		public SqlNumber Tan() {
-			return DoubleOperation(System.Math.Tan);
-		}
-
-		public SqlNumber TanH() {
-			return DoubleOperation(System.Math.Tanh);
-		}
-
-		public SqlNumber Sin() {
-			return DoubleOperation(System.Math.Sin);
 		}
 
 		public static bool TryParse(string s, out SqlNumber value) {
@@ -867,7 +818,7 @@ namespace Deveel.Data.Sql {
 
 		#region NumericState
 
-		enum NumericState : byte {
+		internal enum NumericState : byte {
 			None = 0,
 			NegativeInfinity = 1,
 			PositiveInfinity = 2,

@@ -284,7 +284,7 @@ namespace Deveel.Data.Sql {
 			if (destType.Scale > 0)
 				scale = destType.Scale;
 
-			return new SqlNumber(number.ToByteArray(), scale, precision);
+			return new SqlNumber(number.ToUnscaledByteArray(), scale, precision);
 		}
 
 		private SqlNumber ToInteger(SqlNumber number, SqlNumericType destType) {
@@ -293,9 +293,9 @@ namespace Deveel.Data.Sql {
 
 			switch (destType.TypeCode) {
 				case SqlTypeCode.TinyInt:
-					return new SqlNumber((byte) number);
+					return new SqlNumber((int) (byte) number);
 				case SqlTypeCode.SmallInt:
-					return new SqlNumber((short)number);
+					return new SqlNumber((int)(short)number);
 				case SqlTypeCode.Integer:
 					return new SqlNumber((int)number);
 				case SqlTypeCode.BigInt:
@@ -309,7 +309,7 @@ namespace Deveel.Data.Sql {
 			switch (destType.TypeCode) {
 				case SqlTypeCode.Float:
 				case SqlTypeCode.Real:
-					return new SqlNumber((float)number);
+					return new SqlNumber((double)(float)number);
 				case SqlTypeCode.Double:
 					return new SqlNumber((double)number);
 				default:
