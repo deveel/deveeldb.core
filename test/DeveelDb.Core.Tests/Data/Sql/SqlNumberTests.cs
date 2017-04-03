@@ -164,6 +164,43 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Fact]
+		public static void InvalidConvert_SByte()
+		{
+			InvalidConvertTo(typeof(sbyte));
+		}
+
+		[Fact]
+		public static void InvalidConvert_UInt32()
+		{
+			InvalidConvertTo(typeof(uint));
+		}
+
+		[Fact]
+		public static void InvalidConvert_Char()
+		{
+			InvalidConvertTo(typeof(char));
+		}
+
+		[Fact]
+		public static void InvalidConvert_UInt16()
+		{
+			InvalidConvertTo(typeof(ushort));
+		}
+
+		[Fact]
+		public static void InvalidConvert_DateTime()
+		{
+			InvalidConvertTo(typeof(DateTime));
+		}
+
+
+		private static void InvalidConvertTo(Type type) {
+			var number = SqlNumber.One;
+			Assert.Throws<InvalidCastException>(() => Convert.ChangeType(number, type));
+		}
+
+
+		[Fact]
 		public static void BigNumber_Greater_True() {
 			var value1 = SqlNumber.Parse("98356278.911288837773848500069994933229238e45789");
 			var value2 = SqlNumber.Parse("348299.01991828833333333333488888388829911182227373738488847112349928");

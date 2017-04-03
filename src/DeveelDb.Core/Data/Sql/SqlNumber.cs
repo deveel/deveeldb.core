@@ -294,7 +294,7 @@ namespace Deveel.Data.Sql {
 			return TypeCode.Object;
 		}
 
-				bool IConvertible.ToBoolean(IFormatProvider provider) {
+		bool IConvertible.ToBoolean(IFormatProvider provider) {
 			return ToBoolean();
 		}
 
@@ -303,7 +303,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		sbyte IConvertible.ToSByte(IFormatProvider provider) {
-			throw new NotSupportedException("Conversion to Signed Byte numbers not supported yet.");
+			throw new InvalidCastException("Conversion to Signed Byte numbers not supported yet.");
 		}
 
 		byte IConvertible.ToByte(IFormatProvider provider) {
@@ -315,7 +315,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		ushort IConvertible.ToUInt16(IFormatProvider provider) {
-			throw new NotSupportedException("Conversion to Unsigned numbers not supported yet.");
+			throw new InvalidCastException("Conversion to Unsigned numbers not supported yet.");
 		}
 
 		int IConvertible.ToInt32(IFormatProvider provider) {
@@ -323,7 +323,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		uint IConvertible.ToUInt32(IFormatProvider provider) {
-			throw new NotSupportedException("Conversion to Unsigned numbers not supported yet.");
+			throw new InvalidCastException("Conversion to Unsigned numbers not supported yet.");
 		}
 
 		long IConvertible.ToInt64(IFormatProvider provider) {
@@ -343,7 +343,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		decimal IConvertible.ToDecimal(IFormatProvider provider) {
-			throw new NotSupportedException("Conversion to Decimal not supported yet.");
+			throw new InvalidCastException("Conversion to Decimal not supported yet.");
 		}
 
 		DateTime IConvertible.ToDateTime(IFormatProvider provider) {

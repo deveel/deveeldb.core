@@ -150,20 +150,28 @@ namespace Deveel.Data.Sql {
 
 		static SqlDateTime() {
 			tsAbbreviations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
+				{"ACDT", "Australian Central Daylight Savings Time"},
+				{"ACST", "Australian Central Standard Time"},
+				{"ACT", "Acre Time"},
+				{"ADT", "Atlantic Daylight Time"},
+				{"AEDT", "Australian Eastern Daylight Savings Time"},
+				{"AEST", "Australian Eastern Standard Time"},
+				{"AFT", "Afghanistan Time"},
 				{"CET", "Central European Standard Time"},
 				{"EST", "Eastern Standard Time"},
 				{"PST", "Pacific Standard Time"},
 				{"GMT", "Greenwich Mean Time"}
+
 				// TODO: Continue!
 			};
 		}
 
 		int IComparable.CompareTo(object obj) {
-			return CompareTo((SqlDateTime) obj);
+			return CompareToNonNull((SqlDateTime) obj);
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			return CompareTo((SqlDateTime) other);
+			return CompareToNonNull((SqlDateTime) other);
 		}
 
 		public bool IsNull {
@@ -224,6 +232,13 @@ namespace Deveel.Data.Sql {
 			}
 		}
 
+		public long Ticks {
+			get {
+				AssertNotNull();
+				return value.Value.Ticks;
+			}
+		}
+
 		/// <summary>
 		/// Gets the offset between the date-time instance and the UTC time.
 		/// </summary>
@@ -274,7 +289,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		sbyte IConvertible.ToSByte(IFormatProvider provider) {
-			throw new NotImplementedException();
+			throw new InvalidCastException();
 		}
 
 		byte IConvertible.ToByte(IFormatProvider provider) {
@@ -314,7 +329,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		decimal IConvertible.ToDecimal(IFormatProvider provider) {
-			throw new NotImplementedException();
+			throw new InvalidCastException();
 		}
 
 		DateTime IConvertible.ToDateTime(IFormatProvider provider) {
@@ -331,6 +346,8 @@ namespace Deveel.Data.Sql {
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider) {
 			if (conversionType == typeof(byte[]))
 				return ToByteArray();
+			if (conversionType == typeof(DateTimeOffset))
+				return ToDateTimeOffset();
 
 			throw new InvalidCastException();
 		}
@@ -343,7 +360,7 @@ namespace Deveel.Data.Sql {
 			if (!IsNull && other.IsNull)
 				return false;
 
-			return value.Equals(other.value);
+			return value.Value.Equals(other.value.Value);
 		}
 
 		public override bool Equals(object obj) {
@@ -354,15 +371,30 @@ namespace Deveel.Data.Sql {
 			return value == null ? 0 : value.GetHashCode();
 		}
 
-		public int CompareTo(SqlDateTime other) {
-			if (!value.HasValue && !other.value.HasValue)
-				return 0;
-			if (!value.HasValue)
-				return 1;
-			if (!other.value.HasValue)
-				return -1;
+		public SqlNumber CompareTo(SqlDateTime other) {
+			if (IsNull || other.IsNull)
+				return SqlNumber.Null;
 
-			return value.Value.CompareTo(other.value.Value);
+			if (!value.HasValue && !other.value.HasValue)
+				return SqlNumber.Zero;
+			if (!value.HasValue)
+				return SqlNumber.One;
+			if (!other.value.HasValue)
+				return SqlNumber.MinusOne;
+
+			return (SqlNumber) value.Value.CompareTo(other.value.Value);
+		}
+
+		int IComparable<SqlDateTime>.CompareTo(SqlDateTime other) {
+			return CompareToNonNull(other);
+		}
+
+		private int CompareToNonNull(SqlDateTime other) {
+			var i = CompareTo(other);
+			if (i.IsNull)
+				throw new InvalidOperationException();
+
+			return (int) i;
 		}
 
 		private long ToInt64() {
@@ -496,30 +528,48 @@ namespace Deveel.Data.Sql {
 			return (n > 7) ? n % 7 : n;
 		}
 
-		public static bool operator ==(SqlDateTime a, SqlDateTime b) {
-			return a.Equals(b);
+		public static SqlBoolean operator ==(SqlDateTime a, SqlDateTime b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i == SqlNumber.Zero;
 		}
 
-		public static bool operator !=(SqlDateTime a, SqlDateTime b) {
+		public static SqlBoolean operator !=(SqlDateTime a, SqlDateTime b) {
 			return !(a == b);
 		}
 
-		public static bool operator >(SqlDateTime a, SqlDateTime b) {
-			return a.CompareTo(b) > 0;
-		}
-
-		public static bool operator <(SqlDateTime a, SqlDateTime b) {
-			return a.CompareTo(b) < 0;
-		}
-
-		public static bool operator >=(SqlDateTime a, SqlDateTime b) {
+		public static SqlBoolean operator >(SqlDateTime a, SqlDateTime b) {
 			var i = a.CompareTo(b);
-			return i == 0 || i > 0;
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i > SqlNumber.Zero;
 		}
 
-		public static bool operator <=(SqlDateTime a, SqlDateTime b) {
+		public static SqlBoolean operator <(SqlDateTime a, SqlDateTime b) {
 			var i = a.CompareTo(b);
-			return i == 0 || i < 0;
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i < SqlNumber.Zero;
+		}
+
+		public static SqlBoolean operator >=(SqlDateTime a, SqlDateTime b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i == SqlNumber.Zero || i > SqlNumber.Zero;
+		}
+
+		public static SqlBoolean operator <=(SqlDateTime a, SqlDateTime b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i == SqlNumber.Zero || i < SqlNumber.Zero;
 		}
 
 		public static SqlDateTime operator +(SqlDateTime a, SqlDayToSecond b) {
@@ -590,7 +640,23 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static bool TryParseTimeStamp(string s, out SqlDateTime value) {
-			return TryParseTimeStamp(s, null, out value);
+			return TryParseTimeStamp(s, (string)null, out value);
+		}
+
+		public static bool TryParseTimeStamp(string s, string timeZone, out SqlDateTime value) {
+			TimeZoneInfo timeZoneInfo = null;
+
+			if (!String.IsNullOrEmpty(timeZone)) {
+				string norm;
+				if (tsAbbreviations.TryGetValue(timeZone, out norm))
+					timeZone = norm;
+
+				timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+				if (timeZoneInfo == null)
+					throw new ArgumentException(String.Format("Time-zone ID '{0}' is invalid", timeZone));
+			}
+
+			return TryParseTimeStamp(s, timeZoneInfo, out value);
 		}
 
 		public static bool TryParseTimeStamp(string s, TimeZoneInfo timeZone, out SqlDateTime value) {
@@ -616,30 +682,30 @@ namespace Deveel.Data.Sql {
 			return false;
 		}
 
-		public static implicit operator SqlDateTime(DateTimeOffset? a) {
+		public static explicit operator SqlDateTime(DateTimeOffset? a) {
 			if (a == null)
 				return Null;
 
-			return a.Value;
+			return (SqlDateTime) a.Value;
 		}
 
-		public static implicit operator SqlDateTime(DateTimeOffset a) {
+		public static explicit operator SqlDateTime(DateTimeOffset a) {
 			var date = a;
 			var offset = new SqlDayToSecond(date.Offset.Days, date.Offset.Hours, date.Offset.Minutes, date.Offset.Seconds);
 			return new SqlDateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, date.Second, date.Millisecond,
 				offset);
 		}
 
-		public static implicit operator DateTimeOffset?(SqlDateTime a) {
-			if (a == null || a.IsNull)
+		public static explicit operator DateTimeOffset?(SqlDateTime a) {
+			if (a.IsNull)
 				return null;
 
 			var offset = new TimeSpan(a.Offset.Hours, a.Offset.Minutes, a.Offset.Seconds);
 			return new DateTimeOffset(a.Year, a.Month, a.Day, a.Hour, a.Minute, a.Second, a.Millisecond, offset);
 		}
 
-		public static implicit operator DateTimeOffset(SqlDateTime a) {
-			if (a == null || a.IsNull)
+		public static explicit operator DateTimeOffset(SqlDateTime a) {
+			if (a.IsNull)
 				throw new NullReferenceException();
 
 			var offset = new TimeSpan(a.Offset.Hours, a.Offset.Minutes, a.Offset.Seconds);
@@ -694,7 +760,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public string ToString(string format) {
-			return ToString(format, CultureInfo.CurrentCulture);
+			return ToString(format, CultureInfo.InvariantCulture);
 		}
 
 		public DateTime ToDateTime() {
@@ -716,7 +782,7 @@ namespace Deveel.Data.Sql {
 				return this;
 
 			var utcOffset = timeZone.GetUtcOffset(value.Value.LocalDateTime);
-			return value.Value.ToOffset(utcOffset);
+			return (SqlDateTime) value.Value.ToOffset(utcOffset);
 		}
 
 		public SqlDateTime AtTimeZone(string timeZone) {

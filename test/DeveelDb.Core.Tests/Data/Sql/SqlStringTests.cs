@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 
 using Xunit;
@@ -60,7 +61,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("quick brown fox", typeof(string), "quick brown fox")]
 		public static void Convert_ChangeType(string source, Type type, object expected) {
 			var s = new SqlString(source);
-			var result = Convert.ChangeType(s, type);
+			var result = Convert.ChangeType(s, type, CultureInfo.InvariantCulture);
 
 			Assert.NotNull(result);
 			Assert.IsType(type, result);
@@ -71,11 +72,11 @@ namespace Deveel.Data.Sql {
 		[InlineData("457738.99931e32", 457738.99931e32)]
 		public static void Convert_ToSqlNumber(string source, double expected) {
 			var s = new SqlString(source);
-			var result = Convert.ChangeType(s, typeof(SqlNumber));
+			var result = Convert.ChangeType(s, typeof(SqlNumber), CultureInfo.InvariantCulture);
 
 			Assert.NotNull(result);
 			Assert.IsType<SqlNumber>(result);
-			Assert.Equal(expected, (double)(SqlNumber)result);
+			Assert.Equal(expected, (double?)(SqlNumber)result);
 		}
 
 		[Fact]
