@@ -126,13 +126,13 @@ namespace Deveel.Data.Sql {
 
 			switch (TypeCode) {
 				case SqlTypeCode.TinyInt:
-					return new SqlNumber((int) (byte) number);
+					return (SqlNumber)(byte) number;
 				case SqlTypeCode.SmallInt:
-					return new SqlNumber((int) (short) number);
+					return (SqlNumber)(short) number;
 				case SqlTypeCode.Integer:
-					return new SqlNumber((int) number);
+					return (SqlNumber)(int) number;
 				case SqlTypeCode.BigInt:
-					return new SqlNumber((long) number);
+					return (SqlNumber) (long) number;
 				default:
 					throw new InvalidCastException();
 			}
