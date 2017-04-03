@@ -683,39 +683,27 @@ namespace Deveel.Data.Sql {
 			return a.Not();
 		}
 
-		public static SqlBoolean operator ==(SqlNumber a, SqlNumber b) {	
+		public static bool operator ==(SqlNumber a, SqlNumber b) {	
 			return a.Equals(b);
 		}
 
-		public static SqlBoolean operator !=(SqlNumber a, SqlNumber b) {
+		public static bool operator !=(SqlNumber a, SqlNumber b) {
 			return !(a == b);
 		}
 
-		public static SqlBoolean operator >(SqlNumber a, SqlNumber b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator >(SqlNumber a, SqlNumber b) {
 			return a.CompareTo(b) > 0;
 		}
 
-		public static SqlBoolean operator <(SqlNumber a, SqlNumber b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator <(SqlNumber a, SqlNumber b) {
 			return a.CompareTo(b) < 0;
 		}
 
-		public static SqlBoolean operator >=(SqlNumber a, SqlNumber b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator >=(SqlNumber a, SqlNumber b) {
 			return a.CompareTo(b) >= 0;
 		}
 
-		public static SqlBoolean operator <=(SqlNumber a, SqlNumber b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator <=(SqlNumber a, SqlNumber b) {
 			return a.CompareTo(b) <= 0;
 		}
 

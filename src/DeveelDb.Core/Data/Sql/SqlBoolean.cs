@@ -323,10 +323,7 @@ namespace Deveel.Data.Sql {
 		/// <returns></returns>
 		/// <seealso cref="Equals(SqlBoolean)"/>
 		/// <seealso cref="Equals(object)"/>
-		public static SqlBoolean operator ==(SqlBoolean a, SqlBoolean b) {
-			if (a.IsNull || b.IsNull)
-				return Null;
-
+		public static bool operator ==(SqlBoolean a, SqlBoolean b) {
 			return a.Equals(b);
 		}
 
@@ -336,25 +333,16 @@ namespace Deveel.Data.Sql {
 		/// <param name="a">The left term of comparison.</param>
 		/// <param name="b">The right term of comparison.</param>
 		/// <returns></returns>
-		public static SqlBoolean operator !=(SqlBoolean a, SqlBoolean b) {
-			if (a.IsNull || b.IsNull)
-				return Null;
-
+		public static bool operator !=(SqlBoolean a, SqlBoolean b) {
 			return !a.Equals(b);
 		}
 
-		public static SqlBoolean operator ==(SqlBoolean a, ISqlValue b) {
-			if (a.IsNull || (b == null || b.IsNull))
-				return Null;
-
+		public static bool operator ==(SqlBoolean a, ISqlValue b) {
 			return a.Equals(b);
 		}
 
-		public static SqlBoolean operator !=(SqlBoolean a, ISqlValue b) {
-			if (a.IsNull || (b == null || b.IsNull))
-				return Null;
-
-			return !a.Equals(b);
+		public static bool operator !=(SqlBoolean a, ISqlValue b) {
+			return !(a == b);
 		}
 
 		public static SqlBoolean operator &(SqlBoolean a, SqlBoolean b) {

@@ -211,18 +211,14 @@ namespace Deveel.Data.Sql {
 			if (System.String.IsNullOrEmpty(name))
 				return false;
 
-			if (System.String.Equals("long varchar", name, StringComparison.OrdinalIgnoreCase) ||
-				System.String.Equals("long character varying", name, StringComparison.OrdinalIgnoreCase))
-				name = "longvarchar";
-			if (System.String.Equals("long varbinary", name, StringComparison.OrdinalIgnoreCase) ||
-				System.String.Equals("long binary varying", name, StringComparison.OrdinalIgnoreCase))
-				name = "longvarbinary";
-
 			if (name.EndsWith("%TYPE", StringComparison.OrdinalIgnoreCase) ||
 			    name.EndsWith("%ROWTYPE", StringComparison.OrdinalIgnoreCase))
 				return true;
 
 			switch (name.ToUpperInvariant()) {
+				case "NULL":
+					return true;
+
 				case "BOOLEAN":
 				case "BOOL":
 				case "BIT":

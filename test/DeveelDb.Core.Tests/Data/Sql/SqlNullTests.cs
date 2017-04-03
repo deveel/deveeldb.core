@@ -71,5 +71,10 @@ namespace Deveel.Data.Sql {
 
 			Assert.False(null1 != null2);
 		}
+
+		[Fact]
+		public static void EqualToNullBoolean() {
+			Assert.True(SqlBoolean.Null == SqlNull.Value);
+		}
 	}
 }

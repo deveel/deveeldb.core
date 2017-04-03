@@ -115,16 +115,15 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("4.08:12:01.442", "23:22:13.557", false)]
 		[InlineData("22:01:10.223", "22:01:10.223", true)]
-		[InlineData(null, null, null)]
-		[InlineData("22:01:10.223", null, null)]
-		public static void Equal(string dts1, string dts2, bool? expected) {
+		[InlineData(null, null, true)]
+		[InlineData("22:01:10.223", null, false)]
+		public static void Equal(string dts1, string dts2, bool expected) {
 			var d1 = String.IsNullOrEmpty(dts1) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(dts1);
 			var d2 = String.IsNullOrEmpty(dts2) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(dts2);
 
 			var result = d1 == d2;
 
-			var expectedResult = (SqlBoolean)expected;
-			Assert.Equal(expectedResult, result);
+			Assert.Equal(expected, result);
 		}
 
 		[Theory]
@@ -134,9 +133,8 @@ namespace Deveel.Data.Sql {
 			var d2 = SqlDayToSecond.Parse(dts2);
 
 			var result = d1.CompareTo(d2);
-			var expectedResult = (SqlNumber) expected;
 
-			Assert.Equal(expectedResult, result);
+			Assert.Equal(expected, result);
 		}
 	}
 }

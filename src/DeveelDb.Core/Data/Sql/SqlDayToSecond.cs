@@ -57,11 +57,11 @@ namespace Deveel.Data.Sql {
 		}
 
 		int IComparable.CompareTo(object obj) {
-			return CompareToNonNull((SqlDayToSecond) obj);
+			return CompareTo((SqlDayToSecond) obj);
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			return CompareToNonNull((SqlDayToSecond) other);
+			return CompareTo((SqlDayToSecond) other);
 		}
 
 		public bool IsNull {
@@ -119,23 +119,15 @@ namespace Deveel.Data.Sql {
 			return other is SqlDayToSecond;
 		}
 
-		int IComparable<SqlDayToSecond>.CompareTo(SqlDayToSecond other) {
-			return CompareToNonNull(other);
-		}
+		public int CompareTo(SqlDayToSecond other) {
+			if (IsNull && other.IsNull)
+				return 0;
+			if (IsNull && !other.IsNull)
+				return -1;
+			if (!IsNull && other.IsNull)
+				return 1;
 
-		private int CompareToNonNull(SqlDayToSecond other) {
-			var i = CompareTo(other);
-			if (i.IsNull)
-				throw new InvalidOperationException();
-
-			return (int)i;
-		}
-
-		public SqlNumber CompareTo(SqlDayToSecond other) {
-			if (IsNull || other.IsNull)
-				return SqlNumber.Null;
-
-			return (SqlNumber) value.Value.CompareTo(other.value.Value);
+			return value.Value.CompareTo(other.value.Value);
 		}
 
 		public SqlDayToSecond Add(SqlDayToSecond interval) {
@@ -210,20 +202,12 @@ namespace Deveel.Data.Sql {
 			return a.Subtract(b);
 		}
 
-		public static SqlBoolean operator ==(SqlDayToSecond a, SqlDayToSecond b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
-				return SqlBoolean.Null;
-
-			return i == SqlNumber.Zero;
+		public static bool operator ==(SqlDayToSecond a, SqlDayToSecond b) {
+			return a.CompareTo(b) == 0;
 		}
 
-		public static SqlBoolean operator !=(SqlDayToSecond a, SqlDayToSecond b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
-				return SqlBoolean.Null;
-
-			return i != SqlNumber.Zero;
+		public static bool operator !=(SqlDayToSecond a, SqlDayToSecond b) {
+			return !(a == b);
 		}
 
 		public static SqlDayToSecond operator -(SqlDayToSecond value) {

@@ -146,33 +146,33 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData("2011-02-15", "2012-03-22", false)]
-		[InlineData(null, "2011-11-02T22:01:00", null)]
-		[InlineData(null, null, null)]
-		public static void Operator_Equal(string d1, string d2, bool? expected) {
+		[InlineData(null, "2011-11-02T22:01:00", false)]
+		[InlineData(null, null, true)]
+		public static void Operator_Equal(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x == y, d1, d2, expected);
 		}
 
 		[Theory]
 		[InlineData("2001-04-06T22:11:04.556", "2001-04-06", true)]
-		[InlineData("22:01:11", null, null)]
-		[InlineData(null, null, null)]
-		public static void Operator_NotEqual(string d1, string d2, bool? expected) {
+		[InlineData("22:01:11", null, true)]
+		[InlineData(null, null, false)]
+		public static void Operator_NotEqual(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x != y, d1, d2, expected);
 		}
 
 		[Theory]
 		[InlineData("2010-02-10", "2011-04-11", false)]
-		[InlineData("04:11:02.345", null, null)]
-		public static void Operator_Greater(string d1, string d2, bool? expected) {
+		[InlineData("04:11:02.345", null, true)]
+		public static void Operator_Greater(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x > y, d1, d2, expected);
 		}
 
 		[Theory]
 		[InlineData("2004-08-19", "2004-08-19", true)]
 		[InlineData("2013-02-05", "2012-02-05", true)]
-		[InlineData("2010-01-03", null, null)]
-		[InlineData(null, null, null)]
-		public static void Operator_GreaterOrEqual(string d1, string d2, bool? expected) {
+		[InlineData("2010-01-03", null, true)]
+		[InlineData(null, null, true)]
+		public static void Operator_GreaterOrEqual(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x >= y, d1, d2, expected);
 		}
 
@@ -180,8 +180,8 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("2004-08-19", "2004-08-19", true)]
 		[InlineData("2010-02-24", "2012-02-25", true)]
-		[InlineData("20:30:22.019", null, null)]
-		public static void Operator_SmallerOrEqual(string d1, string d2, bool? expected) {
+		[InlineData("20:30:22.019", null, false)]
+		public static void Operator_SmallerOrEqual(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x <= y, d1, d2, expected);
 		}
 
@@ -190,9 +190,9 @@ namespace Deveel.Data.Sql {
 		[InlineData("1999-02-01T22:11:03.011", "1999-02-01T22:11:03.012", true)]
 		[InlineData("13:47:02", "13:45:21", false)]
 		[InlineData("1980-04-06T03:01:20", "1981-08-27T05:05:22", true)]
-		[InlineData(null, null, null)]
-		[InlineData("15:16:09", null, null)]
-		public static void Operator_Smaller(string d1, string d2, bool? expected) {
+		[InlineData(null, null, false)]
+		[InlineData("15:16:09", null, false)]
+		public static void Operator_Smaller(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x < y, d1, d2, expected);
 		}
 
@@ -220,7 +220,7 @@ namespace Deveel.Data.Sql {
 			BinaryOp((x, y) => x + y, d, months, expected);
 		}
 
-		private static void BinaryOp(Func<SqlDateTime, SqlDateTime, SqlBoolean> op, string s1, string s2, bool? expected) {
+		private static void BinaryOp(Func<SqlDateTime, SqlDateTime, SqlBoolean> op, string s1, string s2, bool expected) {
 			var date1 = String.IsNullOrEmpty(s1) ? SqlDateTime.Null : SqlDateTime.Parse(s1);
 			var date2 = String.IsNullOrEmpty(s2) ? SqlDateTime.Null : SqlDateTime.Parse(s2);
 

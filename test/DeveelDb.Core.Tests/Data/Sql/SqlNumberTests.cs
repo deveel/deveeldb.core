@@ -395,8 +395,8 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(2133, 123, true)]
 		[InlineData(65484.213e21, 54331432.546e121, false)]
-		[InlineData(1234, null, null)]
-		[InlineData(null, null, null)]
+		[InlineData(1234, null, true)]
+		[InlineData(null, null, false)]
 		public static void Operator_Greater(double? value1, double? value2, bool? expected) {
 			BinaryOp((x, y) => x > y, value1, value2, expected);
 		}

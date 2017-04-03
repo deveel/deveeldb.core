@@ -28,15 +28,14 @@ namespace Deveel.Data.Sql {
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
 			if (other == null || other.IsNull)
 				return 0;
+
 			return 1;
 		}
 
-		public bool IsNull {
-			get { return true; }
-		}
+		public bool IsNull => true;
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
-			return false;
+			return other.IsNull;
 		}
 
 		public override bool Equals(object obj) {
@@ -128,11 +127,11 @@ namespace Deveel.Data.Sql {
 		}
 
 		string IConvertible.ToString(IFormatProvider provider) {
-			throw new InvalidCastException();
+			return null;
 		}
 
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider) {
-			throw new InvalidCastException();
+			return null;
 		}
 
 		public override string ToString() {

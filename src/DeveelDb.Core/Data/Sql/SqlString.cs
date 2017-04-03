@@ -477,18 +477,20 @@ namespace Deveel.Data.Sql {
 
 		#region Operators
 
-		public static SqlBoolean operator ==(SqlString s1, SqlString s2) {
-			if (s1.IsNull || s2.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator ==(SqlString s1, SqlString s2) {
 			return s1.Equals(s2);
 		}
 
-		public static SqlBoolean operator !=(SqlString s1, SqlString s2) {
-			if (s1.IsNull || s2.IsNull)
-				return SqlBoolean.Null;
+		public static bool operator !=(SqlString s1, SqlString s2) {
+			return !(s1 == s2);
+		}
 
-			return !s1.Equals(s2);
+		public static bool operator ==(SqlString a, SqlNull b) {
+			return a.IsNull;
+		}
+
+		public static bool operator !=(SqlString a, SqlNull b) {
+			return !(a == b);
 		}
 
 		#endregion

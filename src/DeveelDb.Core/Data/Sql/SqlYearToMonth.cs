@@ -177,45 +177,27 @@ namespace Deveel.Data.Sql {
 			return a.Subtract(b);
 		}
 
-		public static SqlBoolean operator ==(SqlYearToMonth a, SqlYearToMonth b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator ==(SqlYearToMonth a, SqlYearToMonth b) {
 			return a.CompareTo(b) == 0;
 		}
 
-		public static SqlBoolean operator !=(SqlYearToMonth a, SqlYearToMonth b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator !=(SqlYearToMonth a, SqlYearToMonth b) {
 			return a.CompareTo(b) != 0;
 		}
 
-		public static SqlBoolean operator >(SqlYearToMonth a, SqlYearToMonth b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator >(SqlYearToMonth a, SqlYearToMonth b) {
 			return a.CompareTo(b) > 0;
 		}
 
-		public static SqlBoolean operator <(SqlYearToMonth a, SqlYearToMonth b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator <(SqlYearToMonth a, SqlYearToMonth b) {
 			return a.CompareTo(b) < 0;
 		}
 
-		public static SqlBoolean operator >=(SqlYearToMonth a, SqlYearToMonth b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator >=(SqlYearToMonth a, SqlYearToMonth b) {
 			return a.CompareTo(b) >= 0;
 		}
 
-		public static SqlBoolean operator <=(SqlYearToMonth a, SqlYearToMonth b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator <=(SqlYearToMonth a, SqlYearToMonth b) {
 			return a.CompareTo(b) <= 0;
 		}
 

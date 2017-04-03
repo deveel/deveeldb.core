@@ -111,18 +111,18 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(23, 56, false)]
 		[InlineData(22, 22, true)]
-		[InlineData(null, null, null)]
-		[InlineData(null, 22, null)]
-		public static void Equal(int? value1, int? value2, bool? expected) {
+		[InlineData(null, null, true)]
+		[InlineData(null, 22, false)]
+		public static void Equal(int? value1, int? value2, bool expected) {
 			BinaryOp((x, y) => x == y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(1, 2, true)]
 		[InlineData(45, 45, false)]
-		[InlineData(null, 34, null)]
-		[InlineData(null, null, null)]
-		public static void NotEqual(int? value1, int? value2, bool? expected) {
+		[InlineData(null, 34, true)]
+		[InlineData(null, null, false)]
+		public static void NotEqual(int? value1, int? value2, bool expected) {
 			BinaryOp((x, y) => x != y, value1, value2, expected);
 		}
 
@@ -130,8 +130,8 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(3, 4, false)]
 		[InlineData(5, 2, true)]
-		[InlineData(null, null, null)]
-		public static void Greater(int? value1, int? value2, bool? expected) {
+		[InlineData(null, null, false)]
+		public static void Greater(int? value1, int? value2, bool expected) {
 			BinaryOp((x, y) => x > y, value1, value2, expected);
 		}
 
@@ -139,8 +139,8 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(3, 4, true)]
 		[InlineData(5, 2, false)]
-		[InlineData(null, null, null)]
-		public static void Smaller(int? value1, int? value2, bool? expected) {
+		[InlineData(null, null, false)]
+		public static void Smaller(int? value1, int? value2, bool expected) {
 			BinaryOp((x, y) => x < y, value1, value2, expected);
 		}
 
@@ -149,8 +149,8 @@ namespace Deveel.Data.Sql {
 		[InlineData(3, 4, false)]
 		[InlineData(5, 5, true)]
 		[InlineData(5, 2, true)]
-		[InlineData(null, null, null)]
-		public static void GreaterOrEqual(int? value1, int? value2, bool? expected) {
+		[InlineData(null, null, true)]
+		public static void GreaterOrEqual(int? value1, int? value2, bool expected) {
 			BinaryOp((x, y) => x >= y, value1, value2, expected);
 		}
 
@@ -159,8 +159,8 @@ namespace Deveel.Data.Sql {
 		[InlineData(3, 4, true)]
 		[InlineData(7, 7, true)]
 		[InlineData(5, 2, false)]
-		[InlineData(null, null, null)]
-		public static void SmallerOrEqual(int? value1, int? value2, bool? expected) {
+		[InlineData(null, null, true)]
+		public static void SmallerOrEqual(int? value1, int? value2, bool expected) {
 			BinaryOp((x, y) => x <= y, value1, value2, expected);
 		}
 
@@ -182,17 +182,16 @@ namespace Deveel.Data.Sql {
 			BinaryOp((x, y) => x - y, value1, value2, expected);
 		}
 
-		private static void BinaryOp(Func<SqlYearToMonth, SqlYearToMonth, SqlBoolean> op,
+		private static void BinaryOp(Func<SqlYearToMonth, SqlYearToMonth, bool> op,
 			int? months1,
 			int? months2,
-			bool? expected) {
+			bool expected) {
 			var ytm1 = (SqlYearToMonth) months1;
 			var ytm2 = (SqlYearToMonth) months2;
 
 			var result = op(ytm1, ytm2);
 
-			var expectedResult = (SqlBoolean) expected;
-			Assert.Equal(expectedResult, result);
+			Assert.Equal(expected, result);
 		}
 
 		public static void BinaryOp(Func<SqlYearToMonth, SqlYearToMonth, SqlYearToMonth> op,

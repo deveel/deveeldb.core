@@ -482,9 +482,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlDateTime Subtract(SqlYearToMonth interval) {
-			if (IsNull)
-				return Null;
-			if (interval.IsNull)
+			if (IsNull || interval.IsNull)
 				return Null;
 
 			var result = value.Value.AddMonths(-interval.TotalMonths);
@@ -516,73 +514,43 @@ namespace Deveel.Data.Sql {
 			return (n > 7) ? n % 7 : n;
 		}
 
-		public static SqlBoolean operator ==(SqlDateTime a, SqlDateTime b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
-			return a.CompareTo(b) == 0;
+		public static bool operator ==(SqlDateTime a, SqlDateTime b) {
+			return a.Equals(b);
 		}
 
-		public static SqlBoolean operator !=(SqlDateTime a, SqlDateTime b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator !=(SqlDateTime a, SqlDateTime b) {
 			return !(a == b);
 		}
 
-		public static SqlBoolean operator >(SqlDateTime a, SqlDateTime b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator >(SqlDateTime a, SqlDateTime b) {
 			return a.CompareTo(b) > 0;
 		}
 
-		public static SqlBoolean operator <(SqlDateTime a, SqlDateTime b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator <(SqlDateTime a, SqlDateTime b) {
 			return a.CompareTo(b) < 0;
 		}
 
-		public static SqlBoolean operator >=(SqlDateTime a, SqlDateTime b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator >=(SqlDateTime a, SqlDateTime b) {
 			return a.CompareTo(b) >= 0;
 		}
 
-		public static SqlBoolean operator <=(SqlDateTime a, SqlDateTime b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
+		public static bool operator <=(SqlDateTime a, SqlDateTime b) {
 			return a.CompareTo(b) <= 0;
 		}
 
 		public static SqlDateTime operator +(SqlDateTime a, SqlDayToSecond b) {
-			if (a.IsNull || b.IsNull)
-				return Null;
-
 			return a.Add(b);
 		}
 
 		public static SqlDateTime operator -(SqlDateTime a, SqlDayToSecond b) {
-			if (a.IsNull || b.IsNull)
-				return Null;
-
 			return a.Subtract(b);
 		}
 
 		public static SqlDateTime operator +(SqlDateTime a, SqlYearToMonth b) {
-			if (a.IsNull || b.IsNull)
-				return Null;
-
 			return a.Add(b);
 		}
 
 		public static SqlDateTime operator -(SqlDateTime a, SqlYearToMonth b) {
-			if (a.IsNull || b.IsNull)
-				return Null;
-
 			return a.Subtract(b);
 		}
 

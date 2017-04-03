@@ -166,7 +166,7 @@ namespace Deveel.Data.Sql {
 
 			var result = value1 != value2;
 
-			Assert.True(result.IsNull);
+			Assert.True(result);
 		}
 
 		[Fact]
@@ -175,7 +175,7 @@ namespace Deveel.Data.Sql {
 			var value2 = SqlNull.Value;
 
 			var result = value1 == value2;
-			Assert.True(result.IsNull);
+			Assert.True(result);
 		}
 
 		[Fact]
