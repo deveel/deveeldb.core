@@ -16,11 +16,7 @@
 
 
 using System;
-using System.IO;
 using System.Linq;
-using System.Text;
-
-using Deveel.Data.Storage;
 
 namespace Deveel.Data.Sql {
 	public sealed class SqlBinaryType : SqlType {

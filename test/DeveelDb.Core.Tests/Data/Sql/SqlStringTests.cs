@@ -69,6 +69,49 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData("2012-02-12T03:22:12")]
+		public static void Convert_ToDateTime(string date) {
+			var s = new SqlString(date);
+			var result = Convert.ChangeType(s, typeof(DateTime), CultureInfo.InvariantCulture);
+
+			Assert.NotNull(result);
+			Assert.IsType<DateTime>(result);
+
+			var expectedResult = DateTime.Parse(date);
+			Assert.Equal(expectedResult, result);
+		}
+
+		[Theory]
+		[InlineData("2012-02-12T03:22:12")]
+		[InlineData("2012-02-12T03:22:12 +02:00")]
+		public static void Convert_ToDateTimeOffset(string date)
+		{
+			var s = new SqlString(date);
+			var result = Convert.ChangeType(s, typeof(DateTimeOffset), CultureInfo.InvariantCulture);
+
+			Assert.NotNull(result);
+			Assert.IsType<DateTimeOffset>(result);
+
+			var expectedResult = DateTimeOffset.Parse(date);
+			Assert.Equal(expectedResult, result);
+		}
+
+		[Theory]
+		[InlineData("2012-02-12T03:22:12")]
+		[InlineData("2012-02-12T03:22:12 +02:00")]
+		public static void Convert_ToSqlDateTime(string date)
+		{
+			var s = new SqlString(date);
+			var result = Convert.ChangeType(s, typeof(SqlDateTime), CultureInfo.InvariantCulture);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlDateTime>(result);
+
+			var expectedResult = SqlDateTime.Parse(date);
+			Assert.Equal(expectedResult, result);
+		}
+
+		[Theory]
 		[InlineData("457738.99931e32", 457738.99931e32)]
 		public static void Convert_ToSqlNumber(string source, double expected) {
 			var s = new SqlString(source);

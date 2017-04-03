@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 
 using Xunit;
 
@@ -114,7 +115,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData("2014-04-11T02:19:13.334 +02:30", 2014, 04, 11, 02, 19, 13, 334, 02, 0, "CET", true)]
+		[InlineData("2014-04-11T02:19:13.334 +02:00", 2014, 04, 11, 02, 19, 13, 334, 02, 0, true)]
 		public static void TryParseFullWithTimeZone(string s,
 			int year,
 			int month,
@@ -125,10 +126,10 @@ namespace Deveel.Data.Sql {
 			int millis,
 			int offsetHour,
 			int offsetMinute,
-			string timeZone,
 			bool expected) {
+			var timeZoneInfo = TimeZoneInfo.GetSystemTimeZones().First(x => x.BaseUtcOffset.Hours == 1 && x.BaseUtcOffset.Minutes == 0);
 			SqlDateTime date;
-			Assert.Equal(expected, SqlDateTime.TryParseTimeStamp(s, timeZone, out date));
+			Assert.Equal(expected, SqlDateTime.TryParseTimeStamp(s, timeZoneInfo, out date));
 
 			Assert.False(date.IsNull);
 			Assert.Equal(year, date.Year);

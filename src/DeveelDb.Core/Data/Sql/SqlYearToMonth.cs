@@ -21,12 +21,12 @@ namespace Deveel.Data.Sql {
 	/// <summary>
 	/// A month span representation of time.
 	/// </summary>
-	public struct SqlYearToMonth : ISqlValue, IComparable<SqlYearToMonth> {
+	public struct SqlYearToMonth : ISqlValue, IComparable<SqlYearToMonth>, IEquatable<SqlYearToMonth> {
 		private int? months;
 
 		public static readonly SqlYearToMonth Null = new SqlYearToMonth(true);
 
-		public SqlYearToMonth(int months) 
+		public SqlYearToMonth(int months)
 			: this() {
 			if (months <= 0)
 				throw new ArgumentException("Must be a number greater than 0");
@@ -35,7 +35,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlYearToMonth(int years, int months)
-			: this((years*12) + months) {
+			: this((years * 12) + months) {
 		}
 
 		private SqlYearToMonth(bool isNull)
@@ -92,7 +92,7 @@ namespace Deveel.Data.Sql {
 				if (months == null)
 					throw new NullReferenceException();
 
-				return ((double)months.Value/12);
+				return ((double) months.Value / 12);
 			}
 		}
 
@@ -109,17 +109,57 @@ namespace Deveel.Data.Sql {
 			return (int) i;
 		}
 
+		public bool Equals(SqlYearToMonth other) {
+			if (IsNull && other.IsNull)
+				return true;
+			if (IsNull && !other.IsNull)
+				return false;
+			if (!IsNull && other.IsNull)
+				return false;
+
+			return months.Value == other.months.Value;
+		}
+
+		public override bool Equals(object obj) {
+			if (!(obj is SqlYearToMonth))
+				return false;
+
+			return Equals((SqlYearToMonth)obj);
+		}
+
+		public override int GetHashCode() {
+			return base.GetHashCode();
+		}
+
+		public SqlYearToMonth Add(SqlYearToMonth other) {
+			if (IsNull || other.IsNull)
+				return Null;
+
+			return AddMonths(other.TotalMonths);
+		}
+
+		public SqlYearToMonth AddMonths(int value) {
+			if (months == null)
+				return Null;
+
+			var result = months.Value + value;
+			if (result <= 0)
+				return Null;
+
+			return new SqlYearToMonth(result);
+		}
+
+		public SqlYearToMonth Subtract(SqlYearToMonth other) {
+			if (IsNull || other.IsNull)
+				return Null;
+
+			return AddMonths(-other.TotalMonths);
+		}
+
 		/// <inheritdoc/>
 		public SqlNumber CompareTo(SqlYearToMonth other) {
-			if (months == null && 
-				other.months == null)
+			if (IsNull || other.IsNull)
 				return SqlNumber.Null;
-			if (months == null && 
-				other.months != null)
-				return SqlNumber.MinusOne;
-			if (months != null && 
-				other.months == null)
-				return SqlNumber.One;
 
 			return (SqlNumber) months.Value.CompareTo(other.months.Value);
 		}
@@ -128,8 +168,84 @@ namespace Deveel.Data.Sql {
 			if (IsNull && number.IsNull)
 				return SqlNumber.Null;
 
-			var other = new SqlYearToMonth((int)number);
+			var other = new SqlYearToMonth((int) number);
 			return CompareTo(other);
+		}
+
+		public static SqlYearToMonth operator +(SqlYearToMonth a, SqlYearToMonth b) {
+			return a.Add(b);
+		}
+
+		public static SqlYearToMonth operator -(SqlYearToMonth a, SqlYearToMonth b) {
+			return a.Subtract(b);
+		}
+
+		public static SqlBoolean operator ==(SqlYearToMonth a, SqlYearToMonth b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i == SqlNumber.Zero;
+		}
+
+		public static SqlBoolean operator !=(SqlYearToMonth a, SqlYearToMonth b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i != SqlNumber.Zero;
+		}
+
+		public static SqlBoolean operator >(SqlYearToMonth a, SqlYearToMonth b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i > SqlNumber.Zero;
+		}
+
+		public static SqlBoolean operator <(SqlYearToMonth a, SqlYearToMonth b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i < SqlNumber.Zero;
+		}
+
+		public static SqlBoolean operator >=(SqlYearToMonth a, SqlYearToMonth b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i > SqlNumber.Zero || i == SqlNumber.Zero;
+		}
+
+		public static SqlBoolean operator <=(SqlYearToMonth a, SqlYearToMonth b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i < SqlNumber.Zero || i == SqlNumber.Zero;
+		}
+
+
+		public static explicit operator SqlYearToMonth(int value) {
+			return new SqlYearToMonth(value);
+		}
+
+		public static explicit operator SqlYearToMonth(int? value) {
+			return value == null ? Null : new SqlYearToMonth(value.Value);
+		}
+
+		public static explicit operator int?(SqlYearToMonth value) {
+			return value.months;
+		}
+
+		public static explicit operator int(SqlYearToMonth value) {
+			if (value.months == null)
+				throw new InvalidCastException();
+
+			return value.months.Value;
 		}
 	}
 }

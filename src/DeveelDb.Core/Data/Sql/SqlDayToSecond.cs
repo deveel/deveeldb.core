@@ -132,12 +132,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlNumber CompareTo(SqlDayToSecond other) {
-			if (IsNull && other.IsNull)
-				return SqlNumber.Zero;
-			if (!IsNull && other.IsNull)
-				return SqlNumber.MinusOne;
-			if (IsNull && !other.IsNull)
-				return SqlNumber.One;
+			if (IsNull || other.IsNull)
+				return SqlNumber.Null;
 
 			return (SqlNumber) value.Value.CompareTo(other.value.Value);
 		}
@@ -214,12 +210,20 @@ namespace Deveel.Data.Sql {
 			return a.Subtract(b);
 		}
 
-		public static bool operator ==(SqlDayToSecond a, SqlDayToSecond b) {
-			return a.Equals(b);
+		public static SqlBoolean operator ==(SqlDayToSecond a, SqlDayToSecond b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i == SqlNumber.Zero;
 		}
 
-		public static bool operator !=(SqlDayToSecond a, SqlDayToSecond b) {
-			return !(a == b);
+		public static SqlBoolean operator !=(SqlDayToSecond a, SqlDayToSecond b) {
+			var i = a.CompareTo(b);
+			if (i.IsNull)
+				return SqlBoolean.Null;
+
+			return i != SqlNumber.Zero;
 		}
 
 		public static SqlDayToSecond operator -(SqlDayToSecond value) {

@@ -418,20 +418,23 @@ namespace Deveel.Data.Sql {
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider) {
 			if (conversionType == typeof(char[]))
 				return ToCharArray();
+			if (conversionType == typeof(DateTimeOffset))
+				return ToDateTimeOffset(provider);
 
 			if (conversionType == typeof(SqlNumber))
 				return ToNumber(provider);
 			if (conversionType == typeof(SqlBoolean))
 				return ToBoolean();
-			/*
-			TODO:
 			if (conversionType == typeof(SqlDateTime))
-				return ToDateTime();
-			*/
+				return ToSqlDateTime(provider);
 			if (conversionType == typeof(SqlBinary))
 				return ToBinary();
 
 			throw new InvalidCastException(String.Format("Cannot convet SQL STRING to {0}", conversionType.FullName));
+		}
+
+		private DateTimeOffset ToDateTimeOffset(IFormatProvider provider) {
+			return DateTimeOffset.Parse(Value, provider);
 		}
 
 		private SqlBoolean ToBoolean() {
@@ -450,16 +453,13 @@ namespace Deveel.Data.Sql {
 			return value;
 		}
 
-		/*
-		TODO:
-		public SqlDateTime ToDateTime() {
+		public SqlDateTime ToSqlDateTime(IFormatProvider provider) {
 			SqlDateTime value;
 			if (!SqlDateTime.TryParse(Value, out value))
 				return SqlDateTime.Null; // TODO: Shoudl we throw an exception?
 
 			return value;
 		}
-		*/
 
 		private SqlBinary ToBinary() {
 			var bytes = ToByteArray();

@@ -653,7 +653,7 @@ namespace Deveel.Data.Sql {
 
 				timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
 				if (timeZoneInfo == null)
-					throw new ArgumentException(String.Format("Time-zone ID '{0}' is invalid", timeZone));
+					throw new InvalidTimeZoneException(String.Format("Time-zone ID '{0}' is invalid", timeZone));
 			}
 
 			return TryParseTimeStamp(s, timeZoneInfo, out value);

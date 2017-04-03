@@ -16,5 +16,69 @@ namespace Deveel.Data.Sql {
 			return typeCode == SqlTypeCode.YearToMonth ||
 			       typeCode == SqlTypeCode.DayToSecond;
 		}
+
+		public override ISqlValue Add(ISqlValue a, ISqlValue b) {
+			if (a is SqlYearToMonth) {
+				var x = (SqlYearToMonth) a;
+
+				if (b is SqlYearToMonth) {
+					var y = (SqlYearToMonth) b;
+
+					return x.Add(y);
+				} else if (b is SqlDayToSecond) {
+					var y = (SqlDayToSecond) b;
+					// TODO:
+					throw new NotImplementedException();
+				} else if (b is SqlNumber) {
+					var y = (SqlNumber) b;
+					return x.AddMonths((int)y);
+				}
+			} else if (a is SqlDayToSecond) {
+				var x = (SqlDayToSecond) a;
+
+				if (b is SqlDayToSecond) {
+					var y = (SqlDayToSecond) b;
+					return x.Add(y);
+				} else if (b is SqlYearToMonth) {
+					var y = (SqlYearToMonth) b;
+					// TODO:
+					throw new NotImplementedException();
+				}
+			}
+
+			return base.Add(a, b);
+		}
+
+		public override ISqlValue Subtract(ISqlValue a, ISqlValue b) {
+			if (a is SqlYearToMonth) {
+				var x = (SqlYearToMonth)a;
+
+				if (b is SqlYearToMonth) {
+					var y = (SqlYearToMonth)b;
+
+					return x.Subtract(y);
+				} else if (b is SqlDayToSecond) {
+					var y = (SqlDayToSecond)b;
+					// TODO:
+					throw new NotImplementedException();
+				} else if (b is SqlNumber) {
+					var y = (SqlNumber)b;
+					return x.AddMonths(-(int)y);
+				}
+			} else if (a is SqlDayToSecond) {
+				var x = (SqlDayToSecond)a;
+
+				if (b is SqlDayToSecond) {
+					var y = (SqlDayToSecond)b;
+					return x.Subtract(y);
+				} else if (b is SqlYearToMonth) {
+					var y = (SqlYearToMonth)b;
+					// TODO:
+					throw new NotImplementedException();
+				}
+			}
+
+			return base.Subtract(a, b);
+		}
 	}
 }

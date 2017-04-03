@@ -86,26 +86,45 @@ namespace Deveel.Data.Sql {
 		[InlineData("2.20:11:32", "10:02:30.334", "3.06:14:02.3340000")]
 		[InlineData("22:01:10.223", "-02:10:32", "19:50:38.2230000")]
 		public static void Add(string dts1, string dts2, string expected) {
-			var d1 = SqlDayToSecond.Parse(dts1);
-			var d2 = SqlDayToSecond.Parse(dts2);
+			var d1 = String.IsNullOrEmpty(dts1) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(dts1);
+			var d2 = String.IsNullOrEmpty(dts2) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(dts2);
 
 			var result = d1+ d2;
 			Assert.NotNull(result);
 
-			Assert.Equal(expected, result.ToString());
+			var expectedResult = String.IsNullOrEmpty(expected) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(expected);
+			Assert.Equal(expectedResult, result);
 		}
 
 		[Theory]
 		[InlineData("4.08:12:01.442", "23:22:13.557", "3.08:49:47.8850000")]
 		[InlineData("22:01:10.223", "-02:10:32", "1.00:11:42.2230000")]
+		[InlineData(null, null, null)]
+		[InlineData("22:01:10.223", null, null)]
 		public static void Subtract(string dts1, string dts2, string expected) {
-			var d1 = SqlDayToSecond.Parse(dts1);
-			var d2 = SqlDayToSecond.Parse(dts2);
+			var d1 = String.IsNullOrEmpty(dts1) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(dts1);
+			var d2 = String.IsNullOrEmpty(dts2) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(dts2);
 
 			var result = d1 - d2;
 			Assert.NotNull(result);
 
-			Assert.Equal(expected, result.ToString());
+			var expectedResult = String.IsNullOrEmpty(expected) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(expected);
+			Assert.Equal(expectedResult, result);
+		}
+
+		[Theory]
+		[InlineData("4.08:12:01.442", "23:22:13.557", false)]
+		[InlineData("22:01:10.223", "22:01:10.223", true)]
+		[InlineData(null, null, null)]
+		[InlineData("22:01:10.223", null, null)]
+		public static void Equal(string dts1, string dts2, bool? expected) {
+			var d1 = String.IsNullOrEmpty(dts1) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(dts1);
+			var d2 = String.IsNullOrEmpty(dts2) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(dts2);
+
+			var result = d1 == d2;
+
+			var expectedResult = (SqlBoolean)expected;
+			Assert.Equal(expectedResult, result);
 		}
 
 		[Theory]
