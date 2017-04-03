@@ -52,7 +52,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			SqlNumber i;
+			int i;
 			if (other is SqlYearToMonth) {
 				i = CompareTo((SqlYearToMonth) other);
 			} else if (other is SqlNumber) {
@@ -61,10 +61,7 @@ namespace Deveel.Data.Sql {
 				throw new NotSupportedException();
 			}
 
-			if (i.IsNull)
-				throw new InvalidOperationException();
-
-			return (int) i;
+			return i;
 		}
 
 		/// <inheritdoc/>
@@ -99,14 +96,6 @@ namespace Deveel.Data.Sql {
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
 			return other is SqlYearToMonth ||
 			       other is SqlNumber;
-		}
-
-		int IComparable<SqlYearToMonth>.CompareTo(SqlYearToMonth other) {
-			var i = CompareTo(other);
-			if (i.IsNull)
-				throw new InvalidOperationException();
-
-			return (int) i;
 		}
 
 		public bool Equals(SqlYearToMonth other) {
@@ -157,16 +146,24 @@ namespace Deveel.Data.Sql {
 		}
 
 		/// <inheritdoc/>
-		public SqlNumber CompareTo(SqlYearToMonth other) {
-			if (IsNull || other.IsNull)
-				return SqlNumber.Null;
+		public int CompareTo(SqlYearToMonth other) {
+			if (IsNull && other.IsNull)
+				return 0;
+			if (!IsNull && other.IsNull)
+				return 1;
+			if (IsNull && !other.IsNull)
+				return -1;
 
-			return (SqlNumber) months.Value.CompareTo(other.months.Value);
+			return months.Value.CompareTo(other.months.Value);
 		}
 
-		public SqlNumber CompareTo(SqlNumber number) {
+		public int CompareTo(SqlNumber number) {
 			if (IsNull && number.IsNull)
-				return SqlNumber.Null;
+				return 0;
+			if (!IsNull && number.IsNull)
+				return 1;
+			if (IsNull && !number.IsNull)
+				return -1;
 
 			var other = new SqlYearToMonth((int) number);
 			return CompareTo(other);
@@ -181,51 +178,45 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlBoolean operator ==(SqlYearToMonth a, SqlYearToMonth b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i == SqlNumber.Zero;
+			return a.CompareTo(b) == 0;
 		}
 
 		public static SqlBoolean operator !=(SqlYearToMonth a, SqlYearToMonth b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i != SqlNumber.Zero;
+			return a.CompareTo(b) != 0;
 		}
 
 		public static SqlBoolean operator >(SqlYearToMonth a, SqlYearToMonth b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i > SqlNumber.Zero;
+			return a.CompareTo(b) > 0;
 		}
 
 		public static SqlBoolean operator <(SqlYearToMonth a, SqlYearToMonth b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i < SqlNumber.Zero;
+			return a.CompareTo(b) < 0;
 		}
 
 		public static SqlBoolean operator >=(SqlYearToMonth a, SqlYearToMonth b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i > SqlNumber.Zero || i == SqlNumber.Zero;
+			return a.CompareTo(b) >= 0;
 		}
 
 		public static SqlBoolean operator <=(SqlYearToMonth a, SqlYearToMonth b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i < SqlNumber.Zero || i == SqlNumber.Zero;
+			return a.CompareTo(b) <= 0;
 		}
 
 

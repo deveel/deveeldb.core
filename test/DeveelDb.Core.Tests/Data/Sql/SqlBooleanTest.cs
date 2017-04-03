@@ -207,7 +207,8 @@ namespace Deveel.Data.Sql {
 			var value1 = SqlBoolean.Null;
 			var value2 = SqlNull.Value;
 
-			Assert.True(value1 == value2);
+			var result = value1 == value2;
+			Assert.True(result.IsNull);
 		}
 
 		[Fact]

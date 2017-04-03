@@ -287,10 +287,11 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData("12:25:01", "CET", "13:25:01 +01:00")]
-		public static void AtTimeZone(string s, string timeZone, string expected) {
+		[InlineData("12:25:01", "13:25:01 +01:00")]
+		public static void AtTimeZone(string s, string expected) {
 			var date = SqlDateTime.Parse(s);
-			var result = date.AtTimeZone(timeZone);
+			var timeZoneInfo = TimeZoneInfo.GetSystemTimeZones().First(x => x.BaseUtcOffset.Hours == 1);
+			var result = date.AtTimeZone(timeZoneInfo);
 
 			var expectedResult = SqlDateTime.Parse(expected);
 			Assert.Equal(expectedResult, result);

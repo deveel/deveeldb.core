@@ -147,14 +147,14 @@ namespace Deveel.Data.Sql {
 			if (!(obj is SqlNumber))
 				throw new ArgumentException();
 
-			return CompareToNonNull((SqlNumber) obj);
+			return CompareTo((SqlNumber) obj);
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
 			if (!(other is SqlNumber))
 				throw new ArgumentException();
 
-			return CompareToNonNull((SqlNumber) other);
+			return CompareTo((SqlNumber) other);
 		}
 
 		public bool IsNull {
@@ -213,47 +213,39 @@ namespace Deveel.Data.Sql {
 			return innerValue.GetHashCode() ^ State.GetHashCode();
 		}
 
-		int IComparable<SqlNumber>.CompareTo(SqlNumber other) {
-			return CompareToNonNull(other);
-		}
-
-		private int CompareToNonNull(SqlNumber other) {
-			var result = CompareTo(other);
-			if (result.IsNull)
-				throw new InvalidOperationException("Cannot compare on NULL");
-
-			return (int)result;
-		}
-
-		public SqlNumber CompareTo(SqlNumber other) {
-			if (IsNull || other.IsNull)
-				return Null;
+		public int CompareTo(SqlNumber other) {
+			if (IsNull && other.IsNull)
+				return 0;
+			if (!IsNull && other.IsNull)
+				return 1;
+			if (IsNull && !other.IsNull)
+				return -1;
 
 			if (Equals(this, other))
-				return Zero;
+				return 0;
 
 			// If this is a non-infinity number
 			if (State == NumericState.None) {
 				// If both values can be represented by a long value
 				if (CanBeInt64 && other.CanBeInt64) {
 					// Perform a long comparison check,
-					return (SqlNumber) valueAsLong.CompareTo(other.valueAsLong);
+					return valueAsLong.CompareTo(other.valueAsLong);
 				}
 
 				// And the compared number is non-infinity then use the BigDecimal
 				// compareTo method.
 				if (other.State == NumericState.None)
-					return (SqlNumber) innerValue.CompareTo(other.innerValue);
+					return  innerValue.CompareTo(other.innerValue);
 
 				// Comparing a regular number with a NaN number.
 				// If positive infinity or if NaN
 				if (other.State == NumericState.PositiveInfinity ||
 				    other.State == NumericState.NotANumber) {
-					return MinusOne;
+					return -1;
 				}
 					// If negative infinity
 				if (other.State == NumericState.NegativeInfinity)
-					return One;
+					return 1;
 
 				throw new ArgumentException("Unknown number state.");
 			}
@@ -263,12 +255,12 @@ namespace Deveel.Data.Sql {
 			if (other.State == NumericState.None) {
 				// Yes, negative infinity
 				if (State == NumericState.NegativeInfinity)
-					return MinusOne;
+					return -1;
 
 				// positive infinity or NaN
 				if (State == NumericState.PositiveInfinity ||
 				    State == NumericState.NotANumber)
-					return One;
+					return 1;
 
 				throw new ArgumentException("Unknown number state.");
 			}
@@ -278,11 +270,11 @@ namespace Deveel.Data.Sql {
 			// Inf and -Inf.  -Inf < Inf < NaN
 			var c = (State - other.State);
 			if (c == 0)
-				return Zero;
+				return 0;
 			if (c < 0)
-				return MinusOne;
+				return -1;
 
-			return One;
+			return 1;
 		}
 
 		TypeCode IConvertible.GetTypeCode() {
@@ -727,35 +719,31 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlBoolean operator >(SqlNumber a, SqlNumber b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i.valueAsLong > 0;
+			return a.CompareTo(b) > 0;
 		}
 
 		public static SqlBoolean operator <(SqlNumber a, SqlNumber b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i.valueAsLong < 0;
+			return a.CompareTo(b) < 0;
 		}
 
 		public static SqlBoolean operator >=(SqlNumber a, SqlNumber b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i.valueAsLong == 0 || i.valueAsLong > 0;
+			return a.CompareTo(b) >= 0;
 		}
 
 		public static SqlBoolean operator <=(SqlNumber a, SqlNumber b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i.valueAsLong == 0 || i.valueAsLong < 0;
+			return a.CompareTo(b) <= 0;
 		}
 
 		#region Explicit Operators

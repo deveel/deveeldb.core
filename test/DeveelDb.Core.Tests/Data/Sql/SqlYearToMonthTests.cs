@@ -59,9 +59,8 @@ namespace Deveel.Data.Sql {
 			var ytm = new SqlYearToMonth(months);
 			var number = (SqlNumber) value;
 
-			var expectedResult = (SqlNumber) expected;
 			var result = ytm.CompareTo(number);
-			Assert.Equal(expectedResult, result);
+			Assert.Equal(expected, result);
 		}
 
 		[Theory]
@@ -72,9 +71,8 @@ namespace Deveel.Data.Sql {
 			var ytm1 = new SqlYearToMonth(months1);
 			var ytm2 = new SqlYearToMonth(months2);
 
-			var expectedResult = (SqlNumber) expected;
 			var result = ytm1.CompareTo(ytm2);
-			Assert.Equal(expectedResult, result);
+			Assert.Equal(expected, result);
 		}
 
 		[Theory]

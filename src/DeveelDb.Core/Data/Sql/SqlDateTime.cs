@@ -167,11 +167,14 @@ namespace Deveel.Data.Sql {
 		}
 
 		int IComparable.CompareTo(object obj) {
-			return CompareToNonNull((SqlDateTime) obj);
+			return CompareTo((SqlDateTime) obj);
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			return CompareToNonNull((SqlDateTime) other);
+			if (!(value is SqlDateTime))
+				throw new ArgumentException();
+
+			return CompareTo((SqlDateTime) other);
 		}
 
 		public bool IsNull {
@@ -371,30 +374,15 @@ namespace Deveel.Data.Sql {
 			return value == null ? 0 : value.GetHashCode();
 		}
 
-		public SqlNumber CompareTo(SqlDateTime other) {
-			if (IsNull || other.IsNull)
-				return SqlNumber.Null;
+		public int CompareTo(SqlDateTime other) {
+			if (IsNull && other.IsNull)
+				return 0;
+			if (!IsNull && other.IsNull)
+				return 1;
+			if (IsNull && !other.IsNull)
+				return -1;
 
-			if (!value.HasValue && !other.value.HasValue)
-				return SqlNumber.Zero;
-			if (!value.HasValue)
-				return SqlNumber.One;
-			if (!other.value.HasValue)
-				return SqlNumber.MinusOne;
-
-			return (SqlNumber) value.Value.CompareTo(other.value.Value);
-		}
-
-		int IComparable<SqlDateTime>.CompareTo(SqlDateTime other) {
-			return CompareToNonNull(other);
-		}
-
-		private int CompareToNonNull(SqlDateTime other) {
-			var i = CompareTo(other);
-			if (i.IsNull)
-				throw new InvalidOperationException();
-
-			return (int) i;
+			return value.Value.CompareTo(other.value.Value);
 		}
 
 		private long ToInt64() {
@@ -529,62 +517,72 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlBoolean operator ==(SqlDateTime a, SqlDateTime b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i == SqlNumber.Zero;
+			return a.CompareTo(b) == 0;
 		}
 
 		public static SqlBoolean operator !=(SqlDateTime a, SqlDateTime b) {
+			if (a.IsNull || b.IsNull)
+				return SqlBoolean.Null;
+
 			return !(a == b);
 		}
 
 		public static SqlBoolean operator >(SqlDateTime a, SqlDateTime b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i > SqlNumber.Zero;
+			return a.CompareTo(b) > 0;
 		}
 
 		public static SqlBoolean operator <(SqlDateTime a, SqlDateTime b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i < SqlNumber.Zero;
+			return a.CompareTo(b) < 0;
 		}
 
 		public static SqlBoolean operator >=(SqlDateTime a, SqlDateTime b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i == SqlNumber.Zero || i > SqlNumber.Zero;
+			return a.CompareTo(b) >= 0;
 		}
 
 		public static SqlBoolean operator <=(SqlDateTime a, SqlDateTime b) {
-			var i = a.CompareTo(b);
-			if (i.IsNull)
+			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
 
-			return i == SqlNumber.Zero || i < SqlNumber.Zero;
+			return a.CompareTo(b) <= 0;
 		}
 
 		public static SqlDateTime operator +(SqlDateTime a, SqlDayToSecond b) {
+			if (a.IsNull || b.IsNull)
+				return Null;
+
 			return a.Add(b);
 		}
 
 		public static SqlDateTime operator -(SqlDateTime a, SqlDayToSecond b) {
+			if (a.IsNull || b.IsNull)
+				return Null;
+
 			return a.Subtract(b);
 		}
 
 		public static SqlDateTime operator +(SqlDateTime a, SqlYearToMonth b) {
+			if (a.IsNull || b.IsNull)
+				return Null;
+
 			return a.Add(b);
 		}
 
 		public static SqlDateTime operator -(SqlDateTime a, SqlYearToMonth b) {
+			if (a.IsNull || b.IsNull)
+				return Null;
+
 			return a.Subtract(b);
 		}
 

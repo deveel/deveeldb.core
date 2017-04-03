@@ -339,10 +339,16 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlBoolean operator ==(SqlBoolean a, ISqlValue b) {
+			if (a.IsNull || b.IsNull)
+				return Null;
+
 			return a.Equals(b);
 		}
 
 		public static SqlBoolean operator !=(SqlBoolean a, ISqlValue b) {
+			if (a.IsNull || b.IsNull)
+				return Null;
+
 			return !(a == b);
 		}
 
