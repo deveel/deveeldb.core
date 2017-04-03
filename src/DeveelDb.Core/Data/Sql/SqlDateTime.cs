@@ -321,11 +321,11 @@ namespace Deveel.Data.Sql {
 		}
 
 		float IConvertible.ToSingle(IFormatProvider provider) {
-			return ToInt64();
+			throw new InvalidCastException();
 		}
 
 		double IConvertible.ToDouble(IFormatProvider provider) {
-			return ToInt64();
+			throw new InvalidCastException();
 		}
 
 		decimal IConvertible.ToDecimal(IFormatProvider provider) {
@@ -483,7 +483,7 @@ namespace Deveel.Data.Sql {
 			if (IsNull)
 				return Null;
 			if (interval.IsNull)
-				return this;
+				return Null;
 
 			var result = value.Value.AddMonths(interval.TotalMonths);
 			return new SqlDateTime(result.Ticks);
@@ -497,7 +497,7 @@ namespace Deveel.Data.Sql {
 			if (IsNull)
 				return Null;
 			if (interval.IsNull)
-				return this;
+				return Null;
 
 			var result = value.Value.AddMonths(-interval.TotalMonths);
 			return new SqlDateTime(result.Ticks);

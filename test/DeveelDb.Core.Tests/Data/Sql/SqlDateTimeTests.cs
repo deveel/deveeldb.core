@@ -320,6 +320,19 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Fact]
+		public static void Convert_ToDateTimeOffset() {
+			var date = new SqlDateTime(2018, 02, 04, 14, 02, 00, 00);
+			var result = Convert.ChangeType(date, typeof(DateTimeOffset), CultureInfo.InvariantCulture);
+
+			Assert.NotNull(result);
+			Assert.IsType<DateTimeOffset>(result);
+
+			var d = (DateTimeOffset)result;
+			Assert.Equal(2018, d.Year);
+			Assert.Equal(02, d.Month);
+		}
+
+		[Fact]
 		public static void Convert_ToBinaryArray() {
 			var date = new SqlDateTime(2018, 02, 04, 14, 02, 00, 00);
 			var result = Convert.ChangeType(date, typeof(byte[]), CultureInfo.InvariantCulture);
@@ -339,9 +352,9 @@ namespace Deveel.Data.Sql {
 			Assert.NotNull(result);
 			Assert.IsType<long>(result);
 
-			Assert.Equal(date.Ticks, (long)result);
-			
-			var back = new SqlDateTime((long)result);
+			Assert.Equal(date.Ticks, (long) result);
+
+			var back = new SqlDateTime((long) result);
 
 			Assert.Equal(date.Year, back.Year);
 			Assert.Equal(date.Month, back.Month);
@@ -394,14 +407,12 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Fact]
-		public static void InvalidConvert_Single()
-		{
+		public static void InvalidConvert_Single() {
 			InvalidConvertTo(typeof(float));
 		}
 
 		[Fact]
-		public static void InvalidConvert_Double()
-		{
+		public static void InvalidConvert_Double() {
 			InvalidConvertTo(typeof(double));
 		}
 

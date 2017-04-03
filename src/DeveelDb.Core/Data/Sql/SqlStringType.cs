@@ -18,7 +18,6 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Text;
 
 namespace Deveel.Data.Sql {
 	public sealed class SqlStringType : SqlType {
@@ -69,7 +68,7 @@ namespace Deveel.Data.Sql {
 				throw new ArgumentException(String.Format("The type {0} is not a valid STRING type.", sqlType), "sqlType");
 		}
 
-		internal static bool IsStringType(SqlTypeCode typeCode) {
+		private static bool IsStringType(SqlTypeCode typeCode) {
 			return typeCode == SqlTypeCode.String ||
 			       typeCode == SqlTypeCode.VarChar ||
 			       typeCode == SqlTypeCode.Char ||
@@ -187,7 +186,9 @@ namespace Deveel.Data.Sql {
 			return destType is SqlStringType ||
 			       destType is SqlBinaryType ||
 			       destType is SqlBooleanType ||
-				   destType is SqlNumericType;
+				   destType is SqlNumericType ||
+				   destType is SqlDateTimeType ||
+				   destType is SqlIntervalType;
 		}
 
 		public override ISqlValue Cast(ISqlValue value, SqlType destType) {
@@ -201,6 +202,10 @@ namespace Deveel.Data.Sql {
 					return ToNumber((SqlString) value, (SqlNumericType) destType);
 				if (destType is SqlStringType)
 					return ToString((SqlString) value, (SqlStringType) destType);
+				if (destType is SqlDateTimeType)
+					return ToDateTime((SqlString) value, (SqlDateTimeType) destType);
+				if (destType is SqlIntervalType)
+					return ToInterval((SqlString) value, (SqlIntervalType) destType);
 			}
 
 			return base.Cast(value, destType);
@@ -237,8 +242,6 @@ namespace Deveel.Data.Sql {
 
 			return value;
 		}
-
-
 
 		private SqlNumber ToNumber(SqlString value, SqlNumericType destType) {
 			try {
@@ -327,6 +330,74 @@ namespace Deveel.Data.Sql {
 				return SqlBoolean.False;
 
 			throw new InvalidCastException();
+		}
+
+		private SqlDateTime ToDateTime(SqlString value, SqlDateTimeType destType) {
+			if (value.IsNull)
+				return SqlDateTime.Null;
+
+			switch (destType.TypeCode) {
+				case SqlTypeCode.DateTime:
+				case SqlTypeCode.TimeStamp:
+					return ToTimeStamp(value);
+				case SqlTypeCode.Time:
+					return ToTime(value);
+				case SqlTypeCode.Date:
+					return ToDate(value);
+				default:
+					throw new InvalidCastException();
+			}
+		}
+
+		private SqlDateTime ToDate(SqlString value) {
+			SqlDateTime date;
+			if (!SqlDateTime.TryParseDate(value.Value, out date))
+				return SqlDateTime.Null;
+
+			return date;
+		}
+
+		private SqlDateTime ToTime(SqlString value) {
+			SqlDateTime date;
+			if (!SqlDateTime.TryParseTime(value.Value, out date))
+				return SqlDateTime.Null;
+
+			return date;
+		}
+
+		private SqlDateTime ToTimeStamp(SqlString value) {
+			SqlDateTime date;
+			if (!SqlDateTime.TryParseTimeStamp(value.Value, out date))
+				return SqlDateTime.Null;
+
+			return date;
+		}
+
+		private ISqlValue ToInterval(SqlString value, SqlIntervalType destType) {
+			switch (destType.TypeCode) {
+				case SqlTypeCode.YearToMonth:
+					return ToYearToMonth(value);
+				case SqlTypeCode.DayToSecond:
+					return ToDayToSecond(value);
+				default:
+					throw new InvalidCastException();
+			}
+		}
+
+		private SqlDayToSecond ToDayToSecond(SqlString value) {
+			if (value.IsNull)
+				return SqlDayToSecond.Null;
+
+			SqlDayToSecond dts;
+			if (!SqlDayToSecond.TryParse(value.Value, out dts))
+				return SqlDayToSecond.Null;
+
+			return dts;
+		}
+
+		private SqlYearToMonth ToYearToMonth(SqlString value) {
+			//TODO:
+			throw new NotImplementedException();
 		}
 	}
 }

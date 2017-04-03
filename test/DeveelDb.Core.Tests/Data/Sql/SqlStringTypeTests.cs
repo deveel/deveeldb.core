@@ -278,5 +278,43 @@ namespace Deveel.Data.Sql {
 			Assert.IsType<SqlString>(result);
 			Assert.Equal(expected, ((SqlString)result).Value);
 		}
+
+		[Theory]
+		[InlineData("2011-01-11", SqlTypeCode.Date, "2011-01-11")]
+		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.Date, null)]
+		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.TimeStamp, "2014-01-21T02:10:16.908")]
+		[InlineData("02:10:16.908", SqlTypeCode.Time, "02:10:16.908")]
+		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.Time, null)]
+		public static void CastToDateTime(string s, SqlTypeCode typeCode, string expected) {
+			var sqlString = new SqlString(s);
+			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var destType = new SqlDateTimeType(typeCode);
+
+			Assert.True(type.CanCastTo(destType));
+			var result = type.Cast(sqlString, destType);
+
+			var expectedResult = String.IsNullOrEmpty(expected) ? SqlDateTime.Null : SqlDateTime.Parse(expected);
+			Assert.IsType<SqlDateTime>(result);
+
+			Assert.Equal(expectedResult, result);
+		}
+
+		[Theory]
+		[InlineData("2.12:03:20.433", "2.12:03:20.433")]
+		[InlineData(null, null)]
+		[InlineData("2 10:22:11.111", null)]
+		public static void CastToYearToMonth(string s, string expected) {
+			var sqlString = new SqlString(s);
+			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var destType = new SqlIntervalType(SqlTypeCode.DayToSecond);
+
+			Assert.True(type.CanCastTo(destType));
+			var result = type.Cast(sqlString, destType);
+			Assert.IsType<SqlDayToSecond>(result);
+
+			var expectedResult = String.IsNullOrEmpty(expected) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(expected);
+
+			Assert.Equal(expectedResult, result);
+		}
 	}
 }
