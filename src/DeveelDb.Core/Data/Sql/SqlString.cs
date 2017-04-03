@@ -18,6 +18,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -31,11 +32,12 @@ namespace Deveel.Data.Sql {
 	/// objects and can handle a fixed length of characters.
 	/// </para>
 	/// <para>
-	/// The encoding of the string is dependent from the <see cref="SqlStringType"/> that
+	/// The encoding of the string is dependent from the <see cref="SqlCharacterType"/> that
 	/// defines an object, but the default is <see cref="UnicodeEncoding"/>.
 	/// </para>
 	/// </remarks>
 	/// <seealso cref="ISqlString"/>
+	[DebuggerDisplay("{ToString()}")]
 	public struct SqlString : ISqlString, IEquatable<SqlString>, IConvertible
 	{
 		/// <summary>
@@ -221,7 +223,7 @@ namespace Deveel.Data.Sql {
 				return true;
 			if (source == null)
 				return false;
-			if (other == null || other.IsNull)
+			if (other.IsNull)
 				return false;
 
 			if (source.Length != other.source.Length)
@@ -475,12 +477,18 @@ namespace Deveel.Data.Sql {
 
 		#region Operators
 
-		public static bool operator ==(SqlString s1, SqlString s2) {
+		public static SqlBoolean operator ==(SqlString s1, SqlString s2) {
+			if (s1.IsNull || s2.IsNull)
+				return SqlBoolean.Null;
+
 			return s1.Equals(s2);
 		}
 
-		public static bool operator !=(SqlString s1, SqlString s2) {
-			return !(s1 == s2);
+		public static SqlBoolean operator !=(SqlString s1, SqlString s2) {
+			if (s1.IsNull || s2.IsNull)
+				return SqlBoolean.Null;
+
+			return !s1.Equals(s2);
 		}
 
 		#endregion

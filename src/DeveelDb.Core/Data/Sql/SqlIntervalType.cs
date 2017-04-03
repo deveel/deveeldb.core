@@ -17,6 +17,10 @@ namespace Deveel.Data.Sql {
 			       typeCode == SqlTypeCode.DayToSecond;
 		}
 
+		public override bool IsInstanceOf(ISqlValue value) {
+			return value is SqlYearToMonth || value is SqlDayToSecond;
+		}
+
 		public override ISqlValue Add(ISqlValue a, ISqlValue b) {
 			if (a is SqlYearToMonth) {
 				var x = (SqlYearToMonth) a;

@@ -21,7 +21,7 @@ namespace Deveel.Data.Sql {
 		[Fact]
 		public static void EqualsToNotNull() {
 			var sqlNull = SqlNull.Value;
-			Assert.False(sqlNull.Equals(new SqlNumber(455)));
+			Assert.False(sqlNull.Equals((SqlNumber)455));
 		}
 
 		[Fact]

@@ -29,7 +29,7 @@ namespace Deveel.Data.Sql {
 				throw new ArgumentException(String.Format("The SQL type {0} is not BOOLEAN.", sqlType));
 		}
 
-		internal static bool IsBooleanType(SqlTypeCode sqlType) {
+		private static bool IsBooleanType(SqlTypeCode sqlType) {
 			return (sqlType == SqlTypeCode.Bit ||
 			        sqlType == SqlTypeCode.Boolean);
 		}
@@ -50,9 +50,13 @@ namespace Deveel.Data.Sql {
 			return type is SqlBooleanType;
 		}
 
+		public override bool IsInstanceOf(ISqlValue value) {
+			return value is SqlBoolean;
+		}
+
 		public override bool CanCastTo(SqlType destType) {
 			return destType is SqlNumericType ||
-			       destType is SqlStringType ||
+			       destType is SqlCharacterType ||
 				   destType is SqlBinaryType;
 		}
 
@@ -68,8 +72,8 @@ namespace Deveel.Data.Sql {
 			if (destType is SqlBinaryType)
 				return ToBinary(b);
 
-			if (destType is SqlStringType)
-				return ToString(b, (SqlStringType) destType);
+			if (destType is SqlCharacterType)
+				return ToString(b, (SqlCharacterType) destType);
 
 			return base.Cast(value, destType);
 		}
@@ -89,7 +93,7 @@ namespace Deveel.Data.Sql {
 			return new SqlBinary(bytes);
 		}
 
-		private ISqlString ToString(SqlBoolean value, SqlStringType destType) {
+		private ISqlString ToString(SqlBoolean value, SqlCharacterType destType) {
 			var s = new SqlString(ToString(value));
 			return (ISqlString) destType.NormalizeValue(s);
 		}

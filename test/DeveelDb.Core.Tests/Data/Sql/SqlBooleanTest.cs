@@ -1,71 +1,36 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
 
 using Xunit;
 
 namespace Deveel.Data.Sql {
 	public class SqlBooleanTest {
 		[Theory]
-		[InlineData(true, "true")]
-		[InlineData(false, "false")]
-		public void ConvertToString(bool value, string expected) {
-			var b = new SqlBoolean(value);
+		[InlineData(true, typeof(string), "true")]
+		[InlineData(false, typeof(string), "false")]
+		[InlineData(true, typeof(int), 1)]
+		[InlineData(false, typeof(int), 0)]
+		[InlineData(true, typeof(short), (short) 1)]
+		[InlineData(false, typeof(short), (short) 0)]
+		[InlineData(true, typeof(long), 1L)]
+		[InlineData(false, typeof(long), 0L)]
+		[InlineData(true, typeof(bool), true)]
+		[InlineData(false, typeof(bool), false)]
+		public void Convert_ChangeType(bool? value, Type type, object expected) {
+			var b = (SqlBoolean) value;
+			var result = Convert.ChangeType(b, type, CultureInfo.InvariantCulture);
 
-			var s = Convert.ToString((object)b);
-			Assert.Equal(expected, s);
-		}
-
-		[Theory]
-		[InlineData(true, 1)]
-		[InlineData(false, 0)]
-		public void ConvertToInt32(bool value, int expected) {
-			var b = new SqlBoolean(value);
-
-			var i = Convert.ToInt32(b);
-			Assert.Equal(expected, i);
-		}
-
-		[Theory]
-		[InlineData(true, 1)]
-		[InlineData(false, 0)]
-		public void ConvertToInt16(bool value, short expected) {
-			var b = new SqlBoolean(value);
-
-			var i = Convert.ToInt16(b);
-			Assert.Equal(expected, i);
-		}
-
-		[Theory]
-		[InlineData(true, 1)]
-		[InlineData(false, 0)]
-		public void ConvertToInt64(bool value, long expected) {
-			var b = new SqlBoolean(value);
-
-			var i = Convert.ToInt64(b);
-			Assert.Equal(expected, i);
-		}
-
-		[Theory]
-		[InlineData(true, true)]
-		[InlineData(false, false)]
-		public void ConvertToBoolean(bool value, bool expected) {
-			var b = new SqlBoolean(value);
-
-			var result = Convert.ToBoolean(b);
 			Assert.Equal(expected, result);
 		}
 
-		[Fact]
-		public void CreateFromByte() {
-			var value = new SqlBoolean(1);
-			Assert.NotNull(value);
-			Assert.False(value.IsNull);
-			Assert.Equal(true, (bool)value);
-
-			value = new SqlBoolean(0);
-			Assert.NotNull(value);
-			Assert.False(value.IsNull);
-			Assert.Equal(false, (bool)value);
+		[Theory]
+		[InlineData(1, true)]
+		[InlineData(0, false)]
+		public void CreateFromByte(byte value, bool expected) {
+			var b = new SqlBoolean(value);
+			var expectedResult = (SqlBoolean) expected;
+			Assert.Equal(expectedResult,b);
 		}
 
 		[Fact]
@@ -170,7 +135,7 @@ namespace Deveel.Data.Sql {
 		[Fact]
 		public void Compare_ToNumber_OutOfRange() {
 			var value1 = SqlBoolean.True;
-			var value2 = new SqlNumber(21);
+			var value2 = (SqlNumber)21;
 
 			Assert.False(value1.IsNull);
 			Assert.False(value2.IsNull);
@@ -199,7 +164,9 @@ namespace Deveel.Data.Sql {
 
 			value2 = SqlBoolean.Null;
 
-			Assert.True(value1 != value2);
+			var result = value1 != value2;
+
+			Assert.True(result.IsNull);
 		}
 
 		[Fact]
@@ -212,7 +179,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Fact]
-		[Category("Conversion")]
 		public void Convert_ToString() {
 			var value = SqlBoolean.True;
 			Assert.Equal("true", value.ToString());

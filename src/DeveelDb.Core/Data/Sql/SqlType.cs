@@ -186,6 +186,10 @@ namespace Deveel.Data.Sql {
 			return TypeCode == other.TypeCode;
 		}
 
+		public virtual bool IsInstanceOf(ISqlValue value) {
+			return false;
+		}
+
 		/// <inheritdoc/>
 		public override string ToString() {
 			return this.ToSqlString();

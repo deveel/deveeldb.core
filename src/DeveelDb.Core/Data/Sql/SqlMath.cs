@@ -5,23 +5,23 @@ using Deveel.Math;
 namespace Deveel.Data.Sql {
 	public static class SqlMath {
 		public static SqlNumber Add(SqlNumber a, SqlNumber b) {
-			if (a.State == SqlNumber.NumericState.None) {
-				if (b.State == SqlNumber.NumericState.None) {
+			if (SqlNumber.IsNumber(a)) {
+				if (SqlNumber.IsNumber(b)) {
 					if (a.IsNull || b.IsNull)
 						return SqlNumber.Null;
 
 					return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Add(b.innerValue));
 				}
 
-				return new SqlNumber(b.State, null);
+				return b;
 			}
 
-			return new SqlNumber(a.State, null);
+			return a;
 		}
 
 		public static SqlNumber Subtract(SqlNumber a, SqlNumber b) {
-			if (a.State == SqlNumber.NumericState.None) {
-				if (b.State == SqlNumber.NumericState.None) {
+			if (SqlNumber.IsNumber(a)) {
+				if (SqlNumber.IsNumber(b)) {
 					if (a.IsNull || b.IsNull)
 						return SqlNumber.Null;
 
@@ -30,12 +30,12 @@ namespace Deveel.Data.Sql {
 				return new SqlNumber(b.InverseState(), null);
 			}
 
-			return new SqlNumber(a.State, null);
+			return a;
 		}
 
 		public static SqlNumber Divide(SqlNumber a, SqlNumber b) {
-			if (a.State == SqlNumber.NumericState.None) {
-				if (b.State == SqlNumber.NumericState.None) {
+			if (SqlNumber.IsNumber(a)) {
+				if (SqlNumber.IsNumber(b)) {
 					if (a.IsNull || b.IsNull)
 						return SqlNumber.Null;
 
@@ -49,27 +49,27 @@ namespace Deveel.Data.Sql {
 			}
 
 			// Return NaN if we can't divide
-			return new SqlNumber(SqlNumber.NumericState.NotANumber, null);
+			return SqlNumber.NaN;
 		}
 
 		public static SqlNumber Multiply(SqlNumber a, SqlNumber b) {
-			if (a.State == SqlNumber.NumericState.None) {
-				if (b.State == SqlNumber.NumericState.None) {
+			if (SqlNumber.IsNumber(a)) {
+				if (SqlNumber.IsNumber(b)) {
 					if (a.IsNull || b.IsNull)
 						return SqlNumber.Null;
 
 					return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Multiply(b.innerValue));
 				}
 
-				return new SqlNumber(b.State, null);
+				return b;
 			}
 
-			return new SqlNumber(a.State, null);
+			return a;
 		}
 
 		public static SqlNumber Modulo(SqlNumber a, SqlNumber b) {
-			if (a.State == SqlNumber.NumericState.None) {
-				if (b.State == SqlNumber.NumericState.None) {
+			if (SqlNumber.IsNumber(a)) {
+				if (SqlNumber.IsNumber(b)) {
 					if (a.IsNull || b.IsNull)
 						return SqlNumber.Null;
 
@@ -81,11 +81,11 @@ namespace Deveel.Data.Sql {
 				}
 			}
 
-			return new SqlNumber(SqlNumber.NumericState.NotANumber, null);
+			return SqlNumber.NaN;
 		}
 
 		public static SqlNumber Pow(SqlNumber number, SqlNumber exp) {
-			if (number.State == SqlNumber.NumericState.None)
+			if (SqlNumber.IsNumber(number))
 				return new SqlNumber(number.innerValue.Pow(exp.innerValue));
 
 			return number;
@@ -96,14 +96,14 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber Round(SqlNumber value, int precision) {
-			if (value.State == SqlNumber.NumericState.None)
+			if (SqlNumber.IsNumber(value))
 				return new SqlNumber(value.innerValue.Round(new MathContext(precision, RoundingMode.HalfUp)));
 
 			return value;
 		}
 
 		private static SqlNumber DoubleOperation(SqlNumber number, Func<double, double> op) {
-			if (number.State != SqlNumber.NumericState.None)
+			if (!SqlNumber.IsNumber(number))
 				return number;
 
 			var value = (double) number;
@@ -116,7 +116,7 @@ namespace Deveel.Data.Sql {
 			if (Double.IsNegativeInfinity(result))
 				return SqlNumber.NegativeInfinity;
 
-			return new SqlNumber(result);
+			return (SqlNumber)result;
 		}
 
 		public static SqlNumber Log(SqlNumber number) {
@@ -124,8 +124,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber Log(SqlNumber number, SqlNumber newBase) {
-			if (number.State == SqlNumber.NumericState.None)
-				return new SqlNumber(System.Math.Log((double)number, (double) newBase));
+			if (SqlNumber.IsNumber(number))
+				return (SqlNumber)System.Math.Log((double)number, (double) newBase);
 
 			return number;
 		}
@@ -151,11 +151,12 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber Abs(SqlNumber number) {
-			if (number.State == SqlNumber.NumericState.None)
+			if (SqlNumber.IsNumber(number))
 				return new SqlNumber(SqlNumber.NumericState.None, number.innerValue.Abs());
-			if (number.State == SqlNumber.NumericState.NegativeInfinity)
-				return new SqlNumber(SqlNumber.NumericState.PositiveInfinity, null);
-			return new SqlNumber(number.State, null);
+			if (SqlNumber.IsNegativeInfinity(number))
+				return SqlNumber.PositiveInfinity;
+
+			return number;
 		}
 	}
 }

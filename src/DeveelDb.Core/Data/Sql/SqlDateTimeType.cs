@@ -12,7 +12,7 @@ namespace Deveel.Data.Sql {
 				throw new ArgumentException($"The SQL type {sqlType} is not a valid DATETIME", nameof(sqlType));
 		}
 
-		internal static bool IsDateType(SqlTypeCode sqlType) {
+		private static bool IsDateType(SqlTypeCode sqlType) {
 			return sqlType == SqlTypeCode.Date ||
 			       sqlType == SqlTypeCode.Time ||
 			       sqlType == SqlTypeCode.TimeStamp ||
@@ -62,7 +62,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool CanCastTo(SqlType destType) {
-			return destType is SqlStringType ||
+			return destType is SqlCharacterType ||
 			       destType is SqlDateTimeType ||
 			       destType is SqlNumericType;
 		}
@@ -73,8 +73,8 @@ namespace Deveel.Data.Sql {
 
 			var date = (SqlDateTime) value;
 
-			if (destType is SqlStringType)
-				return ToString(date, (SqlStringType) destType);
+			if (destType is SqlCharacterType)
+				return ToString(date, (SqlCharacterType) destType);
 			if (destType is SqlNumericType)
 				return ToNumber(date);
 			if (destType is SqlDateTimeType)
@@ -91,7 +91,7 @@ namespace Deveel.Data.Sql {
 			return (SqlNumber) date.Ticks;
 		}
 
-		private ISqlString ToString(SqlDateTime date, SqlStringType destType) {
+		private ISqlString ToString(SqlDateTime date, SqlCharacterType destType) {
 			if (date.IsNull)
 				return SqlString.Null;
 
@@ -117,6 +117,10 @@ namespace Deveel.Data.Sql {
 			}
 
 			return base.NormalizeValue(value);
+		}
+
+		public override bool IsInstanceOf(ISqlValue value) {
+			return value is SqlDateTime;
 		}
 
 		public override string ToString(ISqlValue obj) {

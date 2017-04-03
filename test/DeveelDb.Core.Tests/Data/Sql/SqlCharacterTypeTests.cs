@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Globalization;
-using System.Linq.Expressions;
 
 using Xunit;
 
 namespace Deveel.Data.Sql {
-	public static class SqlStringTypeTests {
+	public static class SqlCharacterTypeTests {
 		[Theory]
 		[InlineData(SqlTypeCode.VarChar, -1, null)]
 		[InlineData(SqlTypeCode.VarChar, 255, "en-US")]
@@ -13,7 +12,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.Char, 2, null)]
 		public static void CreateStringType(SqlTypeCode typeCode, int maxSize, string locale) {
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
-			var type = new SqlStringType(typeCode, maxSize, culture);
+			var type = new SqlCharacterType(typeCode, maxSize, culture);
 
 			Assert.Equal(typeCode, type.TypeCode);
 			Assert.Equal(maxSize, type.MaxSize);
@@ -33,7 +32,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.LongVarChar, -1, null, "LONG CHARACTER VARYING")]
 		public static void GetTypeString(SqlTypeCode typeCode, int maxSize, string locale, string expected) {
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
-			var type = new SqlStringType(typeCode, maxSize, culture);
+			var type = new SqlCharacterType(typeCode, maxSize, culture);
 
 			var sql = type.ToString();
 			Assert.Equal(expected, sql);
@@ -46,7 +45,7 @@ namespace Deveel.Data.Sql {
 			var sqlString1 = new SqlString(s1);
 			var sqlString2 = new SqlString(s2);
 
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 			Assert.True(type.IsComparable(type));
 
 			var result = type.Compare(sqlString1, sqlString2);
@@ -66,7 +65,7 @@ namespace Deveel.Data.Sql {
 			var sqlString2 = new SqlString(s2);
 
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
-			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, culture);
 
 			Assert.Equal(expected, (bool) type.Greater(sqlString1, sqlString2));
 		}
@@ -79,7 +78,7 @@ namespace Deveel.Data.Sql {
 			var sqlString2 = new SqlString(s2);
 
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
-			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, culture);
 
 			Assert.Equal(expected, (bool)type.GreaterOrEqual(sqlString1, sqlString2));
 		}
@@ -97,7 +96,7 @@ namespace Deveel.Data.Sql {
 			var sqlString2 = new SqlString(s2);
 
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
-			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, culture);
 
 			Assert.Equal(expected, (bool)type.Smaller(sqlString1, sqlString2));
 		}
@@ -109,7 +108,7 @@ namespace Deveel.Data.Sql {
 			var sqlString2 = new SqlString(s2);
 
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
-			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, culture);
 
 			Assert.Equal(expected, (bool)type.SmallerOrEqual(sqlString1, sqlString2));
 		}
@@ -123,7 +122,7 @@ namespace Deveel.Data.Sql {
 			var sqlString2 = new SqlString(s2);
 
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
-			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, culture);
 
 			Assert.Equal(expected, (bool)type.Equal(sqlString1, sqlString2));
 		}
@@ -136,7 +135,7 @@ namespace Deveel.Data.Sql {
 			var sqlString2 = new SqlString(s2);
 
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
-			var type = new SqlStringType(SqlTypeCode.String, -1, culture);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, culture);
 
 			Assert.Equal(expected, (bool)type.NotEqual(sqlString1, sqlString2));
 		}
@@ -195,7 +194,7 @@ namespace Deveel.Data.Sql {
 			var s1 = new SqlString("ab");
 			var s2 = new SqlString("cd");
 
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 			var op = selector(type);
 			var result = op(s1, s2);
 			Assert.NotNull(result);
@@ -205,7 +204,7 @@ namespace Deveel.Data.Sql {
 		private static void InvalidOp(Func<SqlType, Func<ISqlValue, ISqlValue>> selector) {
 			var s1 = new SqlString("foo");
 
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 			var op = selector(type);
 			var result = op(s1);
 			Assert.NotNull(result);
@@ -220,7 +219,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("TRUE", true)]
 		public static void CastToBoolean(string s, bool expected) {
 			var sqlString = new SqlString(s);
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 
 			Assert.True(type.CanCastTo(PrimitiveTypes.Boolean()));
 			var result = type.Cast(sqlString, PrimitiveTypes.Boolean());
@@ -238,7 +237,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("8992e78", 8992e78)]
 		public static void CastToNumber(string s, double expected) {
 			var sqlString = new SqlString(s);
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 
 			Assert.True(type.CanCastTo(PrimitiveTypes.Numeric()));
 			var result = type.Cast(sqlString, PrimitiveTypes.Numeric());
@@ -253,7 +252,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("71182992", SqlTypeCode.Integer, 71182992)]
 		public static void CastToInteger(string s, SqlTypeCode typeCode, long expected) {
 			var sqlString = new SqlString(s);
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 			var destType = new SqlNumericType(typeCode, -1, -1);
 
 			Assert.True(type.CanCastTo(destType));
@@ -269,8 +268,8 @@ namespace Deveel.Data.Sql {
 		[InlineData("do", SqlTypeCode.Char, 10, "do        ")]
 		public static void CastToString(string s, SqlTypeCode typeCode, int maxSize, string expected) {
 			var sqlString = new SqlString(s);
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
-			var destType = new SqlStringType(typeCode, maxSize, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
+			var destType = new SqlCharacterType(typeCode, maxSize, null);
 
 			Assert.True(type.CanCastTo(destType));
 			var result = type.Cast(sqlString, destType);
@@ -287,7 +286,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.Time, "02:10:16.908")]
 		public static void CastToDateTime(string s, SqlTypeCode typeCode, string expected) {
 			var sqlString = new SqlString(s);
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 			var destType = new SqlDateTimeType(typeCode);
 
 			Assert.True(type.CanCastTo(destType));
@@ -305,7 +304,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("2 10:22:11.111", null)]
 		public static void CastToYearToMonth(string s, string expected) {
 			var sqlString = new SqlString(s);
-			var type = new SqlStringType(SqlTypeCode.String, -1, null);
+			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 			var destType = new SqlIntervalType(SqlTypeCode.DayToSecond);
 
 			Assert.True(type.CanCastTo(destType));

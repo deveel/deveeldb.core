@@ -62,8 +62,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		private static void BinaryOp(Func<SqlNumericType, Func<ISqlValue, ISqlValue, SqlBoolean>> selector, double value1, double value2, bool expected) {
-			var number1 = new SqlNumber(value1);
-			var number2 = new SqlNumber(value2);
+			var number1 = (SqlNumber)value1;
+			var number2 = (SqlNumber)value2;
 			var type = new SqlNumericType(SqlTypeCode.Numeric, -1, -1);
 
 			var op = selector(type);

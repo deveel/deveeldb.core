@@ -17,8 +17,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
-using System.Reflection;
 
 namespace Deveel.Data.Sql {
 	public struct SqlDateTime : ISqlValue, IEquatable<SqlDateTime>, IComparable<SqlDateTime>, IFormattable, IConvertible {

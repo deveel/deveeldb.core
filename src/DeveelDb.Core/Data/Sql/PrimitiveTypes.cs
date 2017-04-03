@@ -147,35 +147,35 @@ namespace Deveel.Data.Sql {
 
 		#region String Types
 
-		public static SqlStringType String() {
+		public static SqlCharacterType String() {
 			return String(SqlTypeCode.String);
 		}
 
-		public static SqlStringType String(SqlTypeCode sqlType) {
+		public static SqlCharacterType String(SqlTypeCode sqlType) {
 			return String(sqlType, -1);
 		}
 
-		public static SqlStringType String(SqlTypeCode sqlType, int maxSize) {
+		public static SqlCharacterType String(SqlTypeCode sqlType, int maxSize) {
 			return String(sqlType, maxSize, null);
 		}
 
-		public static SqlStringType String(SqlTypeCode sqlType, int maxSize, CultureInfo locale) {
-			return new SqlStringType(sqlType, maxSize, locale);
+		public static SqlCharacterType String(SqlTypeCode sqlType, int maxSize, CultureInfo locale) {
+			return new SqlCharacterType(sqlType, maxSize, locale);
 		}
 
-		public static SqlStringType VarChar(int maxSize) {
+		public static SqlCharacterType VarChar(int maxSize) {
 			return VarChar(maxSize, null);
 		}
 
-		public static SqlStringType VarChar() {
+		public static SqlCharacterType VarChar() {
 			return VarChar(null);
 		}
 
-		public static SqlStringType VarChar(CultureInfo locale) {
+		public static SqlCharacterType VarChar(CultureInfo locale) {
 			return VarChar(-1, locale);
 		}
 
-		public static SqlStringType VarChar(int maxSize, CultureInfo locale) {
+		public static SqlCharacterType VarChar(int maxSize, CultureInfo locale) {
 			return String(SqlTypeCode.VarChar, maxSize, locale);
 		}
 
@@ -211,60 +211,63 @@ namespace Deveel.Data.Sql {
 			if (System.String.IsNullOrEmpty(name))
 				return false;
 
-			if (System.String.Equals("long varchar", name, StringComparison.OrdinalIgnoreCase))
+			if (System.String.Equals("long varchar", name, StringComparison.OrdinalIgnoreCase) ||
+				System.String.Equals("long character varying", name, StringComparison.OrdinalIgnoreCase))
 				name = "longvarchar";
-			if (System.String.Equals("long varbinary", name, StringComparison.OrdinalIgnoreCase))
+			if (System.String.Equals("long varbinary", name, StringComparison.OrdinalIgnoreCase) ||
+				System.String.Equals("long binary varying", name, StringComparison.OrdinalIgnoreCase))
 				name = "longvarbinary";
 
 			if (name.EndsWith("%TYPE", StringComparison.OrdinalIgnoreCase) ||
 			    name.EndsWith("%ROWTYPE", StringComparison.OrdinalIgnoreCase))
 				return true;
 
-			if (name.Equals("NUMERIC", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("STRING", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("DATE", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("NULL", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("BOOLEAN", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("BINARY", StringComparison.OrdinalIgnoreCase))
-				return true;
+			switch (name.ToUpperInvariant()) {
+				case "BOOLEAN":
+				case "BOOL":
+				case "BIT":
+					return true;
 
-			if (name.Equals("BIT", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("BOOLEAN", StringComparison.OrdinalIgnoreCase))
-				return true;
+				case "NUMERIC":
+				case "INT":
+				case "INTEGER":
+				case "BIGINT":
+				case "TINYINT":
+				case "SMALLINT":
+				case "REAL":
+				case "FLOAT":
+				case "DOUBLE":
+				case "DECIMAL":
+					return true;
 
-			if (name.Equals("TINYINT", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("SMALLINT", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("INTEGER", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("INT", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("BIGINT", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("REAL", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("FLOAT", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("DOUBLE", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("DECIMAL", StringComparison.OrdinalIgnoreCase))
-				return true;
+				case "STRING":
+				case "VARCHAR":
+				case "CHAR":
+				case "CHARACTER VARYING":
+				case "CLOB":
+				case "LONGVARCHAR":
+				case "LONG VARCHAR":
+				case "LONG CHARACTER VARYING":
+					return true;
 
-			if (name.Equals("DATE", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("TIME", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("TIMESTAMP", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("DATETIME", StringComparison.OrdinalIgnoreCase))
-				return true;
+				case "BINARY":
+				case "VARBINARY":
+				case "LONG VARBINARY":
+				case "LONGVARBINARY":
+				case "LONG BINARY VARYING":
+				case "BLOB":
+					return true;
 
-			if (name.Equals("YEAR TO MONTH", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("DAY TO SECOND", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("INTERVAL", StringComparison.OrdinalIgnoreCase))
-				return true;
+				case "DATE":
+				case "DATETIME":
+				case "TIME":
+				case "TIMESTAMP":
+					return true;
 
-			if (name.Equals("CHAR", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("VARCHAR", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("LONGVARCHAR", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("CLOB", StringComparison.OrdinalIgnoreCase))
-				return true;
-
-			if (name.Equals("BINARY", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("VARBINARY", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("LONGVARBINARY", StringComparison.OrdinalIgnoreCase) ||
-			    name.Equals("BLOB", StringComparison.OrdinalIgnoreCase))
-				return true;
+				case "YEAR TO MONTH":
+				case "DAY TO SECOND":
+					return true;
+			}
 
 			return false;
 		}

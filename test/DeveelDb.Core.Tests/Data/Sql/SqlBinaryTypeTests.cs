@@ -49,7 +49,7 @@ namespace Deveel.Data.Sql {
 		public static void CastToString(string s, SqlTypeCode typeCode, int maxSize, string expected) {
 			var type = new SqlBinaryType(SqlTypeCode.Binary);
 			var input = String.IsNullOrEmpty(s) ? SqlString.Null : new SqlString(s);
-			var destType = new SqlStringType(typeCode, maxSize, null);
+			var destType = new SqlCharacterType(typeCode, maxSize, null);
 
 			var bytes = input.ToByteArray();
 			var binary = new SqlBinary(bytes);

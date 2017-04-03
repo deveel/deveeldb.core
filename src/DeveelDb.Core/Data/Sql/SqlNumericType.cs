@@ -47,6 +47,10 @@ namespace Deveel.Data.Sql {
 			       typeCode == SqlTypeCode.Numeric;
 		}
 
+		public override bool IsInstanceOf(ISqlValue value) {
+			return value is SqlNumber;
+		}
+
 		public override SqlBoolean Greater(ISqlValue a, ISqlValue b) {
 			if (a.IsNull || b.IsNull)
 				return SqlBoolean.Null;
@@ -138,9 +142,9 @@ namespace Deveel.Data.Sql {
 			switch (TypeCode) {
 				case SqlTypeCode.Float:
 				case SqlTypeCode.Real:
-					return new SqlNumber((double) (float) number);
+					return (SqlNumber) ((float) number);
 				case SqlTypeCode.Double:
-					return new SqlNumber((double) number);
+					return SqlNumber.FromDouble((double) number, Precision);
 				default:
 					throw new InvalidCastException();
 			}

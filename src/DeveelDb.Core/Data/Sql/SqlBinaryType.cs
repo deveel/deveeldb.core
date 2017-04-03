@@ -67,7 +67,7 @@ namespace Deveel.Data.Sql {
 		public override bool CanCastTo(SqlType destType) {
 			return destType is SqlBooleanType ||
 			       destType is SqlNumericType ||
-				   destType is SqlStringType ||
+				   destType is SqlCharacterType ||
 				   destType is SqlDateTimeType;
 		}
 
@@ -79,8 +79,8 @@ namespace Deveel.Data.Sql {
 
 			if (destType is SqlBooleanType)
 				return ToBoolean(binary);
-			if (destType is SqlStringType)
-				return ToString(binary, (SqlStringType) destType);
+			if (destType is SqlCharacterType)
+				return ToString(binary, (SqlCharacterType) destType);
 			if (destType is SqlNumericType)
 				return ToNumber(binary, (SqlNumericType) destType);
 			if (destType is SqlDateTimeType)
@@ -113,7 +113,7 @@ namespace Deveel.Data.Sql {
 			return new SqlNumber(value.ToArray(), scale, precision);
 		}
 
-		private ISqlValue ToString(ISqlBinary binary, SqlStringType destType) {
+		private ISqlValue ToString(ISqlBinary binary, SqlCharacterType destType) {
 			if (binary == null || binary.IsNull)
 				return SqlString.Null;
 

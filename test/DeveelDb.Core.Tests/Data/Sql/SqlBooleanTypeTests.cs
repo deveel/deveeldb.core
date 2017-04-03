@@ -176,7 +176,7 @@ namespace Deveel.Data.Sql {
 		public void Compare_BooleanToNumeric_Invalid() {
 			var type = PrimitiveTypes.Boolean();
 			Assert.NotNull(type);
-			Assert.Throws<ArgumentException>(() => type.Compare(SqlBoolean.True, new SqlNumber(22)));
+			Assert.Throws<ArgumentException>(() => type.Compare(SqlBoolean.True, (SqlNumber)22));
 		}
 
 		[Theory]

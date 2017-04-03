@@ -20,14 +20,18 @@ using System.Globalization;
 using System.IO;
 
 namespace Deveel.Data.Sql {
-	public sealed class SqlStringType : SqlType {
-		private CompareInfo collator;
-
+	public sealed class SqlCharacterType : SqlType {
 		public const int DefaultMaxSize = Int16.MaxValue;
 
-		public SqlStringType(SqlTypeCode typeCode, int maxSize, CultureInfo locale) 
+		public SqlCharacterType(SqlTypeCode typeCode, int maxSize, CultureInfo locale) 
 			: base("STRING", typeCode) {
 			AssertIsString(typeCode);
+
+			if (typeCode == SqlTypeCode.Char) {
+				if (maxSize < 0)
+					throw new ArgumentException("CHAR type requires a max length is specified");
+			}
+
 			MaxSize = maxSize;
 			Locale = locale;
 		}
@@ -49,20 +53,6 @@ namespace Deveel.Data.Sql {
 		/// </remarks>
 		public CultureInfo Locale { get; }
 
-		private CompareInfo Collator {
-			get {
-				lock (this) {
-					if (collator != null) {
-						return collator;
-					} else {
-						//TODO:
-						collator = Locale.CompareInfo;
-						return collator;
-					}
-				}
-			}
-		}
-
 		private static void AssertIsString(SqlTypeCode sqlType) {
 			if (!IsStringType(sqlType))
 				throw new ArgumentException(String.Format("The type {0} is not a valid STRING type.", sqlType), "sqlType");
@@ -74,6 +64,10 @@ namespace Deveel.Data.Sql {
 			       typeCode == SqlTypeCode.Char ||
 			       typeCode == SqlTypeCode.LongVarChar ||
 			       typeCode == SqlTypeCode.Clob;
+		}
+
+		public override bool IsInstanceOf(ISqlValue value) {
+			return value is ISqlString;
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {
@@ -97,8 +91,8 @@ namespace Deveel.Data.Sql {
 
 		public override bool IsComparable(SqlType type) {
 			// Are we comparing with another string type?
-			if (type is SqlStringType) {
-				var stringType = (SqlStringType)type;
+			if (type is SqlCharacterType) {
+				var stringType = (SqlCharacterType)type;
 				// If either locale is null return true
 				if (Locale == null || stringType.Locale == null)
 					return true;
@@ -122,68 +116,11 @@ namespace Deveel.Data.Sql {
 			    !(y is ISqlString))
 				throw new ArgumentException("Cannot compare objects that are not strings.");
 
-			if (x.IsNull && y.IsNull)
-				return 0;
-			if (x.IsNull && !y.IsNull)
-				return 1;
-			if (!x.IsNull && y.IsNull)
-				return -1;
-
-			// If lexicographical ordering,
-			if (Locale == null)
-				return LexicographicalOrder((ISqlString)x, (ISqlString)y);
-
-			return Collator.Compare(x.ToString(), y.ToString());
-		}
-
-		private static int LexicographicalOrder(ISqlString str1, ISqlString str2) {
-			// If both strings are small use the 'toString' method to compare the
-			// strings.  This saves the overhead of having to store very large string
-			// objects in memory for all comparisons.
-			long str1Size = str1.Length;
-			long str2Size = str2.Length;
-			if (str1Size < 32 * 1024 &&
-			    str2Size < 32 * 1024) {
-				return String.Compare(str1.ToString(), str2.ToString(), StringComparison.Ordinal);
-			}
-
-			// TODO: pick one of the two encodings?
-
-			// The minimum size
-			long size = System.Math.Min(str1Size, str2Size);
-			TextReader r1 = str1.GetInput();
-			TextReader r2 = str2.GetInput();
-			try {
-				try {
-					while (size > 0) {
-						int c1 = r1.Read();
-						int c2 = r2.Read();
-						if (c1 != c2) {
-							return c1 - c2;
-						}
-						--size;
-					}
-					// They compare equally up to the limit, so now compare sizes,
-					if (str1Size > str2Size) {
-						// If str1 is larger
-						return 1;
-					} else if (str1Size < str2Size) {
-						// If str1 is smaller
-						return -1;
-					}
-					// Must be equal
-					return 0;
-				} finally {
-					r1.Dispose();
-					r2.Dispose();
-				}
-			} catch (IOException e) {
-				throw new Exception("IO Error: " + e.Message);
-			}
+			return SqlStringCompare.Compare(Locale, (ISqlString) x, (ISqlString) y);
 		}
 
 		public override bool CanCastTo(SqlType destType) {
-			return destType is SqlStringType ||
+			return destType is SqlCharacterType ||
 			       destType is SqlBinaryType ||
 			       destType is SqlBooleanType ||
 				   destType is SqlNumericType ||
@@ -232,7 +169,7 @@ namespace Deveel.Data.Sql {
 					return ToBoolean((SqlString) value);
 				if (destType is SqlNumericType)
 					return ToNumber((SqlString) value, destType);
-				if (destType is SqlStringType)
+				if (destType is SqlCharacterType)
 					return ToString((SqlString) value, destType);
 				if (destType is SqlDateTimeType)
 					return ToDateTime((SqlString) value, destType);
@@ -258,7 +195,7 @@ namespace Deveel.Data.Sql {
 
 
 		private SqlBoolean ToBoolean(SqlString value) {
-			if (value == null || value.IsNull)
+			if (value.IsNull)
 				return SqlBoolean.Null;
 
 			if (value.Equals(SqlBoolean.TrueString, true))

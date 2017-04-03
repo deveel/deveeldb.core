@@ -25,6 +25,7 @@ namespace Deveel.Data.Sql {
 		internal readonly BigDecimal innerValue;
 		private readonly int byteCount;
 		private readonly long valueAsLong;
+		private readonly NumericState state;
 
 		public static readonly SqlNumber Zero = new SqlNumber(NumericState.None, BigDecimal.Zero);
 		public static readonly SqlNumber One = new SqlNumber(NumericState.None, BigDecimal.One);
@@ -59,7 +60,7 @@ namespace Deveel.Data.Sql {
 			}
 
 			innerValue = value;
-			State = state;
+			this.state = state;
 		}
 
 		public SqlNumber(byte[] bytes, int scale, int precision)
@@ -70,27 +71,23 @@ namespace Deveel.Data.Sql {
 			: this(GetUnscaledBytes(bytes), GetScale(bytes), GetPrecision(bytes)) {
 		}
 
-		public SqlNumber(int value)
-			: this(value, 0, value.ToString().Length) {
-		}
-
-		public SqlNumber(long value)
-			: this(value, 0, value.ToString().Length) {
-		}
-
-		public SqlNumber(double value)
-			: this(value, MathContext.Decimal64.Precision) {
-		}
-
-		public SqlNumber(double value, int precision)
-			: this(GetNumberState(value), GetNumberState(value) == NumericState.None ? new BigDecimal(value, new MathContext(precision)) : null) {
-		}
-
 		private SqlNumber(BigInteger unscaled, int scale, int precision)
 			: this(new BigDecimal(unscaled, scale, new MathContext(precision))) {
 		}
 
-		internal NumericState State { get; }
+		public bool CanBeInt64 => byteCount <= 8;
+
+		public bool CanBeInt32 => byteCount <= 4;
+
+		public int Scale => state == NumericState.None ? innerValue.Scale : 0;
+
+		public int Precision => state == NumericState.None ? innerValue.Precision : 0;
+
+		internal MathContext MathContext => state == NumericState.None ? new MathContext(Precision) : null;
+
+		public int Sign => state == NumericState.None ? innerValue.Sign : 0;
+
+		public bool IsNull => state == NumericState.None && innerValue == null;
 
 		private static NumericState GetNumberState(double value) {
 			if (Double.IsPositiveInfinity(value))
@@ -119,30 +116,6 @@ namespace Deveel.Data.Sql {
 			return BitConverter.ToInt32(bytes, 4);
 		}
 
-		public bool CanBeInt64 {
-			get { return byteCount <= 8; }
-		}
-
-		public bool CanBeInt32 {
-			get { return byteCount <= 4; }
-		}
-
-		public int Scale {
-			get { return State == NumericState.None ? innerValue.Scale : 0; }
-		}
-
-		public int Precision {
-			get { return State == NumericState.None ? innerValue.Precision : 0; }
-		}
-
-		internal MathContext MathContext {
-			get { return State == NumericState.None ? new MathContext(Precision) : null; }
-		}
-
-		public int Sign {
-			get { return State == NumericState.None ? innerValue.Sign : 0; }
-		}
-
 		int IComparable.CompareTo(object obj) {
 			if (!(obj is SqlNumber))
 				throw new ArgumentException();
@@ -157,28 +130,28 @@ namespace Deveel.Data.Sql {
 			return CompareTo((SqlNumber) other);
 		}
 
-		public bool IsNull {
-			get { return State == NumericState.None && innerValue == null; }
-		}
-
 		internal NumericState InverseState() {
-			if (State == NumericState.NegativeInfinity)
+			if (state == NumericState.NegativeInfinity)
 				return NumericState.PositiveInfinity;
-			if (State == NumericState.PositiveInfinity)
+			if (state == NumericState.PositiveInfinity)
 				return NumericState.NegativeInfinity;
-			return State;
+			return state;
 		}
 
 		public static bool IsNaN(SqlNumber number) {
-			return number.State == NumericState.NotANumber;
+			return number.state == NumericState.NotANumber;
 		}
 
 		public static bool IsPositiveInfinity(SqlNumber number) {
-			return number.State == NumericState.PositiveInfinity;
+			return number.state == NumericState.PositiveInfinity;
 		}
 
 		public static bool IsNegativeInfinity(SqlNumber number) {
-			return number.State == NumericState.NegativeInfinity;
+			return number.state == NumericState.NegativeInfinity;
+		}
+
+		public static bool IsNumber(SqlNumber number) {
+			return number.state == NumericState.None;
 		}
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
@@ -186,10 +159,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		public bool Equals(SqlNumber other) {
-			if (State != other.State)
+			if (state != other.state)
 				return false;
 
-			if (State != NumericState.None)
+			if (state != NumericState.None)
 				return true;
 
 			if (IsNull && other.IsNull)
@@ -210,7 +183,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override int GetHashCode() {
-			return innerValue.GetHashCode() ^ State.GetHashCode();
+			return innerValue.GetHashCode() ^ state.GetHashCode();
 		}
 
 		public int CompareTo(SqlNumber other) {
@@ -225,7 +198,7 @@ namespace Deveel.Data.Sql {
 				return 0;
 
 			// If this is a non-infinity number
-			if (State == NumericState.None) {
+			if (state == NumericState.None) {
 				// If both values can be represented by a long value
 				if (CanBeInt64 && other.CanBeInt64) {
 					// Perform a long comparison check,
@@ -234,17 +207,17 @@ namespace Deveel.Data.Sql {
 
 				// And the compared number is non-infinity then use the BigDecimal
 				// compareTo method.
-				if (other.State == NumericState.None)
+				if (other.state == NumericState.None)
 					return  innerValue.CompareTo(other.innerValue);
 
 				// Comparing a regular number with a NaN number.
 				// If positive infinity or if NaN
-				if (other.State == NumericState.PositiveInfinity ||
-				    other.State == NumericState.NotANumber) {
+				if (other.state == NumericState.PositiveInfinity ||
+				    other.state == NumericState.NotANumber) {
 					return -1;
 				}
 					// If negative infinity
-				if (other.State == NumericState.NegativeInfinity)
+				if (other.state == NumericState.NegativeInfinity)
 					return 1;
 
 				throw new ArgumentException("Unknown number state.");
@@ -252,14 +225,14 @@ namespace Deveel.Data.Sql {
 
 			// This number is a NaN number.
 			// Are we comparing with a regular number?
-			if (other.State == NumericState.None) {
+			if (other.state == NumericState.None) {
 				// Yes, negative infinity
-				if (State == NumericState.NegativeInfinity)
+				if (state == NumericState.NegativeInfinity)
 					return -1;
 
 				// positive infinity or NaN
-				if (State == NumericState.PositiveInfinity ||
-				    State == NumericState.NotANumber)
+				if (state == NumericState.PositiveInfinity ||
+				    state == NumericState.NotANumber)
 					return 1;
 
 				throw new ArgumentException("Unknown number state.");
@@ -268,7 +241,7 @@ namespace Deveel.Data.Sql {
 			// Comparing NaN number with a NaN number.
 			// This compares -Inf less than Inf and NaN and NaN greater than
 			// Inf and -Inf.  -Inf < Inf < NaN
-			var c = (State - other.State);
+			var c = (state - other.state);
 			if (c == 0)
 				return 0;
 			if (c < 0)
@@ -361,7 +334,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public byte[] ToUnscaledByteArray() {
-			if (State != NumericState.None)
+			if (state != NumericState.None)
 				return new byte[0];
 
 			return innerValue.UnscaledValue.ToByteArray();
@@ -369,7 +342,7 @@ namespace Deveel.Data.Sql {
 
 
 		public byte[] ToByteArray() {
-			if (State != NumericState.None)
+			if (state != NumericState.None)
 				return new byte[0];
 
 			var unscaled = innerValue.UnscaledValue.ToByteArray();
@@ -389,7 +362,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
-			switch (State) {
+			switch (state) {
 				case (NumericState.None): {
 					if (IsNull) {
 						builder.Append("NULL");	
@@ -422,7 +395,7 @@ namespace Deveel.Data.Sql {
 		private double ToDouble() {
 			AssertNotNull();
 
-			switch (State) {
+			switch (state) {
 				case (NumericState.None):
 					return innerValue.ToDouble();
 				case (NumericState.NegativeInfinity):
@@ -439,7 +412,7 @@ namespace Deveel.Data.Sql {
 		private float ToSingle() {
 			AssertNotNull();
 
-			switch (State) {
+			switch (state) {
 				case (NumericState.None):
 					return innerValue.ToSingle();
 				case (NumericState.NegativeInfinity):
@@ -458,7 +431,7 @@ namespace Deveel.Data.Sql {
 
 			if (CanBeInt64)
 				return valueAsLong;
-			switch (State) {
+			switch (state) {
 				case (NumericState.None):
 					return innerValue.ToInt64();
 				default:
@@ -471,7 +444,7 @@ namespace Deveel.Data.Sql {
 
 			if (CanBeInt32)
 				return (int)valueAsLong;
-			switch (State) {
+			switch (state) {
 				case (NumericState.None):
 					return innerValue.ToInt32();
 				default:
@@ -519,9 +492,9 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber XOr(SqlNumber value) {
-			if (State != NumericState.None)
+			if (state != NumericState.None)
 				return this;
-			if (value.State != NumericState.None)
+			if (value.state != NumericState.None)
 				return value;
 			if (IsNull || value.IsNull)
 				return Null;
@@ -536,9 +509,9 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber And(SqlNumber value) {
-			if (State != NumericState.None)
+			if (state != NumericState.None)
 				return this;
-			if (value.State != NumericState.None)
+			if (value.state != NumericState.None)
 				return value;
 			if (IsNull || value.IsNull)
 				return Null;
@@ -553,9 +526,9 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber Or(SqlNumber value) {
-			if (State != NumericState.None)
+			if (state != NumericState.None)
 				return this;
-			if (value.State != NumericState.None)
+			if (value.state != NumericState.None)
 				return value;
 			if (IsNull || value.IsNull)
 				return Null;
@@ -570,45 +543,45 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber Negate() {
-			if (State == NumericState.None) {
+			if (state == NumericState.None) {
 				if (IsNull)
 					return Null;
 
 				return new SqlNumber(innerValue.Negate());
 			}
 
-			if (State == NumericState.NegativeInfinity ||
-				State == NumericState.PositiveInfinity)
+			if (state == NumericState.NegativeInfinity ||
+				state == NumericState.PositiveInfinity)
 				return new SqlNumber(InverseState(), null);
 
 			return this;
 		}
 
 		private SqlNumber Plus() {
-			if (State == NumericState.None) {
+			if (state == NumericState.None) {
 				if (IsNull)
 					return Null;
 
 				return new SqlNumber(innerValue.Plus());
 			}
 
-			if (State == NumericState.NegativeInfinity ||
-				State == NumericState.PositiveInfinity)
+			if (state == NumericState.NegativeInfinity ||
+				state == NumericState.PositiveInfinity)
 				return new SqlNumber(InverseState(), null);
 
 			return this;
 		}
 
 		private SqlNumber Not() {
-			if (State == NumericState.None) {
+			if (state == NumericState.None) {
 				if (IsNull)
 					return Null;
 
 				return new SqlNumber(new BigDecimal(~innerValue.ToBigInteger()));
 			}
 
-			if (State == NumericState.NegativeInfinity ||
-				State == NumericState.PositiveInfinity)
+			if (state == NumericState.NegativeInfinity ||
+				state == NumericState.PositiveInfinity)
 				return new SqlNumber(InverseState(), null);
 
 			return this;			
@@ -780,6 +753,7 @@ namespace Deveel.Data.Sql {
 			return number.IsNull ? (long?) null : number.ToInt64();
 		}
 
+
 		public static explicit operator double?(SqlNumber number) {
 			return number.IsNull ? (double?) null : number.ToDouble();
 		}
@@ -797,14 +771,62 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static explicit operator SqlNumber(double? value) {
-			return value == null ? SqlNumber.Null : new SqlNumber(value.Value);
+			if (value == null)
+				return Null;
+
+			return (SqlNumber) value.Value;
 		}
 
 		public static explicit operator SqlNumber(double value) {
-			return new SqlNumber(value);
+			return FromDouble(value);
+		}
+
+		public static explicit operator SqlNumber(float? value) {
+			if (value == null)
+				return Null;
+
+			return (SqlNumber) value.Value;
+		}
+
+		public static explicit operator SqlNumber(float value) {
+			return new SqlNumber(new BigDecimal(value, MathContext.Decimal32));
+		}
+
+		public static explicit operator SqlNumber(int? value) {
+			if (value == null)
+				return Null;
+
+			return (SqlNumber) value.Value;
+		}
+
+		public static explicit operator SqlNumber(int value) {
+			return new SqlNumber(value, 0, 0);
+		}
+
+		public static explicit operator SqlNumber(long? value) {
+			if (value == null)
+				return Null;
+
+			return (SqlNumber) value.Value;
+		}
+
+		public static explicit operator SqlNumber(long value) {
+			return new SqlNumber(value, 0, 0);
 		}
 
 		#endregion
+
+		public static SqlNumber FromDouble(double value, int precision) {
+			var state = GetNumberState(value);
+			if (state == NumericState.None) {
+				return new SqlNumber(new BigDecimal(value, new MathContext(precision)));
+			}
+
+			return new SqlNumber(state, null);
+		}
+
+		public static SqlNumber FromDouble(double value)
+			=> FromDouble(value, Math.MathContext.Decimal64.Precision);
 
 		#region NumericState
 

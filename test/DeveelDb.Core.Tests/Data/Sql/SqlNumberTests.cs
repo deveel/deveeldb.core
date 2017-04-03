@@ -6,7 +6,7 @@ namespace Deveel.Data.Sql {
 	public static class SqlNumberTests {
 		[Fact]
 		public static void Create_FromInteger() {
-			var value = new SqlNumber((int)45993);
+			var value = (SqlNumber)45993;
 			Assert.False(value.IsNull);
 			Assert.True(value.CanBeInt32);
 			Assert.True(value.CanBeInt64);
@@ -20,7 +20,7 @@ namespace Deveel.Data.Sql {
 
 		[Fact]
 		public static void Create_FromBigInt() {
-			var value = new SqlNumber(4599356655L);
+			var value = (SqlNumber)4599356655L;
 			Assert.False(value.IsNull);
 			Assert.False(value.CanBeInt32);
 			Assert.True(value.CanBeInt64);
@@ -34,7 +34,7 @@ namespace Deveel.Data.Sql {
 
 		[Fact]
 		public static void Create_FromDouble() {
-			var value = new SqlNumber(459935.9803d);
+			var value = SqlNumber.FromDouble(459935.9803d);
 			Assert.False(value.IsNull);
 			Assert.False(value.CanBeInt32);
 			Assert.False(value.CanBeInt64);
@@ -65,7 +65,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("-Inf", Double.NegativeInfinity, true)]
 		[InlineData("NaN", Double.NaN, true)]
 		public static void TryParse(string s, double? expected, bool expectedSuccess) {
-			var expectedResult = expected == null ? SqlNumber.Null : new SqlNumber(expected.Value);
+			var expectedResult = (SqlNumber) expected;
 
 			SqlNumber number;
 			Assert.Equal(expectedSuccess, SqlNumber.TryParse(s, out number));
@@ -76,7 +76,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(Double.PositiveInfinity, true)]
 		[InlineData(67784.00033, false)]
 		public static void EqualsToPositiveInfinity(double value, bool expected) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 
 			Assert.Equal(expected, number.Equals(SqlNumber.PositiveInfinity));
 		}
@@ -87,16 +87,16 @@ namespace Deveel.Data.Sql {
 		[InlineData(Double.NaN, Double.PositiveInfinity, 1)]
 		[InlineData(78333.9122, Double.NegativeInfinity, 1)]
 		public static void CompareToInvalidState(double value1, double value2, int expected) {
-			var number1 = new SqlNumber(value1);
-			var number2 = new SqlNumber(value2);
-			Assert.Equal(expected, (int) number1.CompareTo(number2));
+			var number1 = (SqlNumber)value1;
+			var number2 = (SqlNumber)value2;
+			Assert.Equal(expected, number1.CompareTo(number2));
 		}
 
 		[Theory]
 		[InlineData(1, true)]
 		[InlineData(0, false)]
 		public static void Convert_ToSqlBoolean(int i, bool expected) {
-			var value = new SqlNumber(i);
+			var value = (SqlNumber)i;
 			var result = Convert.ChangeType(value, typeof(SqlBoolean));
 			Assert.IsType<SqlBoolean>(result);
 			Assert.Equal(expected, (bool)(SqlBoolean)result);
@@ -107,7 +107,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(543)]
 		[InlineData(322.3223e12)]
 		public static void Convert_ToByteArray(double value) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 			var result = Convert.ChangeType(number, typeof(byte[]));
 
 			Assert.NotNull(result);
@@ -122,7 +122,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(7448)]
 		[InlineData(-02933)]
 		public static void Convert_ToSqlBinary(double value) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 			var result = Convert.ChangeType(number, typeof(SqlBinary));
 
 			Assert.NotNull(result);
@@ -138,7 +138,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(67484433323, TypeCode.Int64)]
 		[InlineData(94055332.6557, TypeCode.Object)]
 		public static void Convert_GetTypeCode(double value, TypeCode expected) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 			var typeCode = Convert.GetTypeCode(number);
 			Assert.Equal(expected, typeCode);
 		}
@@ -157,7 +157,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(78466373.00091e3, typeof(double), 78466373.00091e3)]
 		[InlineData(455.019, typeof(float), 455.019f)]
 		public static void Convert_ChangeType(double value, Type type, object expected) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 			var result = Convert.ChangeType(number, type);
 			Assert.IsType(type, result);
 			Assert.Equal(expected, result);
@@ -212,7 +212,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(34)]
 		[InlineData(12784774)]
 		public static void Int32_Convert(int value) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 
 			var result = Convert.ChangeType(number, typeof(int));
 
@@ -224,7 +224,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(9010)]
 		[InlineData(87749948399)]
 		public static void Int64_Convert(long value) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 
 			var result = Convert.ChangeType(number, typeof(long));
 
@@ -236,7 +236,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(90.121)]
 		[InlineData(119299.0029)]
 		public static void Double_Convert(double value) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 
 			var result = Convert.ChangeType(number, typeof(double));
 
@@ -248,7 +248,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(100)]
 		[InlineData(2)]
 		public static void Byte_Convert(byte value) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 
 			var result = Convert.ChangeType(number, typeof(byte));
 
@@ -471,7 +471,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(Double.PositiveInfinity, "+Infinity")]
 		[InlineData(Double.NegativeInfinity, "-Infinity")]
 		public static void GetString(double value, string expected) {
-			var number = new SqlNumber(value);
+			var number = (SqlNumber)value;
 			var s = number.ToString();
 			Assert.Equal(expected, s);
 		}

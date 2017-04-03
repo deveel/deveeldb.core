@@ -63,7 +63,7 @@ namespace Deveel.Data.Sql {
 			var date = String.IsNullOrEmpty(s) ? SqlDateTime.Null : SqlDateTime.Parse(s);
 			var type = new SqlDateTimeType(typeCode);
 
-			var destType = new SqlStringType(destTypeCode, maxSize, null);
+			var destType = new SqlCharacterType(destTypeCode, maxSize, null);
 			Assert.True(type.CanCastTo(destType));
 
 			var result = type.Cast(date, destType);

@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Diagnostics;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
@@ -30,6 +31,7 @@ namespace Deveel.Data.Sql {
 	/// state cannot be determined.
 	/// </para>
 	/// </remarks>
+	[DebuggerDisplay("{ToString()}")]
 	public struct SqlBoolean : ISqlValue, IEquatable<SqlBoolean>, IComparable<SqlBoolean>, IConvertible {
 		private readonly byte? value;
 
@@ -269,11 +271,11 @@ namespace Deveel.Data.Sql {
 		}
 
 		long IConvertible.ToInt64(IFormatProvider provider) {
-			return (this as IConvertible).ToInt64(provider);
+			return (this as IConvertible).ToInt32(provider);
 		}
 
 		ulong IConvertible.ToUInt64(IFormatProvider provider) {
-			return (this as IConvertible).ToUInt64(provider);
+			return (this as IConvertible).ToUInt32(provider);
 		}
 
 		float IConvertible.ToSingle(IFormatProvider provider) {
@@ -297,9 +299,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider) {
-			if (conversionType == typeof(bool))
-				return (bool) this;
-
 			throw new InvalidCastException(String.Format("Cannot convert a SQL BOOLEAN to {0}", conversionType.FullName));
 		}
 
@@ -325,6 +324,9 @@ namespace Deveel.Data.Sql {
 		/// <seealso cref="Equals(SqlBoolean)"/>
 		/// <seealso cref="Equals(object)"/>
 		public static SqlBoolean operator ==(SqlBoolean a, SqlBoolean b) {
+			if (a.IsNull || b.IsNull)
+				return Null;
+
 			return a.Equals(b);
 		}
 
@@ -335,21 +337,24 @@ namespace Deveel.Data.Sql {
 		/// <param name="b">The right term of comparison.</param>
 		/// <returns></returns>
 		public static SqlBoolean operator !=(SqlBoolean a, SqlBoolean b) {
-			return !(a == b);
+			if (a.IsNull || b.IsNull)
+				return Null;
+
+			return !a.Equals(b);
 		}
 
 		public static SqlBoolean operator ==(SqlBoolean a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
+			if (a.IsNull || (b == null || b.IsNull))
 				return Null;
 
 			return a.Equals(b);
 		}
 
 		public static SqlBoolean operator !=(SqlBoolean a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
+			if (a.IsNull || (b == null || b.IsNull))
 				return Null;
 
-			return !(a == b);
+			return !a.Equals(b);
 		}
 
 		public static SqlBoolean operator &(SqlBoolean a, SqlBoolean b) {
@@ -372,11 +377,14 @@ namespace Deveel.Data.Sql {
 			if (b.IsNull)
 				throw new InvalidCastException();
 
-			return (bool) b;
+			return b;
 		}
 
 		public static bool operator false(SqlBoolean b) {
-			return !(b);
+			if (b.IsNull)
+				throw new InvalidCastException();
+
+			return !b;
 		}
 
 		/// <summary>
