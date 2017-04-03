@@ -44,6 +44,47 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData("the quick brown fox", SqlTypeCode.VarChar, -1, "the quick brown fox")]
+		[InlineData("the quick brown fox", SqlTypeCode.Char, 10, "the quick ")]
+		public static void CastToString(string s, SqlTypeCode typeCode, int maxSize, string expected) {
+			var type = new SqlBinaryType(SqlTypeCode.Binary);
+			var input = String.IsNullOrEmpty(s) ? SqlString.Null : new SqlString(s);
+			var destType = new SqlStringType(typeCode, maxSize, null);
+
+			var bytes = input.ToByteArray();
+			var binary = new SqlBinary(bytes);
+
+			Assert.True(type.CanCastTo(destType));
+
+			var result = type.Cast(binary, destType);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlString>(result);
+
+			Assert.Equal(expected, (SqlString)result);
+		}
+
+		[Theory]
+		[InlineData("2010-02-11", SqlTypeCode.Date)]
+		public static void CastToDate(string s, SqlTypeCode typeCode) {
+			var type = new SqlBinaryType(SqlTypeCode.Binary);
+			var date = String.IsNullOrEmpty(s) ? SqlDateTime.Null : SqlDateTime.Parse(s);
+			var destType = new SqlDateTimeType(typeCode);
+
+			var bytes = date.ToByteArray();
+			var binary = new SqlBinary(bytes);
+
+			Assert.True(type.CanCastTo(destType));
+
+			var result = type.Cast(binary, destType);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlDateTime>(result);
+
+			Assert.Equal(date, (SqlDateTime)result);
+		}
+
+		[Theory]
 		[InlineData(SqlTypeCode.VarBinary, -1, "VARBINARY")]
 		[InlineData(SqlTypeCode.Binary, 4556, "BINARY(4556)")]
 		public static void GetString(SqlTypeCode typeCode, int size, string expected) {

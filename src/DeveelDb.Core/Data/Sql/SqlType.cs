@@ -161,7 +161,7 @@ namespace Deveel.Data.Sql {
 			if (!x.IsNull && y.IsNull)
 				return -1;
 
-			return ((IComparable)x).CompareTo(y);
+			return ((IComparable) x).CompareTo(y);
 		}
 
 		/// <inheritdoc/>
@@ -355,6 +355,10 @@ namespace Deveel.Data.Sql {
 			throw new NotSupportedException();
 		}
 
+		public virtual ISqlValue NormalizeValue(ISqlValue value) {
+			return value;
+		}
+
 		/// <summary>
 		/// Gets the SQL type code corresponding to the given type
 		/// </summary>
@@ -386,6 +390,8 @@ namespace Deveel.Data.Sql {
 			if (type == typeof(DateTime) ||
 			    type == typeof(DateTimeOffset))
 				return SqlTypeCode.TimeStamp;
+			if (type == typeof(TimeSpan))
+				return SqlTypeCode.DayToSecond;
 			if (type == typeof(string))
 				return SqlTypeCode.String;
 			if (type == typeof(byte[]))
@@ -395,12 +401,12 @@ namespace Deveel.Data.Sql {
 				return SqlTypeCode.Boolean;
 			if (type == typeof(SqlNumber))
 				return SqlTypeCode.Numeric;
-			/* TODO:
-if (type == typeof(SqlDateTime))
-	return SqlTypeCode.TimeStamp;
-	*/
+			if (type == typeof(SqlDateTime))
+				return SqlTypeCode.TimeStamp;
 			if (type == typeof(SqlString))
 				return SqlTypeCode.String;
+			if (type == typeof(SqlDayToSecond))
+				return SqlTypeCode.DayToSecond;
 
 			throw new NotSupportedException(String.Format("The type '{0}' is not supported.", type));
 		}

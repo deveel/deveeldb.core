@@ -191,6 +191,38 @@ namespace Deveel.Data.Sql {
 				   destType is SqlIntervalType;
 		}
 
+		public override ISqlValue NormalizeValue(ISqlValue value) {
+			if (!(value is ISqlString))
+				throw new ArgumentException("Cannot normalize a value that is not a SQL string");
+
+			if (value is SqlString) {
+				var s = (SqlString) value;
+				if (s.IsNull)
+					return SqlString.Null;
+
+				switch (TypeCode) {
+					case SqlTypeCode.VarChar:
+					case SqlTypeCode.String: {
+						if (HasMaxSize && s.Length > MaxSize)
+							throw new InvalidCastException(); // TODO: maybe a substring here?
+
+						return s;
+					}
+					case SqlTypeCode.Char: {
+						if (s.Length > MaxSize) {
+							s = s.Substring(0, MaxSize);
+						} else if (s.Length < MaxSize) {
+							s = s.PadRight(MaxSize);
+						}
+
+						return s;
+					}
+				}
+			}
+
+			return base.NormalizeValue(value);
+		}
+
 		public override ISqlValue Cast(ISqlValue value, SqlType destType) {
 			if (!(value is ISqlString))
 				throw new ArgumentException("Cannot cast a non-string value using a string type");
@@ -199,11 +231,11 @@ namespace Deveel.Data.Sql {
 				if (destType is SqlBooleanType)
 					return ToBoolean((SqlString) value);
 				if (destType is SqlNumericType)
-					return ToNumber((SqlString) value, (SqlNumericType) destType);
+					return ToNumber((SqlString) value, destType);
 				if (destType is SqlStringType)
-					return ToString((SqlString) value, (SqlStringType) destType);
+					return ToString((SqlString) value, destType);
 				if (destType is SqlDateTimeType)
-					return ToDateTime((SqlString) value, (SqlDateTimeType) destType);
+					return ToDateTime((SqlString) value, destType);
 				if (destType is SqlIntervalType)
 					return ToInterval((SqlString) value, (SqlIntervalType) destType);
 			}
@@ -211,114 +243,19 @@ namespace Deveel.Data.Sql {
 			return base.Cast(value, destType);
 		}
 
-		private SqlString ToString(SqlString value, SqlStringType destType) {
-			switch (destType.TypeCode) {
-				case SqlTypeCode.Char:
-					return PadString(value, destType.MaxSize);
-				case SqlTypeCode.LongVarChar:
-				case SqlTypeCode.Clob:
-					throw new NotImplementedException();
-				case SqlTypeCode.String:
-				case SqlTypeCode.VarChar:
-					return LimitString(value, destType.MaxSize);
-				default:
-					throw new InvalidCastException();
-			}
+		private ISqlValue ToString(SqlString value, SqlType destType) {
+			return destType.NormalizeValue(value);
 		}
 
-		private SqlString PadString(SqlString value, int size) {
-			if (value.Length > size) {
-				value = value.Substring(0, size);
-			} else if (value.Length < size) {
-				value = value.PadRight(size);
-			}
-
-			return value;
-		}
-
-		private SqlString LimitString(SqlString value, int maxSize) {
-			if (value.Length > maxSize)
-				value = value.Substring(0, maxSize);
-
-			return value;
-		}
-
-		private SqlNumber ToNumber(SqlString value, SqlNumericType destType) {
-			try {
+		private ISqlValue ToNumber(SqlString value, SqlType destType) {
 				var locale = Locale ?? CultureInfo.InvariantCulture;
 				SqlNumber number;
 				if (!SqlNumber.TryParse(value.Value, locale, out number))
 					throw new InvalidCastException();
 
-				switch (destType.TypeCode) {
-					case SqlTypeCode.TinyInt:
-					case SqlTypeCode.SmallInt:
-					case SqlTypeCode.Integer:
-					case SqlTypeCode.BigInt:
-						return ToInteger(number, destType);
-					case SqlTypeCode.Real:
-					case SqlTypeCode.Float:
-					case SqlTypeCode.Double:
-						return ToFloatingPoint(number, destType);
-					case SqlTypeCode.Numeric:
-						return ToDecimal(number, destType);
-				}
-			} catch (InvalidCastException) {
-				throw;
-			} catch (Exception ex) {
-				throw new InvalidCastException("Invalid cast", ex);
-			}
-
-			throw new InvalidCastException();
+			return destType.NormalizeValue(number);
 		}
 
-		private SqlNumber ToDecimal(SqlNumber number, SqlNumericType destType) {
-			if (SqlNumber.IsNaN(number))
-				return SqlNumber.NaN;
-			if (SqlNumber.IsNegativeInfinity(number))
-				return SqlNumber.NegativeInfinity;
-			if (SqlNumber.IsPositiveInfinity(number))
-				return SqlNumber.PositiveInfinity;
-
-			var precision = number.Precision;
-			var scale = number.Scale;
-			if (destType.Precision > 0)
-				precision = destType.Precision;
-			if (destType.Scale > 0)
-				scale = destType.Scale;
-
-			return new SqlNumber(number.ToUnscaledByteArray(), scale, precision);
-		}
-
-		private SqlNumber ToInteger(SqlNumber number, SqlNumericType destType) {
-			if (!number.CanBeInt32 && !number.CanBeInt64)
-				throw new InvalidCastException("Not a valid integer");
-
-			switch (destType.TypeCode) {
-				case SqlTypeCode.TinyInt:
-					return new SqlNumber((int) (byte) number);
-				case SqlTypeCode.SmallInt:
-					return new SqlNumber((int)(short)number);
-				case SqlTypeCode.Integer:
-					return new SqlNumber((int)number);
-				case SqlTypeCode.BigInt:
-					return new SqlNumber((long) number);
-				default:
-					throw new InvalidCastException();
-			}
-		}
-
-		private SqlNumber ToFloatingPoint(SqlNumber number, SqlNumericType destType) {
-			switch (destType.TypeCode) {
-				case SqlTypeCode.Float:
-				case SqlTypeCode.Real:
-					return new SqlNumber((double)(float)number);
-				case SqlTypeCode.Double:
-					return new SqlNumber((double)number);
-				default:
-					throw new InvalidCastException();
-			}
-		}
 
 		private SqlBoolean ToBoolean(SqlString value) {
 			if (value == null || value.IsNull)
@@ -332,45 +269,15 @@ namespace Deveel.Data.Sql {
 			throw new InvalidCastException();
 		}
 
-		private SqlDateTime ToDateTime(SqlString value, SqlDateTimeType destType) {
+		private ISqlValue ToDateTime(SqlString value, SqlType destType) {
 			if (value.IsNull)
 				return SqlDateTime.Null;
 
-			switch (destType.TypeCode) {
-				case SqlTypeCode.DateTime:
-				case SqlTypeCode.TimeStamp:
-					return ToTimeStamp(value);
-				case SqlTypeCode.Time:
-					return ToTime(value);
-				case SqlTypeCode.Date:
-					return ToDate(value);
-				default:
-					throw new InvalidCastException();
-			}
-		}
-
-		private SqlDateTime ToDate(SqlString value) {
 			SqlDateTime date;
-			if (!SqlDateTime.TryParseDate(value.Value, out date))
-				return SqlDateTime.Null;
+			if (!SqlDateTime.TryParse(value.Value, out date))
+				throw new InvalidCastException();
 
-			return date;
-		}
-
-		private SqlDateTime ToTime(SqlString value) {
-			SqlDateTime date;
-			if (!SqlDateTime.TryParseTime(value.Value, out date))
-				return SqlDateTime.Null;
-
-			return date;
-		}
-
-		private SqlDateTime ToTimeStamp(SqlString value) {
-			SqlDateTime date;
-			if (!SqlDateTime.TryParseTimeStamp(value.Value, out date))
-				return SqlDateTime.Null;
-
-			return date;
+			return destType.NormalizeValue(date);
 		}
 
 		private ISqlValue ToInterval(SqlString value, SqlIntervalType destType) {

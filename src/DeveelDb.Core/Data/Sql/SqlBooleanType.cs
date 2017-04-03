@@ -89,22 +89,9 @@ namespace Deveel.Data.Sql {
 			return new SqlBinary(bytes);
 		}
 
-		private SqlString ToString(SqlBoolean value, SqlStringType destType) {
-			if (value.IsNull) {
-				if (destType.IsLargeObject)
-					throw new NotImplementedException();
-
-				return SqlString.Null;
-			}
-
-			var s = Trim(ToString(value), destType.MaxSize);
-			return new SqlString(s);
-		}
-
-		private string Trim(string source, int maxSize) {
-			if (maxSize > 0 && source.Length > maxSize)
-				source = source.Substring(0, maxSize);
-			return source;
+		private ISqlString ToString(SqlBoolean value, SqlStringType destType) {
+			var s = new SqlString(ToString(value));
+			return (ISqlString) destType.NormalizeValue(s);
 		}
 
 		public override ISqlValue Reverse(ISqlValue value) {

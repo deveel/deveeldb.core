@@ -71,7 +71,8 @@ namespace Deveel.Data.Sql {
 		public override bool CanCastTo(SqlType destType) {
 			return destType is SqlBooleanType ||
 			       destType is SqlNumericType ||
-				   destType is SqlStringType;
+				   destType is SqlStringType ||
+				   destType is SqlDateTimeType;
 		}
 
 		public override ISqlValue Cast(ISqlValue value, SqlType destType) {
@@ -86,8 +87,18 @@ namespace Deveel.Data.Sql {
 				return ToString(binary, (SqlStringType) destType);
 			if (destType is SqlNumericType)
 				return ToNumber(binary, (SqlNumericType) destType);
+			if (destType is SqlDateTimeType)
+				return ToDate(binary);
 
 			return base.Cast(value, destType);
+		}
+
+		private SqlDateTime ToDate(ISqlBinary binary) {
+			if (binary == null || binary.IsNull)
+				return SqlDateTime.Null;
+
+			var bytes = binary.ToArray();
+			return new SqlDateTime(bytes);
 		}
 
 		private ISqlValue ToNumber(ISqlBinary value, SqlNumericType destType) {
@@ -107,7 +118,13 @@ namespace Deveel.Data.Sql {
 		}
 
 		private ISqlValue ToString(ISqlBinary binary, SqlStringType destType) {
-			throw new NotImplementedException();
+			if (binary == null || binary.IsNull)
+				return SqlString.Null;
+
+			var bytes = binary.ToArray();
+			var s = new SqlString(bytes);
+
+			return destType.NormalizeValue(s);
 		}
 
 		internal static bool IsBinaryType(SqlTypeCode sqlType) {

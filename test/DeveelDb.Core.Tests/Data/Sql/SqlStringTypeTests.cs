@@ -281,10 +281,10 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData("2011-01-11", SqlTypeCode.Date, "2011-01-11")]
-		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.Date, null)]
+		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.Date, "2014-01-21")]
 		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.TimeStamp, "2014-01-21T02:10:16.908")]
 		[InlineData("02:10:16.908", SqlTypeCode.Time, "02:10:16.908")]
-		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.Time, null)]
+		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.Time, "02:10:16.908")]
 		public static void CastToDateTime(string s, SqlTypeCode typeCode, string expected) {
 			var sqlString = new SqlString(s);
 			var type = new SqlStringType(SqlTypeCode.String, -1, null);

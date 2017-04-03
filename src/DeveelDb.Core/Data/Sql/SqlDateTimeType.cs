@@ -83,59 +83,40 @@ namespace Deveel.Data.Sql {
 			return base.Cast(value, destType);
 		}
 
-		private SqlDateTime ToDateTime(SqlDateTime date, SqlDateTimeType destType) {
-			if (date.IsNull)
-				return SqlDateTime.Null;
-
-			switch (destType.TypeCode) {
-				case SqlTypeCode.DateTime:
-				case SqlTypeCode.TimeStamp:
-					return new SqlDateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, date.Second, date.Millisecond, date.Offset);
-				case SqlTypeCode.Date:
-					return date.DatePart;
-				case SqlTypeCode.Time:
-					return date.TimePart;
-				default:
-					throw new InvalidCastException();
-			}
+		private ISqlValue ToDateTime(SqlDateTime date, SqlDateTimeType destType) {
+			return destType.NormalizeValue(date);
 		}
 
 		private SqlNumber ToNumber(SqlDateTime date) {
 			return (SqlNumber) date.Ticks;
 		}
 
-		private SqlString ToString(SqlDateTime date, SqlStringType destType) {
+		private ISqlString ToString(SqlDateTime date, SqlStringType destType) {
 			if (date.IsNull)
 				return SqlString.Null;
 
-			var s = ToString(date);
+			var dateString = ToString(date);
+			var s = new SqlString(dateString);
 
-			switch (destType.TypeCode) {
-				case SqlTypeCode.VarChar:
-				case SqlTypeCode.String:
-					return VarString(s, destType);
-				case SqlTypeCode.Char:
-					return CharString(s, destType);
-				default:
-					throw new InvalidCastException();
-			}
+			return (ISqlString) destType.NormalizeValue(s);
 		}
 
-		private SqlString VarString(string s, SqlStringType destType) {
-			if (destType.HasMaxSize && s.Length >= destType.MaxSize)
-				throw new InvalidCastException();
+		public override ISqlValue NormalizeValue(ISqlValue value) {
+			if (!(value is SqlDateTime))
+				throw new ArgumentException();
 
-			return new SqlString(s);
-		}
+			var date = (SqlDateTime) value;
+			if (date.IsNull)
+				return SqlDateTime.Null;
 
-		private SqlString CharString(string s, SqlStringType destType) {
-			if (s.Length > destType.MaxSize) {
-				s = s.Substring(0, destType.MaxSize);
-			} else if (s.Length < destType.MaxSize) {
-				s = s.PadRight(destType.MaxSize);
+			switch (TypeCode) {
+				case SqlTypeCode.Time:
+					return date.TimePart;
+				case SqlTypeCode.Date:
+					return date.DatePart;
 			}
 
-			return new SqlString(s);
+			return base.NormalizeValue(value);
 		}
 
 		public override string ToString(ISqlValue obj) {
