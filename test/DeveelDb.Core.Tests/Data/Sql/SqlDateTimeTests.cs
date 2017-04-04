@@ -42,7 +42,6 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(minute, date.Minute);
 			Assert.Equal(second, date.Second);
 			Assert.Equal(millis, date.Millisecond);
-			Assert.False(date.Offset.IsNull);
 			Assert.Equal(0, date.Offset.Hours);
 			Assert.Equal(0, date.Offset.Minutes);
 		}
@@ -102,7 +101,6 @@ namespace Deveel.Data.Sql {
 			SqlDateTime date;
 			Assert.Equal(expected, SqlDateTime.TryParse(s, out date));
 
-			Assert.False(date.IsNull);
 			Assert.Equal(year, date.Year);
 			Assert.Equal(month, date.Month);
 			Assert.Equal(day, date.Day);
@@ -131,7 +129,6 @@ namespace Deveel.Data.Sql {
 			SqlDateTime date;
 			Assert.Equal(expected, SqlDateTime.TryParseTimeStamp(s, timeZoneInfo, out date));
 
-			Assert.False(date.IsNull);
 			Assert.Equal(year, date.Year);
 			Assert.Equal(month, date.Month);
 			Assert.Equal(day, date.Day);
@@ -146,23 +143,18 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData("2011-02-15", "2012-03-22", false)]
-		[InlineData(null, "2011-11-02T22:01:00", false)]
-		[InlineData(null, null, true)]
 		public static void Operator_Equal(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x == y, d1, d2, expected);
 		}
 
 		[Theory]
 		[InlineData("2001-04-06T22:11:04.556", "2001-04-06", true)]
-		[InlineData("22:01:11", null, true)]
-		[InlineData(null, null, false)]
 		public static void Operator_NotEqual(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x != y, d1, d2, expected);
 		}
 
 		[Theory]
 		[InlineData("2010-02-10", "2011-04-11", false)]
-		[InlineData("04:11:02.345", null, true)]
 		public static void Operator_Greater(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x > y, d1, d2, expected);
 		}
@@ -170,8 +162,6 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("2004-08-19", "2004-08-19", true)]
 		[InlineData("2013-02-05", "2012-02-05", true)]
-		[InlineData("2010-01-03", null, true)]
-		[InlineData(null, null, true)]
 		public static void Operator_GreaterOrEqual(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x >= y, d1, d2, expected);
 		}
@@ -180,7 +170,6 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("2004-08-19", "2004-08-19", true)]
 		[InlineData("2010-02-24", "2012-02-25", true)]
-		[InlineData("20:30:22.019", null, false)]
 		public static void Operator_SmallerOrEqual(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x <= y, d1, d2, expected);
 		}
@@ -190,8 +179,6 @@ namespace Deveel.Data.Sql {
 		[InlineData("1999-02-01T22:11:03.011", "1999-02-01T22:11:03.012", true)]
 		[InlineData("13:47:02", "13:45:21", false)]
 		[InlineData("1980-04-06T03:01:20", "1981-08-27T05:05:22", true)]
-		[InlineData(null, null, false)]
-		[InlineData("15:16:09", null, false)]
 		public static void Operator_Smaller(string d1, string d2, bool expected) {
 			BinaryOp((x, y) => x < y, d1, d2, expected);
 		}
@@ -221,8 +208,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		private static void BinaryOp(Func<SqlDateTime, SqlDateTime, SqlBoolean> op, string s1, string s2, bool expected) {
-			var date1 = String.IsNullOrEmpty(s1) ? SqlDateTime.Null : SqlDateTime.Parse(s1);
-			var date2 = String.IsNullOrEmpty(s2) ? SqlDateTime.Null : SqlDateTime.Parse(s2);
+			var date1 = SqlDateTime.Parse(s1);
+			var date2 = SqlDateTime.Parse(s2);
 
 			var result = op(date1, date2);
 			var expectedResult = (SqlBoolean) expected;
@@ -234,8 +221,8 @@ namespace Deveel.Data.Sql {
 			string s1,
 			string s2,
 			string expected) {
-			var date = String.IsNullOrEmpty(s1) ? SqlDateTime.Null : SqlDateTime.Parse(s1);
-			var date2 = String.IsNullOrEmpty(s2) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(s2);
+			var date =  SqlDateTime.Parse(s1);
+			var date2 = SqlDayToSecond.Parse(s2);
 
 			var result = op(date, date2);
 			var expectedResult = SqlDateTime.Parse(expected);
@@ -245,10 +232,10 @@ namespace Deveel.Data.Sql {
 
 		private static void BinaryOp(Func<SqlDateTime, SqlYearToMonth, SqlDateTime> op,
 			string s,
-			int? months,
+			int months,
 			string expected) {
-			var date = String.IsNullOrEmpty(s) ? SqlDateTime.Null : SqlDateTime.Parse(s);
-			var ytm = months == null ? SqlYearToMonth.Null : new SqlYearToMonth(months.Value);
+			var date = SqlDateTime.Parse(s);
+			var ytm = new SqlYearToMonth(months);
 
 			var result = op(date, ytm);
 			var expectedResult = SqlDateTime.Parse(expected);
@@ -264,7 +251,6 @@ namespace Deveel.Data.Sql {
 			var date = SqlDateTime.Parse(s);
 			var nextDate = date.GetNextDateForDay(dayOfWeek);
 
-			Assert.False(nextDate.IsNull);
 			Assert.Equal(expected, nextDate.ToDateString());
 		}
 
@@ -299,12 +285,11 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData("2011-10-23T23:22:10 +02:00", "2011-10-23T21:22:10.000 +00:00")]
-		[InlineData(null, null)]
 		public static void ToUtc(string s, string expected) {
-			var date = String.IsNullOrEmpty(expected) ? SqlDateTime.Null : SqlDateTime.Parse(s);
+			var date = SqlDateTime.Parse(s);
 			var utc = date.ToUtc();
 
-			var expectedResult = String.IsNullOrEmpty(expected) ? SqlDateTime.Null : SqlDateTime.Parse(expected);
+			var expectedResult = SqlDateTime.Parse(expected);
 			Assert.Equal(expectedResult, utc);
 		}
 

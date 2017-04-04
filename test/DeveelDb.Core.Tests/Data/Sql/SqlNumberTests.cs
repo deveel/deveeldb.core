@@ -7,7 +7,6 @@ namespace Deveel.Data.Sql {
 		[Fact]
 		public static void Create_FromInteger() {
 			var value = (SqlNumber)45993;
-			Assert.False(value.IsNull);
 			Assert.True(value.CanBeInt32);
 			Assert.True(value.CanBeInt64);
 			Assert.Equal(0, value.Scale);
@@ -21,7 +20,6 @@ namespace Deveel.Data.Sql {
 		[Fact]
 		public static void Create_FromBigInt() {
 			var value = (SqlNumber)4599356655L;
-			Assert.False(value.IsNull);
 			Assert.False(value.CanBeInt32);
 			Assert.True(value.CanBeInt64);
 			Assert.Equal(0, value.Scale);
@@ -35,7 +33,6 @@ namespace Deveel.Data.Sql {
 		[Fact]
 		public static void Create_FromDouble() {
 			var value = SqlNumber.FromDouble(459935.9803d);
-			Assert.False(value.IsNull);
 			Assert.False(value.CanBeInt32);
 			Assert.False(value.CanBeInt64);
 			Assert.Equal(10, value.Scale);
@@ -49,27 +46,32 @@ namespace Deveel.Data.Sql {
 		[Fact]
 		public static void Parse_BigDecimal() {
 			var value = SqlNumber.Parse("98356278.911288837773848500069994933229238e45789");
-			Assert.False(value.IsNull);
 			Assert.False(value.CanBeInt32);
 			Assert.False(value.CanBeInt64);
 			Assert.True(value.Precision > 40);
 		}
 
 		[Theory]
-		[InlineData("98334454", 98334454, true)]
-		[InlineData("test", null, false)]
-		[InlineData("", null, false)]
-		[InlineData("6785553.89e3", 6785553.89e3, true)]
-		[InlineData("-435", -435, true)]
-		[InlineData("+Inf", Double.PositiveInfinity, true)]
-		[InlineData("-Inf", Double.NegativeInfinity, true)]
-		[InlineData("NaN", Double.NaN, true)]
-		public static void TryParse(string s, double? expected, bool expectedSuccess) {
+		[InlineData("98334454", 98334454)]
+		[InlineData("6785553.89e3", 6785553.89e3)]
+		[InlineData("-435", -435)]
+		[InlineData("+Inf", Double.PositiveInfinity)]
+		[InlineData("-Inf", Double.NegativeInfinity)]
+		[InlineData("NaN", Double.NaN)]
+		public static void TryParse(string s, double expected) {
 			var expectedResult = (SqlNumber) expected;
 
 			SqlNumber number;
-			Assert.Equal(expectedSuccess, SqlNumber.TryParse(s, out number));
+			Assert.True(SqlNumber.TryParse(s, out number));
 			Assert.Equal(expectedResult, number);
+		}
+
+		[Theory]
+		[InlineData("test")]
+		[InlineData("")]
+		public static void TryInvalidParse(string s) {
+			SqlNumber number;
+			Assert.False(SqlNumber.TryParse(s, out number));
 		}
 
 		[Theory]
@@ -260,7 +262,7 @@ namespace Deveel.Data.Sql {
 
 		#region Binary Operators
 
-		private static void BinaryOp(Func<SqlNumber, SqlNumber, SqlNumber> op, double? a, double? b, double? expected) {
+		private static void BinaryOp(Func<SqlNumber, SqlNumber, SqlNumber> op, double a, double b, double expected) {
 			var num1 = (SqlNumber)a;
 			var num2 = (SqlNumber)b;
 
@@ -272,7 +274,7 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(expectedNumber, result);
 		}
 
-		private static void BinaryOp(Func<SqlNumber, SqlNumber, SqlBoolean> op, double? a, double? b, bool? expected) {
+		private static void BinaryOp(Func<SqlNumber, SqlNumber, SqlBoolean> op, double a, double b, bool expected) {
 			var num1 = (SqlNumber)a;
 			var num2 = (SqlNumber)b;
 
@@ -286,10 +288,8 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData(4533, 90, 33)]
-		[InlineData(6758, null, null)]
-		[InlineData(null, 90334.32e2, null)]
 		[InlineData(Double.NaN, 90332, Double.NaN)]
-		public static void Operator_Modulo(double? value1, double? value2, double? expected) {
+		public static void Operator_Modulo(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x % y, value1, value2, expected);
 		}
 
@@ -297,11 +297,8 @@ namespace Deveel.Data.Sql {
 		[InlineData(466637, 9993, 476630)]
 		[InlineData(7833.432, -23, 7810.432)]
 		[InlineData(0933.42, Double.NegativeInfinity, Double.NegativeInfinity)]
-		[InlineData(122394, null, null)]
 		[InlineData(Double.PositiveInfinity, 344, Double.PositiveInfinity)]
-		[InlineData(null, null, null)]
-		[InlineData(null, 5466.903e3, null)]
-		public static void Operator_Add(double? value1, double? value2, double? expected) {
+		public static void Operator_Add(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x + y, value1, value2, expected);
 		}
 
@@ -310,9 +307,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(-45563, 453.332, -46016.332)]
 		[InlineData(-5433, Double.PositiveInfinity, Double.NegativeInfinity)]
 		[InlineData(Double.PositiveInfinity, Double.NegativeInfinity, Double.PositiveInfinity)]
-		[InlineData(4322, null, null)]
-		[InlineData(null, null, null)]
-		public static void Operator_Subtract(double? value1, double? value2, double? expected) {
+		public static void Operator_Subtract(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x - y, value1, value2, expected);
 		}
 
@@ -320,8 +315,6 @@ namespace Deveel.Data.Sql {
 		[InlineData(2783, 231, 642873)]
 		[InlineData(-9032.654, -45, 406469.43)]
 		[InlineData(434.22, Double.PositiveInfinity, Double.PositiveInfinity)]
-		[InlineData(784.33, null, null)]
-		[InlineData(null, null, null)]
 		public static void Operator_Multiply(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x * y, value1, value2, expected);
 		}
@@ -329,14 +322,13 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(1152663, 9929, 116.0905428543)]
 		[InlineData(40, 5, 8)]
-		[InlineData(566.499, null, null)]
-		public static void Operator_Divide(double? value1, double? value2, double? expected) {
+		public static void Operator_Divide(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x / y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(5663.22)]
-		public static void Operator_DivideByZero(double? value) {
+		public static void Operator_DivideByZero(double value) {
 			var number = (SqlNumber) value;
 
 			Assert.Throws<DivideByZeroException>(() => number / SqlNumber.Zero);
@@ -347,57 +339,42 @@ namespace Deveel.Data.Sql {
 		[InlineData(Double.NaN, 2003, Double.NaN)]
 		[InlineData(4355, Double.PositiveInfinity, Double.PositiveInfinity)]
 		[InlineData(Double.NaN, Double.NaN, Double.NaN)]
-		[InlineData(5455, 211.211, null)]
-		[InlineData(null, null, null)]
-		[InlineData(445, null, null)]
-		public static void Operator_And(double? value1, double? value2, double? expected) {
+		public static void Operator_And(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x & y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(46677, 9982, false)]
 		[InlineData(92677, 92677, true)]
-		[InlineData(9455, null, false)]
-		[InlineData(null, null, true)]
-		public static void Operator_Equal(double? value1, double? value2, bool? expected) {
+		public static void Operator_Equal(double value1, double value2, bool expected) {
 			BinaryOp((x, y) => x == y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(46677, 9982, true)]
 		[InlineData(92677, 92677, false)]
-		[InlineData(84955, null, true)]
-		[InlineData(null, null, false)]
-		[InlineData(null, 89334, true)]
-		public static void Operator_NotEqual(double? value1, double? value2, bool? expected) {
+		public static void Operator_NotEqual(double value1, double value2, bool expected) {
 			BinaryOp((x, y) => x != y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(4785, 112, 4849)]
 		[InlineData(6748, Double.PositiveInfinity, Double.PositiveInfinity)]
-		[InlineData(8944.3223, 334, null)]
-		[InlineData(null, null, null)]
-		public static void Operator_Or(double? value1, double? value2, double? expected) {
+		public static void Operator_Or(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x|y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(73844, 13, 73849)]
 		[InlineData(566, Double.NaN, Double.NaN)]
-		[InlineData(90445.332, 1123.211, null)]
-		[InlineData(null, null, null)]
-		[InlineData(445, null, null)]
-		public static void Operator_XOr(double? value1, double? value2, double? expected) {
+		public static void Operator_XOr(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x ^ y, value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(2133, 123, true)]
 		[InlineData(65484.213e21, 54331432.546e121, false)]
-		[InlineData(1234, null, true)]
-		[InlineData(null, null, false)]
-		public static void Operator_Greater(double? value1, double? value2, bool? expected) {
+		public static void Operator_Greater(double value1, double value2, bool expected) {
 			BinaryOp((x, y) => x > y, value1, value2, expected);
 		}
 
@@ -405,14 +382,14 @@ namespace Deveel.Data.Sql {
 		[InlineData(546649, 2112, true)]
 		[InlineData(4333.678, 4333.678, true)]
 		[InlineData(93445, 1200.345e32, false)]
-		public static void Operator_GreaterOrEqual(double? value1, double? value2, bool? expected) {
+		public static void Operator_GreaterOrEqual(double value1, double value2, bool expected) {
 			BinaryOp((x, y) => x >= y, value1, value2, expected);
 		} 
 
 		[Theory]
 		[InlineData(7484, 1230449, true)]
 		[InlineData(102943e45, 201e12, false)]
-		public static void Operator_Smaller(double? value1, double? value2, bool? expected) {
+		public static void Operator_Smaller(double value1, double value2, bool expected) {
 			BinaryOp((x, y) => x < y, value1, value2, expected);
 		}
 
@@ -421,13 +398,13 @@ namespace Deveel.Data.Sql {
 		[InlineData(2331, 15e3, true)]
 		[InlineData(901.54e123, 901.54e123, true)]
 		[InlineData(9120, 102, false)]
-		public static void Operator_SmallerOrEqual(double? value1, double? value2, bool? expected) {
+		public static void Operator_SmallerOrEqual(double value1, double value2, bool expected) {
 			BinaryOp((x, y) => x <= y, value1, value2, expected);
 		}
 
 		#endregion
 
-		private static void UnaryOp(Func<SqlNumber, SqlNumber> op, double? value, double? expected) {
+		private static void UnaryOp(Func<SqlNumber, SqlNumber> op, double value, double expected) {
 			var number = (SqlNumber)value;
 
 			var result = op(number);
@@ -440,23 +417,21 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(7782, -7782)]
 		[InlineData(-9021, 9021)]
-		[InlineData(null, null)]
-		public static void Operator_Negate(double? value, double? expected) {
+		public static void Operator_Negate(double value, double expected) {
 			UnaryOp(x => -x, value, expected);
 		}
 
 		[Theory]
 		[InlineData(7782, 7782)]
 		[InlineData(-9021, -9021)]
-		[InlineData(null, null)]
-		public static void Operator_Plus(double? value, double? expected) {
+		public static void Operator_Plus(double value, double expected) {
 			UnaryOp(x => +x, value, expected);
 		}
 
 		[Theory]
 		[InlineData(4599, -4600)]
-		[InlineData(null, null)]
-		public static void Operator_Not(double? value, double? expected) {
+		[InlineData(-5633, 5632)]
+		public static void Operator_Not(double value, double expected) {
 			UnaryOp(x => ~x, value, expected);
 		}
 

@@ -7,9 +7,6 @@ namespace Deveel.Data.Sql {
 		public static SqlNumber Add(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					if (a.IsNull || b.IsNull)
-						return SqlNumber.Null;
-
 					return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Add(b.innerValue));
 				}
 
@@ -22,9 +19,6 @@ namespace Deveel.Data.Sql {
 		public static SqlNumber Subtract(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					if (a.IsNull || b.IsNull)
-						return SqlNumber.Null;
-
 					return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Subtract(b.innerValue));
 				}
 				return new SqlNumber(b.InverseState(), null);
@@ -36,9 +30,6 @@ namespace Deveel.Data.Sql {
 		public static SqlNumber Divide(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					if (a.IsNull || b.IsNull)
-						return SqlNumber.Null;
-
 					BigDecimal divBy = b.innerValue;
 					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
 						return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Divide(divBy, 10, RoundingMode.HalfUp));
@@ -55,9 +46,6 @@ namespace Deveel.Data.Sql {
 		public static SqlNumber Multiply(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					if (a.IsNull || b.IsNull)
-						return SqlNumber.Null;
-
 					return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Multiply(b.innerValue));
 				}
 
@@ -70,9 +58,6 @@ namespace Deveel.Data.Sql {
 		public static SqlNumber Modulo(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					if (a.IsNull || b.IsNull)
-						return SqlNumber.Null;
-
 					BigDecimal divBy = b.innerValue;
 					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
 						BigDecimal remainder = a.innerValue.Remainder(divBy);

@@ -16,7 +16,6 @@ namespace Deveel.Data.Sql {
 			var result = type.Cast(value, PrimitiveTypes.Numeric(22, 4));
 
 			Assert.NotNull(result);
-			Assert.False(result.IsNull);
 			Assert.IsType<SqlNumber>(result);
 
 			var number = (SqlNumber) result;
@@ -28,7 +27,6 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData((byte)1, true)]
 		[InlineData((byte)0, false)]
-		[InlineData(null, null)]
 		public static void CastToBoolean(byte? singleByte, bool? expected) {
 			var type = new SqlBinaryType(SqlTypeCode.Binary);
 
@@ -48,7 +46,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("the quick brown fox", SqlTypeCode.Char, 10, "the quick ")]
 		public static void CastToString(string s, SqlTypeCode typeCode, int maxSize, string expected) {
 			var type = new SqlBinaryType(SqlTypeCode.Binary);
-			var input = String.IsNullOrEmpty(s) ? SqlString.Null : new SqlString(s);
+			var input = (SqlString)s;
 			var destType = new SqlCharacterType(typeCode, maxSize, null);
 
 			var bytes = input.ToByteArray();
@@ -68,7 +66,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("2010-02-11", SqlTypeCode.Date)]
 		public static void CastToDate(string s, SqlTypeCode typeCode) {
 			var type = new SqlBinaryType(SqlTypeCode.Binary);
-			var date = String.IsNullOrEmpty(s) ? SqlDateTime.Null : SqlDateTime.Parse(s);
+			var date = SqlDateTime.Parse(s);
 			var destType = new SqlDateTimeType(typeCode);
 
 			var bytes = date.ToByteArray();

@@ -22,9 +22,7 @@ namespace Deveel.Data.Sql {
 	/// A month span representation of time.
 	/// </summary>
 	public struct SqlYearToMonth : ISqlValue, IComparable<SqlYearToMonth>, IEquatable<SqlYearToMonth> {
-		private int? months;
-
-		public static readonly SqlYearToMonth Null = new SqlYearToMonth(true);
+		private readonly int months;
 
 		public SqlYearToMonth(int months)
 			: this() {
@@ -36,12 +34,6 @@ namespace Deveel.Data.Sql {
 
 		public SqlYearToMonth(int years, int months)
 			: this((years * 12) + months) {
-		}
-
-		private SqlYearToMonth(bool isNull)
-			: this() {
-			if (isNull)
-				months = null;
 		}
 
 		int IComparable.CompareTo(object obj) {
@@ -64,20 +56,13 @@ namespace Deveel.Data.Sql {
 			return i;
 		}
 
-		/// <inheritdoc/>
-		public bool IsNull {
-			get { return months == null; }
-		}
-
+		
 		/// <summary>
 		/// Gets the total number of months that represents the time span.
 		/// </summary>
 		public int TotalMonths {
 			get {
-				if (months == null)
-					throw new NullReferenceException();
-
-				return months.Value;
+				return months;
 			}
 		}
 
@@ -86,10 +71,7 @@ namespace Deveel.Data.Sql {
 		/// </summary>
 		public double TotalYears {
 			get {
-				if (months == null)
-					throw new NullReferenceException();
-
-				return ((double) months.Value / 12);
+				return ((double) months / 12);
 			}
 		}
 
@@ -99,14 +81,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public bool Equals(SqlYearToMonth other) {
-			if (IsNull && other.IsNull)
-				return true;
-			if (IsNull && !other.IsNull)
-				return false;
-			if (!IsNull && other.IsNull)
-				return false;
-
-			return months.Value == other.months.Value;
+			return months == other.months;
 		}
 
 		public override bool Equals(object obj) {
@@ -121,50 +96,24 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlYearToMonth Add(SqlYearToMonth other) {
-			if (IsNull || other.IsNull)
-				return Null;
-
 			return AddMonths(other.TotalMonths);
 		}
 
 		public SqlYearToMonth AddMonths(int value) {
-			if (months == null)
-				return Null;
-
-			var result = months.Value + value;
-			if (result <= 0)
-				return Null;
-
+			var result = months + value;
 			return new SqlYearToMonth(result);
 		}
 
 		public SqlYearToMonth Subtract(SqlYearToMonth other) {
-			if (IsNull || other.IsNull)
-				return Null;
-
 			return AddMonths(-other.TotalMonths);
 		}
 
 		/// <inheritdoc/>
 		public int CompareTo(SqlYearToMonth other) {
-			if (IsNull && other.IsNull)
-				return 0;
-			if (!IsNull && other.IsNull)
-				return 1;
-			if (IsNull && !other.IsNull)
-				return -1;
-
-			return months.Value.CompareTo(other.months.Value);
+			return months.CompareTo(other.months);
 		}
 
 		public int CompareTo(SqlNumber number) {
-			if (IsNull && number.IsNull)
-				return 0;
-			if (!IsNull && number.IsNull)
-				return 1;
-			if (IsNull && !number.IsNull)
-				return -1;
-
 			var other = new SqlYearToMonth((int) number);
 			return CompareTo(other);
 		}
@@ -206,19 +155,9 @@ namespace Deveel.Data.Sql {
 			return new SqlYearToMonth(value);
 		}
 
-		public static explicit operator SqlYearToMonth(int? value) {
-			return value == null ? Null : new SqlYearToMonth(value.Value);
-		}
-
-		public static explicit operator int?(SqlYearToMonth value) {
-			return value.months;
-		}
 
 		public static explicit operator int(SqlYearToMonth value) {
-			if (value.months == null)
-				throw new InvalidCastException();
-
-			return value.months.Value;
+			return value.months;
 		}
 	}
 }

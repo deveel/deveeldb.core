@@ -37,12 +37,10 @@ namespace Deveel.Data.Sql {
 		public void CreateFromBoolean() {
 			var value = new SqlBoolean(true);
 			Assert.NotNull(value);
-			Assert.False(value.IsNull);
 			Assert.Equal(true, (bool)value);
 
 			value = new SqlBoolean(false);
 			Assert.NotNull(value);
-			Assert.False(value.IsNull);
 			Assert.Equal(false, (bool)value);
 		}
 
@@ -51,10 +49,10 @@ namespace Deveel.Data.Sql {
 			var value1 = SqlBoolean.True;
 			var value2 = new SqlBoolean(true);
 
-			Assert.False(value1.IsNull);
-			Assert.False(value2.IsNull);
+			Assert.NotNull(value1);
+			Assert.NotNull(value2);
 
-			Assert.True(value1.IsComparableTo(value2));
+			Assert.True((value1 as ISqlValue).IsComparableTo(value2));
 
 			int i = -2;
 			i = value1.CompareTo(value2);
@@ -66,10 +64,10 @@ namespace Deveel.Data.Sql {
 			var value1 = SqlBoolean.False;
 			var value2 = new SqlBoolean(true);
 
-			Assert.False(value1.IsNull);
-			Assert.False(value2.IsNull);
+			Assert.NotNull(value1);
+			Assert.NotNull(value2);
 
-			Assert.True(value1.IsComparableTo(value2));
+			Assert.True((value1 as ISqlValue).IsComparableTo(value2));
 
 			int i = -2;
 			i = value1.CompareTo(value2);
@@ -77,33 +75,15 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Fact]
-		public void Compare_ToBooleanNull() {
-			var value1 = SqlBoolean.True;
-			var value2 = SqlBoolean.Null;
-
-			Assert.False(value1.IsNull);
-			Assert.True(value2.IsNull);
-
-			Assert.True(value1.IsComparableTo(value2));
-
-			int i = -2;
-			i = value1.CompareTo(value2);
-			Assert.Equal(1, i);
-		}
-
-		[Fact]
 		public void Compare_ToNull() {
 			var value1 = SqlBoolean.True;
 			var value2 = SqlNull.Value;
 
-			Assert.False(value1.IsNull);
+			Assert.NotNull(value1);
 			Assert.True(value2.IsNull);
 
-			Assert.True(value1.IsComparableTo(value2));
-
-			int i = -2;
-			i = value1.CompareTo(value2);
-			Assert.Equal(1, i);
+			Assert.False((value1 as ISqlValue).IsComparableTo(value2));
+			Assert.Throws<ArgumentException>(() => value1.CompareTo(value2));
 		}
 
 		[Fact]
@@ -111,10 +91,10 @@ namespace Deveel.Data.Sql {
 			var value1 = SqlBoolean.True;
 			var value2 = SqlNumber.One;
 
-			Assert.False(value1.IsNull);
-			Assert.False(value2.IsNull);
+			Assert.NotNull(value1);
+			Assert.NotNull(value2);
 
-			Assert.True(value1.IsComparableTo(value2));
+			Assert.True((value1 as ISqlValue).IsComparableTo(value2));
 
 			int i = -2;
 			i = value1.CompareTo(value2);
@@ -122,10 +102,10 @@ namespace Deveel.Data.Sql {
 
 			value2 = SqlNumber.Zero;
 
-			Assert.False(value1.IsNull);
-			Assert.False(value2.IsNull);
+			Assert.NotNull(value1);
+			Assert.NotNull(value2);
 
-			Assert.True(value1.IsComparableTo(value2));
+			Assert.True((value1 as ISqlValue).IsComparableTo(value2));
 
 			i = -2;
 			i = value1.CompareTo(value2);
@@ -137,10 +117,10 @@ namespace Deveel.Data.Sql {
 			var value1 = SqlBoolean.True;
 			var value2 = (SqlNumber)21;
 
-			Assert.False(value1.IsNull);
-			Assert.False(value2.IsNull);
+			Assert.NotNull(value1);
+			Assert.NotNull(value2);
 
-			Assert.False(value1.IsComparableTo(value2));
+			Assert.False((value1 as ISqlValue).IsComparableTo(value2));
 
 			int i = -2;
 			Assert.Throws<ArgumentOutOfRangeException>(() => i = value1.CompareTo(value2));
@@ -161,21 +141,6 @@ namespace Deveel.Data.Sql {
 			var value2 = SqlBoolean.False;
 
 			Assert.True(value1 != value2);
-
-			value2 = SqlBoolean.Null;
-
-			var result = value1 != value2;
-
-			Assert.True(result);
-		}
-
-		[Fact]
-		public void Equality_ToNull_True() {
-			var value1 = SqlBoolean.Null;
-			var value2 = SqlNull.Value;
-
-			var result = value1 == value2;
-			Assert.True(result);
 		}
 
 		[Fact]
@@ -185,9 +150,6 @@ namespace Deveel.Data.Sql {
 
 			value = SqlBoolean.False;
 			Assert.Equal("false", value.ToString());
-
-			value = SqlBoolean.Null;
-			Assert.Equal("NULL", value.ToString());
 		}
 
 		[Theory]
@@ -212,15 +174,12 @@ namespace Deveel.Data.Sql {
 		[InlineData("FALSE", false)]
 		[InlineData("false", false)]
 		[InlineData("FaLsE", false)]
-		[InlineData("NULL", null)]
-		[InlineData("null", null)]
 		[InlineData("1", true)]
 		[InlineData("0", false)]
-		public void Parse(string s, bool? expected) {
+		public void Parse(string s, bool expected) {
 			var result = SqlBoolean.Parse(s);
 
-			var bResult = (bool?)result;
-			Assert.Equal(expected, bResult);
+			Assert.Equal((SqlBoolean) expected, result);
 		}
 	}
 }

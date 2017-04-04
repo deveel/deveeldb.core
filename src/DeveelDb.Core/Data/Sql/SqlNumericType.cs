@@ -48,38 +48,29 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
-			return value is SqlNumber;
+			return value is SqlNumber || value is SqlNull;
 		}
 
 		public override SqlBoolean Greater(ISqlValue a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
 			return Compare(a, b) > 0;
 		}
 
 		public override SqlBoolean GreaterOrEqual(ISqlValue a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
 			return Compare(a, b) >= 0;
 		}
 
 		public override SqlBoolean Smaller(ISqlValue a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
 			return Compare(a, b) < 0;
 		}
 
 		public override SqlBoolean SmallerOrEqual(ISqlValue a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
 			return Compare(a, b) <= 0;
 		}
 
 		public override ISqlValue NormalizeValue(ISqlValue value) {
+			if (value is SqlNull)
+				return value;
+
 			if (!(value is SqlNumber))
 				throw new ArgumentException();
 

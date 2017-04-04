@@ -26,7 +26,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			if (other == null || other.IsNull)
+			if (other == null || other is SqlNull)
 				return 0;
 
 			return 1;
@@ -35,18 +35,11 @@ namespace Deveel.Data.Sql {
 		public bool IsNull => true;
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
-			return other.IsNull;
+			return other == null || other is SqlNull;
 		}
 
 		public override bool Equals(object obj) {
-			if (obj is SqlNull)
-				return true;
-			if (obj is ISqlValue)
-				return ((ISqlValue) obj).IsNull;
-			if (obj == null)
-				return true;
-
-			return false;
+			return obj is SqlNull || obj == null;
 		}
 
 		public override int GetHashCode() {
@@ -54,12 +47,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static bool operator ==(SqlNull a, ISqlValue b) {
-			if (Equals(a, b))
-				return true;
-			if (b == null || b.IsNull)
-				return true;
-
-			return false;
+			return b == null || b is SqlNull;
 		}
 
 		public static bool operator !=(SqlNull a, ISqlValue b) {

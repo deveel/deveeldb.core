@@ -7,7 +7,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
-			return value.IsNull;
+			return value == null || SqlNull.Value == value;
 		}
 
 		public override bool CanCastTo(SqlType destType) {
@@ -19,5 +19,12 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsIndexable => false;
+
+		public override ISqlValue NormalizeValue(ISqlValue value) {
+			if (value == null)
+				return SqlNull.Value;
+
+			return base.NormalizeValue(value);
+		}
 	}
 }

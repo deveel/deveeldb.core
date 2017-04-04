@@ -5,11 +5,11 @@ using System.IO;
 namespace Deveel.Data.Sql {
 	static class SqlStringCompare {
 		public static int Compare(CultureInfo locale, ISqlString x, ISqlString y) {
-			if (x.IsNull && y.IsNull)
+			if (x == null && y == null)
 				return 0;
-			if (x.IsNull && !y.IsNull)
+			if (x == null && y != null)
 				return 1;
-			if (!x.IsNull && y.IsNull)
+			if (x != null && y == null)
 				return -1;
 
 			// If lexicographical ordering,

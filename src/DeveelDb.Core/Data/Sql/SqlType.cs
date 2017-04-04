@@ -151,15 +151,15 @@ namespace Deveel.Data.Sql {
 
 		/// <inheritdoc/>
 		public virtual int Compare(ISqlValue x, ISqlValue y) {
+			if (x == null && y == null)
+				return 0;
+			if (x == null)
+				return 1;
+			if (y == null)
+				return -1;
+
 			if (!x.IsComparableTo(y))
 				throw new NotSupportedException();
-
-			if (x.IsNull && y.IsNull)
-				return 0;
-			if (x.IsNull && !y.IsNull)
-				return 1;
-			if (!x.IsNull && y.IsNull)
-				return -1;
 
 			return ((IComparable) x).CompareTo(y);
 		}
@@ -187,7 +187,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public virtual bool IsInstanceOf(ISqlValue value) {
-			return false;
+			return value is SqlNull;
 		}
 
 		/// <inheritdoc/>
@@ -279,45 +279,41 @@ namespace Deveel.Data.Sql {
 			return SqlNull.Value;
 		}
 
-		public virtual SqlBoolean Equal(ISqlValue a, ISqlValue b) {
-			if (!a.IsComparableTo(b))
-				return SqlBoolean.Null;
+		private void AssertComparable(ISqlValue a, ISqlValue b) {
+			if (a == null || b == null)
+				return;
 
+			if (!a.IsComparableTo(b))
+				throw new ArgumentException("Values are not comparable");
+		}
+
+		public virtual SqlBoolean Equal(ISqlValue a, ISqlValue b) {
+			AssertComparable(a, b);
 			return a.CompareTo(b) == 0;
 		}
 
 		public virtual SqlBoolean NotEqual(ISqlValue a, ISqlValue b) {
-			if (!a.IsComparableTo(b))
-				return SqlBoolean.Null;
-
+			AssertComparable(a, b);
 			return a.CompareTo(b) != 0;
 		}
 
 		public virtual SqlBoolean Greater(ISqlValue a, ISqlValue b) {
-			if (!a.IsComparableTo(b))
-				return SqlBoolean.Null;
-
+			AssertComparable(a, b);
 			return a.CompareTo(b) < 0;
 		}
 
 		public virtual SqlBoolean Smaller(ISqlValue a, ISqlValue b) {
-			if (!a.IsComparableTo(b))
-				return SqlBoolean.Null;
-
+			AssertComparable(a, b);
 			return a.CompareTo(b) > 0;
 		}
 
 		public virtual SqlBoolean GreaterOrEqual(ISqlValue a, ISqlValue b) {
-			if (!a.IsComparableTo(b))
-				return SqlBoolean.Null;
-
+			AssertComparable(a, b);
 			return a.CompareTo(b) <= 0;
 		}
 
 		public virtual SqlBoolean SmallerOrEqual(ISqlValue a, ISqlValue b) {
-			if (!a.IsComparableTo(b))
-				return SqlBoolean.Null;
-
+			AssertComparable(a, b);
 			return a.CompareTo(b) >= 0;
 		}
 

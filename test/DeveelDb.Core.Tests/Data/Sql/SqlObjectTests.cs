@@ -35,12 +35,23 @@ namespace Deveel.Data.Sql {
 		[InlineData("test1", "test1", true)]
 		[InlineData("test2", "test1", false)]
 		public static void StringEqualToString(string s1, string s2, bool expected) {
-			var obj1 = SqlObject.String(s1);
-			var obj2 = SqlObject.String(s2);
+			var obj1 = SqlObject.String((SqlString)s1);
+			var obj2 = SqlObject.String((SqlString)s2);
 
 			var result = obj1.Equals(obj2);
 
 			Assert.Equal(expected, result);
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.BigInt)]
+		public static void NullObject_FromSqlNull(SqlTypeCode code) {
+			var type = PrimitiveTypes.Type(code);
+			var obj = new SqlObject(type, SqlNull.Value);
+
+			Assert.Equal(code, obj.Type.TypeCode);
+			Assert.Equal(type, obj.Type);
+			Assert.IsType<SqlNull>(obj.Value);
 		}
 	}
 }

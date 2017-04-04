@@ -23,9 +23,6 @@ namespace Deveel.Data.Sql {
 			if (!(a is SqlDateTime))
 				throw new ArgumentException();
 
-			if (a.IsNull || b.IsNull)
-				return SqlDateTime.Null;
-
 			var date = (SqlDateTime) a;
 			if (b is SqlYearToMonth) {
 				var ytm = (SqlYearToMonth) b;
@@ -43,9 +40,6 @@ namespace Deveel.Data.Sql {
 		public override ISqlValue Subtract(ISqlValue a, ISqlValue b) {
 			if (!(a is SqlDateTime))
 				throw new ArgumentException();
-
-			if (a.IsNull || b.IsNull)
-				return SqlDateTime.Null;
 
 			var date = (SqlDateTime)a;
 			if (b is SqlYearToMonth) {
@@ -92,9 +86,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private ISqlString ToString(SqlDateTime date, SqlCharacterType destType) {
-			if (date.IsNull)
-				return SqlString.Null;
-
 			var dateString = ToString(date);
 			var s = new SqlString(dateString);
 
@@ -102,12 +93,13 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override ISqlValue NormalizeValue(ISqlValue value) {
+			if (value is SqlNull)
+				return value;
+
 			if (!(value is SqlDateTime))
 				throw new ArgumentException();
 
 			var date = (SqlDateTime) value;
-			if (date.IsNull)
-				return SqlDateTime.Null;
 
 			switch (TypeCode) {
 				case SqlTypeCode.Time:
@@ -120,7 +112,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
-			return value is SqlDateTime;
+			return value is SqlDateTime || value is SqlNull;
 		}
 
 		public override string ToString(ISqlValue obj) {
@@ -130,9 +122,9 @@ namespace Deveel.Data.Sql {
 			var date = (SqlDateTime) obj;
 			switch (TypeCode) {
 				case SqlTypeCode.Time:
-					return date.ToTimeString();
+					return date.ToTimeString().Value;
 				case SqlTypeCode.Date:
-					return date.ToDateString();
+					return date.ToDateString().Value;
 				default:
 					return date.ToString();
 			}

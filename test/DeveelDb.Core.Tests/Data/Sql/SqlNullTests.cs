@@ -59,7 +59,7 @@ namespace Deveel.Data.Sql {
 		[Fact]
 		public static void OpEqualToObjNull() {
 			var null1 = SqlNull.Value;
-			var null2 = SqlNumber.Null;
+			SqlString null2 = null;
 
 			Assert.True(null1 == null2);
 		}
@@ -67,14 +67,9 @@ namespace Deveel.Data.Sql {
 		[Fact]
 		public static void OpNotEqualToObjNull() {
 			var null1 = SqlNull.Value;
-			var null2 = SqlNumber.Null;
+			SqlString null2 = null;
 
 			Assert.False(null1 != null2);
-		}
-
-		[Fact]
-		public static void EqualToNullBoolean() {
-			Assert.True(SqlBoolean.Null == SqlNull.Value);
 		}
 	}
 }

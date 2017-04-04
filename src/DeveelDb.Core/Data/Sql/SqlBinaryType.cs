@@ -51,9 +51,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlBoolean ToBoolean(ISqlBinary binary) {
-			if (binary == null || binary.IsNull)
-				return SqlBoolean.Null;
-
 			if (binary.Length != 1)
 				throw new InvalidCastException("Exactly one byte needed to cast to boolean.");
 
@@ -90,16 +87,16 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlDateTime ToDate(ISqlBinary binary) {
-			if (binary == null || binary.IsNull)
-				return SqlDateTime.Null;
+			if (binary == null)
+				throw new InvalidCastException();
 
 			var bytes = binary.ToArray();
 			return new SqlDateTime(bytes);
 		}
 
 		private ISqlValue ToNumber(ISqlBinary value, SqlNumericType destType) {
-			if (value == null || value.IsNull)
-				return SqlNumber.Null;
+			if (value == null)
+				throw new InvalidCastException();
 
 			var precision = destType.Precision;
 			var scale = destType.Scale;
@@ -114,8 +111,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		private ISqlValue ToString(ISqlBinary binary, SqlCharacterType destType) {
-			if (binary == null || binary.IsNull)
-				return SqlString.Null;
+			if (binary == null)
+				throw new InvalidCastException();
 
 			var bytes = binary.ToArray();
 			var s = new SqlString(bytes);
@@ -123,11 +120,15 @@ namespace Deveel.Data.Sql {
 			return destType.NormalizeValue(s);
 		}
 
-		internal static bool IsBinaryType(SqlTypeCode sqlType) {
+		private static bool IsBinaryType(SqlTypeCode sqlType) {
 			return sqlType == SqlTypeCode.Binary ||
 			       sqlType == SqlTypeCode.VarBinary ||
 			       sqlType == SqlTypeCode.LongVarBinary ||
 			       sqlType == SqlTypeCode.Blob;
+		}
+
+		public override bool IsInstanceOf(ISqlValue value) {
+			return value is ISqlBinary || value is SqlNull;
 		}
 
 		public override bool Equals(SqlType other) {

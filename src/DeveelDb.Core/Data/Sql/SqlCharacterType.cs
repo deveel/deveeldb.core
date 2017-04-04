@@ -17,7 +17,6 @@
 
 using System;
 using System.Globalization;
-using System.IO;
 
 namespace Deveel.Data.Sql {
 	public sealed class SqlCharacterType : SqlType {
@@ -67,7 +66,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
-			return value is ISqlString;
+			return value is ISqlString || value is SqlNull;
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {
@@ -129,13 +128,14 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override ISqlValue NormalizeValue(ISqlValue value) {
+			if (value is SqlNull)
+				return value;
+
 			if (!(value is ISqlString))
 				throw new ArgumentException("Cannot normalize a value that is not a SQL string");
 
 			if (value is SqlString) {
 				var s = (SqlString) value;
-				if (s.IsNull)
-					return SqlString.Null;
 
 				switch (TypeCode) {
 					case SqlTypeCode.VarChar:
@@ -195,8 +195,8 @@ namespace Deveel.Data.Sql {
 
 
 		private SqlBoolean ToBoolean(SqlString value) {
-			if (value.IsNull)
-				return SqlBoolean.Null;
+			if (value == null)
+				throw new InvalidCastException();
 
 			if (value.Equals(SqlBoolean.TrueString, true))
 				return SqlBoolean.True;
@@ -207,8 +207,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		private ISqlValue ToDateTime(SqlString value, SqlType destType) {
-			if (value.IsNull)
-				return SqlDateTime.Null;
+			if (value == null)
+				throw new InvalidCastException();
 
 			SqlDateTime date;
 			if (!SqlDateTime.TryParse(value.Value, out date))
@@ -229,12 +229,12 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlDayToSecond ToDayToSecond(SqlString value) {
-			if (value.IsNull)
-				return SqlDayToSecond.Null;
+			if (value == null)
+				throw new InvalidCastException();
 
 			SqlDayToSecond dts;
 			if (!SqlDayToSecond.TryParse(value.Value, out dts))
-				return SqlDayToSecond.Null;
+				throw new FormatException();
 
 			return dts;
 		}

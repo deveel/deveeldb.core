@@ -225,7 +225,6 @@ namespace Deveel.Data.Sql {
 			var result = type.Cast(sqlString, PrimitiveTypes.Boolean());
 
 			Assert.IsType<SqlBoolean>(result);
-			Assert.False(result.IsNull);
 			
 			Assert.Equal(expected, (bool)(SqlBoolean) result);
 		}
@@ -292,7 +291,7 @@ namespace Deveel.Data.Sql {
 			Assert.True(type.CanCastTo(destType));
 			var result = type.Cast(sqlString, destType);
 
-			var expectedResult = String.IsNullOrEmpty(expected) ? SqlDateTime.Null : SqlDateTime.Parse(expected);
+			var expectedResult = SqlDateTime.Parse(expected);
 			Assert.IsType<SqlDateTime>(result);
 
 			Assert.Equal(expectedResult, result);
@@ -300,8 +299,6 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData("2.12:03:20.433", "2.12:03:20.433")]
-		[InlineData(null, null)]
-		[InlineData("2 10:22:11.111", null)]
 		public static void CastToYearToMonth(string s, string expected) {
 			var sqlString = new SqlString(s);
 			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
@@ -311,7 +308,7 @@ namespace Deveel.Data.Sql {
 			var result = type.Cast(sqlString, destType);
 			Assert.IsType<SqlDayToSecond>(result);
 
-			var expectedResult = String.IsNullOrEmpty(expected) ? SqlDayToSecond.Null : SqlDayToSecond.Parse(expected);
+			var expectedResult = SqlDayToSecond.Parse(expected);
 
 			Assert.Equal(expectedResult, result);
 		}

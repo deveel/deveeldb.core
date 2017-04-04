@@ -33,7 +33,7 @@ namespace Deveel.Data.Sql {
 	/// </remarks>
 	[DebuggerDisplay("{ToString()}")]
 	public struct SqlBoolean : ISqlValue, IEquatable<SqlBoolean>, IComparable<SqlBoolean>, IConvertible {
-		private readonly byte? value;
+		private readonly byte value;
 
 		/// <summary>
 		/// Represents the materialization of a <c>true</c> boolean.
@@ -48,11 +48,6 @@ namespace Deveel.Data.Sql {
 		public static readonly SqlBoolean False = new SqlBoolean(0);
 
 		public static readonly SqlString FalseString = new SqlString("FALSE");
-
-		/// <summary>
-		/// Defines a <c>null</c> boolean.
-		/// </summary>
-		public static readonly SqlBoolean Null = new SqlBoolean((byte?) null);
 
 		/// <summary>
 		/// Constructs a given boolean object with a defined byte value.
@@ -79,11 +74,6 @@ namespace Deveel.Data.Sql {
 			: this((byte) (value ? 1 : 0)) {
 		}
 
-		private SqlBoolean(byte? value)
-			: this() {
-			this.value = value;
-		}
-
 		int IComparable.CompareTo(object obj) {
 			if (!(obj is ISqlValue))
 				throw new ArgumentException();
@@ -93,18 +83,10 @@ namespace Deveel.Data.Sql {
 
 		/// <inheritdoc/>
 		public int CompareTo(ISqlValue other) {
-			if (other is SqlNull) {
-				if (IsNull)
-					return 0;
-				return 1;
-			}
-
 			SqlBoolean otherBoolean;
 			if (other is SqlNumber) {
 				var num = (SqlNumber) other;
-				if (num.IsNull) {
-					otherBoolean = Null;
-				} else if (num == SqlNumber.One) {
+				if (num == SqlNumber.One) {
 					otherBoolean = True;
 				} else if (num == SqlNumber.Zero) {
 					otherBoolean = False;
@@ -121,27 +103,9 @@ namespace Deveel.Data.Sql {
 			return CompareTo(otherBoolean);
 		}
 
-		/// <inheritdoc/>
-		public bool IsNull {
-			get { return value == null; }
-		}
-
-		/// <summary>
-		/// Indicates if the given <see cref="ISqlValue"/> can be compared to this
-		/// <see cref="SqlBoolean"/>.
-		/// </summary>
-		/// <param name="other">The other object to verifiy compatibility.</param>
-		/// <remarks>
-		/// Comparable objects are <see cref="SqlBoolean"/>, <see cref="SqlNull"/> or
-		/// <see cref="SqlNumber"/> with a value equals to <see cref="SqlNumber.One"/>,
-		/// <see cref="SqlNumber.Zero"/> or <see cref="SqlNumber.Null"/>.
-		/// </remarks>
-		/// <returns>
-		/// Returns <c>true</c> if the given object can be compared to this boolean
-		/// instance, or <c>false</c> otherwise.
-		/// </returns>
-		public bool IsComparableTo(ISqlValue other) {
-			if (other is SqlBoolean || other is SqlNull)
+		
+		bool ISqlValue.IsComparableTo(ISqlValue other) {
+			if (other is SqlBoolean)
 				return true;
 
 			if (other is SqlNumber) {
@@ -155,9 +119,6 @@ namespace Deveel.Data.Sql {
 
 		/// <inheritdoc/>
 		public override bool Equals(object obj) {
-			if (obj is SqlNull && IsNull)
-				return true;
-
 			if (!(obj is SqlBoolean))
 				return false;
 
@@ -166,20 +127,10 @@ namespace Deveel.Data.Sql {
 
 		/// <inheritdoc/>
 		public bool Equals(SqlBoolean other) {
-			if (IsNull && other.IsNull)
-				return true;
-			if (IsNull && !other.IsNull)
-				return false;
-			if (!IsNull && other.IsNull)
-				return false;
-
 			return value.Equals(other.value);
 		}
 
 		private SqlBoolean Negate() {
-			if (value == null)
-				return Null;
-
 			if (value == 1)
 				return False;
 			if (value == 0)
@@ -189,10 +140,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlBoolean Or(SqlBoolean other) {
-			if (value == null ||
-			    other.IsNull)
-				return Null;
-
 			if (value == 1 || other.value == 1)
 				return True;
 
@@ -200,10 +147,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlBoolean And(SqlBoolean other) {
-			if (value == null ||
-			    other.IsNull)
-				return Null;
-
 			if (value == 1 && other.value == 1)
 				return True;
 
@@ -211,10 +154,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlBoolean XOr(SqlBoolean other) {
-			if (value == null ||
-			    other.IsNull)
-				return Null;
-
 			if (value == 1 && other.value == 0)
 				return True;
 			if (value == 0 && other.value == 1)
@@ -225,7 +164,7 @@ namespace Deveel.Data.Sql {
 
 		/// <inheritdoc/>
 		public override int GetHashCode() {
-			return value == null ? 0 : value.Value.GetHashCode();
+			return value.GetHashCode();
 		}
 
 		TypeCode IConvertible.GetTypeCode() {
@@ -245,10 +184,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		byte IConvertible.ToByte(IFormatProvider provider) {
-			if (value == null)
-				throw new NullReferenceException();
-
-			return value.Value;
+			return value;
 		}
 
 		short IConvertible.ToInt16(IFormatProvider provider) {
@@ -260,10 +196,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		int IConvertible.ToInt32(IFormatProvider provider) {
-			if (value == null)
-				throw new NullReferenceException();
-
-			return value.Value;
+			return value;
 		}
 
 		uint IConvertible.ToUInt32(IFormatProvider provider) {
@@ -304,15 +237,7 @@ namespace Deveel.Data.Sql {
 
 		/// <inheritdoc/>
 		public int CompareTo(SqlBoolean other) {
-			if (other.IsNull && IsNull)
-				return 0;
-
-			if (IsNull && !other.IsNull)
-				return -1;
-			if (!IsNull && other.IsNull)
-				return 1;
-
-			return value.Value.CompareTo(other.value.Value);
+			return value.CompareTo(other.value);
 		}
 
 		/// <summary>
@@ -362,16 +287,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static bool operator true(SqlBoolean b) {
-			if (b.IsNull)
-				throw new InvalidCastException();
-
 			return b;
 		}
 
 		public static bool operator false(SqlBoolean b) {
-			if (b.IsNull)
-				throw new InvalidCastException();
-
 			return !b;
 		}
 
@@ -384,16 +303,10 @@ namespace Deveel.Data.Sql {
 		/// this object.
 		/// </returns>
 		public static implicit operator bool(SqlBoolean value) {
-			if (value.IsNull)
-				throw new InvalidCastException();
-
 			return value.value == 1;
 		}
 
 		public static implicit operator bool?(SqlBoolean value) {
-			if (value.IsNull)
-				return null;
-
 			return value.value == 1;
 		}
 
@@ -407,10 +320,6 @@ namespace Deveel.Data.Sql {
 		/// </returns>
 		public static implicit operator SqlBoolean(bool value) {
 			return new SqlBoolean(value);
-		}
-
-		public static implicit operator SqlBoolean(bool? value) {
-			return new SqlBoolean(value == null ? (byte?)null : (byte)(value.Value ? 1 : 0));
 		}
 
 		/// <summary>
@@ -473,18 +382,11 @@ namespace Deveel.Data.Sql {
 				return true;
 			}
 
-			if (String.Equals(s, "NULL", StringComparison.OrdinalIgnoreCase)) {
-				value = Null;
-				return true;
-			}
-
 			return false;
 		}
 
 		/// <inheritdoc/>
 		public override string ToString() {
-			if (value == null)
-				return "NULL";
 			if (value == 1)
 				return "true";
 			if (value == 0)

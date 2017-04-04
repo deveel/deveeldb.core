@@ -7,7 +7,7 @@ namespace Deveel.Data.Sql {
 			if (type == null)
 				throw new ArgumentNullException(nameof(type));
 			if (value == null)
-				throw new ArgumentNullException(nameof(value));
+				value = SqlNull.Value;
 
 			if (!type.IsInstanceOf(value))
 				throw new ArgumentException($"The value given is not an instance of {type}", nameof(value));
@@ -20,7 +20,7 @@ namespace Deveel.Data.Sql {
 
 		public SqlType Type { get; }
 
-		public bool IsNull => Value.IsNull;
+		public bool IsNull => SqlNull.Value == Value;
 
 		private int CompareToNotNull(SqlObject other) {
 			var type = Type;
@@ -94,9 +94,11 @@ namespace Deveel.Data.Sql {
 			if (!Type.Equals(other.Type))
 				return false;
 
-			if (Value.IsNull && other.Value.IsNull)
+			if (SqlNull.Value == Value &&
+			    SqlNull.Value == other.Value)
 				return true;
-			if (Value.IsNull || other.Value.IsNull)
+			if (SqlNull.Value == Value ||
+			    SqlNull.Value == other.Value)
 				return false;
 
 			return Value.Equals(other.Value);

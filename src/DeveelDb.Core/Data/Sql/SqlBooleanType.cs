@@ -51,7 +51,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
-			return value is SqlBoolean;
+			return value is SqlBoolean || value is SqlNull;
 		}
 
 		public override bool CanCastTo(SqlType destType) {
@@ -79,16 +79,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		private SqlNumber ToNumber(SqlBoolean value) {
-			if (value.IsNull)
-				return SqlNumber.Null;
-
 			return value ? SqlNumber.One : SqlNumber.Zero;
 		}
 
 		private SqlBinary ToBinary(SqlBoolean value) {
-			if (value.IsNull)
-				return SqlBinary.Null;
-
 			var bytes = new[] { value ? (byte)1 : (byte)0 };
 			return new SqlBinary(bytes);
 		}
@@ -103,17 +97,11 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override ISqlValue Negate(ISqlValue value) {
-			if (value.IsNull)
-				return SqlBoolean.Null;
-
 			var b = (SqlBoolean)value;
 			return !b;
 		}
 
 		public override ISqlValue And(ISqlValue a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
 			var b1 = (SqlBoolean)a;
 			var b2 = (SqlBoolean)b;
 
@@ -121,9 +109,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override ISqlValue Or(ISqlValue a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
 			var b1 = (SqlBoolean)a;
 			var b2 = (SqlBoolean)b;
 
@@ -131,9 +116,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override ISqlValue XOr(ISqlValue a, ISqlValue b) {
-			if (a.IsNull || b.IsNull)
-				return SqlBoolean.Null;
-
 			var b1 = (SqlBoolean)a;
 			var b2 = (SqlBoolean)b;
 
@@ -142,8 +124,6 @@ namespace Deveel.Data.Sql {
 
 		public override string ToString(ISqlValue obj) {
 			var b = (SqlBoolean)obj;
-			if (b.IsNull)
-				return "NULL";
 			if (TypeCode == SqlTypeCode.Bit) {
 				if (b == SqlBoolean.True)
 					return "1";
@@ -160,18 +140,12 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override SqlBoolean Equal(ISqlValue a, ISqlValue b) {
-			if (a.IsNull && b.IsNull)
-				return true;
-
 			var b1 = (SqlBoolean)a;
 			var b2 = (SqlBoolean)b;
 			return b1.Equals(b2);
 		}
 
 		public override SqlBoolean NotEqual(ISqlValue a, ISqlValue b) {
-			if (a.IsNull && b.IsNull)
-				return false;
-
 			var b1 = (SqlBoolean)a;
 			var b2 = (SqlBoolean)b;
 			return !b1.Equals(b2);

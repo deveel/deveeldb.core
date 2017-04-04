@@ -18,7 +18,9 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
-			return value is SqlYearToMonth || value is SqlDayToSecond;
+			return value is SqlYearToMonth ||
+			       value is SqlDayToSecond ||
+			       value is SqlNull;
 		}
 
 		public override ISqlValue Add(ISqlValue a, ISqlValue b) {

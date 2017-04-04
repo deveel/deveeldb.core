@@ -30,7 +30,6 @@ namespace Deveel.Data.Sql {
 		public static readonly SqlNumber Zero = new SqlNumber(NumericState.None, BigDecimal.Zero);
 		public static readonly SqlNumber One = new SqlNumber(NumericState.None, BigDecimal.One);
 		public static readonly SqlNumber MinusOne = new SqlNumber(NumericState.None, new BigDecimal(-1));
-		public static readonly SqlNumber Null = new SqlNumber(NumericState.None, null);
 
 		public static readonly SqlNumber NaN = new SqlNumber(NumericState.NotANumber, null);
 
@@ -86,8 +85,6 @@ namespace Deveel.Data.Sql {
 		internal MathContext MathContext => state == NumericState.None ? new MathContext(Precision) : null;
 
 		public int Sign => state == NumericState.None ? innerValue.Sign : 0;
-
-		public bool IsNull => state == NumericState.None && innerValue == null;
 
 		private static NumericState GetNumberState(double value) {
 			if (Double.IsPositiveInfinity(value))
@@ -165,13 +162,6 @@ namespace Deveel.Data.Sql {
 			if (state != NumericState.None)
 				return true;
 
-			if (IsNull && other.IsNull)
-				return true;
-			if (IsNull && !other.IsNull)
-				return false;
-			if (!IsNull && other.IsNull)
-				return false;
-
 			return innerValue.CompareTo(other.innerValue) == 0;
 		}
 
@@ -187,13 +177,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		public int CompareTo(SqlNumber other) {
-			if (IsNull && other.IsNull)
-				return 0;
-			if (!IsNull && other.IsNull)
-				return 1;
-			if (IsNull && !other.IsNull)
-				return -1;
-
 			if (Equals(this, other))
 				return 0;
 
@@ -364,9 +347,7 @@ namespace Deveel.Data.Sql {
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			switch (state) {
 				case (NumericState.None): {
-					if (IsNull) {
-						builder.Append("NULL");	
-					} else if (CanBeInt32 || CanBeInt64) {
+					if (CanBeInt32 || CanBeInt64) {
 						builder.Append(valueAsLong);
 					} else {
 						builder.Append(innerValue.ToString());
@@ -387,14 +368,7 @@ namespace Deveel.Data.Sql {
 			}
 		}
 
-		private void AssertNotNull() {
-			if (IsNull)
-				throw new InvalidCastException("Cannot convert a null number to the given type");
-		}
-
 		private double ToDouble() {
-			AssertNotNull();
-
 			switch (state) {
 				case (NumericState.None):
 					return innerValue.ToDouble();
@@ -410,8 +384,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private float ToSingle() {
-			AssertNotNull();
-
 			switch (state) {
 				case (NumericState.None):
 					return innerValue.ToSingle();
@@ -427,8 +399,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private long ToInt64() {
-			AssertNotNull();
-
 			if (CanBeInt64)
 				return valueAsLong;
 			switch (state) {
@@ -440,8 +410,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private int ToInt32() {
-			AssertNotNull();
-
 			if (CanBeInt32)
 				return (int)valueAsLong;
 			switch (state) {
@@ -453,8 +421,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private short ToInt16() {
-			AssertNotNull();
-
 			if (!CanBeInt32)
 				throw new InvalidCastException("The value of this numeric is over the maximum Int16.");
 
@@ -467,8 +433,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private byte ToByte() {
-			AssertNotNull();
-
 			if (!CanBeInt32)
 				throw new InvalidCastException("The value of this numeric is over the maximum Byte.");
 
@@ -481,8 +445,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		private bool ToBoolean() {
-			AssertNotNull();
-
 			if (Equals(One))
 				return true;
 			if (Equals(Zero))
@@ -496,8 +458,6 @@ namespace Deveel.Data.Sql {
 				return this;
 			if (value.state != NumericState.None)
 				return value;
-			if (IsNull || value.IsNull)
-				return Null;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();
@@ -505,7 +465,7 @@ namespace Deveel.Data.Sql {
 				return new SqlNumber(NumericState.None, new BigDecimal(bi1 ^ bi2));
 			}
 
-			return Null;
+			return this;
 		}
 
 		private SqlNumber And(SqlNumber value) {
@@ -513,8 +473,6 @@ namespace Deveel.Data.Sql {
 				return this;
 			if (value.state != NumericState.None)
 				return value;
-			if (IsNull || value.IsNull)
-				return Null;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();
@@ -522,7 +480,7 @@ namespace Deveel.Data.Sql {
 				return new SqlNumber(NumericState.None, new BigDecimal(bi1 & bi2));
 			}
 
-			return Null;			
+			return this;
 		}
 
 		private SqlNumber Or(SqlNumber value) {
@@ -530,8 +488,6 @@ namespace Deveel.Data.Sql {
 				return this;
 			if (value.state != NumericState.None)
 				return value;
-			if (IsNull || value.IsNull)
-				return Null;
 
 			if (Scale == 0 && value.Scale == 0) {
 				BigInteger bi1 = innerValue.ToBigInteger();
@@ -539,14 +495,11 @@ namespace Deveel.Data.Sql {
 				return new SqlNumber(NumericState.None, new BigDecimal(bi1 | bi2));
 			}
 
-			return Null;
+			return this;
 		}
 
 		private SqlNumber Negate() {
 			if (state == NumericState.None) {
-				if (IsNull)
-					return Null;
-
 				return new SqlNumber(innerValue.Negate());
 			}
 
@@ -559,9 +512,6 @@ namespace Deveel.Data.Sql {
 
 		private SqlNumber Plus() {
 			if (state == NumericState.None) {
-				if (IsNull)
-					return Null;
-
 				return new SqlNumber(innerValue.Plus());
 			}
 
@@ -574,9 +524,6 @@ namespace Deveel.Data.Sql {
 
 		private SqlNumber Not() {
 			if (state == NumericState.None) {
-				if (IsNull)
-					return Null;
-
 				return new SqlNumber(new BigDecimal(~innerValue.ToBigInteger()));
 			}
 
@@ -593,7 +540,7 @@ namespace Deveel.Data.Sql {
 
 		public static bool TryParse(string s, IFormatProvider provider, out SqlNumber value) {
 			if (String.IsNullOrEmpty(s)) {
-				value = Null;
+				value = new SqlNumber();
 				return false;
 			}
 
@@ -619,7 +566,7 @@ namespace Deveel.Data.Sql {
 			BigDecimal decimalValue;
 
 			if (!BigDecimal.TryParse(s, provider, out decimalValue)) {
-				value = Null;
+				value = new SqlNumber();
 				return false;
 			}
 
@@ -709,24 +656,12 @@ namespace Deveel.Data.Sql {
 
 		#region Explicit Operators
 
-		public static explicit operator int?(SqlNumber number) {
-			return number.IsNull ? (int?) null : number.ToInt32();
-		}
-
 		public static explicit operator int(SqlNumber number) {
 			return number.ToInt32();
 		}
 
 		public static explicit operator byte(SqlNumber number) {
 			return number.ToByte();
-		}
-
-		public static explicit operator byte?(SqlNumber number) {
-			return number.IsNull ? (byte?) null : number.ToByte();
-		}
-
-		public static explicit operator short?(SqlNumber number) {
-			return number.IsNull ? (short?) null : number.ToInt16();
 		}
 
 		public static explicit operator short(SqlNumber number) {
@@ -737,15 +672,6 @@ namespace Deveel.Data.Sql {
 			return number.ToInt64();
 		}
 
-		public static explicit operator long?(SqlNumber number) {
-			return number.IsNull ? (long?) null : number.ToInt64();
-		}
-
-
-		public static explicit operator double?(SqlNumber number) {
-			return number.IsNull ? (double?) null : number.ToDouble();
-		}
-
 		public static explicit operator double(SqlNumber number) {
 			return number.ToDouble();
 		}
@@ -754,48 +680,16 @@ namespace Deveel.Data.Sql {
 			return number.ToSingle();
 		}
 
-		public static explicit operator float?(SqlNumber number) {
-			return number.IsNull ? (float?) null : number.ToSingle();
-		}
-
-		public static explicit operator SqlNumber(double? value) {
-			if (value == null)
-				return Null;
-
-			return (SqlNumber) value.Value;
-		}
-
 		public static explicit operator SqlNumber(double value) {
 			return FromDouble(value);
-		}
-
-		public static explicit operator SqlNumber(float? value) {
-			if (value == null)
-				return Null;
-
-			return (SqlNumber) value.Value;
 		}
 
 		public static explicit operator SqlNumber(float value) {
 			return new SqlNumber(new BigDecimal(value, MathContext.Decimal32));
 		}
 
-		public static explicit operator SqlNumber(int? value) {
-			if (value == null)
-				return Null;
-
-			return (SqlNumber) value.Value;
-		}
-
 		public static explicit operator SqlNumber(int value) {
 			return new SqlNumber(value, 0, 0);
-		}
-
-		public static explicit operator SqlNumber(long? value) {
-			if (value == null)
-				return Null;
-
-			return (SqlNumber) value.Value;
 		}
 
 		public static explicit operator SqlNumber(long value) {

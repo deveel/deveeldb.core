@@ -38,33 +38,14 @@ namespace Deveel.Data.Sql {
 	/// </remarks>
 	/// <seealso cref="ISqlString"/>
 	[DebuggerDisplay("{ToString()}")]
-	public struct SqlString : ISqlString, IEquatable<SqlString>, IConvertible
+	public sealed class SqlString : ISqlString, IEquatable<SqlString>, IConvertible
 	{
 		/// <summary>
 		/// The maximum length of characters a <see cref="SqlString"/> can handle.
 		/// </summary>
 		public const int MaxLength = Int16.MaxValue;
 
-		/// <summary>
-		/// The <c>null</c> instance of a string.
-		/// </summary>
-		public static readonly SqlString Null = new SqlString(null, 0, true);
-
 		private readonly string source;
-
-		private SqlString(char[] chars, int length, bool isNull) : this() {
-			if (chars == null) {
-				source = null;
-			} else {
-				if (length > MaxLength)
-					throw new ArgumentOutOfRangeException("length");
-
-				source = new string(chars, 0, length);
-				Length = chars.Length;
-			}
-
-			IsNull = isNull || source == null;
-		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SqlString"/> structure with
@@ -81,8 +62,16 @@ namespace Deveel.Data.Sql {
 		/// <param name="chars">The chars.</param>
 		/// <param name="length">The length.</param>
 		/// <exception cref="System.ArgumentOutOfRangeException">length</exception>
-		public SqlString(char[] chars, int length)
-			: this(chars, length, false) {
+		public SqlString(char[] chars, int length) {
+			if (chars == null) {
+				source = null;
+			} else {
+				if (length > MaxLength)
+					throw new ArgumentOutOfRangeException("length");
+
+				source = new string(chars, 0, length);
+				Length = chars.Length;
+			}
 		}
 
 		public SqlString(string source)
@@ -112,8 +101,6 @@ namespace Deveel.Data.Sql {
 			return CompareTo((ISqlString) other);
 		}
 
-		public bool IsNull { get; private set; }
-
 		public string Value {
 			get { return source; }
 		}
@@ -140,13 +127,6 @@ namespace Deveel.Data.Sql {
 			if (other == null)
 				throw new ArgumentNullException("other");
 
-			if (IsNull && other.IsNull)
-				return 0;
-			if (IsNull)
-				return 1;
-			if (other.IsNull)
-				return -1;
-
 			if (other is SqlString) {
 				var otherString = (SqlString) other;
 				return String.Compare(Value, otherString.Value, StringComparison.Ordinal);
@@ -166,9 +146,6 @@ namespace Deveel.Data.Sql {
 		public long Length { get; private set; }
 
 		public TextReader GetInput() {
-			if (IsNull)
-				return TextReader.Null;
-
 			var bytes = Encoding.Unicode.GetBytes(source);
 			var stream = new MemoryStream(bytes);
 			return new StreamReader(stream);
@@ -182,10 +159,7 @@ namespace Deveel.Data.Sql {
 			if (offset + count > Length)
 				throw new ArgumentOutOfRangeException();
 
-			if (IsNull)
-				return Null;
-
-			return source.Substring(offset, count);
+			return new SqlString(source.Substring(offset, count));
 		}
 
 		public SqlString PadRight(int length)
@@ -195,18 +169,12 @@ namespace Deveel.Data.Sql {
 			if (length < 0)
 				throw new ArgumentException();
 
-			if (IsNull)
-				return Null;
-
 			return new SqlString(source.PadRight(length, c));
 		}
 
 		public SqlString PadLeft(int length, char c) {
 			if (length < 0)
 				throw new ArgumentException();
-
-			if (IsNull)
-				return Null;
 
 			return new SqlString(source.PadLeft(length, c));
 		}
@@ -223,8 +191,6 @@ namespace Deveel.Data.Sql {
 				return true;
 			if (source == null)
 				return false;
-			if (other.IsNull)
-				return false;
 
 			if (source.Length != other.source.Length)
 				return false;
@@ -234,8 +200,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool Equals(object obj) {
-			if (obj is SqlNull && IsNull)
-				return true;
+			if (!(obj is SqlString))
+				return false;
 
 			return Equals((SqlString) obj);
 		}
@@ -264,7 +230,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlString Concat(ISqlString other) {
-			if (other == null || other.IsNull)
+			if (other == null)
 				return this;
 
 			if (other is SqlString) {
@@ -442,7 +408,7 @@ namespace Deveel.Data.Sql {
 		private SqlBoolean ToBoolean() {
 			SqlBoolean value;
 			if (!SqlBoolean.TryParse(Value, out value))
-				return SqlBoolean.Null; // TODO: Should we throw an exception?
+				throw new FormatException();
 
 			return value;
 		}
@@ -450,7 +416,7 @@ namespace Deveel.Data.Sql {
 		private SqlNumber ToNumber(IFormatProvider provider) {
 			SqlNumber value;
 			if (!SqlNumber.TryParse(Value, provider, out value))
-				return SqlNumber.Null; // TODO: Shoudl we throw an exception?
+				throw new FormatException();
 
 			return value;
 		}
@@ -458,7 +424,7 @@ namespace Deveel.Data.Sql {
 		public SqlDateTime ToSqlDateTime(IFormatProvider provider) {
 			SqlDateTime value;
 			if (!SqlDateTime.TryParse(Value, out value))
-				return SqlDateTime.Null; // TODO: Shoudl we throw an exception?
+				throw new FormatException();
 
 			return value;
 		}
@@ -478,6 +444,14 @@ namespace Deveel.Data.Sql {
 		#region Operators
 
 		public static bool operator ==(SqlString s1, SqlString s2) {
+			if (ReferenceEquals(s1, null) &&
+			    ReferenceEquals(s2, null))
+				return true;
+			if (ReferenceEquals(s1, null))
+				return false;
+			if (ReferenceEquals(s2, null))
+				return false;
+
 			return s1.Equals(s2);
 		}
 
@@ -485,26 +459,10 @@ namespace Deveel.Data.Sql {
 			return !(s1 == s2);
 		}
 
-		public static bool operator ==(SqlString a, SqlNull b) {
-			return a.IsNull;
-		}
-
-		public static bool operator !=(SqlString a, SqlNull b) {
-			return !(a == b);
-		}
-
 		#endregion
 
-		#region Implicit Operators
-
-		public static implicit operator SqlString(string s) {
+		public static explicit operator SqlString(string s) {
 			return new SqlString(s);
 		}
-
-		public static implicit operator string(SqlString s) {
-			return s.Value;
-		}
-
-		#endregion
 	}
 }

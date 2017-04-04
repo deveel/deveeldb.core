@@ -22,9 +22,7 @@ using System.Globalization;
 
 namespace Deveel.Data.Sql {
 	public struct SqlDateTime : ISqlValue, IEquatable<SqlDateTime>, IComparable<SqlDateTime>, IFormattable, IConvertible {
-		private readonly DateTimeOffset? value;
-
-		public static readonly SqlDateTime Null = new SqlDateTime(true);
+		private readonly DateTimeOffset value;
 
 		private const int DateSize = 7;
 		private const int TimeStampSize = 11;
@@ -116,12 +114,6 @@ namespace Deveel.Data.Sql {
 			value = new DateTimeOffset(ticks, tsOffset);
 		}
 
-		private SqlDateTime(bool isNull)
-			: this() {
-			if (isNull)
-				value = null;
-		}
-
 		public SqlDateTime(byte[] bytes)
 			: this() {
 			var year = ((bytes[0] - 100) * 100) + (bytes[1] - 100);
@@ -171,74 +163,57 @@ namespace Deveel.Data.Sql {
 		}
 
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			if (!(value is SqlDateTime))
+			if (!(other is SqlDateTime))
 				throw new ArgumentException();
 
 			return CompareTo((SqlDateTime) other);
 		}
 
-		public bool IsNull {
-			get { return value == null; }
-		}
-
-		private void AssertNotNull() {
-			if (value == null)
-				throw new InvalidOperationException();
-		}
-
 		public int Year {
 			get {
-				AssertNotNull();
-				return value.Value.Year;
+				return value.Year;
 			}
 		}
 
 		public int Month {
 			get {
-				AssertNotNull();
-				return value.Value.Month;
+				return value.Month;
 			}
 		}
 
 		public int Day {
 			get {
-				AssertNotNull();
-				return value.Value.Day;
+				return value.Day;
 			}
 		}
 
 		public int Hour {
 			get {
-				AssertNotNull();
-				return value.Value.Hour;
+				return value.Hour;
 			}
 		}
 
 		public int Minute {
 			get {
-				AssertNotNull();
-				return value.Value.Minute;
+				return value.Minute;
 			}
 		}
 
 		public int Second {
 			get {
-				AssertNotNull();
-				return value.Value.Second;
+				return value.Second;
 			}
 		}
 
 		public int Millisecond {
 			get {
-				AssertNotNull();
-				return value.Value.Millisecond;
+				return value.Millisecond;
 			}
 		}
 
 		public long Ticks {
 			get {
-				AssertNotNull();
-				return value.Value.Ticks;
+				return value.Ticks;
 			}
 		}
 
@@ -247,21 +222,18 @@ namespace Deveel.Data.Sql {
 		/// </summary>
 		public SqlDayToSecond Offset {
 			get {
-				AssertNotNull();
-				return new SqlDayToSecond(0, value.Value.Offset.Hours, value.Value.Offset.Minutes, 0, 0);
+				return new SqlDayToSecond(0, value.Offset.Hours, value.Offset.Minutes, 0, 0);
 			}
 		}
 
 		public SqlDateTime DatePart {
 			get {
-				AssertNotNull();
 				return new SqlDateTime(Year, Month, Day);
 			}
 		}
 
 		public SqlDateTime TimePart {
 			get {
-				AssertNotNull();
 				return new SqlDateTime(1, 1, 1, Hour, Minute, Second, Millisecond);
 			}
 		}
@@ -339,7 +311,7 @@ namespace Deveel.Data.Sql {
 			if (value == null)
 				throw new NullReferenceException();
 
-			return value.Value.DateTime;
+			return value.DateTime;
 		}
 
 		string IConvertible.ToString(IFormatProvider provider) {
@@ -356,14 +328,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public bool Equals(SqlDateTime other) {
-			if (IsNull && other.IsNull)
-				return true;
-			if (IsNull && !other.IsNull)
-				return false;
-			if (!IsNull && other.IsNull)
-				return false;
-
-			return value.Value.Equals(other.value.Value);
+			return value.Equals(other.value);
 		}
 
 		public override bool Equals(object obj) {
@@ -371,23 +336,15 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override int GetHashCode() {
-			return value == null ? 0 : value.GetHashCode();
+			return value.GetHashCode();
 		}
 
 		public int CompareTo(SqlDateTime other) {
-			if (IsNull && other.IsNull)
-				return 0;
-			if (!IsNull && other.IsNull)
-				return 1;
-			if (IsNull && !other.IsNull)
-				return -1;
-
-			return value.Value.CompareTo(other.value.Value);
+			return value.CompareTo(other.value);
 		}
 
 		private long ToInt64() {
-			AssertNotNull();
-			return value.Value.Ticks;
+			return value.Ticks;
 		}
 
 		public byte[] ToByteArray() {
@@ -396,8 +353,6 @@ namespace Deveel.Data.Sql {
 
 		public byte[] ToByteArray(bool timeZone) {
 			var size = timeZone ? 13 : 11;
-			if (IsNull)
-				return new byte[size];
 
 			var bytes = new byte[size];
 			bytes[0] = (byte) ((Year / 100) + 100);
@@ -423,22 +378,12 @@ namespace Deveel.Data.Sql {
 		/// Adds the given interval of time to this date-time.
 		/// </summary>
 		/// <param name="interval">The interval of time to add.</param>
-		/// <remarks>
-		/// This method will return <see cref="Null"/> if either the given 
-		/// <paramref name="interval"/> is <see cref="SqlDayToSecond.Null"/>
-		/// or if this instance is equivalent to <c>NULL</c>.
-		/// </remarks>
 		/// <returns>
 		/// Returns an instance of <see cref="SqlDateTime"/> that is the result of
 		/// the addition to this date of the given interval of time.
 		/// </returns>
 		public SqlDateTime Add(SqlDayToSecond interval) {
-			if (IsNull)
-				return Null;
-			if (interval.IsNull)
-				return this;
-
-			var result = value.Value.AddMilliseconds(interval.TotalMilliseconds);
+			var result = value.AddMilliseconds(interval.TotalMilliseconds);
 			return new SqlDateTime(result.Ticks);
 		}
 
@@ -452,12 +397,7 @@ namespace Deveel.Data.Sql {
 		/// </returns>
 		/// <seealso cref="SqlDayToSecond"/>
 		public SqlDateTime Subtract(SqlDayToSecond interval) {
-			if (IsNull)
-				return Null;
-			if (interval.IsNull)
-				return this;
-
-			var result = value.Value.AddMilliseconds(-(interval.TotalMilliseconds));
+			var result = value.AddMilliseconds(-(interval.TotalMilliseconds));
 			return new SqlDateTime(result.Ticks);
 		}
 
@@ -468,12 +408,7 @@ namespace Deveel.Data.Sql {
 		/// <returns></returns>
 		/// <seealso cref="SqlYearToMonth"/>
 		public SqlDateTime Add(SqlYearToMonth interval) {
-			if (IsNull)
-				return Null;
-			if (interval.IsNull)
-				return Null;
-
-			var result = value.Value.AddMonths(interval.TotalMonths);
+			var result = value.AddMonths(interval.TotalMonths);
 			return new SqlDateTime(result.Ticks);
 		}
 
@@ -482,10 +417,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlDateTime Subtract(SqlYearToMonth interval) {
-			if (IsNull || interval.IsNull)
-				return Null;
-
-			var result = value.Value.AddMonths(-interval.TotalMonths);
+			var result = value.AddMonths(-interval.TotalMonths);
 			return new SqlDateTime(result.Ticks);
 		}
 
@@ -497,8 +429,7 @@ namespace Deveel.Data.Sql {
 
 		public DayOfWeek DayOfWeek {
 			get {
-				AssertNotNull();
-				return value.Value.DayOfWeek;
+				return value.DayOfWeek;
 			}
 		}
 
@@ -649,9 +580,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static explicit operator SqlDateTime(DateTimeOffset? a) {
-			if (a == null)
-				return Null;
-
 			return (SqlDateTime) a.Value;
 		}
 
@@ -663,66 +591,42 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static explicit operator DateTimeOffset?(SqlDateTime a) {
-			if (a.IsNull)
-				return null;
-
 			var offset = new TimeSpan(a.Offset.Hours, a.Offset.Minutes, a.Offset.Seconds);
 			return new DateTimeOffset(a.Year, a.Month, a.Day, a.Hour, a.Minute, a.Second, a.Millisecond, offset);
 		}
 
 		public static explicit operator DateTimeOffset(SqlDateTime a) {
-			if (a.IsNull)
-				throw new NullReferenceException();
-
 			var offset = new TimeSpan(a.Offset.Hours, a.Offset.Minutes, a.Offset.Seconds);
 			return new DateTimeOffset(a.Year, a.Month, a.Day, a.Hour, a.Minute, a.Second, a.Millisecond, offset);
 		}
 
 		public SqlDateTime ToUtc() {
-			if (value == null)
-				return Null;
-
-			var utc = value.Value.ToUniversalTime();
+			var utc = value.ToUniversalTime();
 			var offset = new SqlDayToSecond(utc.Offset.Days, utc.Offset.Hours, utc.Offset.Minutes);
 			return new SqlDateTime(utc.Year, utc.Month, utc.Day, utc.Hour, utc.Minute, utc.Second, utc.Millisecond, offset);
 		}
 
 		public SqlString ToDateString() {
-			if (value == null)
-				return SqlString.Null;
-
-			var s = value.Value.ToString(DateStringFormat, CultureInfo.InvariantCulture);
+			var s = value.ToString(DateStringFormat, CultureInfo.InvariantCulture);
 			return new SqlString(s);
 		}
 
 		public SqlString ToTimeString() {
-			if (value == null)
-				return SqlString.Null;
-
-			var s = value.Value.ToString(TimeStringFormat, CultureInfo.InvariantCulture);
+			var s = value.ToString(TimeStringFormat, CultureInfo.InvariantCulture);
 			return new SqlString(s);
 		}
 
 		public SqlString ToTimeStampString() {
-			if (value == null)
-				return SqlString.Null;
-
-			var s = value.Value.ToString(TimeStampStringFormat, CultureInfo.InvariantCulture);
+			var s = value.ToString(TimeStampStringFormat, CultureInfo.InvariantCulture);
 			return new SqlString(s);
 		}
 
 		public override string ToString() {
-			if (value == null)
-				return "NULL";
-
 			return ToTimeStampString().ToString();
 		}
 
 		public string ToString(string format, IFormatProvider formatProvider) {
-			if (value == null)
-				return "NULL";
-
-			return value.Value.ToString(format, formatProvider);
+			return value.ToString(format, formatProvider);
 		}
 
 		public string ToString(string format) {
@@ -730,25 +634,16 @@ namespace Deveel.Data.Sql {
 		}
 
 		public DateTime ToDateTime() {
-			if (value == null)
-				throw new InvalidCastException();
-
-			return value.Value.DateTime;
+			return value.DateTime;
 		}
 
 		public DateTimeOffset ToDateTimeOffset() {
-			if (value == null)
-				throw new InvalidCastException();
-
-			return value.Value;
+			return value;
 		}
 
 		public SqlDateTime AtTimeZone(TimeZoneInfo timeZone) {
-			if (IsNull)
-				return this;
-
-			var utcOffset = timeZone.GetUtcOffset(value.Value.LocalDateTime);
-			return (SqlDateTime) value.Value.ToOffset(utcOffset);
+			var utcOffset = timeZone.GetUtcOffset(value.LocalDateTime);
+			return (SqlDateTime) value.ToOffset(utcOffset);
 		}
 
 		public SqlDateTime AtTimeZone(string timeZone) {

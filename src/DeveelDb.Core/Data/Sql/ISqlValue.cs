@@ -23,12 +23,6 @@ namespace Deveel.Data.Sql {
 	/// </summary>
 	public interface ISqlValue : IComparable, IComparable<ISqlValue> {
 		/// <summary>
-		/// Gets a boolean value indicating if the value is <c>NULL</c>.
-		/// </summary>
-		/// <seealso cref="SqlNull"/>
-		bool IsNull { get; }
-
-		/// <summary>
 		/// Checks if the current object is comparable with the given one.
 		/// </summary>
 		/// <param name="other">The other <see cref="ISqlValue"/> to compare.</param>

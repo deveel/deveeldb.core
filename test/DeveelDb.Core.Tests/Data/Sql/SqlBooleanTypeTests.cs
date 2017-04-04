@@ -23,10 +23,7 @@ namespace Deveel.Data.Sql {
 			var type = new SqlBooleanType(SqlTypeCode.Boolean);
 
 			var result = type.Add(a, b);
-
-			Assert.True(result.IsNull);
-			Assert.Equal(SqlBoolean.Null, result);
-			Assert.Equal(SqlNull.Value, result);
+			Assert.IsType<SqlNull>(result);
 		}
 
 		[Fact]
@@ -35,11 +32,8 @@ namespace Deveel.Data.Sql {
 			var b = SqlBoolean.False;
 			var type = new SqlBooleanType(SqlTypeCode.Boolean);
 
-			var result = type.Subtract(a, b);
-
-			Assert.True(result.IsNull);
-			Assert.Equal(SqlBoolean.Null, result);
-			Assert.Equal(SqlNull.Value, result);
+			var result = type.Multiply(a, b);
+			Assert.IsType<SqlNull>(result);
 		}
 
 		[Fact]
@@ -49,17 +43,13 @@ namespace Deveel.Data.Sql {
 			var type = new SqlBooleanType(SqlTypeCode.Boolean);
 
 			var result = type.Multiply(a, b);
-
-			Assert.True(result.IsNull);
-			Assert.Equal(SqlBoolean.Null, result);
-			Assert.Equal(SqlNull.Value, result);
+			Assert.IsType<SqlNull>(result);
 		}
 
 		[Theory]
 		[InlineData(true, false, false)]
 		[InlineData(true, true, true)]
-		[InlineData(true, null, false)]
-		public static void Equal(bool? a, bool? b, bool? expected) {
+		public static void Equal(bool a, bool b, bool expected) {
 			var x = (SqlBoolean)a;
 			var y = (SqlBoolean)b;
 			var type = new SqlBooleanType(SqlTypeCode.Boolean);
@@ -67,15 +57,13 @@ namespace Deveel.Data.Sql {
 			var result = type.Equal(x, y);
 			var exp = (SqlBoolean) expected;
 
-			Assert.False(result.IsNull);
 			Assert.Equal(exp, result);
 		}
 
 		[Theory]
 		[InlineData(true, false, true)]
 		[InlineData(true, true, false)]
-		[InlineData(true, null, true)]
-		public static void NotEqual(bool? a, bool? b, bool? expected) {
+		public static void NotEqual(bool a, bool b, bool expected) {
 			var x = (SqlBoolean)a;
 			var y = (SqlBoolean)b;
 			var type = new SqlBooleanType(SqlTypeCode.Boolean);
@@ -83,15 +71,13 @@ namespace Deveel.Data.Sql {
 			var result = type.NotEqual(x, y);
 			var exp = (SqlBoolean)expected;
 
-			Assert.False(result.IsNull);
 			Assert.Equal(exp, result);
 		}
 
 		[Theory]
 		[InlineData(true, true, true)]
 		[InlineData(true, false, false)]
-		[InlineData(true, null, null)]
-		public static void And(bool? a, bool? b, bool? expected) {
+		public static void And(bool a, bool b, bool expected) {
 			var x = (SqlBoolean)a;
 			var y = (SqlBoolean)b;
 			var type = new SqlBooleanType(SqlTypeCode.Boolean);
@@ -105,8 +91,7 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(true, true, true)]
 		[InlineData(true, false, true)]
-		[InlineData(true, null, null)]
-		public static void Or(bool? a, bool? b, bool? expected) {
+		public static void Or(bool a, bool b, bool expected) {
 			var x = (SqlBoolean)a;
 			var y = (SqlBoolean)b;
 			var type = new SqlBooleanType(SqlTypeCode.Boolean);
@@ -120,8 +105,7 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(true, false)]
 		[InlineData(false, true)]
-		[InlineData(null, null)]
-		public static void Negate(bool? value, bool? expected) {
+		public static void Negate(bool value, bool expected) {
 			var b = (SqlBoolean) value;
 			var type = new SqlBooleanType(SqlTypeCode.Boolean);
 
@@ -162,17 +146,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Fact]
-		public static void NullToString() {
-			var type = new SqlBooleanType(SqlTypeCode.Boolean);
-
-			var value = SqlBoolean.Null;
-			var s = type.ToString(value);
-
-			Assert.Equal("NULL", s);
-		}
-
-
-		[Fact]
 		public void Compare_BooleanToNumeric_Invalid() {
 			var type = PrimitiveTypes.Boolean();
 			Assert.NotNull(type);
@@ -203,7 +176,7 @@ namespace Deveel.Data.Sql {
 			var type = PrimitiveTypes.Boolean();
 			var boolean = new SqlBoolean(value);
 
-			var casted = type.Cast(boolean, PrimitiveTypes.Binary());
+			var casted = type.Cast(boolean, PrimitiveTypes.VarBinary());
 
 			var expectedArray = new[] {expected};
 

@@ -19,9 +19,8 @@ using System;
 
 namespace Deveel.Data.Sql {
 	public struct SqlDayToSecond : ISqlValue, IComparable<SqlDayToSecond>, IEquatable<SqlDayToSecond>, ISqlFormattable {
-		private readonly TimeSpan? value;
+		private readonly TimeSpan value;
 
-		public static readonly SqlDayToSecond Null = new SqlDayToSecond((TimeSpan?) null);
 		public static readonly SqlDayToSecond Zero = new SqlDayToSecond(0, 0, 0, 0, 0);
 
 		public SqlDayToSecond(int hours, int minutes, int seconds) 
@@ -32,13 +31,10 @@ namespace Deveel.Data.Sql {
 			: this(days, hours, minutes, seconds, 0) {
 		}
 
-		public SqlDayToSecond(int days, int hours, int minutes, int seconds, int milliseconds)
-			: this(new TimeSpan(days, hours, minutes, seconds, milliseconds)) {
+		public SqlDayToSecond(int days, int hours, int minutes, int seconds, int milliseconds) {
+			value = new TimeSpan(days, hours, minutes, seconds, milliseconds);
 		}
 
-		private SqlDayToSecond(TimeSpan? value) {
-			this.value = value;
-		}
 
 		public SqlDayToSecond(byte[] bytes) {
 			if (bytes == null)
@@ -64,54 +60,39 @@ namespace Deveel.Data.Sql {
 			return CompareTo((SqlDayToSecond) other);
 		}
 
-		public bool IsNull {
-			get { return value == null; }
-		}
-
-		private void AssertNotNull() {
-			if (value == null)
-				throw new NullReferenceException();
-		}
-
 		public double TotalMilliseconds {
 			get {
-				AssertNotNull();
-				return value.Value.TotalMilliseconds;
+				return value.TotalMilliseconds;
 			}
 		}
 
 		public int Days {
 			get {
-				AssertNotNull();
-				return value.Value.Days;
+				return value.Days;
 			}
 		}
 
 		public int Hours {
 			get {
-				AssertNotNull();
-				return value.Value.Hours;
+				return value.Hours;
 			}
 		}
 
 		public int Minutes {
 			get {
-				AssertNotNull();
-				return value.Value.Minutes;
+				return value.Minutes;
 			}
 		}
 
 		public int Seconds {
 			get {
-				AssertNotNull();
-				return value.Value.Seconds;
+				return value.Seconds;
 			}
 		}
 
 		public int Milliseconds {
 			get {
-				AssertNotNull();
-				return value.Value.Milliseconds;
+				return value.Milliseconds;
 			}
 		}
 
@@ -120,48 +101,28 @@ namespace Deveel.Data.Sql {
 		}
 
 		public int CompareTo(SqlDayToSecond other) {
-			if (IsNull && other.IsNull)
-				return 0;
-			if (IsNull && !other.IsNull)
-				return -1;
-			if (!IsNull && other.IsNull)
-				return 1;
-
-			return value.Value.CompareTo(other.value.Value);
+			return value.CompareTo(other.value);
 		}
 
 		public SqlDayToSecond Add(SqlDayToSecond interval) {
-			if (IsNull)
-				return interval;
-			if (interval.IsNull)
-				return Null;
-
 			var ts = new TimeSpan(interval.Days, interval.Hours, interval.Minutes, interval.Seconds, interval.Milliseconds);
-			var result = value.Value.Add(ts);
+			var result = value.Add(ts);
 			return new SqlDayToSecond(result.Days, result.Hours, result.Minutes, result.Seconds, result.Milliseconds);
 		}
 
 		public SqlDayToSecond Subtract(SqlDayToSecond interval) {
-			if (IsNull)
-				return interval;
-			if (interval.IsNull)
-				return Null;
-
 			var ts = new TimeSpan(interval.Days, interval.Hours, interval.Minutes, interval.Seconds, interval.Milliseconds);
-			var result = value.Value.Subtract(ts);
+			var result = value.Subtract(ts);
 			return new SqlDayToSecond(result.Days, result.Hours, result.Minutes, result.Seconds, result.Milliseconds);
 		}
 
 		public byte[] ToByArray() {
-			if (value == null)
-				return new byte[0];
-
 			var bytes = new byte[20];
-			var days = BitConverter.GetBytes(value.Value.Days);
-			var hours = BitConverter.GetBytes(value.Value.Hours);
-			var minutes = BitConverter.GetBytes(value.Value.Minutes);
-			var seconds = BitConverter.GetBytes(value.Value.Seconds);
-			var millis = BitConverter.GetBytes(value.Value.Milliseconds);
+			var days = BitConverter.GetBytes(value.Days);
+			var hours = BitConverter.GetBytes(value.Hours);
+			var minutes = BitConverter.GetBytes(value.Minutes);
+			var seconds = BitConverter.GetBytes(value.Seconds);
+			var millis = BitConverter.GetBytes(value.Milliseconds);
 
 			Array.Copy(days, 0, bytes, 0, 4);
 			Array.Copy(hours, 0, bytes, 4, 4);
@@ -172,17 +133,11 @@ namespace Deveel.Data.Sql {
 		}
 
 		public bool Equals(SqlDayToSecond other) {
-			if (IsNull && other.IsNull)
-				return true;
-
 			return value.Equals(other.value);
 		}
 
 		public SqlDayToSecond Negate() {
-			if (IsNull || value == null)
-				return this;
-
-			var ts = value.Value.Negate();
+			var ts = value.Negate();
 			return new SqlDayToSecond(ts.Days, ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
 		}
 
@@ -191,7 +146,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override int GetHashCode() {
-			return value == null ? 0 : value.Value.GetHashCode();
+			return value.GetHashCode();
 		}
 
 		public static SqlDayToSecond operator +(SqlDayToSecond a, SqlDayToSecond b) {
@@ -219,17 +174,13 @@ namespace Deveel.Data.Sql {
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
-			if (IsNull) {
-				builder.Append("NULL");
-			} else {
-				builder.Append(value.Value.ToString("c"));
-			}
+			builder.Append(value.ToString("c"));
 		}
 
 		public static bool TryParse(string s, out SqlDayToSecond interval) {
 			TimeSpan ts;
 			if (!TimeSpan.TryParse(s, out ts)) {
-				interval = Null;
+				interval = new SqlDayToSecond();
 				return false;
 			}
 
