@@ -18,8 +18,6 @@ namespace Deveel.Data.Sql {
 			return SqlNull.Value;
 		}
 
-		public override bool IsIndexable => false;
-
 		public override ISqlValue NormalizeValue(ISqlValue value) {
 			if (value == null)
 				return SqlNull.Value;

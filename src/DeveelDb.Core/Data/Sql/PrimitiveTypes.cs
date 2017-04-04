@@ -35,6 +35,10 @@ namespace Deveel.Data.Sql {
 
 		public static ISqlTypeResolver Resolver { get; }
 
+		public static SqlNullType Null() {
+			return new SqlNullType();
+		}
+
 		#region Boolean Types
 
 		public static SqlBooleanType Boolean() {
@@ -68,8 +72,8 @@ namespace Deveel.Data.Sql {
 			return Binary(SqlTypeCode.VarBinary, maxSize);
 		}
 
-		public static SqlBinaryType Blob(int size) {
-			return Binary(SqlTypeCode.Blob, size);
+		public static SqlBinaryType Blob() {
+			return Binary(SqlTypeCode.Blob, -1);
 		}
 
 		#endregion
@@ -124,6 +128,10 @@ namespace Deveel.Data.Sql {
 			return Numeric(SqlTypeCode.Double, 64, 4);
 		}
 
+		public static SqlNumericType Decimal() {
+			return Numeric(SqlTypeCode.Decimal, 128, 8);
+		}
+
 		#endregion
 
 		#region String Types
@@ -168,8 +176,8 @@ namespace Deveel.Data.Sql {
 			return String(SqlTypeCode.Char, size, locale);
 		}
 
-		public static SqlCharacterType Clob(int size) {
-			return String(SqlTypeCode.Clob, size);
+		public static SqlCharacterType Clob() {
+			return String(SqlTypeCode.Clob, -1);
 		}
 
 		#endregion
@@ -194,6 +202,22 @@ namespace Deveel.Data.Sql {
 
 		#endregion
 
+		#region Interval Types
+
+		public static SqlIntervalType Interval(SqlTypeCode typeCode) {
+			return new SqlIntervalType(typeCode);
+		}
+
+		public static SqlIntervalType YearToMonth() {
+			return Interval(SqlTypeCode.YearToMonth);
+		}
+
+		public static SqlIntervalType DayToSecond() {
+			return Interval(SqlTypeCode.DayToSecond);
+		}
+
+		#endregion
+
 		/// <summary>
 		/// Checks if the given code represents a primitive type.
 		/// </summary>
@@ -206,7 +230,9 @@ namespace Deveel.Data.Sql {
 			if (sqlType == SqlTypeCode.Unknown ||
 			    sqlType == SqlTypeCode.Type ||
 			    sqlType == SqlTypeCode.QueryPlan ||
-			    sqlType == SqlTypeCode.Object)
+			    sqlType == SqlTypeCode.Object ||
+				sqlType == SqlTypeCode.RowRef ||
+				sqlType == SqlTypeCode.FieldRef)
 				return false;
 
 			return true;
@@ -287,6 +313,10 @@ namespace Deveel.Data.Sql {
 					return "LONG VARCHAR";
 				case SqlTypeCode.LongVarBinary:
 					return "LONG VARBINARY";
+				case SqlTypeCode.YearToMonth:
+					return "YEAR TO MONTH";
+				case SqlTypeCode.DayToSecond:
+					return "DAY TO SECOND";
 				default:
 					return typeCode.ToString().ToUpperInvariant();
 			}
@@ -300,6 +330,10 @@ namespace Deveel.Data.Sql {
 				return null;
 
 			switch (resolveInfo.TypeName.ToUpperInvariant()) {
+				// NULL
+				case "NULL":
+					return Null();
+
 				// Booleans
 				case "BIT":
 					return Bit();
@@ -322,9 +356,10 @@ namespace Deveel.Data.Sql {
 					return Float();
 				case "DOUBLE":
 					return Double();
+				case "DECIMAL":
+					return Decimal();
 				case "NUMBER":
-				case "NUMERIC":
-				case "DECIMAL": {
+				case "NUMERIC":{
 					var precision = resolveInfo.Properties.GetValue<int?>("Precision") ?? -1;
 					var scale = resolveInfo.Properties.GetValue<int?>("Scale") ?? -1;
 					return Numeric(precision, scale);
@@ -350,8 +385,7 @@ namespace Deveel.Data.Sql {
 				case "LONG CHARACTER VARYING":
 				case "TEXT":
 				case "CLOB": {
-					var size = resolveInfo.Properties.GetValue<int?>("Size") ?? SqlCharacterType.DefaultMaxSize;
-					return Clob(size);
+					return Clob();
 				}
 
 				// Date-Time
@@ -362,6 +396,12 @@ namespace Deveel.Data.Sql {
 					return TimeStamp();
 				case "TIME":
 					return Time();
+
+				// Intervals
+				case "DAY TO SECOND":
+					return DayToSecond();
+				case "YEAR TO MONTH":
+					return YearToMonth();
 
 				// Binary
 				case "BINARY": {
@@ -377,8 +417,7 @@ namespace Deveel.Data.Sql {
 				case "LONG VARBINARY":
 				case "LONG BINARY VARYING":
 				case "BLOB": {
-					var size = resolveInfo.Properties.GetValue<int?>("Size") ?? SqlBinaryType.DefaultMaxSize;
-					return Blob(size);
+					return Blob();
 				}
 
 				default:

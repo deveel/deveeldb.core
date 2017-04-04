@@ -29,11 +29,6 @@ namespace Deveel.Data.Sql {
 		private byte[] bytes;
 
 		/// <summary>
-		/// A binary <c>NULL</c> value instance
-		/// </summary>
-		public static readonly SqlBinary Null = new SqlBinary(null);
-
-		/// <summary>
 		/// A constant value defining the maximum allowed length of bytes
 		/// that this binary can handle.
 		/// </summary>
@@ -49,15 +44,14 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlBinary(byte[] source, int offset, int length) {
-			if (source == null) {
-				bytes = null;
-			} else {
-				if (length > MaxLength)
-					throw new ArgumentOutOfRangeException("length");
-				
-				bytes = new byte[length];
-				Array.Copy(source, offset, bytes, 0, length);
-			}
+			if (source == null)
+				throw new ArgumentNullException("source");
+
+			if (length > MaxLength)
+				throw new ArgumentOutOfRangeException("length");
+
+			bytes = new byte[length];
+			Array.Copy(source, offset, bytes, 0, length);
 		}
 
 		int IComparable.CompareTo(object obj) {
@@ -67,9 +61,6 @@ namespace Deveel.Data.Sql {
 		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
 			throw new NotSupportedException();
 		}
-
-		/// <inheritdoc/>
-		public bool IsNull => bytes == null;
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
 			return false;
@@ -92,9 +83,6 @@ namespace Deveel.Data.Sql {
 
 		/// <inheritdoc/>
 		public Stream GetInput() {
-			if (IsNull)
-				return Stream.Null;
-
 			return new MemoryStream(bytes, false);
 		}
 

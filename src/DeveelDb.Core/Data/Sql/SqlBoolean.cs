@@ -232,6 +232,9 @@ namespace Deveel.Data.Sql {
 		}
 
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider) {
+			if (conversionType == typeof(SqlNumber))
+				return (SqlNumber) value;
+
 			throw new InvalidCastException(String.Format("Cannot convert a SQL BOOLEAN to {0}", conversionType.FullName));
 		}
 
@@ -260,14 +263,6 @@ namespace Deveel.Data.Sql {
 		/// <returns></returns>
 		public static bool operator !=(SqlBoolean a, SqlBoolean b) {
 			return !a.Equals(b);
-		}
-
-		public static bool operator ==(SqlBoolean a, ISqlValue b) {
-			return a.Equals(b);
-		}
-
-		public static bool operator !=(SqlBoolean a, ISqlValue b) {
-			return !(a == b);
 		}
 
 		public static SqlBoolean operator &(SqlBoolean a, SqlBoolean b) {

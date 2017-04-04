@@ -27,10 +27,10 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData((byte)1, true)]
 		[InlineData((byte)0, false)]
-		public static void CastToBoolean(byte? singleByte, bool? expected) {
+		public static void CastToBoolean(byte singleByte, bool expected) {
 			var type = new SqlBinaryType(SqlTypeCode.Binary);
 
-			var value = singleByte == null ? SqlBinary.Null : new SqlBinary(new[]{singleByte.Value});
+			var value = new SqlBinary(new[]{singleByte});
 			Assert.True(type.CanCastTo(PrimitiveTypes.Bit()));
 
 			var result = type.Cast(value, PrimitiveTypes.Bit());

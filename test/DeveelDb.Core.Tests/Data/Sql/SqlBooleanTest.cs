@@ -7,24 +7,6 @@ using Xunit;
 namespace Deveel.Data.Sql {
 	public class SqlBooleanTest {
 		[Theory]
-		[InlineData(true, typeof(string), "true")]
-		[InlineData(false, typeof(string), "false")]
-		[InlineData(true, typeof(int), 1)]
-		[InlineData(false, typeof(int), 0)]
-		[InlineData(true, typeof(short), (short) 1)]
-		[InlineData(false, typeof(short), (short) 0)]
-		[InlineData(true, typeof(long), 1L)]
-		[InlineData(false, typeof(long), 0L)]
-		[InlineData(true, typeof(bool), true)]
-		[InlineData(false, typeof(bool), false)]
-		public void Convert_ChangeType(bool? value, Type type, object expected) {
-			var b = (SqlBoolean) value;
-			var result = Convert.ChangeType(b, type, CultureInfo.InvariantCulture);
-
-			Assert.Equal(expected, result);
-		}
-
-		[Theory]
 		[InlineData(1, true)]
 		[InlineData(0, false)]
 		public void CreateFromByte(byte value, bool expected) {
@@ -143,13 +125,59 @@ namespace Deveel.Data.Sql {
 			Assert.True(value1 != value2);
 		}
 
-		[Fact]
-		public void Convert_ToString() {
-			var value = SqlBoolean.True;
-			Assert.Equal("true", value.ToString());
+		[Theory]
+		[InlineData(true, typeof(bool), true)]
+		[InlineData(false, typeof(bool), false)]
+		[InlineData(true, typeof(string), "true")]
+		[InlineData(false, typeof(string), "false")]
+		[InlineData(true, typeof(int), 1)]
+		[InlineData(false, typeof(int), 0)]
+		[InlineData(true, typeof(short), 1)]
+		[InlineData(false, typeof(short), 0)]
+		[InlineData(true, typeof(long), 1L)]
+		[InlineData(false, typeof(long), 0L)]
+		[InlineData(true, typeof(float), 1f)]
+		[InlineData(false, typeof(float), 0f)]
+		[InlineData(true, typeof(double), 1d)]
+		[InlineData(false, typeof(double), 0d)]
+		[InlineData(true, typeof(uint), (uint)1)]
+		[InlineData(false, typeof(uint), (uint)0)]
+		[InlineData(true, typeof(ushort), (ushort)1)]
+		[InlineData(false, typeof(ushort), (ushort)0)]
+		[InlineData(true, typeof(ulong), (ulong)1)]
+		[InlineData(false, typeof(ulong), (ulong)0)]
+		[InlineData(true, typeof(byte), (byte)1)]
+		[InlineData(false, typeof(byte), (byte)0)]
+		[InlineData(true, typeof(sbyte), (sbyte)1)]
+		[InlineData(false, typeof(sbyte), (sbyte)0)]
+		public void ConvertValid(bool value, Type destTpe, object expected) {
+			var b = (SqlBoolean) value;
+			var result = Convert.ChangeType(b, destTpe, CultureInfo.InvariantCulture);
 
-			value = SqlBoolean.False;
-			Assert.Equal("false", value.ToString());
+			Assert.NotNull(result);
+			Assert.IsType(destTpe, result);
+			Assert.Equal(expected, result);
+		}
+
+		[Theory]
+		[InlineData(true, typeof(DateTime))]
+		[InlineData(false, typeof(DateTime))]
+		[InlineData(true, typeof(char))]
+		[InlineData(false, typeof(char))]
+		public void ConvertInvalid(bool value, Type destType) {
+			var b = (SqlBoolean) value;
+			Assert.Throws<InvalidCastException>(() => Convert.ChangeType(b, destType, CultureInfo.InvariantCulture));
+		}
+
+		[Theory]
+		[InlineData(true, 1)]
+		[InlineData(false, 0)]
+		public static void ConvertToSqlNumber(bool value, int expected) {
+			var number = (SqlNumber) expected;
+			var b = (SqlBoolean) value;
+
+			var result = Convert.ChangeType(b, typeof(SqlNumber));
+			Assert.Equal(number, result);
 		}
 
 		[Theory]
@@ -161,6 +189,21 @@ namespace Deveel.Data.Sql {
 			var value2 = (SqlBoolean)b2;
 
 			var result = value1 ^ value2;
+
+			var bResult = (bool)result;
+
+			Assert.Equal(expected, bResult);
+		}
+
+		[Theory]
+		[InlineData(true, true, true)]
+		[InlineData(true, false, true)]
+		[InlineData(false, false, false)]
+		public void Or(bool b1, bool b2, bool expected) {
+			var value1 = (SqlBoolean)b1;
+			var value2 = (SqlBoolean)b2;
+
+			var result = value1 | value2;
 
 			var bResult = (bool)result;
 
@@ -180,6 +223,24 @@ namespace Deveel.Data.Sql {
 			var result = SqlBoolean.Parse(s);
 
 			Assert.Equal((SqlBoolean) expected, result);
+		}
+
+		[Theory]
+		[InlineData("true", true, true)]
+		[InlineData("TRUE", true, true)]
+		[InlineData("TrUe", true, true)]
+		[InlineData("FALSE", false, true)]
+		[InlineData("false", false, true)]
+		[InlineData("FaLsE", false, true)]
+		[InlineData("1", true, true)]
+		[InlineData("0", false, true)]
+		[InlineData("", false, false)]
+		[InlineData("445", false, false)]
+		[InlineData("t rue", false, false)]
+		public void TryParse(string s, bool expected, bool success) {
+			SqlBoolean value;
+			Assert.Equal(success, SqlBoolean.TryParse(s, out value));
+			Assert.Equal(expected, (bool) value);
 		}
 	}
 }

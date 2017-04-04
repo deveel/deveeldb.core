@@ -113,9 +113,7 @@ namespace Deveel.Data.Sql {
 		/// <summary>
 		/// Gets a value indicating if this data-type is primitive.
 		/// </summary>
-		public bool IsPrimitive {
-			get { return IsPrimitiveType(TypeCode); }
-		}
+		public bool IsPrimitive => IsPrimitiveType(TypeCode);
 
 		/// <summary>
 		/// Gets a value indicating whether this instance is reference to another type.

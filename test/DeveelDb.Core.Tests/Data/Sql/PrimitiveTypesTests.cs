@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Xunit;
 
@@ -27,38 +28,45 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(SqlTypeCode.Bit)]
-		[InlineData(SqlTypeCode.Boolean)]
-		public static void GetBoolean(SqlTypeCode typeCode) {
-			var type = PrimitiveTypes.Boolean(typeCode);
+		[InlineData(SqlTypeCode.Null, null, null, null, null)]
+		[InlineData(SqlTypeCode.Bit, null, null, null, null)]
+		[InlineData(SqlTypeCode.Boolean, null, null, null, null)]
+		[InlineData(SqlTypeCode.BigInt, null, null, null, null)]
+		[InlineData(SqlTypeCode.Integer, null, null, null, null)]
+		[InlineData(SqlTypeCode.TinyInt, null, null, null, null)]
+		[InlineData(SqlTypeCode.SmallInt, null, null, null, null)]
+		[InlineData(SqlTypeCode.Double, null, null, null, null)]
+		[InlineData(SqlTypeCode.Float, null, null, null, null)]
+		[InlineData(SqlTypeCode.Decimal, "Precision", 22, "Scale", 2)]
+		[InlineData(SqlTypeCode.Decimal, "Precision", null, "Scale", 2)]
+		[InlineData(SqlTypeCode.Decimal, null, null, "Scale", 1)]
+		[InlineData(SqlTypeCode.Numeric, "precision", 10, "scale", 4)]
+		[InlineData(SqlTypeCode.Numeric, null, null, null, null)]
+		[InlineData(SqlTypeCode.Char, null, null, null, null)]
+		[InlineData(SqlTypeCode.Char, "Size", 200, null, null)]
+		[InlineData(SqlTypeCode.VarChar, "maxSize", 255, null, null)]
+		[InlineData(SqlTypeCode.VarChar, null, null, null, null)]
+		[InlineData(SqlTypeCode.Clob, "size", 40677, null, null)]
+		[InlineData(SqlTypeCode.Date, null, null, null, null)]
+		[InlineData(SqlTypeCode.Time, null, null, null, null)]
+		[InlineData(SqlTypeCode.TimeStamp, null, null, null, null)]
+		[InlineData(SqlTypeCode.Binary, "size", 1024, null, null)]
+		[InlineData(SqlTypeCode.Binary, null, null, null, null)]
+		[InlineData(SqlTypeCode.VarBinary, null, null, null, null)]
+		[InlineData(SqlTypeCode.YearToMonth, null, null, null, null)]
+		[InlineData(SqlTypeCode.DayToSecond, null, null, null, null)]
+		public static void ResolveType(SqlTypeCode typeCode, string propName1, object prop1, string propName2, object prop2) {
+			var props = new Dictionary<string, object>();
+			if (!String.IsNullOrEmpty(propName1))
+				props.Add(propName1, prop1);
+			if (!String.IsNullOrEmpty(propName2))
+				props.Add(propName2, prop2);
 
-			Assert.IsType<SqlBooleanType>(type);
-			Assert.Equal(typeCode, type.TypeCode);
-			Assert.False(type.IsLargeObject);
-			Assert.False(type.IsReference);
-			Assert.True(type.IsPrimitive);
-			Assert.True(type.IsIndexable);
-		}
-
-		[Theory]
-		[InlineData(SqlTypeCode.TinyInt, -1, -1)]
-		[InlineData(SqlTypeCode.SmallInt, -1, -1)]
-		[InlineData(SqlTypeCode.Integer, -1, -1)]
-		[InlineData(SqlTypeCode.BigInt, -1, -1)]
-		[InlineData(SqlTypeCode.Real, 45, 2)]
-		[InlineData(SqlTypeCode.Float, 10, 3)]
-		[InlineData(SqlTypeCode.Double, 22, 92)]
-		public static void GetNumeric(SqlTypeCode typeCode, int precision, int scale) {
-			var type = PrimitiveTypes.Numeric(typeCode, precision, scale);
-
-			Assert.IsType<SqlNumericType>(type);
-			Assert.Equal(typeCode, type.TypeCode);
-			Assert.Equal(precision, type.Precision);
-			Assert.Equal(scale, type.Scale);
-			Assert.False(type.IsLargeObject);
-			Assert.False(type.IsReference);
-			Assert.True(type.IsPrimitive);
-			Assert.True(type.IsIndexable);
+			var sqlType = PrimitiveTypes.Type(typeCode, props);
+			Assert.NotNull(sqlType);
+			Assert.Equal(typeCode, sqlType.TypeCode);
+			Assert.True(sqlType.IsPrimitive);
+			Assert.False(sqlType.IsReference);
 		}
 
 		[Theory]

@@ -158,6 +158,46 @@ namespace Deveel.Data.Sql {
 			};
 		}
 
+		public int Year => value.Year;
+
+		public int Month => value.Month;
+
+		public int Day => value.Day;
+
+		public int Hour => value.Hour;
+
+		public int Minute => value.Minute;
+
+		public int Second => value.Second;
+
+		public int Millisecond => value.Millisecond;
+
+		public long Ticks => value.Ticks;
+
+		/// <summary>
+		/// Gets the offset between the date-time instance and the UTC time.
+		/// </summary>
+		public SqlDayToSecond Offset => new SqlDayToSecond(0, value.Offset.Hours, value.Offset.Minutes, 0, 0);
+
+		public SqlDateTime DatePart => new SqlDateTime(Year, Month, Day);
+
+		public SqlDateTime TimePart => new SqlDateTime(1, 1, 1, Hour, Minute, Second, Millisecond);
+
+		public static SqlDateTime Now {
+			get {
+				var date = DateTimeOffset.Now;
+				var offset = new SqlDayToSecond(date.Offset.Days, date.Offset.Hours, date.Offset.Minutes, date.Minute);
+				return new SqlDateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, date.Second, date.Millisecond,
+					offset);
+			}
+		}
+
+		public DayOfWeek DayOfWeek => value.DayOfWeek;
+
+		bool ISqlValue.IsComparableTo(ISqlValue other) {
+			return other is SqlDateTime;
+		}
+
 		int IComparable.CompareTo(object obj) {
 			return CompareTo((SqlDateTime) obj);
 		}
@@ -169,91 +209,15 @@ namespace Deveel.Data.Sql {
 			return CompareTo((SqlDateTime) other);
 		}
 
-		public int Year {
-			get {
-				return value.Year;
-			}
-		}
-
-		public int Month {
-			get {
-				return value.Month;
-			}
-		}
-
-		public int Day {
-			get {
-				return value.Day;
-			}
-		}
-
-		public int Hour {
-			get {
-				return value.Hour;
-			}
-		}
-
-		public int Minute {
-			get {
-				return value.Minute;
-			}
-		}
-
-		public int Second {
-			get {
-				return value.Second;
-			}
-		}
-
-		public int Millisecond {
-			get {
-				return value.Millisecond;
-			}
-		}
-
-		public long Ticks {
-			get {
-				return value.Ticks;
-			}
-		}
-
-		/// <summary>
-		/// Gets the offset between the date-time instance and the UTC time.
-		/// </summary>
-		public SqlDayToSecond Offset {
-			get {
-				return new SqlDayToSecond(0, value.Offset.Hours, value.Offset.Minutes, 0, 0);
-			}
-		}
-
-		public SqlDateTime DatePart {
-			get {
-				return new SqlDateTime(Year, Month, Day);
-			}
-		}
-
-		public SqlDateTime TimePart {
-			get {
-				return new SqlDateTime(1, 1, 1, Hour, Minute, Second, Millisecond);
-			}
-		}
-
-		public static SqlDateTime Now {
-			get {
-				var date = DateTimeOffset.Now;
-				var offset = new SqlDayToSecond(date.Offset.Days, date.Offset.Hours, date.Offset.Minutes, date.Minute);
-				return new SqlDateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute, date.Second, date.Millisecond,
-					offset);
-			}
-		}
-
-		bool ISqlValue.IsComparableTo(ISqlValue other) {
-			return other is SqlDateTime;
+		public int CompareTo(SqlDateTime other) {
+			return value.CompareTo(other.value);
 		}
 
 		TypeCode IConvertible.GetTypeCode() {
 			return TypeCode.DateTime;
 		}
+
+		#region Comparable
 
 		bool IConvertible.ToBoolean(IFormatProvider provider) {
 			throw new InvalidCastException();
@@ -327,51 +291,25 @@ namespace Deveel.Data.Sql {
 			throw new InvalidCastException();
 		}
 
+		private long ToInt64() {
+			return value.Ticks;
+		}
+
+		#endregion
+
 		public bool Equals(SqlDateTime other) {
 			return value.Equals(other.value);
 		}
 
 		public override bool Equals(object obj) {
+			if (!(obj is SqlDateTime))
+				return false;
+
 			return Equals((SqlDateTime) obj);
 		}
 
 		public override int GetHashCode() {
 			return value.GetHashCode();
-		}
-
-		public int CompareTo(SqlDateTime other) {
-			return value.CompareTo(other.value);
-		}
-
-		private long ToInt64() {
-			return value.Ticks;
-		}
-
-		public byte[] ToByteArray() {
-			return ToByteArray(false);
-		}
-
-		public byte[] ToByteArray(bool timeZone) {
-			var size = timeZone ? 13 : 11;
-
-			var bytes = new byte[size];
-			bytes[0] = (byte) ((Year / 100) + 100);
-			bytes[1] = (byte) ((Year % 100) + 100);
-			bytes[2] = (byte) (Month);
-			bytes[3] = (byte) (Day);
-			bytes[4] = (byte) (Hour + 1);
-			bytes[5] = (byte) (Minute + 1);
-			bytes[6] = (byte) (Second + 1);
-			bytes[7] = (byte) ((Millisecond >> 24));
-			bytes[8] = (byte) ((Millisecond >> 16) & 0xff);
-			bytes[9] = (byte) ((Millisecond >> 8) & 0xff);
-			bytes[10] = (byte) (Millisecond & 0xff);
-			if (timeZone) {
-				var tsOffset = Offset;
-				bytes[11] = (byte) (tsOffset.Hours + 20);
-				bytes[12] = (byte) (tsOffset.Minutes + 60);
-			}
-			return bytes;
 		}
 
 		/// <summary>
@@ -427,12 +365,6 @@ namespace Deveel.Data.Sql {
 			return AddDays(DaysToAdd(DayOfWeek, desiredDay));
 		}
 
-		public DayOfWeek DayOfWeek {
-			get {
-				return value.DayOfWeek;
-			}
-		}
-
 		private static int DaysToAdd(DayOfWeek current, DayOfWeek desired) {
 			// f( c, d ) = g( c, d ) mod 7, g( c, d ) > 7
 			//           = g( c, d ), g( c, d ) < = 7
@@ -444,6 +376,8 @@ namespace Deveel.Data.Sql {
 
 			return (n > 7) ? n % 7 : n;
 		}
+
+		#region Operators
 
 		public static bool operator ==(SqlDateTime a, SqlDateTime b) {
 			return a.Equals(b);
@@ -484,6 +418,10 @@ namespace Deveel.Data.Sql {
 		public static SqlDateTime operator -(SqlDateTime a, SqlYearToMonth b) {
 			return a.Subtract(b);
 		}
+
+		#endregion
+
+		#region Parse
 
 		public static SqlDateTime Parse(string s) {
 			SqlDateTime date;
@@ -579,6 +517,10 @@ namespace Deveel.Data.Sql {
 			return false;
 		}
 
+		#endregion
+
+		#region Explicit Operators
+
 		public static explicit operator SqlDateTime(DateTimeOffset? a) {
 			return (SqlDateTime) a.Value;
 		}
@@ -598,6 +540,35 @@ namespace Deveel.Data.Sql {
 		public static explicit operator DateTimeOffset(SqlDateTime a) {
 			var offset = new TimeSpan(a.Offset.Hours, a.Offset.Minutes, a.Offset.Seconds);
 			return new DateTimeOffset(a.Year, a.Month, a.Day, a.Hour, a.Minute, a.Second, a.Millisecond, offset);
+		}
+
+		#endregion
+
+		public byte[] ToByteArray() {
+			return ToByteArray(false);
+		}
+
+		public byte[] ToByteArray(bool timeZone) {
+			var size = timeZone ? 13 : 11;
+
+			var bytes = new byte[size];
+			bytes[0] = (byte) ((Year / 100) + 100);
+			bytes[1] = (byte) ((Year % 100) + 100);
+			bytes[2] = (byte) (Month);
+			bytes[3] = (byte) (Day);
+			bytes[4] = (byte) (Hour + 1);
+			bytes[5] = (byte) (Minute + 1);
+			bytes[6] = (byte) (Second + 1);
+			bytes[7] = (byte) ((Millisecond >> 24));
+			bytes[8] = (byte) ((Millisecond >> 16) & 0xff);
+			bytes[9] = (byte) ((Millisecond >> 8) & 0xff);
+			bytes[10] = (byte) (Millisecond & 0xff);
+			if (timeZone) {
+				var tsOffset = Offset;
+				bytes[11] = (byte) (tsOffset.Hours + 20);
+				bytes[12] = (byte) (tsOffset.Minutes + 60);
+			}
+			return bytes;
 		}
 
 		public SqlDateTime ToUtc() {
