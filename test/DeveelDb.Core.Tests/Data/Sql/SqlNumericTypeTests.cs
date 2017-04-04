@@ -42,7 +42,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(2123e89, 102223e21, false)]
 		[InlineData(122, 100, false)]
 		public static void NumberSmaller(double value1, double value2, bool expected) {
-			BinaryOp(type => type.Smaller, value1, value2, expected);
+			BinaryOp(type => type.Less, value1, value2, expected);
 		}
 
 		[Theory]
@@ -58,7 +58,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(2133, 100, false)]
 		[InlineData(210, 4355e45, true)]
 		public static void NumberSmallerOrEqual(double value1, double value2, bool expected) {
-			BinaryOp(type => type.SmallerOrEqual, value1, value2, expected);
+			BinaryOp(type => type.LessOrEqual, value1, value2, expected);
 		}
 
 		private static void BinaryOp(Func<SqlNumericType, Func<ISqlValue, ISqlValue, SqlBoolean>> selector, double value1, double value2, bool expected) {

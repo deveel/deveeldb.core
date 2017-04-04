@@ -36,10 +36,6 @@ namespace Deveel.Data.Sql {
 
 		public static ISqlTypeResolver Resolver { get; }
 
-		public static SqlNullType Null() {
-			return new SqlNullType();
-		}
-
 		#region Boolean Types
 
 		public static SqlBooleanType Boolean() {
@@ -122,15 +118,15 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumericType Float() {
-			return Numeric(SqlTypeCode.Float, MathContext.Decimal32.Precision, 2);
+			return Numeric(SqlTypeCode.Float, MathContext.Decimal32.Precision, 8);
 		}
 
 		public static SqlNumericType Double() {
-			return Numeric(SqlTypeCode.Double, MathContext.Decimal64.Precision, 4);
+			return Numeric(SqlTypeCode.Double, MathContext.Decimal64.Precision, 12);
 		}
 
 		public static SqlNumericType Decimal() {
-			return Numeric(SqlTypeCode.Decimal, MathContext.Decimal128.Precision, 8);
+			return Numeric(SqlTypeCode.Decimal, MathContext.Decimal128.Precision, 16);
 		}
 
 		#endregion
@@ -331,10 +327,6 @@ namespace Deveel.Data.Sql {
 				return null;
 
 			switch (resolveInfo.TypeName.ToUpperInvariant()) {
-				// NULL
-				case "NULL":
-					return Null();
-
 				// Booleans
 				case "BIT":
 					return Bit();

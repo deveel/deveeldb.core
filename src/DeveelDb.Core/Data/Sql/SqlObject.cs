@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Globalization;
-using System.Security.Cryptography.X509Certificates;
 
 using Deveel.Math;
 
 namespace Deveel.Data.Sql {
 	public sealed class SqlObject : IComparable<SqlObject>, IComparable, ISqlFormattable, IEquatable<SqlObject> {
+		public static readonly SqlObject Unknown = new SqlObject(PrimitiveTypes.Boolean(), null);
+
 		public SqlObject(SqlType type, ISqlValue value) {
 			if (type == null)
 				throw new ArgumentNullException(nameof(type));
@@ -24,6 +24,12 @@ namespace Deveel.Data.Sql {
 		public SqlType Type { get; }
 
 		public bool IsNull => SqlNull.Value == Value;
+
+		public bool IsUnknown => Type is SqlBooleanType && IsNull;
+
+		public bool IsTrue => Type is SqlBooleanType && (SqlBoolean)Value == SqlBoolean.True;
+
+		public bool IsFalse => Type is SqlBooleanType && (SqlBoolean) Value == SqlBoolean.False;
 
 		private int CompareToNotNull(SqlObject other) {
 			var type = Type;
@@ -67,7 +73,13 @@ namespace Deveel.Data.Sql {
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
-			builder.Append(Type.ToString(Value));
+			if (IsUnknown) {
+				builder.Append("UNKNOWN");
+			} else if (IsNull) {
+				builder.Append("NULL");
+			} else {
+				builder.Append(Type.ToString(Value));
+			}
 		}
 
 		public override string ToString() {
@@ -107,14 +119,34 @@ namespace Deveel.Data.Sql {
 			return Value.Equals(other.Value);
 		}
 
-		#region Operators
-
-		private SqlObject BinaryOperator(Func<SqlType, Func<ISqlValue, ISqlValue, SqlBoolean>> selector, SqlObject other) {
+		private SqlObject BinaryOperator(Func<SqlType, Func<ISqlValue, ISqlValue, ISqlValue>> selector, SqlObject other) {
 			if (IsNull || (other == null || other.IsNull))
-				return new SqlObject(PrimitiveTypes.Boolean(), SqlNull.Value);
+				return Unknown;
 
 			if (!Type.IsComparable(other.Type))
-				throw new InvalidOperationException();	// TODO: should instead return null?
+				throw new ArgumentException($"Type {Type} is not comparable to type {other.Type} of the argument");
+			// TODO: should instead return null?
+
+			var resultType = Type.Wider(other.Type);
+			var op = selector(resultType);
+			var result = op(Value, other.Value);
+
+			if (SqlNull.Value != result &&
+			    !resultType.IsInstanceOf(result))
+				resultType = GetSqlType(result);
+
+			return new SqlObject(resultType, result);
+		}
+
+		private SqlObject RelationalOperator(Func<SqlType, Func<ISqlValue, ISqlValue, SqlBoolean>> selector, SqlObject other) {
+			if (IsNull || (other == null || other.IsNull))
+				return Unknown;
+			if (IsUnknown || other.IsUnknown)
+				return Unknown;
+
+			if (!Type.IsComparable(other.Type))
+				throw new ArgumentException($"Type {Type} is not comparable to type {other.Type} of the argument");
+			// TODO: should instead return null?
 
 			var op = selector(Type);
 			var result = op(Value, other.Value);
@@ -122,65 +154,184 @@ namespace Deveel.Data.Sql {
 			return new SqlObject(PrimitiveTypes.Boolean(), result);
 		}
 
+		#region Relational Operators
+
 		public SqlObject Equal(SqlObject other) {
-			return BinaryOperator(type => type.Equal, other);
+			return RelationalOperator(type => type.Equal, other);
 		}
 
 		public SqlObject NotEqual(SqlObject other) {
-			return BinaryOperator(type => type.NotEqual, other);
+			return RelationalOperator(type => type.NotEqual, other);
 		}
 
 		public SqlObject GreaterThan(SqlObject other) {
-			return BinaryOperator(type => type.Greater, other);
+			return RelationalOperator(type => type.Greater, other);
+		}
+
+		public SqlObject GreaterOrEqualThan(SqlObject other) {
+			return RelationalOperator(type => type.GreaterOrEqual, other);
+		}
+
+		public SqlObject LessThan(SqlObject other) {
+			return RelationalOperator(type => type.Less, other);
+		}
+
+		public SqlObject LessOrEqualThan(SqlObject other) {
+			return RelationalOperator(type => type.LessOrEqual, other);
+		}
+
+		public SqlObject Is(SqlObject other) {
+			if (IsUnknown && other.IsUnknown)
+				return New(SqlBoolean.True);
+			if (IsUnknown && !other.IsUnknown ||
+			    !IsUnknown && other.IsUnknown)
+				return New(SqlBoolean.False);
+
+			if (Type is SqlBooleanType &&
+			    other.Type is SqlBooleanType) {
+				var b1 = (SqlBoolean) Value;
+				var b2 = (SqlBoolean) other.Value;
+				return New((SqlBoolean) (b1 == b2));
+			}
+
+			return New(SqlBoolean.False);
+		}
+
+		public SqlObject IsNot(SqlObject other) {
+			return Is(other).Not();
+		}
+
+		#endregion
+
+		#region Logical Operators
+
+		// Note: AND and OR can be logical but also bitwise operators
+
+		public SqlObject Or(SqlObject other) {
+			if (IsUnknown && other.IsUnknown)
+				return Unknown;
+			if (IsUnknown && other.IsTrue)
+				return other;
+			if (IsTrue && other.IsUnknown)
+				return this;
+
+			return BinaryOperator(type => type.Or, other);
+		}
+
+		public SqlObject And(SqlObject other) {
+			if (IsUnknown && other.IsUnknown)
+				return Unknown;
+			if (IsUnknown && other.IsFalse)
+				return other;
+			if (IsFalse && other.IsUnknown)
+				return this;
+
+			return BinaryOperator(type => type.And, other);
+		}
+
+		#endregion
+
+		#region Binary Operators
+
+		public SqlObject Add(SqlObject other) {
+			return BinaryOperator(type => type.Add, other);
+		}
+
+		public SqlObject Subtract(SqlObject other) {
+			return BinaryOperator(type => type.Subtract, other);
+		}
+
+		public SqlObject Multiply(SqlObject other) {
+			return BinaryOperator(type => type.Multiply, other);
+		}
+
+		public SqlObject Divide(SqlObject other) {
+			return BinaryOperator(type => type.Divide, other);
+		}
+
+		public SqlObject Modulo(SqlObject other) {
+			return BinaryOperator(type => type.Modulo, other);
+		}
+
+		#endregion
+
+		#region Unary Operators
+
+		private SqlObject UnaryOperatory(Func<SqlType, Func<ISqlValue, ISqlValue>> selector) {
+			if (IsNull)
+				return this;
+
+			var resultType = Type;
+			var op = selector(resultType);
+			var result = op(Value);
+
+			if (SqlNull.Value != result &&
+			    !resultType.IsInstanceOf(result))
+				resultType = GetSqlType(result);
+
+			return new SqlObject(resultType, result);
+		}
+
+		public SqlObject Not() {
+			return UnaryOperatory(type => type.Negate);
+		}
+
+		public SqlObject Plus() {
+			return UnaryOperatory(type => type.UnaryPlus);
 		}
 
 		#endregion
 
 		#region Factories
 
-		public static SqlObject New(ISqlValue value) {
-			if (value is SqlNull)
-				return new SqlObject(PrimitiveTypes.Null(), value);
+		private static SqlType GetSqlType(ISqlValue value) {
+			if (value == null ||
+			    SqlNull.Value == value)
+				throw new ArgumentException();
 
 			if (value is SqlNumber) {
-				var number = (SqlNumber) value;
+				var number = (SqlNumber)value;
 				if (number.CanBeInt32)
-					return new SqlObject(PrimitiveTypes.Integer(), value);
+					return PrimitiveTypes.Integer();
 				if (number.CanBeInt64)
-					return new SqlObject(PrimitiveTypes.BigInt(), value);
+					return PrimitiveTypes.BigInt();
 
-				if (number.Precision <= MathContext.Decimal32.Precision)
-					return new SqlObject(PrimitiveTypes.Float(), number);
-				if (number.Precision <= MathContext.Decimal64.Precision)
-					return new SqlObject(PrimitiveTypes.Double(), number);
+				if (number.Precision == MathContext.Decimal32.Precision)
+					return new SqlNumericType(SqlTypeCode.Float, number.Precision, number.Scale);
+				if (number.Precision == MathContext.Decimal64.Precision)
+					return new SqlNumericType(SqlTypeCode.Double, number.Precision, number.Scale);
 
-				return new SqlObject(PrimitiveTypes.Numeric(number.Precision, number.Scale), value);
+				return PrimitiveTypes.Numeric(number.Precision, number.Scale);
 			}
 
 			if (value is ISqlString) {
 				// TODO: support the long string
-				var length = ((ISqlString) value).Length;
-				return new SqlObject(PrimitiveTypes.VarChar((int)length), value);
+				var length = ((ISqlString)value).Length;
+				return PrimitiveTypes.VarChar((int)length);
 			}
 
 			if (value is SqlBinary) {
-				var bin = (SqlBinary) value;
-				return new SqlObject(PrimitiveTypes.VarBinary((int)bin.Length), value);
+				var bin = (SqlBinary)value;
+				return PrimitiveTypes.VarBinary((int)bin.Length);
 			}
 
 			if (value is SqlDateTime) {
-				return new SqlObject(PrimitiveTypes.TimeStamp(), value);
+				return PrimitiveTypes.TimeStamp();
 			}
 
 			if (value is SqlBoolean)
-				return new SqlObject(PrimitiveTypes.Boolean(), value);
+				return PrimitiveTypes.Boolean();
 
 			if (value is SqlYearToMonth)
-				return new SqlObject(PrimitiveTypes.YearToMonth(), value);
+				return PrimitiveTypes.YearToMonth();
 			if (value is SqlDayToSecond)
-				return new SqlObject(PrimitiveTypes.DayToSecond(), value);
+				return PrimitiveTypes.DayToSecond();
 
 			throw new NotSupportedException();
+		}
+
+		public static SqlObject New(ISqlValue value) {
+			return new SqlObject(GetSqlType(value), value);
 		}
 
 		#region Boolean Objects

@@ -98,7 +98,7 @@ namespace Deveel.Data.Sql {
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
 			var type = new SqlCharacterType(SqlTypeCode.String, -1, culture);
 
-			Assert.Equal(expected, (bool)type.Smaller(sqlString1, sqlString2));
+			Assert.Equal(expected, (bool)type.Less(sqlString1, sqlString2));
 		}
 
 		[Theory]
@@ -110,7 +110,7 @@ namespace Deveel.Data.Sql {
 			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
 			var type = new SqlCharacterType(SqlTypeCode.String, -1, culture);
 
-			Assert.Equal(expected, (bool)type.SmallerOrEqual(sqlString1, sqlString2));
+			Assert.Equal(expected, (bool)type.LessOrEqual(sqlString1, sqlString2));
 		}
 
 		[Theory]

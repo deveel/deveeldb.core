@@ -5,7 +5,7 @@ using Xunit;
 namespace Deveel.Data.Sql {
 	public static class SqlObjectTests {
 		[Theory]
-		[InlineData(SqlTypeCode.Double, 9, 2, 36755.0912)]
+		[InlineData(SqlTypeCode.Double, 16, -1, 36755.0912)]
 		[InlineData(SqlTypeCode.Integer, -1, -1, 54667)]
 		public static void GetNumericObject(SqlTypeCode code, int precision, int scale, double value) {
 			var type = new SqlNumericType(code, precision, scale);
@@ -27,7 +27,8 @@ namespace Deveel.Data.Sql {
 
 			var obj = new SqlObject(type, s);
 			Assert.Equal(type, obj.Type);
-			Assert.Equal(expected, (SqlString) obj.Value);
+			Assert.NotNull(obj.Value);
+			Assert.Equal(expected, obj.Value.ToString());
 			Assert.False(obj.IsNull);
 		}
 
@@ -98,13 +99,40 @@ namespace Deveel.Data.Sql {
 		[InlineData(45533.94044, SqlTypeCode.Double)]
 		[InlineData("the quick brown fox", SqlTypeCode.VarChar)]
 		public static void NewFromObject(object value, SqlTypeCode expectedType) {
-			var number = FromObject(value);
+			var number = ValueFromObject(value);
 			var obj = SqlObject.New(number);
 
 			Assert.Equal(expectedType, obj.Type.TypeCode);
 			Assert.NotNull(obj.Value);
 			Assert.False(obj.IsNull);
 			Assert.Equal(number, obj.Value);
+		}
+
+		[Theory]
+		[InlineData(3004.330, "3004.330000000000")]
+		[InlineData(true, "TRUE")]
+		[InlineData(false, "FALSE")]
+		[InlineData("the quick brown fox", "the quick brown fox")]
+		[InlineData(SqlTypeCode.Unknown, "UNKNOWN")]
+		public static void GetAsString(object value, string expected) {
+			var obj = FromObject(value);
+			Assert.Equal(expected, obj.ToString());
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.Integer, 300, 210, 1)]
+		[InlineData(SqlTypeCode.VarChar, "the quick", "the quick brown fox", -32)]
+		[InlineData(SqlTypeCode.Boolean, true, true, 0)]
+		[InlineData(SqlTypeCode.Boolean, false, true, -1)]
+		[InlineData(SqlTypeCode.VarChar, null, "the quick brown fox", -1)]
+		[InlineData(SqlTypeCode.Boolean, true, null, 1)]
+		public static void Compare(SqlTypeCode typeCode, object value1, object value2, int expected) {
+			var type = PrimitiveTypes.Type(typeCode);
+			var obj1 = new SqlObject(type, ValueFromObject(value1));
+			var obj2 = new SqlObject(type, ValueFromObject(value2));
+
+			var result = obj1.CompareTo(obj2);
+			Assert.Equal(expected, result);
 		}
 
 		[Theory]
@@ -133,23 +161,142 @@ namespace Deveel.Data.Sql {
 			BinaryOp((x, y) => x.GreaterThan(y), value1, value2, expected);
 		}
 
-		private static void BinaryOp(Func<SqlObject, SqlObject, SqlObject> op, object value1, object value2, object expected) {
-			var number1 = FromObject(value1);
-			var number2 = FromObject(value2);
+		[Theory]
+		[InlineData(647483.9930, 192e43, true)]
+		public static void Operator_LessThan(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.LessThan(y), value1, value2, expected);
+		}
 
-			var obj1 = SqlObject.New(number1);
-			var obj2 = SqlObject.New(number2);
+		[Theory]
+		[InlineData(659, 659, true)]
+		[InlineData(43222, 10e34, false)]
+		[InlineData(1922.333, SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
+		[InlineData(null, 903.400, SqlTypeCode.Unknown)]
+		public static void Operator_GreaterOrEqualThan(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.GreaterOrEqualThan(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(74644, 100, false)]
+		[InlineData("the quick brown fox", "the quick brown fox", true)]
+		[InlineData(7849, SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
+		public static void Operator_LessOrEqualThan(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.LessOrEqualThan(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.Unknown, SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
+		[InlineData(true, SqlTypeCode.Unknown, true)]
+		[InlineData(false, SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
+		public static void Operator_Or(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.Or(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.Unknown, false, false)]
+		[InlineData(SqlTypeCode.Unknown, SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
+		[InlineData(true, SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
+		public static void Operator_And(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.And(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(2334.0923e21, 0912.09e2, 2.3340923e24)]
+		public static void Operator_Add(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.Add(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(56.0031, 0911.222, -855.2189)]
+		public static void Operator_Subtract(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.Subtract(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(84, 2, 42)]
+		public static void Operator_Divide(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.Divide(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(5893.657, 3445, 2448.657)]
+		public static void Operator_Modulo(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.Modulo(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(true, true, true)]
+		[InlineData(true, false, false)]
+		[InlineData(false, false, true)]
+		[InlineData(SqlTypeCode.Unknown, SqlTypeCode.Unknown, true)]
+		[InlineData(SqlTypeCode.Unknown, true, false)]
+		[InlineData(SqlTypeCode.Unknown, false, false)]
+		[InlineData(3445.22, SqlTypeCode.Unknown, false)]
+		public static void Operator_Is(object value1, object value2, bool expected) {
+			BinaryOp((x, y) => x.Is(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(true, true, false)]
+		[InlineData(false,true, true)]
+		[InlineData(false, false, false)]
+		[InlineData(SqlTypeCode.Unknown, SqlTypeCode.Unknown, false)]
+		[InlineData(SqlTypeCode.Unknown, true, true)]
+		[InlineData(SqlTypeCode.Unknown, false, true)]
+		[InlineData(65884.223, SqlTypeCode.Unknown, true)]
+		[InlineData("the quick brown fox", true, true)]
+		public static void Operator_IsNot(object value1, object value2, bool expected) {
+			BinaryOp((x, y) => x.IsNot(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(true, false)]
+		[InlineData(false, true)]
+		[InlineData(SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
+		[InlineData(-5603.0032, 5602)]
+		public static void Operator_Not(object value, object expected) {
+			UnaryOp(x => x.Not(), value, expected);
+		}
+
+		[Theory]
+		[InlineData(903, 903)]
+		[InlineData(-56.9930, -56.9930)]
+		public static void Operator_Plus(object value, object expected) {
+			UnaryOp(x => x.Plus(), value, expected);
+		}
+
+		private static void UnaryOp(Func<SqlObject, SqlObject> op, object value, object expected) {
+			var obj = FromObject(value);
+			var result = op(obj);
+
+			var expectedObj = FromObject(expected);
+			Assert.Equal(expectedObj, result);
+		}
+
+		private static void BinaryOp(Func<SqlObject, SqlObject, SqlObject> op, object value1, object value2, object expected) {
+			var obj1 = FromObject(value1);
+			var obj2 = FromObject(value2);
 
 			var result = op(obj1, obj2);
 
-			var expectedNumber = FromObject(expected);
-			var expectedObj = SqlObject.New(expectedNumber);
+			var expectedObj = FromObject(expected);
 
 			Assert.Equal(expectedObj, result);
 		}
 
+		private static SqlObject FromObject(object value) {
+			if (value == null)
+				return SqlObject.Unknown;
 
-		private static ISqlValue FromObject(object value) {
+			if (value is SqlTypeCode &&
+				(SqlTypeCode)value == SqlTypeCode.Unknown)
+				return SqlObject.Unknown;
+
+			var sqlValue = ValueFromObject(value);
+			return SqlObject.New(sqlValue);
+		}
+
+		private static ISqlValue ValueFromObject(object value) {
 			if (value == null)
 				return SqlNull.Value;
 

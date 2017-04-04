@@ -4,10 +4,19 @@ using Deveel.Math;
 
 namespace Deveel.Data.Sql {
 	public static class SqlMath {
+		private static MathContext WiderContext(MathContext a, MathContext b) {
+			if (a.Precision > b.Precision)
+				return a;
+			if (a.Precision < b.Precision)
+				return b;
+			return a;
+		}
 		public static SqlNumber Add(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Add(b.innerValue));
+					var context = WiderContext(a.MathContext, b.MathContext);
+					var result = a.innerValue.Add(b.innerValue,  context);
+					return new SqlNumber(SqlNumber.NumericState.None, result);
 				}
 
 				return b;
@@ -19,7 +28,9 @@ namespace Deveel.Data.Sql {
 		public static SqlNumber Subtract(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Subtract(b.innerValue));
+					var context = WiderContext(a.MathContext, b.MathContext);
+					var result = a.innerValue.Subtract(b.innerValue, context);
+					return new SqlNumber(SqlNumber.NumericState.None, result);
 				}
 				return new SqlNumber(b.InverseState(), null);
 			}
@@ -32,10 +43,11 @@ namespace Deveel.Data.Sql {
 				if (SqlNumber.IsNumber(b)) {
 					BigDecimal divBy = b.innerValue;
 					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
-						return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Divide(divBy, 10, RoundingMode.HalfUp));
-					} else {
-						throw new DivideByZeroException();
+						var context = WiderContext(a.MathContext, b.MathContext);
+						var result = a.innerValue.Divide(divBy, context);
+						return new SqlNumber(SqlNumber.NumericState.None, result);
 					}
+					throw new DivideByZeroException();
 				}
 			}
 
@@ -46,7 +58,8 @@ namespace Deveel.Data.Sql {
 		public static SqlNumber Multiply(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					return new SqlNumber(SqlNumber.NumericState.None, a.innerValue.Multiply(b.innerValue));
+					var result = a.innerValue.Multiply(b.innerValue);
+					return new SqlNumber(SqlNumber.NumericState.None, result);
 				}
 
 				return b;
@@ -55,12 +68,12 @@ namespace Deveel.Data.Sql {
 			return a;
 		}
 
-		public static SqlNumber Modulo(SqlNumber a, SqlNumber b) {
+		public static SqlNumber Remainder(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
 					BigDecimal divBy = b.innerValue;
 					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
-						BigDecimal remainder = a.innerValue.Remainder(divBy);
+						var remainder = a.innerValue.Remainder(divBy);
 						return new SqlNumber(SqlNumber.NumericState.None, remainder);
 					}
 				}

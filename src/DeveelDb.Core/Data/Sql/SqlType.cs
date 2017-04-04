@@ -162,6 +162,29 @@ namespace Deveel.Data.Sql {
 			return ((IComparable) x).CompareTo(y);
 		}
 
+		/// <summary>
+		/// Gets the one data-type between this and the other one given
+		/// that handles the wider range of values.
+		/// </summary>
+		/// <param name="otherType">The other type to verify.</param>
+		/// <remarks>
+		/// This is very important for operations and functions, when
+		/// operating on <see cref="SqlObject">objects</see> with comparable
+		/// but different data-types, to ensure the result of the operation
+		/// will be capable to handle the final value.
+		/// <para>
+		/// By default, this method returns this instance, as it is not able
+		/// to dynamically define the wider type.
+		/// </para>
+		/// </remarks>
+		/// <returns>
+		/// Returns this type if it handles a wider range of values or <paramref name="otherType">other 
+		/// type</paramref> given otherwise.
+		/// </returns>
+		public virtual SqlType Wider(SqlType otherType) {
+			return this;
+		}
+
 		/// <inheritdoc/>
 		public override bool Equals(object obj) {
 			var dataType = obj as SqlType;
@@ -300,7 +323,7 @@ namespace Deveel.Data.Sql {
 			return a.CompareTo(b) < 0;
 		}
 
-		public virtual SqlBoolean Smaller(ISqlValue a, ISqlValue b) {
+		public virtual SqlBoolean Less(ISqlValue a, ISqlValue b) {
 			AssertComparable(a, b);
 			return a.CompareTo(b) > 0;
 		}
@@ -310,7 +333,7 @@ namespace Deveel.Data.Sql {
 			return a.CompareTo(b) <= 0;
 		}
 
-		public virtual SqlBoolean SmallerOrEqual(ISqlValue a, ISqlValue b) {
+		public virtual SqlBoolean LessOrEqual(ISqlValue a, ISqlValue b) {
 			AssertComparable(a, b);
 			return a.CompareTo(b) >= 0;
 		}

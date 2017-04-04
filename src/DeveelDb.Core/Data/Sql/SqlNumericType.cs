@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Runtime.InteropServices;
 
 namespace Deveel.Data.Sql {
 	public class SqlNumericType : SqlType {
@@ -48,7 +49,30 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
-			return value is SqlNumber || value is SqlNull;
+			if (value is SqlNumber) {
+				var number = (SqlNumber) value;
+				switch (TypeCode) {
+					case SqlTypeCode.Integer:
+					case SqlTypeCode.TinyInt:
+					case SqlTypeCode.SmallInt:
+						return number.CanBeInt32;
+					case SqlTypeCode.BigInt:
+						return number.CanBeInt64;
+					case SqlTypeCode.Double:
+					case SqlTypeCode.Float:
+						return Precision == number.Precision;
+					default: {
+						if (Precision > 0 && number.Precision != Precision)
+							return false;
+						if (Scale > 0 && number.Scale != Scale)
+							return false;
+					}
+
+						return true;
+				}
+			}
+
+			return value is SqlNull;
 		}
 
 		public override SqlBoolean Greater(ISqlValue a, ISqlValue b) {
@@ -59,12 +83,97 @@ namespace Deveel.Data.Sql {
 			return Compare(a, b) >= 0;
 		}
 
-		public override SqlBoolean Smaller(ISqlValue a, ISqlValue b) {
+		public override SqlBoolean Less(ISqlValue a, ISqlValue b) {
 			return Compare(a, b) < 0;
 		}
 
-		public override SqlBoolean SmallerOrEqual(ISqlValue a, ISqlValue b) {
+		public override SqlBoolean LessOrEqual(ISqlValue a, ISqlValue b) {
 			return Compare(a, b) <= 0;
+		}
+
+		public override bool IsComparable(SqlType type) {
+			return type is SqlNumericType;
+		}
+
+		private static int GetIntSize(SqlTypeCode sqlType) {
+			switch (sqlType) {
+				case SqlTypeCode.TinyInt:
+					return 1;
+				case SqlTypeCode.SmallInt:
+					return 2;
+				case SqlTypeCode.Integer:
+					return 4;
+				case SqlTypeCode.BigInt:
+					return 8;
+				default:
+					return 0;
+			}
+		}
+
+
+		private static int GetFloatSize(SqlTypeCode sqlType) {
+			switch (sqlType) {
+				default:
+					return 0;
+				case SqlTypeCode.Real:
+					return 4;
+				case SqlTypeCode.Float:
+				case SqlTypeCode.Double:
+					return 8;
+			}
+		}
+
+		public override SqlType Wider(SqlType otherType) {
+			var t1SqlType = TypeCode;
+			var t2SqlType = otherType.TypeCode;
+			if (t1SqlType == SqlTypeCode.Decimal) {
+				return this;
+			}
+			if (t2SqlType == SqlTypeCode.Decimal) {
+				return otherType;
+			}
+			if (t1SqlType == SqlTypeCode.Numeric) {
+				return this;
+			}
+			if (t2SqlType == SqlTypeCode.Numeric) {
+				return otherType;
+			}
+
+			if (t1SqlType == SqlTypeCode.Bit) {
+				return otherType; // It can't be any smaller than a Bit
+			}
+			if (t2SqlType == SqlTypeCode.Bit) {
+				return this;
+			}
+
+			int t1IntSize = GetIntSize(t1SqlType);
+			int t2IntSize = GetIntSize(t2SqlType);
+			if (t1IntSize > 0 && t2IntSize > 0) {
+				// Both are int types, use the largest size
+				return (t1IntSize > t2IntSize) ? this : otherType;
+			}
+
+			int t1FloatSize = GetFloatSize(t1SqlType);
+			int t2FloatSize = GetFloatSize(t2SqlType);
+			if (t1FloatSize > 0 && t2FloatSize > 0) {
+				// Both are floating types, use the largest size
+				return (t1FloatSize > t2FloatSize) ? this : otherType;
+			}
+
+			if (t1FloatSize > t2IntSize) {
+				return this;
+			}
+			if (t2FloatSize > t1IntSize) {
+				return otherType;
+			}
+			if (t1IntSize >= t2FloatSize || t2IntSize >= t1FloatSize) {
+				// Must be a long (8 bytes) and a real (4 bytes), widen to a double
+				return new SqlNumericType(SqlTypeCode.Double, 8, 0);
+			}
+
+			// NOTREACHED - can't get here, the last three if statements cover
+			// all possibilities.
+			throw new InvalidOperationException("Widest type error.");
 		}
 
 		public override ISqlValue NormalizeValue(ISqlValue value) {
@@ -139,6 +248,86 @@ namespace Deveel.Data.Sql {
 				default:
 					throw new InvalidCastException();
 			}
+		}
+
+		public override ISqlValue UnaryPlus(ISqlValue value) {
+			if (!(value is SqlNumber))
+				return SqlNull.Value;
+
+			return +(SqlNumber) value;
+		}
+
+		public override ISqlValue Negate(ISqlValue value) {
+			if (!(value is SqlNumber))
+				return SqlNull.Value;
+
+			return ~(SqlNumber) value;
+		}
+
+		public override ISqlValue Add(ISqlValue a, ISqlValue b) {
+			if (!(a is SqlNumber) ||
+				!(b is SqlNumber))
+				return SqlNull.Value;
+
+			var x = (SqlNumber) a;
+			var y = (SqlNumber) b;
+
+			return x + y;
+		}
+
+		public override ISqlValue Subtract(ISqlValue a, ISqlValue b) {
+			if (!(a is SqlNumber) ||
+			    !(b is SqlNumber))
+				return SqlNull.Value;
+
+			var x = (SqlNumber)a;
+			var y = (SqlNumber)b;
+
+			return x - y;
+		}
+
+		public override ISqlValue Multiply(ISqlValue a, ISqlValue b) {
+			if (!(a is SqlNumber) ||
+			    !(b is SqlNumber))
+				return SqlNull.Value;
+
+			var x = (SqlNumber)a;
+			var y = (SqlNumber)b;
+
+			return x * y;
+		}
+
+		public override ISqlValue Divide(ISqlValue a, ISqlValue b) {
+			if (!(a is SqlNumber) ||
+			    !(b is SqlNumber))
+				return SqlNull.Value;
+
+			var x = (SqlNumber)a;
+			var y = (SqlNumber)b;
+
+			return x / y;
+		}
+
+		public override ISqlValue Modulo(ISqlValue a, ISqlValue b) {
+			if (!(a is SqlNumber) ||
+			    !(b is SqlNumber))
+				return SqlNull.Value;
+
+			var x = (SqlNumber)a;
+			var y = (SqlNumber)b;
+
+			return x % y;
+		}
+
+		public override ISqlValue XOr(ISqlValue a, ISqlValue b) {
+			if (!(a is SqlNumber) ||
+			    !(b is SqlNumber))
+				return SqlNull.Value;
+
+			var x = (SqlNumber)a;
+			var y = (SqlNumber)b;
+
+			return x ^ y;
 		}
 	}
 }

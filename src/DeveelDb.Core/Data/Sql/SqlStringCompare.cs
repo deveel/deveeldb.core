@@ -7,14 +7,14 @@ namespace Deveel.Data.Sql {
 		public static int Compare(CultureInfo locale, ISqlString x, ISqlString y) {
 			if (x == null && y == null)
 				return 0;
-			if (x == null && y != null)
+			if (x == null)
 				return 1;
-			if (x != null && y == null)
+			if (y == null)
 				return -1;
 
 			// If lexicographical ordering,
 			if (locale == null)
-				return LexicographicalOrder((ISqlString)x, (ISqlString)y);
+				return LexicographicalOrder(x, y);
 
 			return locale.CompareInfo.Compare(x.ToString(), y.ToString());
 		}

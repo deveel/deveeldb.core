@@ -28,7 +28,6 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(SqlTypeCode.Null, null, null, null, null)]
 		[InlineData(SqlTypeCode.Bit, null, null, null, null)]
 		[InlineData(SqlTypeCode.Boolean, null, null, null, null)]
 		[InlineData(SqlTypeCode.BigInt, null, null, null, null)]

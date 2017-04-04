@@ -320,7 +320,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(1152663, 9929, 116.0905428543)]
+		[InlineData(1152663, 9929, 116.0905)]
 		[InlineData(40, 5, 8)]
 		public static void Operator_Divide(double value1, double value2, double expected) {
 			BinaryOp((x, y) => x / y, value1, value2, expected);

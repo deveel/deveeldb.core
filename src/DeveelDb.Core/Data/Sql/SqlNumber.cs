@@ -603,7 +603,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber operator %(SqlNumber a, SqlNumber b) {
-			return SqlMath.Modulo(a, b);
+			return SqlMath.Remainder(a, b);
 		}
 
 		public static SqlNumber operator |(SqlNumber a, SqlNumber b) {
@@ -712,7 +712,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber FromDouble(double value)
-			=> FromDouble(value, Math.MathContext.Decimal64.Precision);
+			=> FromDouble(value, MathContext.Decimal64.Precision);
 
 		#region NumericState
 
