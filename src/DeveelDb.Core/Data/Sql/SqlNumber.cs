@@ -680,6 +680,10 @@ namespace Deveel.Data.Sql {
 			return number.ToSingle();
 		}
 
+		public static explicit operator SqlNumber(short value) {
+			return new SqlNumber(value, 0, 0);
+		}
+
 		public static explicit operator SqlNumber(double value) {
 			return FromDouble(value);
 		}

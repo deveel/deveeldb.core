@@ -89,8 +89,16 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(34454655, SqlTypeCode.Integer)]
 		[InlineData(-45337782, SqlTypeCode.Integer)]
-		public static void New_FromInt32(int value, SqlTypeCode expectedType) {
-			var number = (SqlNumber) value;
+		[InlineData((short)3445, SqlTypeCode.Integer)]
+		[InlineData((short)-4533, SqlTypeCode.Integer)]
+		[InlineData(34454655344L, SqlTypeCode.BigInt)]
+		[InlineData(-453377822144L, SqlTypeCode.BigInt)]
+		[InlineData(223.019f, SqlTypeCode.Float)]
+		[InlineData(-0.2f, SqlTypeCode.Float)]
+		[InlineData(45533.94044, SqlTypeCode.Double)]
+		[InlineData("the quick brown fox", SqlTypeCode.VarChar)]
+		public static void NewFromObject(object value, SqlTypeCode expectedType) {
+			var number = FromObject(value);
 			var obj = SqlObject.New(number);
 
 			Assert.Equal(expectedType, obj.Type.TypeCode);
@@ -100,17 +108,71 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(34454655344, SqlTypeCode.BigInt)]
-		[InlineData(-453377822144, SqlTypeCode.BigInt)]
-		public static void New_FromInt64(long value, SqlTypeCode expectedType) {
-			var number = (SqlNumber) value;
-			var obj = SqlObject.New(number);
-
-			Assert.Equal(expectedType, obj.Type.TypeCode);
-			Assert.NotNull(obj.Value);
-			Assert.False(obj.IsNull);
-			Assert.Equal(number, obj.Value);
+		[InlineData(2334.93f, 10.03f, false)]
+		[InlineData(93044.33494003, 93044.33494003, true)]
+		[InlineData("the quick brown fox", "the quick brown fox ", false)]
+		[InlineData("the quick brown fox", "the quick brown fox", true)]
+		[InlineData(56, 45, false)]
+		public static void Operator_Equal(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.Equal(y), value1, value2, expected);
 		}
 
+		[Theory]
+		[InlineData(false, false, false)]
+		[InlineData(true, false, true)]
+		[InlineData("The quick brown Fox", "the quick brown fox", true)]
+		[InlineData(9042.55f, 223.092f, true)]
+		public static void Operator_NotEqual(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.NotEqual(y), value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(456, 223, true)]
+		[InlineData("the quick brown", "the quick brown fox", true)]
+		public static void Operator_GreaterThan(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.GreaterThan(y), value1, value2, expected);
+		}
+
+		private static void BinaryOp(Func<SqlObject, SqlObject, SqlObject> op, object value1, object value2, object expected) {
+			var number1 = FromObject(value1);
+			var number2 = FromObject(value2);
+
+			var obj1 = SqlObject.New(number1);
+			var obj2 = SqlObject.New(number2);
+
+			var result = op(obj1, obj2);
+
+			var expectedNumber = FromObject(expected);
+			var expectedObj = SqlObject.New(expectedNumber);
+
+			Assert.Equal(expectedObj, result);
+		}
+
+
+		private static ISqlValue FromObject(object value) {
+			if (value == null)
+				return SqlNull.Value;
+
+			if (value is bool)
+				return (SqlBoolean) (bool) value;
+
+			if (value is byte)
+				return (SqlNumber) (byte) value;
+			if (value is int)
+				return (SqlNumber) (int) value;
+			if (value is short)
+				return (SqlNumber) (short) value;
+			if (value is long)
+				return (SqlNumber) (long) value;
+			if (value is float)
+				return (SqlNumber) (float) value;
+			if (value is double)
+				return (SqlNumber) (double) value;
+
+			if (value is string)
+				return new SqlString((string)value);
+
+			throw new NotSupportedException();
+		}
 	}
 }

@@ -2,6 +2,8 @@
 using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
 
+using Deveel.Math;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlObject : IComparable<SqlObject>, IComparable, ISqlFormattable, IEquatable<SqlObject> {
 		public SqlObject(SqlType type, ISqlValue value) {
@@ -146,7 +148,12 @@ namespace Deveel.Data.Sql {
 					return new SqlObject(PrimitiveTypes.Integer(), value);
 				if (number.CanBeInt64)
 					return new SqlObject(PrimitiveTypes.BigInt(), value);
-				
+
+				if (number.Precision <= MathContext.Decimal32.Precision)
+					return new SqlObject(PrimitiveTypes.Float(), number);
+				if (number.Precision <= MathContext.Decimal64.Precision)
+					return new SqlObject(PrimitiveTypes.Double(), number);
+
 				return new SqlObject(PrimitiveTypes.Numeric(number.Precision, number.Scale), value);
 			}
 

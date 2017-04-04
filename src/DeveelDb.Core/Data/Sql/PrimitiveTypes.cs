@@ -21,6 +21,7 @@ using System.Globalization;
 using System.Text;
 
 using Deveel.Data.Sql.Types;
+using Deveel.Math;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
@@ -121,15 +122,15 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumericType Float() {
-			return Numeric(SqlTypeCode.Float, 32, 2);
+			return Numeric(SqlTypeCode.Float, MathContext.Decimal32.Precision, 2);
 		}
 
 		public static SqlNumericType Double() {
-			return Numeric(SqlTypeCode.Double, 64, 4);
+			return Numeric(SqlTypeCode.Double, MathContext.Decimal64.Precision, 4);
 		}
 
 		public static SqlNumericType Decimal() {
-			return Numeric(SqlTypeCode.Decimal, 128, 8);
+			return Numeric(SqlTypeCode.Decimal, MathContext.Decimal128.Precision, 8);
 		}
 
 		#endregion
