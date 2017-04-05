@@ -8,14 +8,14 @@ namespace Deveel.Data.Sql.Types {
 				throw new ArgumentNullException(nameof(typeName));
 
 			if (properties == null)
-				properties = new Dictionary<string, object>();
+				properties = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
 			TypeName = typeName;
 			Properties = properties;
 		}
 
 		public SqlTypeResolveInfo(string typeName)
-			: this(typeName, new Dictionary<string, object>()) {
+			: this(typeName, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)) {
 		}
 
 		public string TypeName { get; }

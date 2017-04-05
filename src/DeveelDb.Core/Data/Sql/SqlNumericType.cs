@@ -16,13 +16,32 @@
 
 
 using System;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
+
+using Deveel.Math;
 
 namespace Deveel.Data.Sql {
 	public class SqlNumericType : SqlType {
+		internal const int TinyIntPrecision = 3;
+		internal const int SmallIntPrecision = 5;
+		internal const int IntegerPrecision = 10;
+		internal const int BigIntPrecision = 19;
+		internal const int DoublePrecision = 16;
+		internal const int FloatPrecision = 8;
+		internal const int DecimalPrecision = 24;
+
 		public SqlNumericType(SqlTypeCode typeCode, int precision, int scale)
 			: base("NUMERIC", typeCode) {
 			AssertIsNumeric(typeCode);
+
+			AssertScale(typeCode, scale);
+
+			if (precision < 0)
+				precision = DiscoverPrecision(typeCode);
+
+			ValidatePrecision(precision);
+
 			Precision = precision;
 			Scale = scale;
 		}
@@ -36,7 +55,76 @@ namespace Deveel.Data.Sql {
 				throw new ArgumentException(String.Format("The type '{0}' is not a valid NUMERIC type.", typeCode));
 		}
 
-		internal static bool IsNumericType(SqlTypeCode typeCode) {
+		private static void AssertScale(SqlTypeCode typeCode, int scale) {
+			if (typeCode == SqlTypeCode.TinyInt ||
+			    typeCode == SqlTypeCode.SmallInt ||
+			    typeCode == SqlTypeCode.Integer ||
+			    typeCode == SqlTypeCode.BigInt) {
+				if (scale > 0)
+					throw new ArgumentException($"Integer type {typeCode} must have a scale of 0");
+			} else if (typeCode == SqlTypeCode.Numeric &&
+				scale <= 0) {
+				throw new ArgumentException("The NUMERIC type requires an explicit scale");
+			}
+		}
+
+		private static int DiscoverPrecision(SqlTypeCode typeCode) {
+			switch (typeCode) {
+				case SqlTypeCode.TinyInt:
+					return TinyIntPrecision;
+				case SqlTypeCode.SmallInt:
+					return SmallIntPrecision;
+				case SqlTypeCode.Integer:
+					return IntegerPrecision;
+				case SqlTypeCode.BigInt:
+					return BigIntPrecision;
+				case SqlTypeCode.Float:
+				case SqlTypeCode.Real:
+					return FloatPrecision;
+				case SqlTypeCode.Double:
+					return DoublePrecision;
+				case SqlTypeCode.Decimal:
+					return DecimalPrecision;
+				default:
+					throw new ArgumentException($"Type {typeCode} requires an explicit precision");
+			}
+		}
+
+		private void ValidatePrecision(int value) {
+			bool valid;
+
+			switch (TypeCode) {
+				case SqlTypeCode.TinyInt:
+					valid = value == TinyIntPrecision;
+					break;
+				case SqlTypeCode.SmallInt:
+					valid = value == SmallIntPrecision;
+					break;
+				case SqlTypeCode.Integer:
+					valid = value == IntegerPrecision;
+					break;
+				case SqlTypeCode.BigInt:
+					valid = value == BigIntPrecision;
+					break;
+				case SqlTypeCode.Float:
+					valid = value == FloatPrecision;
+					break;
+				case SqlTypeCode.Double:
+					valid = value == DoublePrecision;
+					break;
+				case SqlTypeCode.Decimal:
+					valid = value == DecimalPrecision;
+					break;
+				default:
+					valid = true;
+					break;
+			}
+
+			if (!valid)
+				throw new ArgumentException($"The precision {value} is invalid for type {TypeCode}");
+		}
+
+		private static bool IsNumericType(SqlTypeCode typeCode) {
 			return typeCode == SqlTypeCode.TinyInt ||
 			       typeCode == SqlTypeCode.SmallInt ||
 			       typeCode == SqlTypeCode.Integer ||
@@ -55,20 +143,14 @@ namespace Deveel.Data.Sql {
 					case SqlTypeCode.Integer:
 					case SqlTypeCode.TinyInt:
 					case SqlTypeCode.SmallInt:
-						return number.CanBeInt32;
 					case SqlTypeCode.BigInt:
-						return number.CanBeInt64;
+						return number.Scale == 0 && number.Precision <= Precision;
 					case SqlTypeCode.Double:
 					case SqlTypeCode.Float:
-						return Precision == number.Precision;
-					default: {
-						if (Precision > 0 && number.Precision != Precision)
-							return false;
-						if (Scale > 0 && number.Scale != Scale)
-							return false;
-					}
-
-						return true;
+						return number.Precision <= Precision;
+					default:
+						return number.Precision <= Precision &&
+						       (Scale < 0 || number.Scale <= Scale);
 				}
 			}
 
@@ -168,12 +250,62 @@ namespace Deveel.Data.Sql {
 			}
 			if (t1IntSize >= t2FloatSize || t2IntSize >= t1FloatSize) {
 				// Must be a long (8 bytes) and a real (4 bytes), widen to a double
-				return new SqlNumericType(SqlTypeCode.Double, 8, 0);
+				return new SqlNumericType(SqlTypeCode.Double, 16, -1);
 			}
 
 			// NOTREACHED - can't get here, the last three if statements cover
 			// all possibilities.
 			throw new InvalidOperationException("Widest type error.");
+		}
+
+		public override bool CanCastTo(SqlType destType) {
+			if (destType is SqlCharacterType) {
+				var charType = (SqlCharacterType) destType;
+				return !charType.HasMaxSize ||
+				       charType.MaxSize >= Precision;
+			}
+
+			// TODO: pre-check if the binary type can hold the binary version
+			return destType is SqlBinaryType ||
+			       destType is SqlNumericType;
+		}
+
+		public override ISqlValue Cast(ISqlValue value, SqlType destType) {
+			if (!(value is SqlNumber))
+				throw new ArgumentException();
+
+			var number = (SqlNumber) value;
+
+			if (destType is SqlBinaryType)
+				return ToBinary(number, (SqlBinaryType) destType);
+			if (destType is SqlCharacterType)
+				return ToString(number, (SqlCharacterType) destType);
+			if (destType is SqlNumericType)
+				return ToNumeric(number, (SqlNumericType) destType);
+
+			return base.Cast(value, destType);
+		}
+
+		private ISqlValue ToNumeric(SqlNumber number, SqlNumericType destType) {
+			// TODO: should we make some checks here?
+			return destType.NormalizeValue(number);
+		}
+
+		private ISqlValue ToBinary(SqlNumber number, SqlBinaryType destType) {
+			var bytes = number.ToByteArray();
+
+			/*
+			TODO: should we throw?
+			if (bytes.Length > destType.MaxSize)
+				throw new InvalidCastException();
+			*/
+
+			return destType.NormalizeValue(new SqlBinary(bytes));
+		}
+
+		private ISqlValue ToString(SqlNumber number, SqlCharacterType destType) {
+			var s = number.ToString();
+			return destType.NormalizeValue(new SqlString(s));
 		}
 
 		public override ISqlValue NormalizeValue(ISqlValue value) {
@@ -210,20 +342,23 @@ namespace Deveel.Data.Sql {
 			if (SqlNumber.IsPositiveInfinity(number))
 				return SqlNumber.PositiveInfinity;
 
-			var precision = number.Precision;
-			var scale = number.Scale;
-			if (Precision > 0)
-				precision = Precision;
-			if (Scale > 0)
-				scale = Scale;
+			var thisDiff = Precision - Scale;
+			var otherDiff = number.Precision - Scale;
+			if (thisDiff == otherDiff)
+				return number;
 
-			return new SqlNumber(number.ToUnscaledByteArray(), scale, precision);
+			var value = number.innerValue;
+
+			if (thisDiff > otherDiff) {
+				value = value.SetScale(Scale);
+			} else {
+				value = value.SetScale(Scale-thisDiff);
+			}
+
+			return new SqlNumber(SqlNumber.NumericState.None, value);
 		}
 
 		private SqlNumber ToInteger(SqlNumber number) {
-			if (!number.CanBeInt32 && !number.CanBeInt64)
-				throw new InvalidCastException("Not a valid integer");
-
 			switch (TypeCode) {
 				case SqlTypeCode.TinyInt:
 					return (SqlNumber)(byte) number;
@@ -242,9 +377,9 @@ namespace Deveel.Data.Sql {
 			switch (TypeCode) {
 				case SqlTypeCode.Float:
 				case SqlTypeCode.Real:
-					return (SqlNumber) ((float) number);
+					return (SqlNumber) (float) number;
 				case SqlTypeCode.Double:
-					return SqlNumber.FromDouble((double) number, Precision);
+					return (SqlNumber) (double) number;
 				default:
 					throw new InvalidCastException();
 			}
@@ -272,7 +407,7 @@ namespace Deveel.Data.Sql {
 			var x = (SqlNumber) a;
 			var y = (SqlNumber) b;
 
-			return x + y;
+			return SqlMath.Add(x, y, Precision);
 		}
 
 		public override ISqlValue Subtract(ISqlValue a, ISqlValue b) {
@@ -283,7 +418,7 @@ namespace Deveel.Data.Sql {
 			var x = (SqlNumber)a;
 			var y = (SqlNumber)b;
 
-			return x - y;
+			return SqlMath.Subtract(x, y, Precision);
 		}
 
 		public override ISqlValue Multiply(ISqlValue a, ISqlValue b) {
@@ -294,7 +429,7 @@ namespace Deveel.Data.Sql {
 			var x = (SqlNumber)a;
 			var y = (SqlNumber)b;
 
-			return x * y;
+			return SqlMath.Multiply(x, y);
 		}
 
 		public override ISqlValue Divide(ISqlValue a, ISqlValue b) {
@@ -305,7 +440,7 @@ namespace Deveel.Data.Sql {
 			var x = (SqlNumber)a;
 			var y = (SqlNumber)b;
 
-			return x / y;
+			return SqlMath.Divide(x, y, Precision);
 		}
 
 		public override ISqlValue Modulo(ISqlValue a, ISqlValue b) {
@@ -316,7 +451,7 @@ namespace Deveel.Data.Sql {
 			var x = (SqlNumber)a;
 			var y = (SqlNumber)b;
 
-			return x % y;
+			return SqlMath.Remainder(x, y);
 		}
 
 		public override ISqlValue XOr(ISqlValue a, ISqlValue b) {
@@ -328,6 +463,22 @@ namespace Deveel.Data.Sql {
 			var y = (SqlNumber)b;
 
 			return x ^ y;
+		}
+
+		protected override void AppendTo(SqlStringBuilder builder) {
+			base.AppendTo(builder);
+
+			if (TypeCode == SqlTypeCode.Numeric) {
+				if (Precision > 0) {
+					builder.Append("(");
+					builder.Append(Precision);
+					if (Scale > 0) {
+						builder.Append(",");
+						builder.Append(Scale);
+					}
+					builder.Append(")");
+				}
+			}
 		}
 	}
 }

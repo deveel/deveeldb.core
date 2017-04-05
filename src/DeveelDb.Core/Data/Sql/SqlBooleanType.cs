@@ -57,15 +57,18 @@ namespace Deveel.Data.Sql {
 		public override bool CanCastTo(SqlType destType) {
 			return destType is SqlNumericType ||
 			       destType is SqlCharacterType ||
-				   destType is SqlBinaryType;
+				   destType is SqlBinaryType ||
+				   destType is SqlBooleanType;
 		}
 
 		public override ISqlValue Cast(ISqlValue value, SqlType destType) {
 			if (!(value is SqlBoolean))
-				throw new ArgumentException();
+				throw new ArgumentException($"Cannot cast from {ToString()} to {destType}");
 
 			var b = (SqlBoolean) value;
 
+			if (destType is SqlBooleanType)
+				return b;
 			if (destType is SqlNumericType)
 				return ToNumber(b);
 

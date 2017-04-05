@@ -90,17 +90,32 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(34454655, SqlTypeCode.Integer)]
 		[InlineData(-45337782, SqlTypeCode.Integer)]
-		[InlineData((short)3445, SqlTypeCode.Integer)]
-		[InlineData((short)-4533, SqlTypeCode.Integer)]
-		[InlineData(34454655344L, SqlTypeCode.BigInt)]
-		[InlineData(-453377822144L, SqlTypeCode.BigInt)]
+		[InlineData((short)3445, SqlTypeCode.SmallInt)]
+		[InlineData((short)-4533, SqlTypeCode.SmallInt)]
+		//[InlineData((long)34454655344, SqlTypeCode.BigInt)]
+		//[InlineData((long)-453377822144, SqlTypeCode.BigInt)]
 		[InlineData(223.019f, SqlTypeCode.Float)]
 		[InlineData(-0.2f, SqlTypeCode.Float)]
 		[InlineData(45533.94044, SqlTypeCode.Double)]
-		[InlineData("the quick brown fox", SqlTypeCode.VarChar)]
+		[InlineData("the quick brown fox", SqlTypeCode.String)]
 		public static void NewFromObject(object value, SqlTypeCode expectedType) {
+			var type = GetSqlType(value);
 			var number = ValueFromObject(value);
-			var obj = SqlObject.New(number);
+			var obj = new SqlObject(type, number);
+
+			Assert.Equal(expectedType, obj.Type.TypeCode);
+			Assert.NotNull(obj.Value);
+			Assert.False(obj.IsNull);
+			Assert.Equal(number, obj.Value);
+		}
+
+		[Theory]
+		[InlineData(34454655344, SqlTypeCode.BigInt)]
+		[InlineData(-453377822144, SqlTypeCode.BigInt)]
+		public static void NewFromInt64(long value, SqlTypeCode expectedType) {
+			var number = ValueFromObject(value);
+			var type = GetSqlType(value);
+			var obj = new SqlObject(type, number);
 
 			Assert.Equal(expectedType, obj.Type.TypeCode);
 			Assert.NotNull(obj.Value);
@@ -225,6 +240,12 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData(588.36, 65.2, 38361.072)]
+		public static void Operator_Multiply(object value1, object value2, object expected) {
+			BinaryOp((x, y) => x.Multiply(y), value1, value2, expected);
+		}
+
+		[Theory]
 		[InlineData(true, true, true)]
 		[InlineData(true, false, false)]
 		[InlineData(false, false, true)]
@@ -270,6 +291,9 @@ namespace Deveel.Data.Sql {
 			var result = op(obj);
 
 			var expectedObj = FromObject(expected);
+			if (expectedObj.CanCastTo(result.Type))
+				expectedObj = expectedObj.CastTo(result.Type);
+
 			Assert.Equal(expectedObj, result);
 		}
 
@@ -280,6 +304,9 @@ namespace Deveel.Data.Sql {
 			var result = op(obj1, obj2);
 
 			var expectedObj = FromObject(expected);
+
+			if (expectedObj.CanCastTo(result.Type))
+				expectedObj = expectedObj.CastTo(result.Type);
 
 			Assert.Equal(expectedObj, result);
 		}
@@ -293,7 +320,31 @@ namespace Deveel.Data.Sql {
 				return SqlObject.Unknown;
 
 			var sqlValue = ValueFromObject(value);
-			return SqlObject.New(sqlValue);
+			var sqlType = GetSqlType(value);
+			return new SqlObject(sqlType, sqlValue);
+		}
+
+		private static SqlType GetSqlType(object value) {
+			if (value is bool)
+				return PrimitiveTypes.Boolean();
+
+			if (value is double)
+				return PrimitiveTypes.Double();
+			if (value is float)
+				return PrimitiveTypes.Float();
+			if (value is int)
+				return PrimitiveTypes.Integer();
+			if (value is long)
+				return PrimitiveTypes.BigInt();
+			if (value is byte)
+				return PrimitiveTypes.TinyInt();
+			if (value is short)
+				return PrimitiveTypes.SmallInt();
+
+			if (value is string)
+				return PrimitiveTypes.String();
+
+			throw new NotSupportedException();
 		}
 
 		private static ISqlValue ValueFromObject(object value) {

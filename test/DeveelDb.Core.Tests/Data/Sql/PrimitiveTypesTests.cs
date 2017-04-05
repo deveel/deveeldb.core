@@ -37,10 +37,8 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.Double, null, null, null, null)]
 		[InlineData(SqlTypeCode.Float, null, null, null, null)]
 		[InlineData(SqlTypeCode.Decimal, "Precision", 22, "Scale", 2)]
-		[InlineData(SqlTypeCode.Decimal, "Precision", null, "Scale", 2)]
-		[InlineData(SqlTypeCode.Decimal, null, null, "Scale", 1)]
+		[InlineData(SqlTypeCode.Decimal, "Precision", 10, "Scale", 2)]
 		[InlineData(SqlTypeCode.Numeric, "precision", 10, "scale", 4)]
-		[InlineData(SqlTypeCode.Numeric, null, null, null, null)]
 		[InlineData(SqlTypeCode.Char, null, null, null, null)]
 		[InlineData(SqlTypeCode.Char, "Size", 200, null, null)]
 		[InlineData(SqlTypeCode.VarChar, "maxSize", 255, null, null)]
@@ -55,7 +53,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.YearToMonth, null, null, null, null)]
 		[InlineData(SqlTypeCode.DayToSecond, null, null, null, null)]
 		public static void ResolveType(SqlTypeCode typeCode, string propName1, object prop1, string propName2, object prop2) {
-			var props = new Dictionary<string, object>();
+			var props = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 			if (!String.IsNullOrEmpty(propName1))
 				props.Add(propName1, prop1);
 			if (!String.IsNullOrEmpty(propName2))
@@ -72,7 +70,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.Binary)]
 		[InlineData(SqlTypeCode.Array)]
 		public static void GetInvalidNumeric(SqlTypeCode typeCode) {
-			Assert.Throws<ArgumentException>(() => PrimitiveTypes.Numeric(typeCode));
+			Assert.Throws<ArgumentException>(() => PrimitiveTypes.Numeric(typeCode, 20, 10));
 		}
 
 		[Fact]

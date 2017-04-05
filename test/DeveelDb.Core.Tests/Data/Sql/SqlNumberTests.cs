@@ -32,7 +32,7 @@ namespace Deveel.Data.Sql {
 
 		[Fact]
 		public static void Create_FromDouble() {
-			var value = SqlNumber.FromDouble(459935.9803d);
+			var value = (SqlNumber)459935.9803d;
 			Assert.False(value.CanBeInt32);
 			Assert.False(value.CanBeInt64);
 			Assert.Equal(10, value.Scale);

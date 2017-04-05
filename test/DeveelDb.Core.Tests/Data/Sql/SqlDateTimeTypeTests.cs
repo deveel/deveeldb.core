@@ -73,13 +73,13 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData("2019-01-04T02:00:30.221", SqlTypeCode.Numeric)]
-		[InlineData("2019-01-04T02:00:30.221", SqlTypeCode.BigInt)]
-		public static void CastToNumber(string s, SqlTypeCode typeCode) {
+		[InlineData("2019-01-04T02:00:30.221", SqlTypeCode.Numeric, 30, 10)]
+		[InlineData("2019-01-04T02:00:30.221", SqlTypeCode.BigInt, 19, 0)]
+		public static void CastToNumber(string s, SqlTypeCode typeCode, int precision, int scale) {
 			var date = SqlDateTime.Parse(s);
 			var type = new SqlDateTimeType(SqlTypeCode.DateTime);
 
-			var destType = new SqlNumericType(typeCode, -1, -1);
+			var destType = new SqlNumericType(typeCode, precision, scale);
 			Assert.True(type.CanCastTo(destType));
 
 			var result = type.Cast(date, destType);

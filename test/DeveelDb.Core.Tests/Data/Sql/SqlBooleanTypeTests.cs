@@ -191,8 +191,8 @@ namespace Deveel.Data.Sql {
 			var type = PrimitiveTypes.Boolean();
 			var boolean = new SqlBoolean(value);
 
-			Assert.True(type.CanCastTo(PrimitiveTypes.Numeric()));
-			var casted = type.Cast(boolean, PrimitiveTypes.Numeric());
+			Assert.True(type.CanCastTo(PrimitiveTypes.TinyInt()));
+			var casted = type.Cast(boolean, PrimitiveTypes.TinyInt());
 
 			Assert.IsType<SqlNumber>(casted);
 			Assert.Equal(expected,(int) (SqlNumber) casted);

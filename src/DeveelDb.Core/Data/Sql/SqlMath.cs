@@ -4,18 +4,15 @@ using Deveel.Math;
 
 namespace Deveel.Data.Sql {
 	public static class SqlMath {
-		private static MathContext WiderContext(MathContext a, MathContext b) {
-			if (a.Precision > b.Precision)
-				return a;
-			if (a.Precision < b.Precision)
-				return b;
-			return a;
-		}
-		public static SqlNumber Add(SqlNumber a, SqlNumber b) {
+		public static SqlNumber Add(SqlNumber a, SqlNumber b)
+			=> Add(a, b, WiderPrecision(a, b));
+
+		public static SqlNumber Add(SqlNumber a, SqlNumber b, int precision) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					var context = WiderContext(a.MathContext, b.MathContext);
-					var result = a.innerValue.Add(b.innerValue,  context);
+					var context = new MathContext(precision);
+					var result = a.innerValue.Add(b.innerValue, context);
+
 					return new SqlNumber(SqlNumber.NumericState.None, result);
 				}
 
@@ -25,25 +22,33 @@ namespace Deveel.Data.Sql {
 			return a;
 		}
 
-		public static SqlNumber Subtract(SqlNumber a, SqlNumber b) {
+		public static SqlNumber Subtract(SqlNumber a, SqlNumber b)
+			=> Subtract(a, b, WiderPrecision(a, b));
+
+		public static SqlNumber Subtract(SqlNumber a, SqlNumber b, int precision) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					var context = WiderContext(a.MathContext, b.MathContext);
+					var context = new MathContext(precision);
 					var result = a.innerValue.Subtract(b.innerValue, context);
+
 					return new SqlNumber(SqlNumber.NumericState.None, result);
 				}
+
 				return new SqlNumber(b.InverseState(), null);
 			}
 
 			return a;
 		}
 
-		public static SqlNumber Divide(SqlNumber a, SqlNumber b) {
+		public static SqlNumber Divide(SqlNumber a, SqlNumber b)
+			=> Divide(a, b, WiderPrecision(a, b));
+
+		public static SqlNumber Divide(SqlNumber a, SqlNumber b, int precision) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
 					BigDecimal divBy = b.innerValue;
 					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
-						var context = WiderContext(a.MathContext, b.MathContext);
+						var context = new MathContext(precision);
 						var result = a.innerValue.Divide(divBy, context);
 						return new SqlNumber(SqlNumber.NumericState.None, result);
 					}
@@ -54,6 +59,20 @@ namespace Deveel.Data.Sql {
 			// Return NaN if we can't divide
 			return SqlNumber.NaN;
 		}
+
+		private static int WiderPrecision(SqlNumber a, SqlNumber b) {
+			return WiderPrecision(a.Precision, b.Precision);
+		}
+
+		private static int WiderPrecision(int a, int b) {
+			if (a > b)
+				return a;
+			if (b > a)
+				return b;
+
+			return a;
+		}
+
 
 		public static SqlNumber Multiply(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {

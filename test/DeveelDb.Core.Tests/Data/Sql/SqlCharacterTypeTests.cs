@@ -238,21 +238,21 @@ namespace Deveel.Data.Sql {
 			var sqlString = new SqlString(s);
 			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
 
-			Assert.True(type.CanCastTo(PrimitiveTypes.Numeric()));
-			var result = type.Cast(sqlString, PrimitiveTypes.Numeric());
+			Assert.True(type.CanCastTo(PrimitiveTypes.Double()));
+			var result = type.Cast(sqlString, PrimitiveTypes.Double());
 
 			Assert.IsType<SqlNumber>(result);
 			Assert.Equal(expected, (double)(SqlNumber) result);
 		}
 
 		[Theory]
-		[InlineData("677110199911111", SqlTypeCode.BigInt, 677110199911111)]
-		[InlineData("215", SqlTypeCode.TinyInt, 215)]
-		[InlineData("71182992", SqlTypeCode.Integer, 71182992)]
-		public static void CastToInteger(string s, SqlTypeCode typeCode, long expected) {
+		[InlineData("677110199911111", SqlTypeCode.BigInt, 19, 677110199911111)]
+		[InlineData("215", SqlTypeCode.TinyInt, 3, 215)]
+		[InlineData("71182992", SqlTypeCode.Integer, 10, 71182992)]
+		public static void CastToInteger(string s, SqlTypeCode typeCode, int precision, long expected) {
 			var sqlString = new SqlString(s);
 			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
-			var destType = new SqlNumericType(typeCode, -1, -1);
+			var destType = new SqlNumericType(typeCode, precision, 0);
 
 			Assert.True(type.CanCastTo(destType));
 			var result = type.Cast(sqlString, destType);

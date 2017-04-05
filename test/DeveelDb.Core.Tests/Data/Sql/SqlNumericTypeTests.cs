@@ -5,10 +5,10 @@ using Xunit;
 namespace Deveel.Data.Sql {
 	public static class SqlNumericTypeTests {
 		[Theory]
-		[InlineData(SqlTypeCode.Integer, -1, -1)]
+		[InlineData(SqlTypeCode.Integer, 10, 0)]
 		[InlineData(SqlTypeCode.Numeric, 20, 15)]
-		[InlineData(SqlTypeCode.BigInt, -1, -1)]
-		[InlineData(SqlTypeCode.Numeric, -1, -1)]
+		[InlineData(SqlTypeCode.BigInt, 19, 0)]
+		[InlineData(SqlTypeCode.Numeric, 21, 10)]
 		public static void CreateNumericType(SqlTypeCode typeCode, int precision, int scale) {
 			var type = new SqlNumericType(typeCode, precision, scale);
 
@@ -64,7 +64,7 @@ namespace Deveel.Data.Sql {
 		private static void BinaryOp(Func<SqlNumericType, Func<ISqlValue, ISqlValue, SqlBoolean>> selector, double value1, double value2, bool expected) {
 			var number1 = (SqlNumber)value1;
 			var number2 = (SqlNumber)value2;
-			var type = new SqlNumericType(SqlTypeCode.Numeric, -1, -1);
+			var type = new SqlNumericType(SqlTypeCode.Double, -1, -1);
 
 			var op = selector(type);
 			var result = op(number1, number2);

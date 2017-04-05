@@ -282,6 +282,25 @@ namespace Deveel.Data.Sql {
 
 		#endregion
 
+		#region Cast Operator
+
+		public bool CanCastTo(SqlType destType) {
+			return Type.CanCastTo(destType);
+		}
+
+		public SqlObject CastTo(SqlType destType) {
+			if (IsUnknown)
+				return this;
+
+			if (!CanCastTo(destType))
+				return new SqlObject(destType, null);
+
+			var result = Type.Cast(Value, destType);
+			return new SqlObject(destType, result);
+		}
+
+		#endregion
+
 		#region Factories
 
 		private static SqlType GetSqlType(ISqlValue value) {
@@ -296,10 +315,12 @@ namespace Deveel.Data.Sql {
 				if (number.CanBeInt64)
 					return PrimitiveTypes.BigInt();
 
-				if (number.Precision == MathContext.Decimal32.Precision)
+				if (number.Precision == SqlNumericType.FloatPrecision)
 					return new SqlNumericType(SqlTypeCode.Float, number.Precision, number.Scale);
-				if (number.Precision == MathContext.Decimal64.Precision)
+				if (number.Precision == SqlNumericType.DoublePrecision)
 					return new SqlNumericType(SqlTypeCode.Double, number.Precision, number.Scale);
+				if (number.Precision == SqlNumericType.DecimalPrecision)
+					return new SqlNumericType(SqlTypeCode.Decimal, number.Precision, number.Scale);
 
 				return PrimitiveTypes.Numeric(number.Precision, number.Scale);
 			}

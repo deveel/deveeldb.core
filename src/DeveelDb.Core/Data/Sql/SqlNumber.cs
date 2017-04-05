@@ -24,12 +24,11 @@ namespace Deveel.Data.Sql {
 	public struct SqlNumber : ISqlValue, IComparable<SqlNumber>, IEquatable<SqlNumber>, IConvertible, ISqlFormattable {
 		internal readonly BigDecimal innerValue;
 		private readonly int byteCount;
-		private readonly long valueAsLong;
+		internal readonly long valueAsLong;
 		private readonly NumericState state;
 
 		public static readonly SqlNumber Zero = new SqlNumber(NumericState.None, BigDecimal.Zero);
 		public static readonly SqlNumber One = new SqlNumber(NumericState.None, BigDecimal.One);
-		public static readonly SqlNumber MinusOne = new SqlNumber(NumericState.None, new BigDecimal(-1));
 
 		public static readonly SqlNumber NaN = new SqlNumber(NumericState.NotANumber, null);
 
@@ -70,7 +69,7 @@ namespace Deveel.Data.Sql {
 			: this(GetUnscaledBytes(bytes), GetScale(bytes), GetPrecision(bytes)) {
 		}
 
-		private SqlNumber(BigInteger unscaled, int scale, int precision)
+		internal SqlNumber(BigInteger unscaled, int scale, int precision)
 			: this(new BigDecimal(unscaled, scale, new MathContext(precision))) {
 		}
 
@@ -680,8 +679,12 @@ namespace Deveel.Data.Sql {
 			return number.ToSingle();
 		}
 
+		public static explicit operator SqlNumber(byte value) {
+			return new SqlNumber(value, 0, SqlNumericType.TinyIntPrecision);
+		}
+
 		public static explicit operator SqlNumber(short value) {
-			return new SqlNumber(value, 0, 0);
+			return new SqlNumber(value, 0, SqlNumericType.SmallIntPrecision);
 		}
 
 		public static explicit operator SqlNumber(double value) {
@@ -693,26 +696,23 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static explicit operator SqlNumber(int value) {
-			return new SqlNumber(value, 0, 0);
+			return new SqlNumber(value, 0, SqlNumericType.IntegerPrecision);
 		}
 
 		public static explicit operator SqlNumber(long value) {
-			return new SqlNumber(value, 0, 0);
+			return new SqlNumber(value, 0, SqlNumericType.BigIntPrecision);
 		}
 
 		#endregion
 
-		public static SqlNumber FromDouble(double value, int precision) {
+		private static SqlNumber FromDouble(double value) {
 			var state = GetNumberState(value);
 			if (state == NumericState.None) {
-				return new SqlNumber(new BigDecimal(value, new MathContext(precision)));
+				return new SqlNumber(new BigDecimal(value, new MathContext(SqlNumericType.DoublePrecision)));
 			}
 
 			return new SqlNumber(state, null);
 		}
-
-		public static SqlNumber FromDouble(double value)
-			=> FromDouble(value, MathContext.Decimal64.Precision);
 
 		#region NumericState
 

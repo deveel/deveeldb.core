@@ -77,22 +77,6 @@ namespace Deveel.Data.Sql {
 
 		#region Numeric Types
 
-		public static SqlNumericType Numeric() {
-			return Numeric(SqlTypeCode.Numeric);
-		}
-
-		public static SqlNumericType Numeric(SqlTypeCode sqlType) {
-			return Numeric(sqlType, -1);
-		}
-
-		public static SqlNumericType Numeric(SqlTypeCode sqlType, int precision) {
-			return Numeric(sqlType, precision, -1);
-		}
-
-		public static SqlNumericType Numeric(int precision) {
-			return Numeric(precision, -1);
-		}
-
 		public static SqlNumericType Numeric(int precision, int scale) {
 			return Numeric(SqlTypeCode.Numeric, precision, scale);
 		}
@@ -102,31 +86,31 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumericType TinyInt() {
-			return Numeric(SqlTypeCode.TinyInt);
+			return Numeric(SqlTypeCode.TinyInt, SqlNumericType.TinyIntPrecision, 0);
 		}
 
 		public static SqlNumericType SmallInt() {
-			return Numeric(SqlTypeCode.SmallInt);
+			return Numeric(SqlTypeCode.SmallInt, SqlNumericType.SmallIntPrecision, 0);
 		}
 
 		public static SqlNumericType Integer() {
-			return Numeric(SqlTypeCode.Integer);
+			return Numeric(SqlTypeCode.Integer, SqlNumericType.IntegerPrecision, 0);
 		}
 
 		public static SqlNumericType BigInt() {
-			return Numeric(SqlTypeCode.BigInt);
+			return Numeric(SqlTypeCode.BigInt, SqlNumericType.BigIntPrecision, 0);
 		}
 
 		public static SqlNumericType Float() {
-			return Numeric(SqlTypeCode.Float, MathContext.Decimal32.Precision, 8);
+			return Numeric(SqlTypeCode.Float, SqlNumericType.FloatPrecision, -1);
 		}
 
 		public static SqlNumericType Double() {
-			return Numeric(SqlTypeCode.Double, MathContext.Decimal64.Precision, 12);
+			return Numeric(SqlTypeCode.Double, SqlNumericType.DoublePrecision, -1);
 		}
 
 		public static SqlNumericType Decimal() {
-			return Numeric(SqlTypeCode.Decimal, MathContext.Decimal128.Precision, 16);
+			return Numeric(SqlTypeCode.Decimal, SqlNumericType.DecimalPrecision, -1);
 		}
 
 		#endregion
@@ -352,10 +336,16 @@ namespace Deveel.Data.Sql {
 				case "DECIMAL":
 					return Decimal();
 				case "NUMBER":
-				case "NUMERIC":{
-					var precision = resolveInfo.Properties.GetValue<int?>("Precision") ?? -1;
-					var scale = resolveInfo.Properties.GetValue<int?>("Scale") ?? -1;
-					return Numeric(precision, scale);
+				case "NUMERIC": {
+					var precision = resolveInfo.Properties.GetValue<int?>("Precision");
+					var scale = resolveInfo.Properties.GetValue<int?>("Scale");
+
+					if (precision == null)
+						throw new ArgumentException("No precision specified to resolve NUMERIC");
+					if (scale == null)
+						throw new ArgumentException("No scale specified to resolve NUMERIC");
+
+					return Numeric(precision.Value, scale.Value);
 				}
 
 				// Strings
