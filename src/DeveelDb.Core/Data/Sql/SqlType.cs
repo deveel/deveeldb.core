@@ -232,6 +232,7 @@ namespace Deveel.Data.Sql {
 		/// <summary>
 		/// Verifies if this type can cast any value to the given <see cref="SqlType"/>.
 		/// </summary>
+		/// <param name="value">The value to be casted</param>
 		/// <param name="destType">The other type, destination of the cast, to verify.</param>
 		/// <remarks>
 		/// By default, this method returns <c>false</c>, because cast process must be
@@ -241,7 +242,7 @@ namespace Deveel.Data.Sql {
 		/// <returns>
 		/// </returns>
 		/// <see cref="Cast"/>
-		public virtual bool CanCastTo(SqlType destType) {
+		public virtual bool CanCastTo(ISqlValue value, SqlType destType) {
 			return false;
 		}
 
@@ -272,8 +273,7 @@ namespace Deveel.Data.Sql {
 			if (Equals(destType))
 				return value;
 
-			// TODO: Should we return a null value instead? NULL OF TYPE anyway is still a cast ...
-			throw new InvalidCastException($"Cannot cast a value of type {this.ToString()} to type {destType}");
+			return SqlNull.Value;
 		}
 
 		public virtual ISqlValue Add(ISqlValue a, ISqlValue b) {
@@ -354,10 +354,9 @@ namespace Deveel.Data.Sql {
 			return SqlNull.Value;
 		}
 
-		public virtual ISqlValue Reverse(ISqlValue value) {
+		public virtual ISqlValue Not(ISqlValue value) {
 			return SqlNull.Value;
 		}
-
 
 		/// <summary>
 		/// Converts a given SQL object to the given runtime type.

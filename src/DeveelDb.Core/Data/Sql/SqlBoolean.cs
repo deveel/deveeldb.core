@@ -265,6 +265,22 @@ namespace Deveel.Data.Sql {
 			return !a.Equals(b);
 		}
 
+		public static SqlBoolean operator >(SqlBoolean a, SqlBoolean b) {
+			return a.CompareTo(b) > 0;
+		}
+
+		public static SqlBoolean operator <(SqlBoolean a, SqlBoolean b) {
+			return a.CompareTo(b) < 0;
+		}
+
+		public static SqlBoolean operator <=(SqlBoolean a, SqlBoolean b) {
+			return a.CompareTo(b) <= 0;
+		}
+
+		public static SqlBoolean operator >=(SqlBoolean a, SqlBoolean b) {
+			return a.CompareTo(b) >= 0;
+		}
+
 		public static SqlBoolean operator &(SqlBoolean a, SqlBoolean b) {
 			return a.And(b);
 		}

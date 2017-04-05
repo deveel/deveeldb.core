@@ -11,7 +11,7 @@ namespace Deveel.Data.Sql {
 			var type = new SqlBinaryType(SqlTypeCode.Binary);
 
 			var value = new SqlBinary(new byte[]{44, 95, 122, 0});
-			Assert.True(type.CanCastTo(PrimitiveTypes.Numeric(22, 4)));
+			Assert.True(type.CanCastTo(value, PrimitiveTypes.Numeric(22, 4)));
 
 			var result = type.Cast(value, PrimitiveTypes.Numeric(22, 4));
 
@@ -31,7 +31,7 @@ namespace Deveel.Data.Sql {
 			var type = new SqlBinaryType(SqlTypeCode.Binary);
 
 			var value = new SqlBinary(new[]{singleByte});
-			Assert.True(type.CanCastTo(PrimitiveTypes.Bit()));
+			Assert.True(type.CanCastTo(value, PrimitiveTypes.Bit()));
 
 			var result = type.Cast(value, PrimitiveTypes.Bit());
 
@@ -52,7 +52,7 @@ namespace Deveel.Data.Sql {
 			var bytes = input.ToByteArray();
 			var binary = new SqlBinary(bytes);
 
-			Assert.True(type.CanCastTo(destType));
+			Assert.True(type.CanCastTo(binary, destType));
 
 			var result = type.Cast(binary, destType);
 
@@ -72,7 +72,7 @@ namespace Deveel.Data.Sql {
 			var bytes = date.ToByteArray();
 			var binary = new SqlBinary(bytes);
 
-			Assert.True(type.CanCastTo(destType));
+			Assert.True(type.CanCastTo(binary, destType));
 
 			var result = type.Cast(binary, destType);
 

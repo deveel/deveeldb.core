@@ -61,7 +61,7 @@ namespace Deveel.Data.Sql {
 			return b == 1;
 		}
 
-		public override bool CanCastTo(SqlType destType) {
+		public override bool CanCastTo(ISqlValue value, SqlType destType) {
 			return destType is SqlBooleanType ||
 			       destType is SqlNumericType ||
 				   destType is SqlCharacterType ||

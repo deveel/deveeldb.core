@@ -159,5 +159,55 @@ namespace Deveel.Data.Sql {
 		public static explicit operator int(SqlYearToMonth value) {
 			return value.months;
 		}
+
+		public static bool TryParse(string s, out SqlYearToMonth result) {
+			Exception error;
+			return TryParse(s, out result, out error);
+		}
+
+		private static bool TryParse(string s, out SqlYearToMonth result, out Exception error) {
+			if (String.IsNullOrEmpty(s)) {
+				result = new SqlYearToMonth();
+				error = new ArgumentNullException(nameof(s));
+				return false;
+			}
+
+			int months;
+			int years = 0;
+
+			var index = s.IndexOf('.');
+			if (index != -1) {
+				var ys = s.Substring(0, index);
+				var ms = s.Substring(index + 1);
+
+				if (!Int32.TryParse(ys, out years)) {
+					error = new FormatException("Invalid digits for the years part in the interval string");
+					result = new SqlYearToMonth();
+					return false;
+				}
+				if (!Int32.TryParse(ms, out months)) {
+					error = new FormatException("Invalid digits for the months in the interval string");
+					result = new SqlYearToMonth();
+					return false;
+				}
+			} else if (!Int32.TryParse(s, out months)) {
+				error = new FormatException("Invalid digits for the months in the interval string");
+				result = new SqlYearToMonth();
+				return false;
+			}
+
+			result = new SqlYearToMonth(years, months);
+			error = null;
+			return true;
+		}
+
+		public static SqlYearToMonth Parse(string s) {
+			Exception error;
+			SqlYearToMonth result;
+			if (!TryParse(s, out result, out error))
+				throw error;
+
+			return result;
+		}
 	}
 }

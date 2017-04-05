@@ -39,7 +39,7 @@ namespace Deveel.Data.Sql {
 			var type = new SqlDateTimeType(SqlTypeCode.DateTime);
 
 			var destType = new SqlDateTimeType(destTypeCode);
-			Assert.True(type.CanCastTo(destType));
+			Assert.True(type.CanCastTo(date, destType));
 
 			var result = type.Cast(date, destType);
 
@@ -62,7 +62,7 @@ namespace Deveel.Data.Sql {
 			var type = new SqlDateTimeType(typeCode);
 
 			var destType = new SqlCharacterType(destTypeCode, maxSize, null);
-			Assert.True(type.CanCastTo(destType));
+			Assert.True(type.CanCastTo(date, destType));
 
 			var result = type.Cast(date, destType);
 
@@ -78,9 +78,9 @@ namespace Deveel.Data.Sql {
 		public static void CastToNumber(string s, SqlTypeCode typeCode, int precision, int scale) {
 			var date = SqlDateTime.Parse(s);
 			var type = new SqlDateTimeType(SqlTypeCode.DateTime);
-
 			var destType = new SqlNumericType(typeCode, precision, scale);
-			Assert.True(type.CanCastTo(destType));
+
+			Assert.True(type.CanCastTo(date, destType));
 
 			var result = type.Cast(date, destType);
 

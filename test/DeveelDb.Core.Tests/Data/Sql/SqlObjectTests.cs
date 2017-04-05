@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+
+using Deveel.Data.Sql.Types;
 
 using Xunit;
 
@@ -92,35 +95,19 @@ namespace Deveel.Data.Sql {
 		[InlineData(-45337782, SqlTypeCode.Integer)]
 		[InlineData((short)3445, SqlTypeCode.SmallInt)]
 		[InlineData((short)-4533, SqlTypeCode.SmallInt)]
-		//[InlineData((long)34454655344, SqlTypeCode.BigInt)]
-		//[InlineData((long)-453377822144, SqlTypeCode.BigInt)]
+		[InlineData((long)34454655344, SqlTypeCode.BigInt)]
+		[InlineData((long)-453377822144, SqlTypeCode.BigInt)]
 		[InlineData(223.019f, SqlTypeCode.Float)]
 		[InlineData(-0.2f, SqlTypeCode.Float)]
 		[InlineData(45533.94044, SqlTypeCode.Double)]
 		[InlineData("the quick brown fox", SqlTypeCode.String)]
 		public static void NewFromObject(object value, SqlTypeCode expectedType) {
-			var type = GetSqlType(value);
-			var number = ValueFromObject(value);
-			var obj = new SqlObject(type, number);
+			var obj = FromObject(value);
 
 			Assert.Equal(expectedType, obj.Type.TypeCode);
 			Assert.NotNull(obj.Value);
 			Assert.False(obj.IsNull);
-			Assert.Equal(number, obj.Value);
-		}
-
-		[Theory]
-		[InlineData(34454655344, SqlTypeCode.BigInt)]
-		[InlineData(-453377822144, SqlTypeCode.BigInt)]
-		public static void NewFromInt64(long value, SqlTypeCode expectedType) {
-			var number = ValueFromObject(value);
-			var type = GetSqlType(value);
-			var obj = new SqlObject(type, number);
-
-			Assert.Equal(expectedType, obj.Type.TypeCode);
-			Assert.NotNull(obj.Value);
-			Assert.False(obj.IsNull);
-			Assert.Equal(number, obj.Value);
+			Assert.True(obj.Type.IsInstanceOf(obj.Value));
 		}
 
 		[Theory]
@@ -143,8 +130,8 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.Boolean, true, null, 1)]
 		public static void Compare(SqlTypeCode typeCode, object value1, object value2, int expected) {
 			var type = PrimitiveTypes.Type(typeCode);
-			var obj1 = new SqlObject(type, ValueFromObject(value1));
-			var obj2 = new SqlObject(type, ValueFromObject(value2));
+			var obj1 = new SqlObject(type, SqlValueUtil.FromObject(value1));
+			var obj2 = new SqlObject(type, SqlValueUtil.FromObject(value2));
 
 			var result = obj1.CompareTo(obj2);
 			Assert.Equal(expected, result);
@@ -274,7 +261,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(true, false)]
 		[InlineData(false, true)]
 		[InlineData(SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
-		[InlineData(-5603.0032, 5602)]
+		[InlineData(-5603.0032, 5603.0032)]
 		public static void Operator_Not(object value, object expected) {
 			UnaryOp(x => x.Not(), value, expected);
 		}
@@ -319,58 +306,9 @@ namespace Deveel.Data.Sql {
 				(SqlTypeCode)value == SqlTypeCode.Unknown)
 				return SqlObject.Unknown;
 
-			var sqlValue = ValueFromObject(value);
-			var sqlType = GetSqlType(value);
+			var sqlValue = SqlValueUtil.FromObject(value);
+			var sqlType = SqlTypeUtil.FromValue(value);
 			return new SqlObject(sqlType, sqlValue);
-		}
-
-		private static SqlType GetSqlType(object value) {
-			if (value is bool)
-				return PrimitiveTypes.Boolean();
-
-			if (value is double)
-				return PrimitiveTypes.Double();
-			if (value is float)
-				return PrimitiveTypes.Float();
-			if (value is int)
-				return PrimitiveTypes.Integer();
-			if (value is long)
-				return PrimitiveTypes.BigInt();
-			if (value is byte)
-				return PrimitiveTypes.TinyInt();
-			if (value is short)
-				return PrimitiveTypes.SmallInt();
-
-			if (value is string)
-				return PrimitiveTypes.String();
-
-			throw new NotSupportedException();
-		}
-
-		private static ISqlValue ValueFromObject(object value) {
-			if (value == null)
-				return SqlNull.Value;
-
-			if (value is bool)
-				return (SqlBoolean) (bool) value;
-
-			if (value is byte)
-				return (SqlNumber) (byte) value;
-			if (value is int)
-				return (SqlNumber) (int) value;
-			if (value is short)
-				return (SqlNumber) (short) value;
-			if (value is long)
-				return (SqlNumber) (long) value;
-			if (value is float)
-				return (SqlNumber) (float) value;
-			if (value is double)
-				return (SqlNumber) (double) value;
-
-			if (value is string)
-				return new SqlString((string)value);
-
-			throw new NotSupportedException();
 		}
 	}
 }

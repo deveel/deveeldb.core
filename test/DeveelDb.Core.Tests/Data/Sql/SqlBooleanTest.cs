@@ -15,45 +15,31 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(expectedResult,b);
 		}
 
-		[Fact]
-		public void CreateFromBoolean() {
-			var value = new SqlBoolean(true);
-			Assert.NotNull(value);
-			Assert.Equal(true, (bool)value);
-
-			value = new SqlBoolean(false);
-			Assert.NotNull(value);
-			Assert.Equal(false, (bool)value);
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void CreateFromBoolean(bool value) {
+			var b = (SqlBoolean) value;
+			Assert.NotNull(b);
+			Assert.Equal(value, (bool)b);
 		}
 
-		[Fact]
-		public void Compare_Equal() {
-			var value1 = SqlBoolean.True;
-			var value2 = new SqlBoolean(true);
+		[Theory]
+		[InlineData(true, true, 0)]
+		[InlineData(false, true, -1)]
+		[InlineData(true, true, 0)]
+		[InlineData(false, false, 0)]
+		[InlineData(true, 1, 0)]
+		[InlineData(false, 0, 0)]
+		[InlineData(true, 0, 1)]
+		public void Compare(bool value1, object value2, int expected) {
+			var a = (SqlBoolean) value1;
+			var b = SqlValueUtil.FromObject(value2);
 
-			Assert.NotNull(value1);
-			Assert.NotNull(value2);
+			Assert.True((a as ISqlValue).IsComparableTo(b));
 
-			Assert.True((value1 as ISqlValue).IsComparableTo(value2));
-
-			int i = -2;
-			i = value1.CompareTo(value2);
-			Assert.Equal(0, i);
-		}
-
-		[Fact]
-		public void Compare_NotEqual() {
-			var value1 = SqlBoolean.False;
-			var value2 = new SqlBoolean(true);
-
-			Assert.NotNull(value1);
-			Assert.NotNull(value2);
-
-			Assert.True((value1 as ISqlValue).IsComparableTo(value2));
-
-			int i = -2;
-			i = value1.CompareTo(value2);
-			Assert.Equal(-1, i);
+			var result = a.CompareTo(b);
+			Assert.Equal(expected, result);
 		}
 
 		[Fact]
@@ -66,32 +52,6 @@ namespace Deveel.Data.Sql {
 
 			Assert.False((value1 as ISqlValue).IsComparableTo(value2));
 			Assert.Throws<ArgumentException>(() => value1.CompareTo(value2));
-		}
-
-		[Fact]
-		public void Compare_ToNumber_InRange() {
-			var value1 = SqlBoolean.True;
-			var value2 = SqlNumber.One;
-
-			Assert.NotNull(value1);
-			Assert.NotNull(value2);
-
-			Assert.True((value1 as ISqlValue).IsComparableTo(value2));
-
-			int i = -2;
-			i = value1.CompareTo(value2);
-			Assert.Equal(0, i);
-
-			value2 = SqlNumber.Zero;
-
-			Assert.NotNull(value1);
-			Assert.NotNull(value2);
-
-			Assert.True((value1 as ISqlValue).IsComparableTo(value2));
-
-			i = -2;
-			i = value1.CompareTo(value2);
-			Assert.Equal(1, i);
 		}
 
 		[Fact]
@@ -109,20 +69,16 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(-2, i);
 		}
 
-		[Fact]
-		public void Equality_True() {
-			var value1 = SqlBoolean.True;
-			var value2 = SqlBoolean.True;
-
-			Assert.True(value1 == value2);
+		[Theory]
+		[InlineData(true, true, true)]
+		[InlineData(true, false, false)]
+		[InlineData(false, false, true)]
+		public void Equal(bool value1, bool value2, bool expected) {
+			BinaryOp((x, y) => x == y, value1, value2, expected);
 		}
 
-		[Fact]
-		public void Equality_False() {
-			var value1 = SqlBoolean.True;
-			var value2 = SqlBoolean.False;
-
-			Assert.True(value1 != value2);
+		private static void BinaryOp(Func<SqlBoolean, SqlBoolean, SqlBoolean> op, bool value1, bool value2, bool expected) {
+			OperatorsUtil.Binary((x, y) => op((SqlBoolean)x, (SqlBoolean)y), value1, value2, expected);
 		}
 
 		[Theory]
@@ -185,14 +141,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(true, false, true)]
 		[InlineData(false, false, false)]
 		public void XOr(bool b1, bool b2, bool expected) {
-			var value1 = (SqlBoolean)b1;
-			var value2 = (SqlBoolean)b2;
-
-			var result = value1 ^ value2;
-
-			var bResult = (bool)result;
-
-			Assert.Equal(expected, bResult);
+			BinaryOp((x, y) => x ^ y, b1, b2, expected);
 		}
 
 		[Theory]
@@ -200,14 +149,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(true, false, true)]
 		[InlineData(false, false, false)]
 		public void Or(bool b1, bool b2, bool expected) {
-			var value1 = (SqlBoolean)b1;
-			var value2 = (SqlBoolean)b2;
-
-			var result = value1 | value2;
-
-			var bResult = (bool)result;
-
-			Assert.Equal(expected, bResult);
+			BinaryOp((x, y) => x | y, b1, b2, expected);
 		}
 
 		[Theory]

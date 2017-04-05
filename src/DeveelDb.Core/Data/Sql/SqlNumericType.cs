@@ -258,11 +258,15 @@ namespace Deveel.Data.Sql {
 			throw new InvalidOperationException("Widest type error.");
 		}
 
-		public override bool CanCastTo(SqlType destType) {
+		public override bool CanCastTo(ISqlValue value, SqlType destType) {
+			if (!(value is SqlNumber))
+				return false;
+
+			var number = (SqlNumber) value;
 			if (destType is SqlCharacterType) {
 				var charType = (SqlCharacterType) destType;
 				return !charType.HasMaxSize ||
-				       charType.MaxSize >= Precision;
+				       charType.MaxSize >= number.Precision;
 			}
 
 			// TODO: pre-check if the binary type can hold the binary version
@@ -294,16 +298,16 @@ namespace Deveel.Data.Sql {
 		private ISqlValue ToBinary(SqlNumber number, SqlBinaryType destType) {
 			var bytes = number.ToByteArray();
 
-			/*
-			TODO: should we throw?
 			if (bytes.Length > destType.MaxSize)
-				throw new InvalidCastException();
-			*/
+				return SqlNull.Value;
 
 			return destType.NormalizeValue(new SqlBinary(bytes));
 		}
 
 		private ISqlValue ToString(SqlNumber number, SqlCharacterType destType) {
+			if (destType.HasMaxSize && number.Precision > destType.MaxSize)
+				return SqlNull.Value;
+
 			var s = number.ToString();
 			return destType.NormalizeValue(new SqlString(s));
 		}
@@ -392,11 +396,18 @@ namespace Deveel.Data.Sql {
 			return +(SqlNumber) value;
 		}
 
-		public override ISqlValue Negate(ISqlValue value) {
+		public override ISqlValue Not(ISqlValue value) {
 			if (!(value is SqlNumber))
 				return SqlNull.Value;
 
 			return ~(SqlNumber) value;
+		}
+
+		public override ISqlValue Negate(ISqlValue value) {
+			if (!(value is SqlNumber))
+				return SqlNull.Value;
+
+			return -(SqlNumber) value;
 		}
 
 		public override ISqlValue Add(ISqlValue a, ISqlValue b) {

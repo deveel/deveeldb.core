@@ -118,7 +118,7 @@ namespace Deveel.Data.Sql {
 			return SqlStringCompare.Compare(Locale, (ISqlString) x, (ISqlString) y);
 		}
 
-		public override bool CanCastTo(SqlType destType) {
+		public override bool CanCastTo(ISqlValue value, SqlType destType) {
 			return destType is SqlCharacterType ||
 			       destType is SqlBinaryType ||
 			       destType is SqlBooleanType ||
@@ -228,20 +228,20 @@ namespace Deveel.Data.Sql {
 			}
 		}
 
-		private SqlDayToSecond ToDayToSecond(SqlString value) {
-			if (value == null)
-				throw new InvalidCastException();
-
+		private ISqlValue ToDayToSecond(SqlString value) {
 			SqlDayToSecond dts;
 			if (!SqlDayToSecond.TryParse(value.Value, out dts))
-				throw new FormatException();
+				return SqlNull.Value;
 
 			return dts;
 		}
 
-		private SqlYearToMonth ToYearToMonth(SqlString value) {
-			//TODO:
-			throw new NotImplementedException();
+		private ISqlValue ToYearToMonth(SqlString value) {
+			SqlYearToMonth ytm;
+			if (!SqlYearToMonth.TryParse(value.Value, out ytm))
+				return SqlNull.Value;
+
+			return ytm;
 		}
 	}
 }

@@ -18,10 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
+using System.Linq;
+using System.Reflection;
 
 using Deveel.Data.Sql.Types;
-using Deveel.Math;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
@@ -423,6 +423,16 @@ namespace Deveel.Data.Sql {
 		public static SqlType Type(SqlTypeCode typeCode, IDictionary<string, object> propeties) {
 			var typeName = GetTypeName(typeCode);
 			return Type(typeName, propeties);
+		}
+
+		public static SqlType Type(SqlTypeCode typeCode, object properties) {
+			var dictionary = properties == null
+				? new Dictionary<string, object>()
+				: properties.GetType()
+					.GetRuntimeProperties()
+					.Select(x => new {key = x.Name, value = x.GetValue(properties)})
+					.ToDictionary(x => x.key, y => y.value, StringComparer.OrdinalIgnoreCase);
+			return Type(typeCode, dictionary);
 		}
 
 		#region PrimitiveTypesResolver

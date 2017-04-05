@@ -285,7 +285,7 @@ namespace Deveel.Data.Sql {
 		#region Cast Operator
 
 		public bool CanCastTo(SqlType destType) {
-			return Type.CanCastTo(destType);
+			return Type.CanCastTo(Value, destType);
 		}
 
 		public SqlObject CastTo(SqlType destType) {

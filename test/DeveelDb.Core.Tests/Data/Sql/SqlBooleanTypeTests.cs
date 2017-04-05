@@ -78,28 +78,14 @@ namespace Deveel.Data.Sql {
 		[InlineData(true, true, true)]
 		[InlineData(true, false, false)]
 		public static void And(bool a, bool b, bool expected) {
-			var x = (SqlBoolean)a;
-			var y = (SqlBoolean)b;
-			var type = new SqlBooleanType(SqlTypeCode.Boolean);
-
-			var result = type.And(x, y);
-			var exp = (SqlBoolean)expected;
-
-			Assert.Equal(exp, result);
+			BinaryOp(type => type.And, a, b, expected);
 		}
 
 		[Theory]
 		[InlineData(true, true, true)]
 		[InlineData(true, false, true)]
 		public static void Or(bool a, bool b, bool expected) {
-			var x = (SqlBoolean)a;
-			var y = (SqlBoolean)b;
-			var type = new SqlBooleanType(SqlTypeCode.Boolean);
-
-			var result = type.Or(x, y);
-			var exp = (SqlBoolean)expected;
-
-			Assert.Equal(exp, result);
+			BinaryOp(type => type.Or, a, b, expected);
 		}
 
 		[Theory]
@@ -113,6 +99,25 @@ namespace Deveel.Data.Sql {
 			var exp = (SqlBoolean) expected;
 
 			Assert.Equal(exp, result);
+		}
+
+		[Theory]
+		[InlineData(true, true, false)]
+		[InlineData(false, false, false)]
+		[InlineData(true,  false, true)]
+		[InlineData(false, true, false)]
+		public static void Grater(bool value1, bool value2, bool expected) {
+			BinaryOp(type => type.Greater, value1, value2, expected);
+		}
+
+		private static void BinaryOp(Func<SqlType, Func<ISqlValue, ISqlValue, SqlBoolean>> selector, bool value1, bool value2,
+			bool expected) {
+			OperatorsUtil.Binary(PrimitiveTypes.Boolean(), selector, value1, value2, expected);
+		}
+
+		private static void BinaryOp(Func<SqlType, Func<ISqlValue, ISqlValue, ISqlValue>> selector, bool value1, bool value2,
+			bool expected) {
+			OperatorsUtil.Binary(PrimitiveTypes.Boolean(), selector, value1, value2, expected);
 		}
 
 		[Theory]
@@ -153,21 +158,52 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(SqlTypeCode.Bit, true, "1")]
-		[InlineData(SqlTypeCode.Bit, false, "0")]
-		[InlineData(SqlTypeCode.Boolean, true, "TRUE")]
-		[InlineData(SqlTypeCode.Boolean, false, "FALSE")]
-		public void CastToString(SqlTypeCode typeCode, bool value, string expected) {
-			var type = new SqlBooleanType(typeCode);
+		[InlineData(SqlTypeCode.Bit, true, SqlTypeCode.String, 20, -1, "1")]
+		[InlineData(SqlTypeCode.Bit, false, SqlTypeCode.VarChar, 10, -1, "0")]
+		[InlineData(SqlTypeCode.Boolean, true, SqlTypeCode.VarChar, 20, -1, "TRUE")]
+		[InlineData(SqlTypeCode.Boolean, false, SqlTypeCode.String, 10, -1, "FALSE")]
+		[InlineData(SqlTypeCode.Boolean, true, SqlTypeCode.TinyInt, -1, -1, (byte)1)]
+		[InlineData(SqlTypeCode.Boolean, false, SqlTypeCode.TinyInt, -1, -1, (byte)0)]
+		[InlineData(SqlTypeCode.Boolean, true, SqlTypeCode.SmallInt, -1, -1, (short)1)]
+		[InlineData(SqlTypeCode.Boolean, false, SqlTypeCode.SmallInt, -1, -1, (short)0)]
+		[InlineData(SqlTypeCode.Boolean, true, SqlTypeCode.Integer, -1, -1, 1)]
+		[InlineData(SqlTypeCode.Boolean, false, SqlTypeCode.Integer, -1, -1, 0)]
+		[InlineData(SqlTypeCode.Boolean, true, SqlTypeCode.BigInt, -1, -1, 1L)]
+		[InlineData(SqlTypeCode.Boolean, false, SqlTypeCode.BigInt, -1, -1, 0L)]
+		[InlineData(SqlTypeCode.Boolean, true, SqlTypeCode.Float, -1, -1, 1f)]
+		[InlineData(SqlTypeCode.Boolean, false, SqlTypeCode.Float, -1, -1, 0f)]
+		[InlineData(SqlTypeCode.Boolean, true, SqlTypeCode.Double, -1, -1, (double)1)]
+		[InlineData(SqlTypeCode.Boolean, true, SqlTypeCode.Double, -1, -1, (double)1)]
+		public static void CastTo(SqlTypeCode srcTypeCode, bool value, SqlTypeCode destTypeCode, int p, int s, object expected) {
+			var b = (SqlBoolean) value;
+			var srcType = PrimitiveTypes.Boolean(srcTypeCode);
+			var destType = PrimitiveTypes.Type(destTypeCode, new {precision = p, scale = s, maxSize = p});
 
-			var boolean = new SqlBoolean(value);
+			Assert.True(srcType.CanCastTo(b, destType));
 
-			var casted = type.Cast(boolean, PrimitiveTypes.String());
+			var result = srcType.Cast(b, destType);
+			var expectedValue = SqlValueUtil.FromObject(expected);
 
-			Assert.IsType<SqlString>(casted);
-			Assert.Equal(expected, casted.ToString());
+			Assert.Equal(expectedValue, result);
 		}
 
+		[Theory]
+		[InlineData(SqlTypeCode.DateTime)]
+		[InlineData(SqlTypeCode.Time)]
+		[InlineData(SqlTypeCode.DateTime)]
+		[InlineData(SqlTypeCode.DayToSecond)]
+		[InlineData(SqlTypeCode.YearToMonth)]
+		public static void CastToInvalid(SqlTypeCode destTypeCode) {
+			var value = SqlBoolean.True;
+			var type = PrimitiveTypes.Boolean();
+
+			var destType = PrimitiveTypes.Type(destTypeCode);
+
+			Assert.False(type.CanCastTo(value, destType));
+
+			var result = type.Cast(value, destType);
+			Assert.Equal(SqlNull.Value, result);
+		}
 
 		[Theory]
 		[InlineData(true, 1)]
@@ -182,20 +218,6 @@ namespace Deveel.Data.Sql {
 
 			Assert.IsType<SqlBinary>(casted);
 			Assert.Equal(expectedArray, ((SqlBinary) casted).ToByteArray());
-		}
-
-		[Theory]
-		[InlineData(true, 1)]
-		[InlineData(false, 0)]
-		public void CastToNumber(bool value, int expected) {
-			var type = PrimitiveTypes.Boolean();
-			var boolean = new SqlBoolean(value);
-
-			Assert.True(type.CanCastTo(PrimitiveTypes.TinyInt()));
-			var casted = type.Cast(boolean, PrimitiveTypes.TinyInt());
-
-			Assert.IsType<SqlNumber>(casted);
-			Assert.Equal(expected,(int) (SqlNumber) casted);
 		}
 
 		[Theory]

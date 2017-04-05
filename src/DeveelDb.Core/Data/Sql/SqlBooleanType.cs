@@ -54,7 +54,7 @@ namespace Deveel.Data.Sql {
 			return value is SqlBoolean || value is SqlNull;
 		}
 
-		public override bool CanCastTo(SqlType destType) {
+		public override bool CanCastTo(ISqlValue value, SqlType destType) {
 			return destType is SqlNumericType ||
 			       destType is SqlCharacterType ||
 				   destType is SqlBinaryType ||
@@ -95,10 +95,6 @@ namespace Deveel.Data.Sql {
 			return (ISqlString) destType.NormalizeValue(s);
 		}
 
-		public override ISqlValue Reverse(ISqlValue value) {
-			return Negate(value);
-		}
-
 		public override ISqlValue Negate(ISqlValue value) {
 			var b = (SqlBoolean)value;
 			return !b;
@@ -125,21 +121,32 @@ namespace Deveel.Data.Sql {
 			return b1 ^ b2;
 		}
 
-		public override string ToString(ISqlValue obj) {
-			var b = (SqlBoolean)obj;
-			if (TypeCode == SqlTypeCode.Bit) {
-				if (b == SqlBoolean.True)
-					return "1";
-				if (b == SqlBoolean.False)
-					return "0";
-			} else {
-				if (b == SqlBoolean.True)
-					return "TRUE";
-				if (b == SqlBoolean.False)
-					return "FALSE";
-			}
+		public override SqlBoolean Greater(ISqlValue a, ISqlValue b) {
+			var b1 = (SqlBoolean)a;
+			var b2 = (SqlBoolean)b;
 
-			return base.ToString(obj);
+			return b1 > b2;
+		}
+
+		public override SqlBoolean GreaterOrEqual(ISqlValue a, ISqlValue b) {
+			var b1 = (SqlBoolean)a;
+			var b2 = (SqlBoolean)b;
+
+			return b1 >= b2;
+		}
+
+		public override SqlBoolean Less(ISqlValue a, ISqlValue b) {
+			var b1 = (SqlBoolean)a;
+			var b2 = (SqlBoolean)b;
+
+			return b1 < b2;
+		}
+
+		public override SqlBoolean LessOrEqual(ISqlValue a, ISqlValue b) {
+			var b1 = (SqlBoolean)a;
+			var b2 = (SqlBoolean)b;
+
+			return b1 <= b2;
 		}
 
 		public override SqlBoolean Equal(ISqlValue a, ISqlValue b) {
@@ -156,6 +163,18 @@ namespace Deveel.Data.Sql {
 
 		public override bool Equals(SqlType other) {
 			return other is SqlBooleanType;
+		}
+
+		public override string ToString(ISqlValue obj) {
+			var b = (SqlBoolean) obj;
+
+			switch (TypeCode) {
+				case SqlTypeCode.Bit:
+					return b == true ? "1" : "0";
+				case SqlTypeCode.Boolean:
+				default:
+					return b == true ? "TRUE" : "FALSE";
+			}
 		}
 	}
 }

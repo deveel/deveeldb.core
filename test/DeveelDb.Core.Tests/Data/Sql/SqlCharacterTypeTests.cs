@@ -45,7 +45,7 @@ namespace Deveel.Data.Sql {
 			var sqlString1 = new SqlString(s1);
 			var sqlString2 = new SqlString(s2);
 
-			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
+			var type = PrimitiveTypes.String();
 			Assert.True(type.IsComparable(type));
 
 			var result = type.Compare(sqlString1, sqlString2);
@@ -60,7 +60,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("Abc", "abc", null, true)]
 		[InlineData("ås", "øs", "nb-NO", true)]
 		[InlineData("yolo", "yol", null, false)]
-		public static void StringIsGreater(string s1, string s2, string locale, bool expected) {
+		public static void Greater(string s1, string s2, string locale, bool expected) {
 			var sqlString1 = new SqlString(s1);
 			var sqlString2 = new SqlString(s2);
 
@@ -73,7 +73,7 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("ereee", "123bd", null, false)]
 		[InlineData("abc1234", "abc1234", null, true)]
-		public static void StringIsGreaterOrEqual(string s1, string s2, string locale, bool expected) {
+		public static void GreaterOrEqual(string s1, string s2, string locale, bool expected) {
 			var sqlString1 = new SqlString(s1);
 			var sqlString2 = new SqlString(s2);
 
@@ -91,7 +91,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("Abc", "abc", null, false)]
 		[InlineData("ås", "øs", "nb-NO", false)]
 		[InlineData("yolo", "yol", null, true)]
-		public static void StringIsSmaller(string s1, string s2, string locale, bool expected) {
+		public static void Smaller(string s1, string s2, string locale, bool expected) {
 			var sqlString1 = new SqlString(s1);
 			var sqlString2 = new SqlString(s2);
 
@@ -103,7 +103,7 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData("abc", "cde", null, false)]
-		public static void StringIsSmallerOrEqual(string s1, string s2, string locale, bool expected) {
+		public static void SmallerOrEqual(string s1, string s2, string locale, bool expected) {
 			var sqlString1 = new SqlString(s1);
 			var sqlString2 = new SqlString(s2);
 
@@ -117,7 +117,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("abc12345", "abc12345", null, true)]
 		[InlineData("ab12345", "abc12345",  null, false)]
 		[InlineData("the brown\n", "the brown", null, false)]
-		public static void StringIsEqual(string s1, string s2, string locale, bool expected) {
+		public static void Equal(string s1, string s2, string locale, bool expected) {
 			var sqlString1 = new SqlString(s1);
 			var sqlString2 = new SqlString(s2);
 
@@ -130,7 +130,7 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("abc12345", "abc12345", null, false)]
 		[InlineData("ab12345", "abc12345", null, true)]
-		public static void StringIsNotEqual(string s1, string s2, string locale, bool expected) {
+		public static void NotEqual(string s1, string s2, string locale, bool expected) {
 			var sqlString1 = new SqlString(s1);
 			var sqlString2 = new SqlString(s2);
 
@@ -190,6 +190,11 @@ namespace Deveel.Data.Sql {
 			InvalidOp(type => type.UnaryPlus);
 		}
 
+		[Fact]
+		public static void InvalidNot() {
+			InvalidOp(type => type.Not);
+		}
+
 		private static void InvalidOp(Func<SqlType, Func<ISqlValue, ISqlValue, ISqlValue>> selector) {
 			var s1 = new SqlString("ab");
 			var s2 = new SqlString("cd");
@@ -211,70 +216,22 @@ namespace Deveel.Data.Sql {
 			Assert.IsType<SqlNull>(result);
 		}
 
-
-
 		[Theory]
-		[InlineData("true", true)]
-		[InlineData("FALSE", false)]
-		[InlineData("TRUE", true)]
-		public static void CastToBoolean(string s, bool expected) {
-			var sqlString = new SqlString(s);
-			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
-
-			Assert.True(type.CanCastTo(PrimitiveTypes.Boolean()));
-			var result = type.Cast(sqlString, PrimitiveTypes.Boolean());
-
-			Assert.IsType<SqlBoolean>(result);
-			
-			Assert.Equal(expected, (bool)(SqlBoolean) result);
-		}
-
-		[Theory]
-		[InlineData("5628829.000021192", 5628829.000021192)]
-		[InlineData("NaN", Double.NaN)]
-		[InlineData("-6773.09222222", -6773.09222222)]
-		[InlineData("8992e78", 8992e78)]
-		public static void CastToNumber(string s, double expected) {
-			var sqlString = new SqlString(s);
-			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
-
-			Assert.True(type.CanCastTo(PrimitiveTypes.Double()));
-			var result = type.Cast(sqlString, PrimitiveTypes.Double());
-
-			Assert.IsType<SqlNumber>(result);
-			Assert.Equal(expected, (double)(SqlNumber) result);
-		}
-
-		[Theory]
-		[InlineData("677110199911111", SqlTypeCode.BigInt, 19, 677110199911111)]
-		[InlineData("215", SqlTypeCode.TinyInt, 3, 215)]
-		[InlineData("71182992", SqlTypeCode.Integer, 10, 71182992)]
-		public static void CastToInteger(string s, SqlTypeCode typeCode, int precision, long expected) {
-			var sqlString = new SqlString(s);
-			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
-			var destType = new SqlNumericType(typeCode, precision, 0);
-
-			Assert.True(type.CanCastTo(destType));
-			var result = type.Cast(sqlString, destType);
-
-			Assert.IsType<SqlNumber>(result);
-			Assert.Equal(expected, (long) (SqlNumber)result);
-		}
-
-		[Theory]
-		[InlineData("the quick brown fox", SqlTypeCode.VarChar, 255, "the quick brown fox")]
-		[InlineData("lorem ipsum dolor sit amet", SqlTypeCode.Char, 11, "lorem ipsum")]
-		[InlineData("do", SqlTypeCode.Char, 10, "do        ")]
-		public static void CastToString(string s, SqlTypeCode typeCode, int maxSize, string expected) {
-			var sqlString = new SqlString(s);
-			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
-			var destType = new SqlCharacterType(typeCode, maxSize, null);
-
-			Assert.True(type.CanCastTo(destType));
-			var result = type.Cast(sqlString, destType);
-
-			Assert.IsType<SqlString>(result);
-			Assert.Equal(expected, ((SqlString)result).Value);
+		[InlineData("true", SqlTypeCode.Boolean, 1, 0, true)]
+		[InlineData("FALSE", SqlTypeCode.Boolean, 1, 0, false)]
+		[InlineData("TRUE", SqlTypeCode.Boolean, 1, 0, true)]
+		[InlineData("5628829.000021192", SqlTypeCode.Double, -1, -1, 5628829.000021192)]
+		[InlineData("NaN", SqlTypeCode.Double, -1, -1, Double.NaN)]
+		[InlineData("-6773.09222222", SqlTypeCode.Double, -1, -1, -6773.09222222)]
+		[InlineData("8992e78", SqlTypeCode.Double, -1, -1, 8992e78)]
+		[InlineData("677110199911111", SqlTypeCode.BigInt, -1, -1, 677110199911111)]
+		[InlineData("215", SqlTypeCode.TinyInt, -1, -1, 215)]
+		[InlineData("71182992", SqlTypeCode.Integer, -1, -1, 71182992)]
+		[InlineData("the quick brown fox", SqlTypeCode.VarChar, 255, -1, "the quick brown fox")]
+		[InlineData("lorem ipsum dolor sit amet", SqlTypeCode.Char, 11, -1, "lorem ipsum")]
+		[InlineData("do", SqlTypeCode.Char, 10, -1, "do        ")]
+		public static void Cast(string value, SqlTypeCode destTypeCode, int p, int s, object expected) {
+			OperatorsUtil.Cast(value, destTypeCode, p, s, expected);
 		}
 
 		[Theory]
@@ -284,33 +241,15 @@ namespace Deveel.Data.Sql {
 		[InlineData("02:10:16.908", SqlTypeCode.Time, "02:10:16.908")]
 		[InlineData("2014-01-21T02:10:16.908", SqlTypeCode.Time, "02:10:16.908")]
 		public static void CastToDateTime(string s, SqlTypeCode typeCode, string expected) {
-			var sqlString = new SqlString(s);
-			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
-			var destType = new SqlDateTimeType(typeCode);
-
-			Assert.True(type.CanCastTo(destType));
-			var result = type.Cast(sqlString, destType);
-
 			var expectedResult = SqlDateTime.Parse(expected);
-			Assert.IsType<SqlDateTime>(result);
-
-			Assert.Equal(expectedResult, result);
+			Cast(s, typeCode, -1, -1, expectedResult);
 		}
 
 		[Theory]
 		[InlineData("2.12:03:20.433", "2.12:03:20.433")]
 		public static void CastToYearToMonth(string s, string expected) {
-			var sqlString = new SqlString(s);
-			var type = new SqlCharacterType(SqlTypeCode.String, -1, null);
-			var destType = new SqlIntervalType(SqlTypeCode.DayToSecond);
-
-			Assert.True(type.CanCastTo(destType));
-			var result = type.Cast(sqlString, destType);
-			Assert.IsType<SqlDayToSecond>(result);
-
 			var expectedResult = SqlDayToSecond.Parse(expected);
-
-			Assert.Equal(expectedResult, result);
+			Cast(s, SqlTypeCode.DayToSecond, -1, -1, expectedResult);
 		}
 	}
 }

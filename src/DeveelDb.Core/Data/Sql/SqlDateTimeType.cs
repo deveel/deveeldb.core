@@ -55,7 +55,7 @@ namespace Deveel.Data.Sql {
 			return base.Subtract(a, b);
 		}
 
-		public override bool CanCastTo(SqlType destType) {
+		public override bool CanCastTo(ISqlValue value, SqlType destType) {
 			return destType is SqlCharacterType ||
 			       destType is SqlDateTimeType ||
 			       destType is SqlNumericType;
