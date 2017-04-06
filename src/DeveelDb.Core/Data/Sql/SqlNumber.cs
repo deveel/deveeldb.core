@@ -499,7 +499,7 @@ namespace Deveel.Data.Sql {
 
 		private SqlNumber Negate() {
 			if (state == NumericState.None) {
-				return new SqlNumber(innerValue.Negate());
+				return new SqlNumber(-innerValue);
 			}
 
 			if (state == NumericState.NegativeInfinity ||
@@ -511,7 +511,7 @@ namespace Deveel.Data.Sql {
 
 		private SqlNumber Plus() {
 			if (state == NumericState.None) {
-				return new SqlNumber(innerValue.Plus());
+				return new SqlNumber(+innerValue);
 			}
 
 			if (state == NumericState.NegativeInfinity ||

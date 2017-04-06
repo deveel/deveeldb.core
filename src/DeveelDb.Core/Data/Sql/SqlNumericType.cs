@@ -354,9 +354,9 @@ namespace Deveel.Data.Sql {
 			var value = number.innerValue;
 
 			if (thisDiff > otherDiff) {
-				value = value.SetScale(Scale);
+				value = BigMath.Scale(value, Scale);
 			} else {
-				value = value.SetScale(Scale-thisDiff);
+				value = BigMath.Scale(value, Scale-thisDiff);
 			}
 
 			return new SqlNumber(SqlNumber.NumericState.None, value);

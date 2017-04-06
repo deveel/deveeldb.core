@@ -11,7 +11,7 @@ namespace Deveel.Data.Sql {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
 					var context = new MathContext(precision);
-					var result = a.innerValue.Add(b.innerValue, context);
+					var result = BigMath.Add(a.innerValue, b.innerValue, context);
 
 					return new SqlNumber(SqlNumber.NumericState.None, result);
 				}
@@ -29,7 +29,7 @@ namespace Deveel.Data.Sql {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
 					var context = new MathContext(precision);
-					var result = a.innerValue.Subtract(b.innerValue, context);
+					var result = BigMath.Subtract(a.innerValue, b.innerValue, context);
 
 					return new SqlNumber(SqlNumber.NumericState.None, result);
 				}
@@ -49,7 +49,7 @@ namespace Deveel.Data.Sql {
 					BigDecimal divBy = b.innerValue;
 					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
 						var context = new MathContext(precision);
-						var result = a.innerValue.Divide(divBy, context);
+						var result = BigMath.Divide(a.innerValue, divBy, context);
 						return new SqlNumber(SqlNumber.NumericState.None, result);
 					}
 					throw new DivideByZeroException();
@@ -77,7 +77,7 @@ namespace Deveel.Data.Sql {
 		public static SqlNumber Multiply(SqlNumber a, SqlNumber b) {
 			if (SqlNumber.IsNumber(a)) {
 				if (SqlNumber.IsNumber(b)) {
-					var result = a.innerValue.Multiply(b.innerValue);
+					var result = BigMath.Multiply(a.innerValue, b.innerValue);
 					return new SqlNumber(SqlNumber.NumericState.None, result);
 				}
 
@@ -92,7 +92,7 @@ namespace Deveel.Data.Sql {
 				if (SqlNumber.IsNumber(b)) {
 					BigDecimal divBy = b.innerValue;
 					if (divBy.CompareTo(BigDecimal.Zero) != 0) {
-						var remainder = a.innerValue.Remainder(divBy);
+						var remainder = BigMath.Remainder(a.innerValue, divBy);
 						return new SqlNumber(SqlNumber.NumericState.None, remainder);
 					}
 				}
@@ -102,8 +102,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber Pow(SqlNumber number, SqlNumber exp) {
-			if (SqlNumber.IsNumber(number))
-				return new SqlNumber(number.innerValue.Pow(exp.innerValue));
+			if (SqlNumber.IsNumber(number)) {
+				var result = BigMath.Pow(number.innerValue, exp.innerValue);
+				return new SqlNumber(result);
+			}
 
 			return number;
 		}
@@ -113,8 +115,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		public static SqlNumber Round(SqlNumber value, int precision) {
-			if (SqlNumber.IsNumber(value))
-				return new SqlNumber(value.innerValue.Round(new MathContext(precision, RoundingMode.HalfUp)));
+			if (SqlNumber.IsNumber(value)) {
+				var result = BigMath.Round(value.innerValue, new MathContext(precision, RoundingMode.HalfUp));
+				return new SqlNumber(result);
+			}
 
 			return value;
 		}
@@ -169,7 +173,7 @@ namespace Deveel.Data.Sql {
 
 		public static SqlNumber Abs(SqlNumber number) {
 			if (SqlNumber.IsNumber(number))
-				return new SqlNumber(SqlNumber.NumericState.None, number.innerValue.Abs());
+				return new SqlNumber(SqlNumber.NumericState.None, BigMath.Abs(number.innerValue));
 			if (SqlNumber.IsNegativeInfinity(number))
 				return SqlNumber.PositiveInfinity;
 
