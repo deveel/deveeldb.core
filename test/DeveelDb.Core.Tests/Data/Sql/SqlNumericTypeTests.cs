@@ -89,6 +89,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(6709.89f, SqlTypeCode.Char, 7, -1, "6709.89")]
 		[InlineData((byte)23, SqlTypeCode.Double, -1, -1, (double)23)]
 		[InlineData(32167, SqlTypeCode.Float, -1, -1, (float)32167)]
+		[InlineData((double)56878.99876, SqlTypeCode.Float, -1, -1, (float) 56878.99876)]
 		private static void Cast(object value, SqlTypeCode destType, int p, int s, object expected) {
 			OperatorsUtil.Cast(value, destType, p, s, expected);
 		}

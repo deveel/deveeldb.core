@@ -4,24 +4,30 @@ using Xunit;
 
 namespace Deveel.Data.Sql {
 	public static class SqlNullTests {
-		[Fact]
-		public static void EqualsToOtherSqlNull() {
+		[Theory]
+		[InlineData(null, true)]
+		[InlineData(563543.9921, false)]
+		public static void Equal(object other, bool expected) {
+			BinaryOp((x, y)=> x == y, other, expected);
+		}
+
+		[Theory]
+		[InlineData("the quick brown fox", true)]
+		[InlineData(null, false)]
+		public static void NotEqual(object other, bool expected) {
+			BinaryOp((x, y) => x != y, other, expected);
+		}
+
+		private static void BinaryOp(Func<SqlNull, ISqlValue, bool> op, object other, bool expected) {
 			var null1 = SqlNull.Value;
-			var null2 = SqlNull.Value;
+			var value1 = SqlValueUtil.FromObject(other);
 
-			Assert.True(null1.Equals(null2));
-		}
+			var result = op(null1, value1);
 
-		[Fact]
-		public static void EqualsToNull() {
-			var sqlNull = SqlNull.Value;
-			Assert.True(sqlNull.Equals(null));
-		}
+			var b = (SqlBoolean) result;
+			var expectedNumber = (SqlBoolean)expected;
 
-		[Fact]
-		public static void EqualsToNotNull() {
-			var sqlNull = SqlNull.Value;
-			Assert.False(sqlNull.Equals((SqlNumber)455));
+			Assert.Equal(expectedNumber, b);
 		}
 
 		[Fact]
@@ -30,46 +36,53 @@ namespace Deveel.Data.Sql {
 			Assert.Equal("NULL", sqlNull.ToString());
 		}
 
-		[Fact]
-		public static void OpEqualToNull() {
-			var sqlNull = SqlNull.Value;
-			Assert.True(sqlNull == null);
+		[Theory]
+		[InlineData(typeof(byte))]
+		[InlineData(typeof(sbyte))]
+		[InlineData(typeof(int))]
+		[InlineData(typeof(long))]
+		[InlineData(typeof(short))]
+		[InlineData(typeof(float))]
+		[InlineData(typeof(double))]
+		[InlineData(typeof(decimal))]
+		[InlineData(typeof(uint))]
+		[InlineData(typeof(ushort))]
+		[InlineData(typeof(ulong))]
+		[InlineData(typeof(bool))]
+		[InlineData(typeof(DateTime))]
+		[InlineData(typeof(char))]
+		public static void InvalidConvertTo(Type type) {
+			Assert.Throws<InvalidCastException>(() => Convert.ChangeType(SqlNull.Value, type));
+		}
+
+		[Theory]
+		[InlineData(typeof(string))]
+		[InlineData(typeof(SqlNull))]
+		[InlineData(typeof(SqlType))]
+		public static void ConvertTo(Type type) {
+			var result = Convert.ChangeType(SqlNull.Value, type);
+			Assert.Null(result);
 		}
 
 		[Fact]
-		public static void OpNotEqualToNull() {
-			var sqlNull = SqlNull.Value;
-			Assert.False(sqlNull != null);
+		public static void GetTypeCode() {
+			Assert.Equal(TypeCode.Empty, (SqlNull.Value as IConvertible).GetTypeCode());
 		}
 
-		[Fact]
-		public static void OpEqualToSqlNull() {
-			var null1 = SqlNull.Value;
-			var null2 = SqlNull.Value;
-			Assert.True(null1 == null2);
+		[Theory]
+		[InlineData(null, 0)]
+		[InlineData(true, -1)]
+		public static void CompareTo(object other, int expected) {
+			var value = SqlValueUtil.FromObject(other);
+			Assert.Equal(expected, (SqlNull.Value as IComparable<ISqlValue>).CompareTo(value));
 		}
 
-		[Fact]
-		public static void OpNotEqualToSqlNull() {
-			var null1 = SqlNull.Value;
-			var null2 = SqlNull.Value;
-			Assert.False(null1 != null2);
-		}
-
-		[Fact]
-		public static void OpEqualToObjNull() {
-			var null1 = SqlNull.Value;
-			SqlString null2 = null;
-
-			Assert.True(null1 == null2);
-		}
-
-		[Fact]
-		public static void OpNotEqualToObjNull() {
-			var null1 = SqlNull.Value;
-			SqlString null2 = null;
-
-			Assert.False(null1 != null2);
+		[Theory]
+		[InlineData(null, true)]
+		[InlineData(54495.33, false)]
+		public static void IsComparableTo(object other, bool expected) {
+			var value = SqlValueUtil.FromObject(other);
+			Assert.Equal(expected, (SqlNull.Value as ISqlValue).IsComparableTo(value));
 		}
 	}
 }

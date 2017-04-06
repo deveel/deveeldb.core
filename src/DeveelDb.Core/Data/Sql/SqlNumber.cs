@@ -233,10 +233,21 @@ namespace Deveel.Data.Sql {
 		}
 
 		TypeCode IConvertible.GetTypeCode() {
-			if (CanBeInt32)
-				return TypeCode.Int32;
-			if (CanBeInt64)
-				return TypeCode.Int64;
+			if (Scale == 0) {
+				if (Precision <= SqlNumericType.TinyIntPrecision)
+					return TypeCode.Byte;
+				if (Precision <= SqlNumericType.SmallIntPrecision)
+					return TypeCode.Int16;
+				if (Precision <= SqlNumericType.IntegerPrecision)
+					return TypeCode.Int32;
+				if (Precision <= SqlNumericType.BigIntPrecision)
+					return TypeCode.Int64;
+			} else {
+				if (Precision <= SqlNumericType.FloatPrecision)
+					return TypeCode.Single;
+				if (Precision <= SqlNumericType.DoublePrecision)
+					return TypeCode.Double;
+			}
 
 			return TypeCode.Object;
 		}

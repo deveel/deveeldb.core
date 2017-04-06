@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Reflection;
 
 namespace Deveel.Data.Sql {
 	public struct SqlNull : ISqlValue, IConvertible, ISqlFormattable {
@@ -29,10 +30,8 @@ namespace Deveel.Data.Sql {
 			if (other == null || other is SqlNull)
 				return 0;
 
-			return 1;
+			return -1;
 		}
-
-		public bool IsNull => true;
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
 			return other == null || other is SqlNull;
@@ -55,7 +54,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		TypeCode IConvertible.GetTypeCode() {
-			return TypeCode.Object;
+			return TypeCode.Empty;
 		}
 
 		bool IConvertible.ToBoolean(IFormatProvider provider) {
@@ -119,7 +118,12 @@ namespace Deveel.Data.Sql {
 		}
 
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider) {
-			return null;
+			if (conversionType == typeof(SqlNull))
+				return null;
+			if (conversionType.GetTypeInfo().IsClass)
+				return null;
+
+			throw new InvalidCastException();
 		}
 
 		public override string ToString() {

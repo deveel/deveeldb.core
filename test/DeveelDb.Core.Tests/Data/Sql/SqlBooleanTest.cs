@@ -48,7 +48,6 @@ namespace Deveel.Data.Sql {
 			var value2 = SqlNull.Value;
 
 			Assert.NotNull(value1);
-			Assert.True(value2.IsNull);
 
 			Assert.False((value1 as ISqlValue).IsComparableTo(value2));
 			Assert.Throws<ArgumentException>(() => value1.CompareTo(value2));

@@ -136,11 +136,15 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(4566, TypeCode.Int32)]
+		[InlineData(4566748, TypeCode.Int32)]
 		[InlineData(67484433323, TypeCode.Int64)]
-		[InlineData(94055332.6557, TypeCode.Object)]
-		public static void Convert_GetTypeCode(double value, TypeCode expected) {
-			var number = (SqlNumber)value;
+		[InlineData((byte)22, TypeCode.Byte)]
+		[InlineData((short)9330, TypeCode.Int16)]
+		[InlineData(9033.443, TypeCode.Double)]
+		[InlineData(1220.09f, TypeCode.Single)]
+		[InlineData(94055332.6557, TypeCode.Double)]
+		public static void Convert_GetTypeCode(object value, TypeCode expected) {
+			var number = (SqlNumber) SqlValueUtil.FromObject(value);
 			var typeCode = Convert.GetTypeCode(number);
 			Assert.Equal(expected, typeCode);
 		}

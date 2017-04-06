@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 
 using Xunit;
 
@@ -247,9 +248,17 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData("2.12:03:20.433", "2.12:03:20.433")]
-		public static void CastToYearToMonth(string s, string expected) {
+		public static void CastToDayToSecond(string s, string expected) {
 			var expectedResult = SqlDayToSecond.Parse(expected);
 			Cast(s, SqlTypeCode.DayToSecond, -1, -1, expectedResult);
+		}
+
+		[Theory]
+		[InlineData("1.22", 34)]
+		[InlineData("15", 15)]
+		public static void CastToYearToMonth(string s, int expected) {
+			var exp = new SqlYearToMonth(expected);
+			Cast(s, SqlTypeCode.YearToMonth, -1, -1, exp);
 		}
 	}
 }
