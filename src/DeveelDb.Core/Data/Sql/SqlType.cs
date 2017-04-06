@@ -358,78 +358,78 @@ namespace Deveel.Data.Sql {
 			return SqlNull.Value;
 		}
 
-		/// <summary>
-		/// Converts a given SQL object to the given runtime type.
-		/// </summary>
-		/// <param name="obj">The SQL object to convert.</param>
-		/// <param name="destType">The destination <see cref="Type"/> of the conversion.</param>
-		/// <returns>
-		/// Returns an object result of the conversion from the given SQL object
-		/// of the type specified.
-		/// </returns>
-		/// <exception cref="NotSupportedException">
-		/// If the given input object is not compatible with this SQL type or
-		/// if the destination type is not supported
-		/// </exception>
-		public virtual object ConvertTo(ISqlValue obj, Type destType) {
-			throw new NotSupportedException();
-		}
+		///// <summary>
+		///// Converts a given SQL object to the given runtime type.
+		///// </summary>
+		///// <param name="obj">The SQL object to convert.</param>
+		///// <param name="destType">The destination <see cref="Type"/> of the conversion.</param>
+		///// <returns>
+		///// Returns an object result of the conversion from the given SQL object
+		///// of the type specified.
+		///// </returns>
+		///// <exception cref="NotSupportedException">
+		///// If the given input object is not compatible with this SQL type or
+		///// if the destination type is not supported
+		///// </exception>
+		//public virtual object ConvertTo(ISqlValue obj, Type destType) {
+		//	throw new NotSupportedException();
+		//}
 
 		public virtual ISqlValue NormalizeValue(ISqlValue value) {
 			return value;
 		}
 
-		/// <summary>
-		/// Gets the SQL type code corresponding to the given type
-		/// </summary>
-		/// <param name="type">The type to get the corresponding type code</param>
-		/// <returns>
-		/// Returns a <see cref="SqlTypeCode"/> that represents a code corresponding
-		/// the SQL type.
-		/// </returns>
-		/// <exception cref="NotSupportedException">If the given <paramref name="type"/>
-		/// is not supported by the system</exception>
-		public static SqlTypeCode GetTypeCode(Type type) {
-			if (type == null)
-				return SqlTypeCode.Unknown;
+		///// <summary>
+		///// Gets the SQL type code corresponding to the given type
+		///// </summary>
+		///// <param name="type">The type to get the corresponding type code</param>
+		///// <returns>
+		///// Returns a <see cref="SqlTypeCode"/> that represents a code corresponding
+		///// the SQL type.
+		///// </returns>
+		///// <exception cref="NotSupportedException">If the given <paramref name="type"/>
+		///// is not supported by the system</exception>
+		//public static SqlTypeCode GetTypeCode(Type type) {
+		//	if (type == null)
+		//		return SqlTypeCode.Unknown;
 
-			if (type == typeof(bool))
-				return SqlTypeCode.Boolean;
-			if (type == typeof(byte))
-				return SqlTypeCode.TinyInt;
-			if (type == typeof(short))
-				return SqlTypeCode.SmallInt;
-			if (type == typeof(int))
-				return SqlTypeCode.Integer;
-			if (type == typeof(long))
-				return SqlTypeCode.BigInt;
-			if (type == typeof(float))
-				return SqlTypeCode.Real;
-			if (type == typeof(double))
-				return SqlTypeCode.Double;
-			if (type == typeof(DateTime) ||
-			    type == typeof(DateTimeOffset))
-				return SqlTypeCode.TimeStamp;
-			if (type == typeof(TimeSpan))
-				return SqlTypeCode.DayToSecond;
-			if (type == typeof(string))
-				return SqlTypeCode.String;
-			if (type == typeof(byte[]))
-				return SqlTypeCode.Binary;
+		//	if (type == typeof(bool))
+		//		return SqlTypeCode.Boolean;
+		//	if (type == typeof(byte))
+		//		return SqlTypeCode.TinyInt;
+		//	if (type == typeof(short))
+		//		return SqlTypeCode.SmallInt;
+		//	if (type == typeof(int))
+		//		return SqlTypeCode.Integer;
+		//	if (type == typeof(long))
+		//		return SqlTypeCode.BigInt;
+		//	if (type == typeof(float))
+		//		return SqlTypeCode.Real;
+		//	if (type == typeof(double))
+		//		return SqlTypeCode.Double;
+		//	if (type == typeof(DateTime) ||
+		//	    type == typeof(DateTimeOffset))
+		//		return SqlTypeCode.TimeStamp;
+		//	if (type == typeof(TimeSpan))
+		//		return SqlTypeCode.DayToSecond;
+		//	if (type == typeof(string))
+		//		return SqlTypeCode.String;
+		//	if (type == typeof(byte[]))
+		//		return SqlTypeCode.Binary;
 
-			if (type == typeof(SqlBoolean))
-				return SqlTypeCode.Boolean;
-			if (type == typeof(SqlNumber))
-				return SqlTypeCode.Numeric;
-			if (type == typeof(SqlDateTime))
-				return SqlTypeCode.TimeStamp;
-			if (type == typeof(SqlString))
-				return SqlTypeCode.String;
-			if (type == typeof(SqlDayToSecond))
-				return SqlTypeCode.DayToSecond;
+		//	if (type == typeof(SqlBoolean))
+		//		return SqlTypeCode.Boolean;
+		//	if (type == typeof(SqlNumber))
+		//		return SqlTypeCode.Numeric;
+		//	if (type == typeof(SqlDateTime))
+		//		return SqlTypeCode.TimeStamp;
+		//	if (type == typeof(SqlString))
+		//		return SqlTypeCode.String;
+		//	if (type == typeof(SqlDayToSecond))
+		//		return SqlTypeCode.DayToSecond;
 
-			throw new NotSupportedException(String.Format("The type '{0}' is not supported.", type));
-		}
+		//	throw new NotSupportedException(String.Format("The type '{0}' is not supported.", type));
+		//}
 
 		public static bool IsPrimitiveType(SqlTypeCode typeCode) {
 			return PrimitiveTypes.IsPrimitive(typeCode);

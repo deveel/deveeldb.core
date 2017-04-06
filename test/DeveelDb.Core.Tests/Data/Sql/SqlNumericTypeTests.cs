@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 using Xunit;
 
@@ -98,8 +99,54 @@ namespace Deveel.Data.Sql {
 			OperatorsUtil.Binary(PrimitiveTypes.Double(), selector, value1, value2, expected);
 		}
 
-		private static void Unary(Func<SqlType, Func<ISqlValue, ISqlValue>> selector, object value, object result) {
-			OperatorsUtil.Unary(PrimitiveTypes.Double(), selector, value, result);
+		[Theory]
+		[InlineData(SqlTypeCode.TinyInt, -1, -1, "TINYINT")]
+		[InlineData(SqlTypeCode.SmallInt, -1, -1, "SMALLINT")]
+		[InlineData(SqlTypeCode.Integer, -1, -1, "INTEGER")]
+		[InlineData(SqlTypeCode.BigInt, -1, -1, "BIGINT")]
+		[InlineData(SqlTypeCode.Float, -1, -1, "FLOAT")]
+		[InlineData(SqlTypeCode.Real, -1, -1, "FLOAT")]
+		[InlineData(SqlTypeCode.Decimal, -1, -1, "DECIMAL")]
+		[InlineData(SqlTypeCode.Numeric, 23, 5, "NUMERIC(23,5)")]
+		public static void GetString(SqlTypeCode typeCode, int p, int s, string expected) {
+			var type = PrimitiveTypes.Type(typeCode, new {precision = p, scale = s});
+			Assert.NotNull(type);
+			Assert.IsType<SqlNumericType>(type);
+
+			var sqlString = type.ToString();
+
+			Assert.Equal(expected, sqlString);
+		}
+
+		[Theory]
+		[InlineData(544667.002f, SqlTypeCode.VarBinary, 200)]
+		[InlineData(6734, SqlTypeCode.VarBinary, 56)]
+		[InlineData(900192299.9220, SqlTypeCode.VarBinary, 450)]
+		public static void CastToBinary(object value, SqlTypeCode typeCode, int size) {
+			var type = SqlTypeUtil.FromValue(value);
+			var destType = PrimitiveTypes.Binary(typeCode, size);
+
+			Assert.NotNull(type);
+			Assert.IsType<SqlNumericType>(type);
+
+			var number = (SqlNumber) SqlValueUtil.FromObject(value);
+
+			Assert.True(type.CanCastTo(number, destType));
+			var result = type.Cast(number, destType);
+
+			Assert.IsAssignableFrom<ISqlBinary>(result);
+
+			var binary = (ISqlBinary) result;
+			
+			var memStream = new MemoryStream();
+			binary.GetInput().CopyTo(memStream);
+
+			var bytes = memStream.ToArray();
+			Assert.NotEmpty(bytes);
+
+			var back = new SqlNumber(bytes);
+
+			Assert.Equal(number, back);
 		}
 	}
 }

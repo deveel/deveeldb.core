@@ -439,7 +439,7 @@ namespace Deveel.Data.Sql {
 
 		class PrimitiveTypesResolver : ISqlTypeResolver {
 			public SqlType Resolve(SqlTypeResolveInfo resolveInfo) {
-				return PrimitiveTypes.ResolvePrimitive(resolveInfo);
+				return ResolvePrimitive(resolveInfo);
 			}
 		}
 
