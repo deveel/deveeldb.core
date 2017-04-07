@@ -442,7 +442,7 @@ namespace Deveel.Data.Sql {
 		#endregion
 
 		[Theory]
-		[InlineData(455.331, "455.3310000000000")]
+		[InlineData(455.331, "455.331")]
 		[InlineData(67, "67")]
 		[InlineData(126477489, "126477489")]
 		[InlineData(-67488493, "-67488493")]

@@ -34,7 +34,7 @@ namespace Deveel.Data.Sql.Variables {
 		[Theory]
 		[InlineData("a", SqlTypeCode.Double, -1, -1, false, null, ":a DOUBLE")]
 		[InlineData("b", SqlTypeCode.Boolean, -1, -1, true, true, ":b CONSTANT BOOLEAN := TRUE")]
-		[InlineData("c", SqlTypeCode.Numeric, 20, 5, false, 3445.021, ":c NUMERIC(20,5) := 3445.021000000000")]
+		[InlineData("c", SqlTypeCode.Numeric, 20, 5, false, 3445.021, ":c NUMERIC(20,5) := 3445.021")]
 		public static void GetVariableString(string name, SqlTypeCode typeCode, int p, int s, bool constant,
 			object defaultValue, string expected) {
 			var exp = FormDefaultValue(defaultValue);

@@ -111,7 +111,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(3004.330, "3004.330000000000")]
+		[InlineData(3004.330, "3004.33")]
 		[InlineData(true, "TRUE")]
 		[InlineData(false, "FALSE")]
 		[InlineData("the quick brown fox", "the quick brown fox")]

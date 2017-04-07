@@ -83,7 +83,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[Theory]
 		[InlineData(SqlExpressionType.Equal, 34, 34, "34 = 34")]
 		[InlineData(SqlExpressionType.NotEqual, 190, 21, "190 <> 21")]
-		[InlineData(SqlExpressionType.GreaterThan, 12.02, 23.98, "12.02000000000000 > 23.98000000000000")]
+		[InlineData(SqlExpressionType.GreaterThan, 12.02, 23.98, "12.02 > 23.98")]
 		[InlineData(SqlExpressionType.GreaterThanOrEqual, 110, 20, "110 >= 20")]
 		[InlineData(SqlExpressionType.LessThan, 67, 98, "67 < 98")]
 		[InlineData(SqlExpressionType.LessThanOrEqual, "abc1234", "abc12345", "'abc1234' <= 'abc12345'")]
@@ -92,7 +92,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[InlineData(SqlExpressionType.Multiply, 22, 2, "22 * 2")]
 		[InlineData(SqlExpressionType.Divide, 100, 2, "100 / 2")]
 		[InlineData(SqlExpressionType.Is, true, true, "TRUE IS TRUE")]
-		[InlineData(SqlExpressionType.IsNot, 22.09, false, "22.09000000000000 IS NOT FALSE")]
+		[InlineData(SqlExpressionType.IsNot, 22.09, false, "22.09 IS NOT FALSE")]
 		[InlineData(SqlExpressionType.Or, true, false, "TRUE OR FALSE")]
 		[InlineData(SqlExpressionType.XOr, 113, 56, "113 XOR 56")]
 		[InlineData(SqlExpressionType.And, true, false, "TRUE AND FALSE")]
@@ -143,8 +143,8 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
-		[InlineData(SqlExpressionType.UnaryPlus, 22.34, "+22.34000000000000")]
-		[InlineData(SqlExpressionType.Negate, 455.43, "-455.4300000000000")]
+		[InlineData(SqlExpressionType.UnaryPlus, 22.34, "+22.34")]
+		[InlineData(SqlExpressionType.Negate, 455.43, "-455.43")]
 		[InlineData(SqlExpressionType.Not, true, "~TRUE")]
 		public static void GetUnaryString(SqlExpressionType expressionType, object value, string expected) {
 			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
@@ -194,7 +194,7 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
-		[InlineData(5634.99, SqlTypeCode.Double, -1, -1, "CAST(5634.990000000000 AS DOUBLE)")]
+		[InlineData(5634.99, SqlTypeCode.Double, -1, -1, "CAST(5634.99 AS DOUBLE)")]
 		[InlineData("TRUE", SqlTypeCode.Boolean, -1, -1, "CAST('TRUE' AS BOOLEAN)")]
 		public static void GetCastString(object value, SqlTypeCode destTypeCode, int p, int s, string expected) {
 			var targetType = PrimitiveTypes.Type(destTypeCode, new {precision = p, scale = s, maxSize = p, size = p});

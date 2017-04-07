@@ -86,7 +86,7 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData(4355, SqlTypeCode.Double, -1, -1, (double) 4355)]
-		[InlineData(673.04492, SqlTypeCode.String, 200, -1, "673.0449200000000")]
+		[InlineData(673.04492, SqlTypeCode.String, 200, -1, "673.04492")]
 		[InlineData(6709.89f, SqlTypeCode.Char, 7, -1, "6709.89")]
 		[InlineData((byte)23, SqlTypeCode.Double, -1, -1, (double)23)]
 		[InlineData(32167, SqlTypeCode.Float, -1, -1, (float)32167)]

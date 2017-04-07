@@ -360,7 +360,8 @@ namespace Deveel.Data.Sql {
 					if (CanBeInt32 || CanBeInt64) {
 						builder.Append(valueAsLong);
 					} else {
-						builder.Append(innerValue.ToString());
+						var norm = BigMath.StripTrailingZeros(innerValue);
+						builder.Append(norm.ToString());
 					}
 					break;
 				}
