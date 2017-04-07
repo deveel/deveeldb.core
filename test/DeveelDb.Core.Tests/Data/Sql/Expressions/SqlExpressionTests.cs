@@ -59,6 +59,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[InlineData(SqlExpressionType.Is, true, true, true)]
 		[InlineData(SqlExpressionType.IsNot, 22.09, false, true)]
 		[InlineData(SqlExpressionType.Or, true, false, true)]
+		[InlineData(SqlExpressionType.XOr, 113, 56, 73)]
 		[InlineData(SqlExpressionType.And, true, false, false)]
 		public static void ReduceBinary(SqlExpressionType expressionType, object value1, object value2, object expected) {
 			var obj1 = SqlObject.New(SqlValueUtil.FromObject(value1));
