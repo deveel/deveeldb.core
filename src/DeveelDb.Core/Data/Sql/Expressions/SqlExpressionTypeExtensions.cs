@@ -17,6 +17,8 @@ namespace Deveel.Data.Sql.Expressions {
 				case SqlExpressionType.GreaterThanOrEqual:
 				case SqlExpressionType.LessThan:
 				case SqlExpressionType.LessThanOrEqual:
+				case SqlExpressionType.Is:
+				case SqlExpressionType.IsNot:
 					return true;
 				default:
 					return false;

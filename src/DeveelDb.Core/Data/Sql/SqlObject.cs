@@ -183,7 +183,7 @@ namespace Deveel.Data.Sql {
 			return RelationalOperator(type => type.Greater, other);
 		}
 
-		public SqlObject GreaterOrEqualThan(SqlObject other) {
+		public SqlObject GreaterThanOrEqual(SqlObject other) {
 			return RelationalOperator(type => type.GreaterOrEqual, other);
 		}
 
@@ -231,6 +231,17 @@ namespace Deveel.Data.Sql {
 				return this;
 
 			return BinaryOperator(type => type.Or, other);
+		}
+
+		public SqlObject XOr(SqlObject other) {
+			if (IsUnknown && other.IsUnknown)
+				return Unknown;
+			if (IsUnknown && other.IsTrue)
+				return other;
+			if (IsTrue && other.IsUnknown)
+				return this;
+
+			return BinaryOperator(type => type.XOr, other);
 		}
 
 		public SqlObject And(SqlObject other) {

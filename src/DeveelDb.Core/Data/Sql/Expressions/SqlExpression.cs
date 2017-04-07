@@ -98,6 +98,10 @@ namespace Deveel.Data.Sql.Expressions {
 			
 		}
 
+		public virtual SqlExpression Reduce(IContext context) {
+			return this;
+		}
+
 		#region Factories
 
 		public static SqlConstantExpression Constant(SqlObject value) {
@@ -106,7 +110,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public static SqlBinaryExpression Binary(SqlExpressionType expressionType, SqlExpression left, SqlExpression right) {
 			if (!expressionType.IsBinary())
-				throw new ArgumentException();
+				throw new ArgumentException($"Expression type {expressionType} is not binary");
 
 			return new SqlBinaryExpression(expressionType, left, right);
 		}

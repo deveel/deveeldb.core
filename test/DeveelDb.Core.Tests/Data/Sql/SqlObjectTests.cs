@@ -175,7 +175,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(1922.333, SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
 		[InlineData(null, 903.400, SqlTypeCode.Unknown)]
 		public static void Operator_GreaterOrEqualThan(object value1, object value2, object expected) {
-			BinaryOp((x, y) => x.GreaterOrEqualThan(y), value1, value2, expected);
+			BinaryOp((x, y) => x.GreaterThanOrEqual(y), value1, value2, expected);
 		}
 
 		[Theory]
