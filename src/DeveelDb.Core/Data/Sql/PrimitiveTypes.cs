@@ -195,6 +195,14 @@ namespace Deveel.Data.Sql {
 
 		#endregion
 
+		#region Array
+
+		public static SqlArrayType Array(int length) {
+			return new SqlArrayType(length);
+		}
+
+		#endregion
+
 		/// <summary>
 		/// Checks if the given code represents a primitive type.
 		/// </summary>

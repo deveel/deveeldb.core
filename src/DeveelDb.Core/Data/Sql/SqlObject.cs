@@ -17,8 +17,6 @@
 
 using System;
 
-using Deveel.Math;
-
 namespace Deveel.Data.Sql {
 	public sealed class SqlObject : IComparable<SqlObject>, IComparable, ISqlFormattable, IEquatable<SqlObject> {
 		public static readonly SqlObject Unknown = new SqlObject(PrimitiveTypes.Boolean(), null);
@@ -364,6 +362,9 @@ namespace Deveel.Data.Sql {
 				return PrimitiveTypes.YearToMonth();
 			if (value is SqlDayToSecond)
 				return PrimitiveTypes.DayToSecond();
+
+			if (value is SqlArray)
+				return PrimitiveTypes.Array(((SqlArray) value).Length);
 
 			throw new NotSupportedException();
 		}
