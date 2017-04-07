@@ -97,16 +97,78 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("2016-11-29", "10.20:00:03.445", "2016-12-09T20:00:03.445")]
 		public static void Add(string date, string offset, string expected) {
-			BinaryOp(type => type.Add, date, offset, expected);
+			BinaryWithInterval(type => type.Add, date, offset, expected);
 		}
 
 		[Theory]
 		[InlineData("0001-02-10T00:00:01", "2.23:12:02", "0001-02-07T00:47:59")]
 		public static void Subtract(string date, string offset, string expected) {
-			BinaryOp(type => type.Subtract, date, offset, expected);
+			BinaryWithInterval(type => type.Subtract, date, offset, expected);
 		}
 
-		private static void BinaryOp(Func<SqlDateTimeType, Func<ISqlValue, ISqlValue, ISqlValue>> selector, string date, string offset, string expected) {
+		[Theory]
+		[InlineData("2011-02-10", "2001-10-11", false)]
+		[InlineData("2016-01-01T04:20:56", "2016-01-01T04:20:56", true)]
+		[InlineData("02:05:54.667", "02:05:54.668", false)]
+		public static void Equal(string date1, string date2, bool expetced) {
+			Binary(type => type.Equal, date1, date2, expetced);
+		}
+
+		[Theory]
+		[InlineData("2011-02-10", "2001-10-11", true)]
+		[InlineData("2016-01-01T04:20:56", "2016-01-01T04:20:56", false)]
+		[InlineData("02:05:54.667", "02:05:54.668", true)]
+		public static void NotEqual(string date1, string date2, bool expetced) {
+			Binary(type => type.NotEqual, date1, date2, expetced);
+		}
+
+		[Theory]
+		[InlineData("2010-03-10", "2001-10-11", true)]
+		[InlineData("2016-01-01T04:20:56", "2016-01-01T04:20:56", false)]
+		[InlineData("02:05:54.667", "02:05:54.668", false)]
+		public static void Greater(string date1, string date2, bool expetced) {
+			Binary(type => type.Greater, date1, date2, expetced);
+		}
+
+		[Theory]
+		[InlineData("2010-03-10", "2001-10-11", true)]
+		[InlineData("2016-01-01T04:20:56", "2016-01-01T04:20:56", true)]
+		[InlineData("02:05:54.667", "02:05:54.668", false)]
+		public static void GreaterOrEqual(string date1, string date2, bool expetced) {
+			Binary(type => type.GreaterOrEqual, date1, date2, expetced);
+		}
+
+		[Theory]
+		[InlineData("2010-03-10", "2001-10-11", false)]
+		[InlineData("2016-01-01T04:20:56", "2016-01-01T04:20:56", false)]
+		[InlineData("02:05:54.667", "02:05:54.668", true)]
+		public static void Less(string date1, string date2, bool expetced) {
+			Binary(type => type.Less, date1, date2, expetced);
+		}
+
+		[Theory]
+		[InlineData("2010-03-10", "2001-10-11", false)]
+		[InlineData("2016-01-01T04:20:56", "2016-01-01T04:20:56", true)]
+		[InlineData("02:05:54.667", "02:05:54.668", true)]
+		public static void LessOrEqual(string date1, string date2, bool expetced) {
+			Binary(type => type.LessOrEqual, date1, date2, expetced);
+		}
+
+
+		private static void Binary(Func<SqlDateTimeType, Func<ISqlValue, ISqlValue, SqlBoolean>> selector, string date1, string date2, bool expected) {
+			var type = new SqlDateTimeType(SqlTypeCode.DateTime);
+			var sqlDate1 = SqlDateTime.Parse(date1);
+			var sqlDate2 = SqlDateTime.Parse(date2);
+
+			var op = selector(type);
+			var result = op(sqlDate1, sqlDate2);
+
+			var expectedResult = (SqlBoolean) expected;
+
+			Assert.Equal(expectedResult, result);
+		}
+
+		private static void BinaryWithInterval(Func<SqlDateTimeType, Func<ISqlValue, ISqlValue, ISqlValue>> selector, string date, string offset, string expected) {
 			var type = new SqlDateTimeType(SqlTypeCode.DateTime);
 			var sqlDate = SqlDateTime.Parse(date);
 			var dts = SqlDayToSecond.Parse(offset);
@@ -122,16 +184,16 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("2005-04-04", 5, "2005-09-04")]
 		public static void AddMonths(string date, int months, string expected) {
-			BinaryOp(type => type.Add, date, months, expected);
+			BinaryWithInterval(type => type.Add, date, months, expected);
 		}
 
 		[Theory]
 		[InlineData("2013-12-01T09:11:25.893", 20, "2012-04-01T09:11:25.893")]
 		public static void SubtractMonths(string date, int months, string expected) {
-			BinaryOp(type => type.Subtract, date, months, expected);
+			BinaryWithInterval(type => type.Subtract, date, months, expected);
 		}
 
-		private static void BinaryOp(Func<SqlDateTimeType, Func<ISqlValue, ISqlValue, ISqlValue>> selector, string date, int months, string expected)
+		private static void BinaryWithInterval(Func<SqlDateTimeType, Func<ISqlValue, ISqlValue, ISqlValue>> selector, string date, int months, string expected)
 		{
 			var type = new SqlDateTimeType(SqlTypeCode.DateTime);
 			var sqlDate = SqlDateTime.Parse(date);

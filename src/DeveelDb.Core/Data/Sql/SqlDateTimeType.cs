@@ -1,4 +1,21 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 
 namespace Deveel.Data.Sql {
 	public sealed class SqlDateTimeType : SqlType {
@@ -17,6 +34,10 @@ namespace Deveel.Data.Sql {
 			       sqlType == SqlTypeCode.Time ||
 			       sqlType == SqlTypeCode.TimeStamp ||
 			       sqlType == SqlTypeCode.DateTime;
+		}
+
+		public override bool IsComparable(SqlType type) {
+			return type is SqlDateTimeType;
 		}
 
 		public override ISqlValue Add(ISqlValue a, ISqlValue b) {
@@ -53,6 +74,72 @@ namespace Deveel.Data.Sql {
 			}
 
 			return base.Subtract(a, b);
+		}
+
+		public override SqlBoolean Equal(ISqlValue a, ISqlValue b) {
+			if (a is SqlDateTime && b is SqlDateTime) {
+				var x = (SqlDateTime) a;
+				var y = (SqlDateTime) b;
+
+				return x == y;
+			}
+
+			return base.Equal(a, b);
+		}
+
+		public override SqlBoolean NotEqual(ISqlValue a, ISqlValue b) {
+			if (a is SqlDateTime && b is SqlDateTime) {
+				var x = (SqlDateTime)a;
+				var y = (SqlDateTime)b;
+
+				return x != y;
+			}
+
+			return base.NotEqual(a, b);
+		}
+
+		public override SqlBoolean Greater(ISqlValue a, ISqlValue b) {
+			if (a is SqlDateTime && b is SqlDateTime) {
+				var x = (SqlDateTime)a;
+				var y = (SqlDateTime)b;
+
+				return x > y;
+			}
+
+			return base.Greater(a, b);
+		}
+
+		public override SqlBoolean GreaterOrEqual(ISqlValue a, ISqlValue b) {
+			if (a is SqlDateTime && b is SqlDateTime) {
+				var x = (SqlDateTime)a;
+				var y = (SqlDateTime)b;
+
+				return x >= y;
+			}
+
+			return base.GreaterOrEqual(a, b);
+		}
+
+		public override SqlBoolean Less(ISqlValue a, ISqlValue b) {
+			if (a is SqlDateTime && b is SqlDateTime) {
+				var x = (SqlDateTime)a;
+				var y = (SqlDateTime)b;
+
+				return x < y;
+			}
+
+			return base.Less(a, b);
+		}
+
+		public override SqlBoolean LessOrEqual(ISqlValue a, ISqlValue b) {
+			if (a is SqlDateTime && b is SqlDateTime) {
+				var x = (SqlDateTime)a;
+				var y = (SqlDateTime)b;
+
+				return x <= y;
+			}
+
+			return base.LessOrEqual(a, b);
 		}
 
 		public override bool CanCastTo(ISqlValue value, SqlType destType) {

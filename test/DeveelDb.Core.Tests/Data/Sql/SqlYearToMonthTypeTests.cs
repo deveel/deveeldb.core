@@ -27,9 +27,20 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData("2.13", "2.1", "12")]
 		[InlineData("5.14", "5.0", "1.2")]
+		[InlineData("3.11", "-0.10", "4.9")]
 		public static void SubtractYearToMonth(string value1, string value2, string expected) {
 			var a = SqlYearToMonth.Parse(value1);
 			var b = SqlYearToMonth.Parse(value2);
+			Binary(type => type.Subtract, a, b, expected);
+		}
+
+		[Theory]
+		[InlineData("1.2", 3, "0.11")]
+		[InlineData("2.3", -2, "2.5")]
+		public static void SubtractNumber(string value1, object value2, string expected) {
+			var a = SqlYearToMonth.Parse(value1);
+			var b = SqlValueUtil.FromObject(value2);
+
 			Binary(type => type.Subtract, a, b, expected);
 		}
 
