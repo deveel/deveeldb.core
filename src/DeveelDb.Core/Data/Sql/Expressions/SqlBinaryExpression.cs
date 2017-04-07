@@ -21,6 +21,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override bool CanReduce => true;
 
+		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
+			return visitor.VisitBinary(this);
+		}
+
 		private SqlExpression[] ReduceSides(IContext context) {
 			var info = new List<BinaryEvaluateInfo> {
 				new BinaryEvaluateInfo {Expression = Left, Offset = 0},
@@ -92,6 +96,53 @@ namespace Deveel.Data.Sql.Expressions {
 				// TODO: ANY and ALL
 				default:
 					throw new SqlExpressionException($"The type {ExpressionType} is not a binary expression or is not supported.");
+			}
+		}
+
+		protected override void AppendTo(SqlStringBuilder builder) {
+			Left.AppendTo(builder);
+			builder.Append(" ");
+			builder.Append(GetOperatorString());
+			builder.Append(" ");
+			Right.AppendTo(builder);
+		}
+
+		private string GetOperatorString() {
+			switch (ExpressionType) {
+				case SqlExpressionType.Add:
+					return "+";
+				case SqlExpressionType.Subtract:
+					return "-";
+				case SqlExpressionType.Multiply:
+					return "*";
+				case SqlExpressionType.Modulo:
+					return "%";
+				case SqlExpressionType.Divide:
+					return "/";
+				case SqlExpressionType.Equal:
+					return "=";
+				case SqlExpressionType.NotEqual:
+					return "<>";
+				case SqlExpressionType.GreaterThan:
+					return ">";
+				case SqlExpressionType.GreaterThanOrEqual:
+					return ">=";
+				case SqlExpressionType.LessThan:
+					return "<";
+				case SqlExpressionType.LessThanOrEqual:
+					return "<=";
+				case SqlExpressionType.Or:
+					return "OR";
+				case SqlExpressionType.And:
+					return "AND";
+				case SqlExpressionType.XOr:
+					return "XOR";
+				case SqlExpressionType.Is:
+					return "IS";
+				case SqlExpressionType.IsNot:
+					return "IS NOT";
+				default:
+					throw new SqlExpressionException($"Expression type {ExpressionType} does not have any operator string");
 			}
 		}
 

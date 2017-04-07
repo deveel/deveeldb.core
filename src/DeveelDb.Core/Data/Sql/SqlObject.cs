@@ -283,7 +283,7 @@ namespace Deveel.Data.Sql {
 
 		#region Unary Operators
 
-		private SqlObject UnaryOperatory(Func<SqlType, Func<ISqlValue, ISqlValue>> selector) {
+		private SqlObject UnaryOperator(Func<SqlType, Func<ISqlValue, ISqlValue>> selector) {
 			if (IsNull)
 				return this;
 
@@ -299,11 +299,15 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlObject Not() {
-			return UnaryOperatory(type => type.Negate);
+			return UnaryOperator(type => type.Negate);
+		}
+
+		public SqlObject Negate() {
+			return UnaryOperator(type => type.Negate);
 		}
 
 		public SqlObject Plus() {
-			return UnaryOperatory(type => type.UnaryPlus);
+			return UnaryOperator(type => type.UnaryPlus);
 		}
 
 		#endregion

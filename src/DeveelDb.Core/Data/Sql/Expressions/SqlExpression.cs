@@ -102,6 +102,10 @@ namespace Deveel.Data.Sql.Expressions {
 			return this;
 		}
 
+		public virtual SqlExpression Accept(SqlExpressionVisitor visitor) {
+			return visitor.Visit(this);
+		}
+
 		#region Factories
 
 		public static SqlConstantExpression Constant(SqlObject value) {
@@ -120,6 +124,29 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public static SqlBinaryExpression Subtract(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.Subtract, left, right);
+
+		public static SqlUnaryExpression Unary(SqlExpressionType expressionType, SqlExpression operand) {
+			if (!expressionType.IsUnary())
+				throw new ArgumentException($"Expression type {expressionType} is not unary");
+
+			return new SqlUnaryExpression(expressionType, operand);
+		}
+
+		public static SqlUnaryExpression Not(SqlExpression operand) {
+			return Unary(SqlExpressionType.Not, operand);
+		}
+
+		public static SqlUnaryExpression Negate(SqlExpression operand) {
+			return Unary(SqlExpressionType.Negate, operand);
+		}
+
+		public static SqlUnaryExpression Plus(SqlExpression operand) {
+			return new SqlUnaryExpression(SqlExpressionType.UnaryPlus, operand);
+		}
+
+		public static SqlCastExpression Cast(SqlExpression value, SqlType targetType) {
+			return new SqlCastExpression(value, targetType);
+		}
 
 		#endregion
 	}

@@ -12,8 +12,20 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlObject Value { get; }
 
+		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
+			return visitor.VisitConstant(this);
+		}
+
 		protected override void AppendTo(SqlStringBuilder builder) {
+			if (Value.Type is SqlCharacterType) {
+				builder.Append("'");
+			}
+				
 			(Value as ISqlFormattable).AppendTo(builder);
+
+			if (Value.Type is SqlCharacterType) {
+				builder.Append("'");
+			}
 		}
 	}
 }
