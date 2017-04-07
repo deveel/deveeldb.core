@@ -30,7 +30,7 @@ namespace Deveel.Data.Sql.Expressions {
 				case SqlExpressionType.Reference:
 				case SqlExpressionType.Invoke:
 				case SqlExpressionType.Constant:
-				case SqlExpressionType.VariableReference:
+				case SqlExpressionType.Variable:
 				case SqlExpressionType.Parameter:
 					return 150;
 
@@ -167,6 +167,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public static SqlReferenceExpression Reference(ObjectName reference) {
 			return new SqlReferenceExpression(reference);
+		}
+
+		public static SqlVariableExpression Variable(string name) {
+			return new SqlVariableExpression(name);
 		}
 
 		#endregion

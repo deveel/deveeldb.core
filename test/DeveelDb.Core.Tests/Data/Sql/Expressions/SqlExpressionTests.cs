@@ -206,27 +206,5 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.Equal(expected, sql);
 		}
-
-		[Theory]
-		[InlineData("a.*")]
-		[InlineData("a.b.c")]
-		public static void CreateReference(string name) {
-			var objName = ObjectName.Parse(name);
-			var exp = SqlExpression.Reference(objName);
-
-			Assert.NotNull(exp.ReferenceName);
-			Assert.Equal(objName, exp.ReferenceName);
-		}
-
-		[Theory]
-		[InlineData("a.*")]
-		[InlineData("a.b.c")]
-		public static void GetReferenceString(string name) {
-			var objName = ObjectName.Parse(name);
-			var exp = SqlExpression.Reference(objName);
-
-			var sql = exp.ToString();
-			Assert.Equal(name, sql);
-		}
 	}
 }

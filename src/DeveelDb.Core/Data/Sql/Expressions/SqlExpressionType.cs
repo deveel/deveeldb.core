@@ -73,7 +73,7 @@ namespace Deveel.Data.Sql.Expressions {
 		/// <summary>
 		/// References a variable in a context.
 		/// </summary>
-		VariableReference,
+		Variable,
 
 		Parameter,
 

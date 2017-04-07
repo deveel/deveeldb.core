@@ -18,7 +18,7 @@
 using System;
 
 namespace Deveel.Data.Sql.Expressions {
-	public class SqlExpressionException : Exception {
+	public class SqlExpressionException : SqlException {
 		public SqlExpressionException(string message, Exception innerException)
 			: base(message, innerException) {
 		}
