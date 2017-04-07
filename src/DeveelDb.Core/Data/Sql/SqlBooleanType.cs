@@ -20,7 +20,7 @@ using System;
 namespace Deveel.Data.Sql {
 	public sealed class SqlBooleanType : SqlType {
 		public SqlBooleanType(SqlTypeCode typeCode) 
-			: base("BOOLEAN", typeCode) {
+			: base(typeCode) {
 			AssertIsBoolean(typeCode);
 		}
 

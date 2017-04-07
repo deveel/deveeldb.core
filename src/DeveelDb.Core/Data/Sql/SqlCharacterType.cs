@@ -23,7 +23,7 @@ namespace Deveel.Data.Sql {
 		public const int DefaultMaxSize = Int16.MaxValue;
 
 		public SqlCharacterType(SqlTypeCode typeCode, int maxSize, CultureInfo locale) 
-			: base("STRING", typeCode) {
+			: base(typeCode) {
 			AssertIsString(typeCode);
 
 			if (typeCode == SqlTypeCode.Char) {

@@ -3,7 +3,7 @@
 namespace Deveel.Data.Sql {
 	public sealed class SqlDateTimeType : SqlType {
 		public SqlDateTimeType(SqlTypeCode sqlType)
-			: base("DATETIME", sqlType) {
+			: base(sqlType) {
 			AssertDateType(sqlType);
 		}
 

@@ -34,39 +34,10 @@ namespace Deveel.Data.Sql {
 		/// Constructs the <see cref="SqlType"/> for the given specific
 		/// <see cref="SqlTypeCode">SQL TYPE</see>.
 		/// </summary>
-		/// <remarks>
-		/// This constructor will set the <see cref="Name"/> value to the equivalent
-		/// of the SQL Type specified.
-		/// </remarks>
 		/// <param name="sqlType">The code of the SQL Type this object will represent.</param>
-		protected SqlType(SqlTypeCode sqlType)
-			: this(sqlType.ToString().ToUpperInvariant(), sqlType) {
+		protected SqlType(SqlTypeCode sqlType) {
+			TypeCode = sqlType;
 		}
-
-		/// <summary>
-		/// Constructs the <see cref="SqlType"/> for the given specific
-		/// <see cref="SqlTypeCode">SQL TYPE</see> and a given name.
-		/// </summary>
-		/// <param name="name"></param>
-		/// <param name="typeCode"></param>
-		protected SqlType(string name, SqlTypeCode typeCode) {
-			TypeCode = typeCode;
-			Name = name;
-		}
-
-		/// <summary>
-		/// Gets the name of the data-type that is used to resolve it within the context.
-		/// </summary>
-		/// <remarks>
-		/// This value is always unique within a database system and can be simple
-		/// (eg. for <see cref="IsPrimitive">primitive</see> types like <c>NUMERIC</c>),
-		/// or composed by multiple parts (eg. for user-defined types).
-		/// <para>
-		/// Some primitive types (for example <c>NUMERIC</c>) can handle multiple SQL types,
-		/// so this property works as an identificator for the type handler.
-		/// </para>
-		/// </remarks>
-		public string Name { get; }
 
 		/// <summary>
 		/// Gets the kind of SQL type this data-type handles.

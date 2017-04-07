@@ -32,7 +32,7 @@ namespace Deveel.Data.Sql {
 		internal const int DecimalPrecision = 24;
 
 		public SqlNumericType(SqlTypeCode typeCode, int precision, int scale)
-			: base("NUMERIC", typeCode) {
+			: base(typeCode) {
 			AssertIsNumeric(typeCode);
 
 			AssertScale(typeCode, scale);

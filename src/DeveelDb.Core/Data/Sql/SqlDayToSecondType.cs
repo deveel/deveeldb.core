@@ -3,7 +3,7 @@
 namespace Deveel.Data.Sql {
 	public sealed class SqlDayToSecondType : SqlType {
 		public SqlDayToSecondType()
-			: base("DAY TO SECOND", SqlTypeCode.DayToSecond) {
+			: base(SqlTypeCode.DayToSecond) {
 		}
 
 		public override ISqlValue Add(ISqlValue a, ISqlValue b) {

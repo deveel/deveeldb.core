@@ -28,11 +28,6 @@ namespace Deveel.Data.Sql {
 		Unknown = 0,
 
 		///<summary>
-		/// The <c>NULL</c> object type.
-		///</summary>
-		Null = 1,
-
-		///<summary>
 		/// A boolean type that can store either <c>true</c>
 		/// or <c>false</c> values (0 or 1).
 		///</summary>
@@ -116,17 +111,24 @@ namespace Deveel.Data.Sql {
 		String = 24,
 
 		///<summary>
+		/// A date without time
 		///</summary>
 		Date = 30,
 
 		///<summary>
+		/// A type that expresses only the time part of a date
 		///</summary>
 		Time = 31,
 
 		///<summary>
+		/// A type that holds a precise date and time value
 		///</summary>
 		TimeStamp = 32,
 
+		/// <summary>
+		/// A type that holds date and time values 
+		/// (equivalent to <see cref="TimeStamp"/>)
+		/// </summary>
 		DateTime = 35,
 
 		YearToMonth = 40,
@@ -155,8 +157,19 @@ namespace Deveel.Data.Sql {
 		///</summary>
 		Object = 70,
 
+		/// <summary>
+		/// User-Defined type
+		/// </summary>
 		Type = 75,
+
+		/// <summary>
+		/// A type that is the reference to a field in a table
+		/// </summary>
 		FieldRef = 77,
+
+		/// <summary>
+		/// A complex type that is the reference to a row in a table
+		/// </summary>
 		RowRef = 78,
 
 		///<summary>

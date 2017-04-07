@@ -27,7 +27,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public SqlBinaryType(SqlTypeCode typeCode, int maxSize) 
-			: base("BINARY", typeCode) {
+			: base(typeCode) {
 			MaxSize = maxSize;
 			AssertIsBinary(typeCode);
 		}

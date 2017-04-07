@@ -3,7 +3,7 @@
 namespace Deveel.Data.Sql {
 	public sealed class SqlYearToMonthType : SqlType {
 		public SqlYearToMonthType()
-			: base("YEAR TO MONTH", SqlTypeCode.YearToMonth) {
+			: base(SqlTypeCode.YearToMonth) {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
