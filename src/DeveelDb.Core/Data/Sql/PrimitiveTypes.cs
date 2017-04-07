@@ -185,16 +185,12 @@ namespace Deveel.Data.Sql {
 
 		#region Interval Types
 
-		public static SqlIntervalType Interval(SqlTypeCode typeCode) {
-			return new SqlIntervalType(typeCode);
+		public static SqlYearToMonthType YearToMonth() {
+			return new SqlYearToMonthType();
 		}
 
-		public static SqlIntervalType YearToMonth() {
-			return Interval(SqlTypeCode.YearToMonth);
-		}
-
-		public static SqlIntervalType DayToSecond() {
-			return Interval(SqlTypeCode.DayToSecond);
+		public static SqlDayToSecondType DayToSecond() {
+			return new SqlDayToSecondType();
 		}
 
 		#endregion

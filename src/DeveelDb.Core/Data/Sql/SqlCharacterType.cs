@@ -124,7 +124,8 @@ namespace Deveel.Data.Sql {
 			       destType is SqlBooleanType ||
 				   destType is SqlNumericType ||
 				   destType is SqlDateTimeType ||
-				   destType is SqlIntervalType;
+				   destType is SqlYearToMonthType ||
+				   destType is SqlDayToSecondType;
 		}
 
 		public override ISqlValue NormalizeValue(ISqlValue value) {
@@ -173,8 +174,10 @@ namespace Deveel.Data.Sql {
 					return ToString((SqlString) value, destType);
 				if (destType is SqlDateTimeType)
 					return ToDateTime((SqlString) value, destType);
-				if (destType is SqlIntervalType)
-					return ToInterval((SqlString) value, (SqlIntervalType) destType);
+				if (destType is SqlYearToMonthType)
+					return ToYearToMonth((SqlString) value);
+				if (destType is SqlDayToSecondType)
+					return ToDayToSecond((SqlString) value);
 			}
 
 			return base.Cast(value, destType);
@@ -215,17 +218,6 @@ namespace Deveel.Data.Sql {
 				throw new InvalidCastException();
 
 			return destType.NormalizeValue(date);
-		}
-
-		private ISqlValue ToInterval(SqlString value, SqlIntervalType destType) {
-			switch (destType.TypeCode) {
-				case SqlTypeCode.YearToMonth:
-					return ToYearToMonth(value);
-				case SqlTypeCode.DayToSecond:
-					return ToDayToSecond(value);
-				default:
-					throw new InvalidCastException();
-			}
 		}
 
 		private ISqlValue ToDayToSecond(SqlString value) {

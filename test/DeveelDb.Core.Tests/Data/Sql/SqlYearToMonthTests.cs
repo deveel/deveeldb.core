@@ -30,6 +30,7 @@ namespace Deveel.Data.Sql {
 		[Theory]
 		[InlineData(1, 12, 24)]
 		[InlineData(2, 0, 24)]
+		[InlineData(-2, 0, -24)]
 		public static void FromYearsAndMonths(int years, int months, int expectedMonths) {
 			var ytm = new SqlYearToMonth(years, months);
 
@@ -93,11 +94,6 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(expected, result);
 		}
 
-
-		[Fact]
-		public static void FromNegativeMonths() {
-			Assert.Throws<ArgumentException>(() => new SqlYearToMonth(-2));
-		}
 
 		[Fact]
 		public static void InvalidComparison() {

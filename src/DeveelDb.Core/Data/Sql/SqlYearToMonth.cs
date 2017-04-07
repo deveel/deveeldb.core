@@ -21,14 +21,11 @@ namespace Deveel.Data.Sql {
 	/// <summary>
 	/// A month span representation of time.
 	/// </summary>
-	public struct SqlYearToMonth : ISqlValue, IComparable<SqlYearToMonth>, IEquatable<SqlYearToMonth> {
+	public struct SqlYearToMonth : ISqlValue, IComparable<SqlYearToMonth>, IEquatable<SqlYearToMonth>, ISqlFormattable {
 		private readonly int months;
 
 		public SqlYearToMonth(int months)
 			: this() {
-			if (months <= 0)
-				throw new ArgumentException("Must be a number greater than 0");
-
 			this.months = months;
 		}
 
@@ -166,7 +163,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		private static bool TryParse(string s, out SqlYearToMonth result, out Exception error) {
-			if (String.IsNullOrEmpty(s)) {
+			if (String.IsNullOrWhiteSpace(s)) {
 				result = new SqlYearToMonth();
 				error = new ArgumentNullException(nameof(s));
 				return false;
@@ -174,6 +171,17 @@ namespace Deveel.Data.Sql {
 
 			int months;
 			int years = 0;
+			bool negative = false;
+			if (s[0] == '-') {
+				negative = true;
+				s = s.Substring(1);
+
+				if (String.IsNullOrWhiteSpace(s)) {
+					error = new FormatException();
+					result = new SqlYearToMonth();
+					return false;
+				}
+			}
 
 			var index = s.IndexOf('.');
 			if (index != -1) {
@@ -196,7 +204,11 @@ namespace Deveel.Data.Sql {
 				return false;
 			}
 
-			result = new SqlYearToMonth(years, months);
+			var totalMonths = ((years * 12) + months);
+			if (negative)
+				totalMonths = -totalMonths;
+
+			result = new SqlYearToMonth(totalMonths);
 			error = null;
 			return true;
 		}
@@ -208,6 +220,18 @@ namespace Deveel.Data.Sql {
 				throw error;
 
 			return result;
+		}
+
+		public override string ToString() {
+			return this.ToSqlString();
+		}
+
+		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
+			var totalYears = TotalYears;
+			var sign = System.Math.Sign(TotalMonths);
+			var y = System.Math.Truncate(totalYears);
+			var m = System.Math.Abs(TotalMonths - (y * 12));
+			builder.AppendFormat("{0}{1}.{2}", (sign < 0) ? "-" : "", y, m);
 		}
 	}
 }
