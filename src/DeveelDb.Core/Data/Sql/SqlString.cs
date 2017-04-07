@@ -19,8 +19,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
+
+using Deveel.Data.Text;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
@@ -38,8 +41,7 @@ namespace Deveel.Data.Sql {
 	/// </remarks>
 	/// <seealso cref="ISqlString"/>
 	[DebuggerDisplay("{ToString()}")]
-	public sealed class SqlString : ISqlString, IEquatable<SqlString>, IConvertible
-	{
+	public sealed class SqlString : ISqlString, IEquatable<SqlString>, IConvertible {
 		/// <summary>
 		/// The maximum length of characters a <see cref="SqlString"/> can handle.
 		/// </summary>
@@ -215,7 +217,7 @@ namespace Deveel.Data.Sql {
 
 				// get hash code for all items in array
 				foreach (var item in source) {
-					hash = hash*23 + item.GetHashCode();
+					hash = hash * 23 + item.GetHashCode();
 				}
 
 				return hash;

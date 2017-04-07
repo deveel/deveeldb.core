@@ -18,6 +18,8 @@
 using System;
 using System.Globalization;
 
+using Deveel.Data.Text;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlCharacterType : SqlType {
 		public const int DefaultMaxSize = Int16.MaxValue;

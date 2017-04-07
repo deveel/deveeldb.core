@@ -2,7 +2,7 @@
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlConstantExpression : SqlExpression {
-		public SqlConstantExpression(SqlObject value) 
+		internal SqlConstantExpression(SqlObject value) 
 			: base(SqlExpressionType.Constant) {
 			if (value == null)
 				throw new ArgumentNullException(nameof(value));

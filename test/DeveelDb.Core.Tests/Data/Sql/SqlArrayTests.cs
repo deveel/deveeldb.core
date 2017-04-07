@@ -68,7 +68,7 @@ namespace Deveel.Data.Sql {
 			Assert.True(list.IsReadOnly);
 			Assert.Equal(array.Length, list.Count);
 
-			var dummy = new SqlConstantExpression(SqlObject.Bit(false));
+			var dummy = SqlExpression.Constant(SqlObject.Bit(false));
 			Assert.Throws<NotSupportedException>(() => list.Add(dummy));
 			Assert.Throws<NotSupportedException>(() => list.Contains(dummy));
 			Assert.Throws<NotSupportedException>(() => list.IndexOf(dummy));
@@ -83,7 +83,7 @@ namespace Deveel.Data.Sql {
 			var sqlValue = SqlValueUtil.FromObject(value);
 			var obj = SqlObject.New(sqlValue);
 
-			return new SqlConstantExpression(obj);
+			return SqlExpression.Constant(obj);
 		}
 	}
 }

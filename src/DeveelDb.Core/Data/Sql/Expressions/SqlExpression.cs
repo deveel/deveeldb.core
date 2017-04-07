@@ -97,5 +97,26 @@ namespace Deveel.Data.Sql.Expressions {
 		protected virtual void AppendTo(SqlStringBuilder builder) {
 			
 		}
+
+		#region Factories
+
+		public static SqlConstantExpression Constant(SqlObject value) {
+			return new SqlConstantExpression(value);
+		}
+
+		public static SqlBinaryExpression Binary(SqlExpressionType expressionType, SqlExpression left, SqlExpression right) {
+			if (!expressionType.IsBinary())
+				throw new ArgumentException();
+
+			return new SqlBinaryExpression(expressionType, left, right);
+		}
+
+		public static SqlBinaryExpression Add(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.Add, left, right);
+
+		public static SqlBinaryExpression Subtract(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.Subtract, left, right);
+
+		#endregion
 	}
 }
