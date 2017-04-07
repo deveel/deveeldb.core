@@ -47,11 +47,17 @@ namespace Deveel.Data.Sql.Expressions {
 					return VisitUnary((SqlUnaryExpression) expression);
 				case SqlExpressionType.Cast:
 					return VisitCast((SqlCastExpression) expression);
+				case SqlExpressionType.Reference:
+					return VisitReference((SqlReferenceExpression) expression);
 				case SqlExpressionType.Constant:
 					return VisitConstant((SqlConstantExpression) expression);
 				default:
 					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
 			}
+		}
+
+		public virtual SqlExpression VisitReference(SqlReferenceExpression expression) {
+			return expression;
 		}
 
 		public virtual SqlExpression VisitCast(SqlCastExpression expression) {

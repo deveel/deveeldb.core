@@ -165,6 +165,10 @@ namespace Deveel.Data.Sql.Expressions {
 			return new SqlCastExpression(value, targetType);
 		}
 
+		public static SqlReferenceExpression Reference(ObjectName reference) {
+			return new SqlReferenceExpression(reference);
+		}
+
 		#endregion
 	}
 }
