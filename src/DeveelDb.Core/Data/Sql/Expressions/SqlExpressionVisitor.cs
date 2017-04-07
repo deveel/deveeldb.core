@@ -51,11 +51,23 @@ namespace Deveel.Data.Sql.Expressions {
 					return VisitReference((SqlReferenceExpression) expression);
 				case SqlExpressionType.Variable:
 					return VisitVariable((SqlVariableExpression) expression);
+				case SqlExpressionType.ReferenceAssign:
+					return VisitReferenceAssign((SqlReferenceAssignExpression) expression);
+				case SqlExpressionType.VariableAssign:
+					return VisitVariableAssign((SqlVariableAssignExpression) expression);
 				case SqlExpressionType.Constant:
 					return VisitConstant((SqlConstantExpression) expression);
 				default:
 					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
 			}
+		}
+
+		public virtual SqlExpression VisitVariableAssign(SqlVariableAssignExpression expression) {
+			var value = expression.Value;
+			if (value != null)
+				value = Visit(value);
+
+			return SqlExpression.VariableAssign(expression.VariableName, value);
 		}
 
 		public virtual SqlExpression VisitReference(SqlReferenceExpression expression) {
@@ -64,6 +76,14 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public virtual SqlExpression VisitVariable(SqlVariableExpression expression) {
 			return expression;
+		}
+
+		public virtual SqlExpression VisitReferenceAssign(SqlReferenceAssignExpression expression) {
+			var value = expression.Value;
+			if (value != null)
+				value = Visit(value);
+
+			return SqlExpression.ReferenceAssign(expression.ReferenceName, value);
 		}
 
 		public virtual SqlExpression VisitCast(SqlCastExpression expression) {

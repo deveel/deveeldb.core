@@ -44,14 +44,20 @@ namespace Deveel.Data.Sql.Variables {
 
 		public SqlExpression Value { get; private set; }
 
-		public void SetValue(SqlExpression value) {
+		public SqlExpression SetValue(SqlExpression value, IContext context) {
 			if (value == null)
 				throw new ArgumentNullException(nameof(value));
 
 			if (Constant)
 				throw new VariableException($"Cannot set constant variable {Name}");
 
+			var valueType = value.ReturnType(context);
+			if (!valueType.Equals(Type) &&
+				!valueType.IsComparable(Type))
+				throw new ArgumentException($"The type {valueType} of the value is not compatible with the variable type '{Type}'");
+
 			Value = value;
+			return Value;
 		}
 
 		public SqlExpression Evaluate(IContext context) {

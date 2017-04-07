@@ -84,7 +84,8 @@ namespace Deveel.Data.Sql.Expressions {
 					return 80;
 				
 				// Assign
-				case SqlExpressionType.Assign:
+				case SqlExpressionType.VariableAssign:
+				case SqlExpressionType.ReferenceAssign:
 					return 70;
 				
 				// Tuple
@@ -171,6 +172,14 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public static SqlVariableExpression Variable(string name) {
 			return new SqlVariableExpression(name);
+		}
+
+		public static SqlVariableAssignExpression VariableAssign(string name, SqlExpression value) {
+			return new SqlVariableAssignExpression(name, value);
+		}
+
+		public static SqlReferenceAssignExpression ReferenceAssign(ObjectName referenceName, SqlExpression value) {
+			return new SqlReferenceAssignExpression(referenceName, value);
 		}
 
 		#endregion

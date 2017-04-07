@@ -31,11 +31,8 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var resolver = context.Scope.Resolve<IVariableResolver>();
-			if (resolver == null)
-				throw new SqlExpressionException("No variable resolver was found in this context");
+			var variable = context.ResolveVariable(VariableName);
 
-			var variable = resolver.ResolveVariable(VariableName);
 			if (variable == null)
 				return Constant(SqlObject.Unknown);
 
