@@ -45,14 +45,14 @@ namespace Deveel.Data {
 		/// The special name used as a wild-card to indicate all the columns of a table
 		/// must be referenced in a given context.
 		/// </summary>
-		public const string GlobName = "*";
+		public const char Glob = '*';
 
 		/// <summary>
 		/// The character that separates a name from its parent or child.
 		/// </summary>
 		public const char Separator = '.';
 
-		public static readonly char[] InvalidNameChars = new[] {'%', '^', '&', '(', '{', '}', '+', '-', '/', ']', '[', '\'', ' '};
+		private static readonly char[] InvalidNameChars = "\0.%^&({}+-/][\\".ToCharArray();
 
 		/// <summary>
 		/// Constructs a name reference without a parent.
@@ -86,10 +86,10 @@ namespace Deveel.Data {
 		public ObjectName(ObjectName parent, string name) {
 			if (String.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
-			
-			if (name.IndexOf(Separator) != -1)
-				throw new ArgumentException($"Name '{name}' cannot contain any separator character.");
 
+			if (!IsValidPart(name))
+				throw new ArgumentException($"The name '{name}' contains invalid characters for a part of a complex name");
+			
 			Name = name;
 			Parent = parent;
 		}
@@ -97,16 +97,14 @@ namespace Deveel.Data {
 		/// <summary>
 		/// Gets the parent reference of the current one, if any or <c>null</c> if none.
 		/// </summary>
-		public ObjectName Parent { get; private set; }
+		public ObjectName Parent { get; }
 
-		public string ParentName {
-			get { return Parent == null ? null : Parent.FullName; }
-		}
+		public string ParentName => Parent?.FullName;
 
 		/// <summary>
 		/// Gets the name of the object being referenced.
 		/// </summary>
-		public string Name { get; private set; }
+		public string Name { get; }
 
 		/// <summary>
 		/// Gets the full reference name formatted.
@@ -117,11 +115,9 @@ namespace Deveel.Data {
 		}
 
 		/// <summary>
-		/// Indicates if this reference equivales to <see cref="GlobName"/>.
+		/// Indicates if this reference equivales to <see cref="Glob"/>.
 		/// </summary>
-		public bool IsGlob {
-			get { return Name.Equals(GlobName); }
-		}
+		public bool IsGlob => Name.Length == 1 && Name[0].Equals(Glob);
 
 		/// <summary>
 		/// Parses the given string into a <see cref="ObjectName"/> object.
@@ -158,7 +154,7 @@ namespace Deveel.Data {
 				return false;
 			}
 
-			var sp = s.Split(new[] {Separator });
+			var sp = s.Split(Separator);
 			if (sp.Length == 0) {
 				error = new FormatException("At least one part of the name must be provided");
 				result = null;
@@ -174,7 +170,7 @@ namespace Deveel.Data {
 					return false;
 				}
 
-				if (part.IndexOfAny(InvalidNameChars) != -1) {
+				if (!IsValidPart(part)) {
 					result = null;
 					error = new FormatException($"The name part '{part}' of the input '{s}' has invalid characters");
 					return false;
@@ -193,45 +189,27 @@ namespace Deveel.Data {
 		}
 
 		/// <summary>
-		/// Creates a new reference to a table, given a schema and a table name.
+		/// Appends the given name to this one creating a new object name
+		/// that is the result of the appending
 		/// </summary>
-		/// <param name="schemaName">The name of the schema that is the parent of
-		/// the given table.</param>
-		/// <param name="name">The name of the table to reference.</param>
-		/// <returns>
-		/// Returns an instance of <see cref="ObjectName"/> that references a table
-		/// within the given schema.
-		/// </returns>
-		public static ObjectName ResolveSchema(string schemaName, string name) {
-			var sb = new StringBuilder();
-			if (!String.IsNullOrEmpty(schemaName))
-				sb.Append(schemaName).Append('.');
-			sb.Append(name);
-
-			return Parse(sb.ToString());
-		}
-
-		/// <summary>
-		/// Creates a reference what is the child of the current one.
-		/// </summary>
-		/// <param name="name">The name of the child rerefence.</param>
+		/// <param name="name">The name to append to this one</param>
 		/// <returns>
 		/// Returns an istance of <see cref="ObjectName"/> that has this
 		/// one as parent, and is named by the given <paramref name="name"/>.
 		/// </returns>
-		public ObjectName Child(string name) {
+		public ObjectName Append(string name) {
 			return new ObjectName(this, name);
 		}
 
-		public ObjectName Child(ObjectName childName) {
+		public ObjectName Append(ObjectName name) {
 			var baseName = this;
-			ObjectName parent = childName.Parent;
+			ObjectName parent = name.Parent;
 			while (parent != null) {
-				baseName = baseName.Child(parent.Name);
+				baseName = baseName.Append(parent.Name);
 				parent = parent.Parent;
 			}
 
-			baseName = baseName.Child(childName.Name);
+			baseName = baseName.Append(name.Name);
 			return baseName;
 		}
 
@@ -240,7 +218,13 @@ namespace Deveel.Data {
 		/// returns a value indicating if the two instances equivales.
 		/// </summary>
 		/// <param name="other">The other object reference to compare.</param>
-		/// <returns></returns>
+		/// <param name="ignoreCase">A boolean to indicate whether the comparison
+		/// should be case-insensitive</param>
+		/// <returns>
+		/// Returns -1 if this instance preceeds the other name in the sort order,
+		/// or 0 if the names are equivalent; returns 1 if this name follows the
+		/// other name in the sort order.
+		/// </returns>
 		public int CompareTo(ObjectName other, bool ignoreCase) {
 			if (other == null)
 				return -1;
@@ -257,14 +241,22 @@ namespace Deveel.Data {
 			return v;
 		}
 
+		/// <summary>
+		/// Compares this instance of the object reference to a given one and
+		/// returns a value indicating if the two instances equivales.
+		/// </summary>
+		/// <param name="other">The other object reference to compare.</param>
+		/// <returns>
+		/// Returns -1 if this instance preceeds the other name in the sort order,
+		/// or 0 if the names are equivalent; returns 1 if this name follows the
+		/// other name in the sort order.
+		/// </returns>
 		public int CompareTo(ObjectName other) {
 			return CompareTo(other, false);
 		}
 
 		public override string ToString() {
-			var builder = new SqlStringBuilder();
-			this.AppendTo(builder);
-			return builder.ToString();
+			return this.ToSqlString();
 		}
 
 		public override bool Equals(object obj) {
@@ -275,8 +267,15 @@ namespace Deveel.Data {
 			return Equals(other);
 		}
 
+		/// <summary>
+		/// Compares this object name with the other one given.
+		/// </summary>
+		/// <param name="other">The other <see cref="ObjectName"/> to compare.</param>
+		/// <returns>
+		/// Returns <c>true</c> if the two instances are equal, or <c>false</c> otherwise.
+		/// </returns>
 		public bool Equals(ObjectName other) {
-			return Equals(other, true);
+			return Equals(other, false);
 		}
 
 		/// <summary>
@@ -328,6 +327,20 @@ namespace Deveel.Data {
 			}
 
 			builder.Append(Name);
+		}
+
+		/// <summary>
+		/// Verifies if the part of a name is valid
+		/// </summary>
+		/// <param name="name">The name part to validate</param>
+		/// <returns>
+		/// Returns <c>true</c> if the name part is valid,
+		/// otherwise <c>false</c>.
+		/// </returns>
+		public static bool IsValidPart(string name) {
+			return !String.IsNullOrWhiteSpace(name) &&
+			       name.IndexOfAny(InvalidNameChars) < 0 &&
+				   name.IndexOf(' ') < 0;
 		}
 	}
 }

@@ -1,7 +1,5 @@
 ﻿using System;
 
-using Deveel.Data.Sql;
-
 using Xunit;
 
 namespace Deveel.Data {
@@ -121,11 +119,11 @@ namespace Deveel.Data {
 		[InlineData("a.b", "c", "a.b.c")]
 		[InlineData("a.b", "*", "a.b.*")]
 		[InlineData("a", "b.c", "a.b.c")]
-		public void GetComplexChildName(string s, string childName, string expected) {
+		public void AppendComplexName(string s, string childName, string expected) {
 			var name = ObjectName.Parse(s);
 			var name1 = ObjectName.Parse(childName);
 
-			var child = name.Child(name1);
+			var child = name.Append(name1);
 
 			Assert.NotNull(child);
 			Assert.Equal(expected, child.FullName);
@@ -135,10 +133,10 @@ namespace Deveel.Data {
 		[InlineData("a", "b", "a.b")]
 		[InlineData("a.b", "c", "a.b.c")]
 		[InlineData("a.b", "*", "a.b.*")]
-		public void GetSimpleChildName(string s, string childName, string expected) {
+		public void AppendSimpleName(string s, string childName, string expected) {
 			var name = ObjectName.Parse(s);
 
-			var child = name.Child(childName);
+			var child = name.Append(childName);
 
 			Assert.NotNull(child);
 			Assert.Equal(expected, child.FullName);

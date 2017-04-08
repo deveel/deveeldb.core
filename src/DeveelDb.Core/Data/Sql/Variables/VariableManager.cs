@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 
 using Deveel.Data.Sql.Expressions;
 
@@ -28,11 +29,15 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		bool IDbObjectManager.RealObjectExists(ObjectName objName) {
-			throw new NotImplementedException();
+			return VariableExists(objName.FullName);
 		}
 
 		bool IDbObjectManager.ObjectExists(ObjectName objName) {
-			return variables.ContainsKey(objName);
+			return VariableExists(objName.FullName);
+		}
+
+		public bool VariableExists(string name) {
+			return variables.ContainsKey(new ObjectName(name));
 		}
 
 		IDbObject IDbObjectManager.GetObject(ObjectName objName) {

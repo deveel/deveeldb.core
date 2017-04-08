@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Linq;
-using System.Reflection;
 
 using Deveel.Data.Sql.Expressions;
 
 using Moq;
 
 using Xunit;
-using Xunit.Sdk;
 
 namespace Deveel.Data.Sql.Variables {
 	public class VariableManagerTests : IDisposable {

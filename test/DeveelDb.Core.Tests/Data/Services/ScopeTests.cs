@@ -1,297 +1,58 @@
 ﻿using System;
-using System.Linq;
 
 using Xunit;
 
 namespace Deveel.Data.Services {
-	public class ScopeTests {
-		[Theory]
-		[InlineData(typeof(IService), typeof(ServiceOne), null)]
-		[InlineData(typeof(IService), typeof(ServiceOne), "s1")]
-		public void RegisterAndCheckService(Type serviceType, Type implementationType, object key) {
-			var provider = new ServiceContainer();
-			provider.Register(serviceType, implementationType, key);
+	public class ScopeTests : IDisposable {
+		private ServiceContainer container;
 
-			Assert.True(provider.IsRegistered(serviceType, key));
-		}
-
-		[Theory]
-		[InlineData(typeof(IService), typeof(ServiceOne), null)]
-		[InlineData(typeof(IService), typeof(ServiceOne), "s1")]
-		public void RegisterAndResolveService(Type serviceType, Type implementationType, object key) {
-			var provider = new ServiceContainer();
-			provider.Register(serviceType, implementationType, key);
-
-			var service = provider.Resolve(serviceType, key);
-
-			Assert.NotNull(service);
-			Assert.IsType(implementationType, service);
-		}
-
-		[Theory]
-		[InlineData(typeof(ServiceOne), null)]
-		[InlineData(typeof(ServiceOne), "s1")]
-		public void RegisterAndResolveServiceClass(Type serviceType, object key) {
-			var provider = new ServiceContainer();
-			provider.Register(serviceType, key);
-
-			var service = provider.Resolve(serviceType, key);
-
-			Assert.NotNull(service);
-			Assert.IsType(serviceType, service);
+		public ScopeTests() {
+			container = new ServiceContainer();
+			container.Register<IService, Service1>("one");
+			container.Register<IService, Service2>("two");
 		}
 
 		[Fact]
-		public void RegisterNullService() {
-			var provider = new ServiceContainer();
-			Assert.Throws<ArgumentNullException>(() => provider.Register(null));
-		}
-
-		[Fact]
-		public void RegisterNonInstantiableService() {
-			var provider = new ServiceContainer();
-			Assert.Throws<ServiceException>(() => provider.Register<IService>());
-		}
-
-		[Fact]
-		public void OpenScopeAndResolveParent() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, ServiceOne>();
-
-			var scope = provider.OpenScope("c");
+		public void OpenScope() {
+			var scope = container.OpenScope("testScope");
 
 			Assert.NotNull(scope);
+		}
 
-			var service = provider.Resolve<IService>();
+		[Fact]
+		public void OpenScopeAndResolveOneService() {
+			var scope = container.OpenScope("testScope");
+
+			var service = scope.Resolve<IService>("one");
 
 			Assert.NotNull(service);
-			Assert.IsType<ServiceOne>(service);
+			Assert.IsType<Service1>(service);
 		}
 
-		[Fact]
-		public void RegisterAndUnregisterFromSameScope() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, ServiceOne>();
-
-			Assert.True(provider.IsRegistered<IService>());
-
-			Assert.True(provider.Unregister<IService>());
-
-			Assert.False(provider.IsRegistered<IService>());
-			var service = provider.Resolve<IService>();
-
-			Assert.Null(service);
-		}
-
-		[Fact]
-		public void RegisterAndUnregisterFromChildScope() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, ServiceOne>();
-
-			Assert.True(provider.IsRegistered<IService>());
-
-			var scope = provider.OpenScope("b");
-
-			Assert.NotNull(scope);
-			Assert.True(scope.IsRegistered<IService>());
-
-			Assert.True(scope.Unregister<IService>());
-
-			var service = scope.Resolve<IService>();
-
-			Assert.Null(service);
-		}
-
-		[Fact]
-		public void ResolveAll() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, ServiceOne>();
-			provider.Register<IService, ServiceTwo>();
-
-			var services = provider.ResolveAll<IService>();
-
-			Assert.NotNull(services);
-			Assert.NotEmpty(services);
-			Assert.Equal(2, services.Count());
-		}
-
-		[Fact]
-		public void ResolveNotRegistered() {
-			var provider = new ServiceContainer();
-			var service = provider.Resolve<IService>();
-
-			Assert.Null(service);
-		}
-
-		[Fact]
-		public void ResolveNullService() {
-			var provider = new ServiceContainer();
-			Assert.Throws<ArgumentNullException>(() => provider.Resolve(null));
-		}
-
-		[Fact]
-		public void RegisterManyAndResolveOne() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, ServiceOne>();
-			provider.Register<IService, ServiceTwo>("two");
-
-			var service = provider.Resolve<IService>("two");
-
-			Assert.NotNull(service);
-			Assert.IsType<ServiceTwo>(service);
-
-			Assert.Equal("Hello!", service.Do());
-		}
-
-		[Fact]
-		public void RegisterInstance() {
-			var provider = new ServiceContainer();
-			provider.RegisterInstance<IService>(new ServiceOne());
-
-			var service = provider.Resolve<IService>();
-
-			Assert.NotNull(service);
-			Assert.IsType<ServiceOne>(service);
-		}
-
-		[Fact]
-		public void RegisterNullInstance() {
-			var provider = new ServiceContainer();
-			Assert.Throws<ArgumentNullException>(() => provider.RegisterInstance<IService>(null));
-		}
-
-		[Fact]
-		public void RegisterInstanceExplicit() {
-			var provider = new ServiceContainer();
-			provider.RegisterInstance(typeof(IService), new ServiceOne());
-
-			var service = provider.Resolve<IService>();
-
-			Assert.NotNull(service);
-			Assert.IsType<ServiceOne>(service);
-		}
-
-		[Fact]
-		public void ReplaceService() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, ServiceOne>();
-
-			Assert.True(provider.Replace<IService, ServiceTwo>());
-
-			var service = provider.Resolve<IService>();
-			Assert.NotNull(service);
-			Assert.IsType<ServiceTwo>(service);
-		}
-
-
-		[Fact]
-		public void RegisterNonInstantiable() {
-			var provider = new ServiceContainer();
-			Assert.Throws<ServiceException>(() => provider.Register<IService>());
-		}
-
-		[Fact]
-		public void DisposeProvider() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, DisposableService>();
-
-			var service = provider.Resolve<IService>();
-
-			Assert.IsType<DisposableService>(service);
-
-			var value = service.Do();
-			Assert.Equal("I'm alive!", value);
-
-			provider.Dispose();
-
-			Assert.True(((DisposableService)service).Disposed);
-			Assert.Throws<ObjectDisposedException>(() => service.Do());
-		}
-
-		[Fact]
-		public void ResolveAfterDispose() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, DisposableService>();
-
-			provider.Dispose();
-
-			Assert.Throws<InvalidOperationException>(() => provider.Resolve<IService>());
-		}
-
-		[Fact]
-		public void RegisterAfterDispose() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, DisposableService>();
-
-			provider.Dispose();
-
-			Assert.Throws<InvalidOperationException>(() => provider.Register<IService, ServiceOne>());
-		}
-
-		[Fact]
-		public void IsRegisteredAfterDispose() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, DisposableService>();
-
-			provider.Dispose();
-
-			Assert.Throws<InvalidOperationException>(() => provider.IsRegistered<IService>());
-		}
-
-		[Fact]
-		public void IsRegisteredWithNullService() {
-			var provider = new ServiceContainer();
-			provider.Register<IService, DisposableService>();
-
-			Assert.Throws<ArgumentNullException>(() => provider.IsRegistered(null));
+		public void Dispose() {
+			container.Dispose();
 		}
 
 		#region IService
 
-	private interface IService {
-			object Do();
+		interface IService {
+			
 		}
 
 		#endregion
 
-		#region ServiceOne
+		#region Service1
 
-		class ServiceOne : IService {
-			public object Do() {
-				return 566;
-			}
+		class Service1 : IService {
+			
 		}
 
 		#endregion
 
-		#region ServiceTwo
+		#region Service2
 
-		class ServiceTwo : IService {
-			public object Do() {
-				return "Hello!";
-			}
-		}
-
-		#endregion
-
-		#region DisposableService
-
-		class DisposableService : IService, IDisposable {
-			public bool Disposed { get; private set; }
-
-			private void AssertNotDisposed() {
-				if (Disposed)
-					throw new ObjectDisposedException(GetType().Name);
-			}
-
-			public object Do() {
-				AssertNotDisposed();
-				return "I'm alive!";
-			}
-
-			public void Dispose() {
-				Disposed = true;
-			}
+		class Service2 : Service1 {
+			
 		}
 
 		#endregion
