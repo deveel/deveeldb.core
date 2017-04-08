@@ -30,9 +30,9 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlType Type { get; private set; }
 
-		public override SqlExpression VisitConstant(SqlConstantExpression constant) {
-			Type = constant.Value.Type;
-			return base.VisitConstant(constant);
+		public override SqlExpression VisitConstant(SqlConstantExpression expression) {
+			Type = expression.Value.Type;
+			return base.VisitConstant(expression);
 		}
 
 		public override SqlExpression VisitCast(SqlCastExpression expression) {

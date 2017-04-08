@@ -143,6 +143,12 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlBinaryExpression Subtract(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.Subtract, left, right);
 
+		public static SqlBinaryExpression Equal(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.Equal, left, right);
+
+		public static SqlBinaryExpression NotEqual(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.NotEqual, left, right);
+
 		public static SqlUnaryExpression Unary(SqlExpressionType expressionType, SqlExpression operand) {
 			if (!expressionType.IsUnary())
 				throw new ArgumentException($"Expression type {expressionType} is not unary");
@@ -181,6 +187,8 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlReferenceAssignExpression ReferenceAssign(ObjectName referenceName, SqlExpression value) {
 			return new SqlReferenceAssignExpression(referenceName, value);
 		}
+
+		public static SqlParameterExpression Parameter() => new SqlParameterExpression();
 
 		#endregion
 	}
