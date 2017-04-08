@@ -41,7 +41,7 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		IDbObject IDbObjectManager.GetObject(ObjectName objName) {
-			throw new NotImplementedException();
+			return GetVariable(objName.FullName);
 		}
 
 		bool IDbObjectManager.AlterObject(IDbObjectInfo objInfo) {
@@ -49,7 +49,7 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		bool IDbObjectManager.DropObject(ObjectName objName) {
-			throw new NotImplementedException();
+			return RemoveVariable(objName.FullName);
 		}
 
 		ObjectName IDbObjectManager.ResolveName(ObjectName objName, bool ignoreCase) {
@@ -72,6 +72,15 @@ namespace Deveel.Data.Sql.Variables {
 			return variable;
 		}
 
+		public Variable GetVariable(string name) {
+			var objName = new ObjectName(name);
+			Variable variable;
+			if (variables.TryGetValue(objName, out variable))
+				return variable;
+
+			return null;
+		}
+
 		public SqlExpression AssignVariable(string name, SqlExpression value, IContext context) {
 			var variable = FindVariable(name, context);
 			if (variable == null) {
@@ -81,6 +90,10 @@ namespace Deveel.Data.Sql.Variables {
 			}
 
 			return variable.SetValue(value, context);
+		}
+
+		public bool RemoveVariable(string name) {
+			return variables.Remove(new ObjectName(name));
 		}
 
 		private Variable FindVariable(string name, IContext context) {

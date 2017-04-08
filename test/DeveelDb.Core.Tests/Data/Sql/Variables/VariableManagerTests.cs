@@ -16,36 +16,69 @@ namespace Deveel.Data.Sql.Variables {
 
 			context = mock.Object;
 			manager = new VariableManager();
+
+			var obj1 = new SqlObject(PrimitiveTypes.Integer(), (SqlNumber)1);
+			manager.AssignVariable("a", SqlExpression.Constant(obj1), context);
+
+			var obj2 = new SqlObject(PrimitiveTypes.Boolean(), (SqlBoolean)false);
+			manager.AssignVariable("a_b", SqlExpression.Constant(obj2), context);
 		}
 
 		[Theory]
-		[InlineData("a", SqlTypeCode.Boolean, -1, -1, true)]
-		[InlineData("b", SqlTypeCode.Numeric, 120, 33, 2003933.2293)]
-		public void AssignVariable(string name, SqlTypeCode typeCode, int p, int s, object value) {
-			var type = PrimitiveTypes.Type(typeCode, new {precision = p, scale = s, maxSize = p});
-			var obj = new SqlObject(type, SqlValueUtil.FromObject(value));
+		[InlineData("A", true, true)]
+		[InlineData("a_B", true, true)]
+		[InlineData("ab", false, false)]
+		[InlineData("aB", true, false)]
+		public void ResolveVariable(string name, bool ignoreCase, bool expected) {
+			var variable = manager.ResolveVariable(name, ignoreCase);
 
-			manager.AssignVariable(name, SqlExpression.Constant(obj), context);
+			Assert.Equal(expected, variable != null);
 		}
 
 		[Theory]
-		[InlineData("a", SqlTypeCode.Boolean, -1, -1, true, "A", true)]
-		[InlineData("ab", SqlTypeCode.Numeric, 120, 33, 2003933.2293, "aB", true)]
-		[InlineData("ab", SqlTypeCode.Numeric, 120, 33, 2003933.2293, "ab", false)]
-		public void ObjectManager_ResolveName(string name, SqlTypeCode typeCode, int p, int s, object value, string resolveName, bool ignoreCase) {
-			var type = PrimitiveTypes.Type(typeCode, new { precision = p, scale = s, maxSize = p });
-			var obj = new SqlObject(type, SqlValueUtil.FromObject(value));
+		[InlineData("a", true)]
+		[InlineData("b", false)]
+		public void RemoveVariable(string name, bool expected) {
+			Assert.Equal(expected, manager.RemoveVariable(name));
+		}
 
-			manager.AssignVariable(name, SqlExpression.Constant(obj), context);
-
+		[Theory]
+		[InlineData("A", true, true)]
+		[InlineData("a_B", true, true)]
+		[InlineData("ab", false, false)]
+		[InlineData("aB", true, false)]
+		public void ObjectManager_ResolveName(string name, bool ignoreCase, bool expected) {
 			var objManager = (manager as IDbObjectManager);
-			var result = objManager.ResolveName(new ObjectName(resolveName), ignoreCase);
+			var result = objManager.ResolveName(new ObjectName(name), ignoreCase);
 
-			Assert.Equal(new ObjectName(name), result);
+			Assert.Equal(expected, result != null);
 		}
- 
+
+		[Theory]
+		[InlineData("a", true)]
+		[InlineData("b", false)]
+		[InlineData("a_b", true)]
+		[InlineData("a_B", false)]
+		[InlineData("A", false)]
+		public void ObjectManager_VariableExists(string name, bool expected) {
+			var objManager = (manager as IDbObjectManager);
+
+			Assert.Equal(expected, objManager.ObjectExists(new ObjectName(name)));
+			Assert.Equal(expected, objManager.RealObjectExists(new ObjectName(name)));
+		}
+
+		[Theory]
+		[InlineData("a", true)]
+		[InlineData("b", false)]
+		public void ObjectManager_DropVariable(string name, bool expected) {
+			var objManager = (manager as IDbObjectManager);
+
+			Assert.Equal(expected, objManager.DropObject(new ObjectName(name)));
+		}
+
 		public void Dispose() {
-			manager = new VariableManager();
+			manager.Dispose();
+			context.Dispose();
 		}
 	}
 }
