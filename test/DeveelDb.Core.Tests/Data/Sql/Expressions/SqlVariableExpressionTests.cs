@@ -12,6 +12,11 @@ namespace Deveel.Data.Sql.Expressions {
 		private IContext context;
 
 		public SqlVariableExpressionTests() {
+			var mock = new Mock<IContext>();
+			mock.SetupGet(x => x.Scope)
+				.Returns(new ServiceContainer());
+			context = mock.Object;
+
 			var value = SqlExpression.Constant(SqlObject.New(new SqlBoolean(false)));
 			var variable = new Variable("a", PrimitiveTypes.Boolean(), false, value);
 
@@ -19,13 +24,9 @@ namespace Deveel.Data.Sql.Expressions {
 			resolver.Setup(x => x.ResolveVariable(It.Is<string>(s => s == "a"), It.IsAny<bool>()))
 				.Returns<string, bool>((name, ignoreCase) => variable);
 
-			var manager = new VariableManager();
+			context.RegisterVariableManager();
+			var manager = context.ResolveVariableManager();
 			manager.CreateVariable(new VariableInfo("b", PrimitiveTypes.VarChar(150), false, null));
-
-			var mock = new Mock<IContext>();
-			mock.SetupGet(x => x.Scope)
-				.Returns(new ServiceContainer());
-			context = mock.Object;
 
 			context.Scope.RegisterInstance<IVariableResolver>(resolver.Object);
 			context.Scope.RegisterInstance(manager);

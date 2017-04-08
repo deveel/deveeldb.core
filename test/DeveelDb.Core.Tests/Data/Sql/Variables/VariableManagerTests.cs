@@ -18,7 +18,8 @@ namespace Deveel.Data.Sql.Variables {
 				.Returns(new ServiceContainer());
 
 			context = mock.Object;
-			manager = new VariableManager();
+			context.RegisterVariableManager();
+			manager = context.ResolveVariableManager();
 
 			var obj1 = new SqlObject(PrimitiveTypes.Integer(), (SqlNumber)1);
 			manager.AssignVariable("a", SqlExpression.Constant(obj1), context);

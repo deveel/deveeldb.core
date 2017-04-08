@@ -16,6 +16,8 @@
 
 
 using System;
+using System.Linq;
+
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Variables {
@@ -34,17 +36,23 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		private static Variable ResolveVariable(IScope scope, string name, bool ignoreCase) {
-			var resolver = scope.Resolve<IVariableResolver>();
-			if (resolver == null)
+			var resolvers = scope.ResolveAll<IVariableResolver>();
+			if (resolvers == null)
 				return null;
 
-			return resolver.ResolveVariable(name, ignoreCase);
+			return resolvers.Select(resolver => resolver.ResolveVariable(name, ignoreCase))
+				.FirstOrDefault(variable => variable != null);
+		}
+
+		public static void RegisterVariableManager(this IContext context) {
+			context.RegisterObjectManager<VariableManager>(DbObjectType.Variable);
+			context.Scope.Register<IVariableResolver, VariableManager>();
 		}
 
 		public static VariableManager ResolveVariableManager(this IContext context) {
 			var current = context;
 			while (current != null) {
-				var manager = current.Scope.Resolve<VariableManager>();
+				var manager = current.Scope.Resolve<VariableManager>(DbObjectType.Variable);
 				if (manager != null)
 					return manager;
 

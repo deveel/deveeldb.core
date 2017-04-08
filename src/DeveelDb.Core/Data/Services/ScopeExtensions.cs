@@ -39,11 +39,6 @@ namespace Deveel.Data.Services {
 			if (serviceType.GetTypeInfo().IsValueType)
 				throw new ArgumentException(String.Format("The service type '{0}' to register is not a class.", serviceType));
 
-			var interfaces = serviceType.GetTypeInfo().ImplementedInterfaces;
-			foreach (var interfaceType in interfaces) {
-				scope.Register(interfaceType, serviceType, serviceKey);
-			}
-
 			scope.Register(serviceType, serviceType, serviceKey);
 		}
 
