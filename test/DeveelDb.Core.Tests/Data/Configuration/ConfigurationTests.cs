@@ -84,6 +84,20 @@ namespace Deveel.Data.Configuration {
 			Assert.Equal(expected, configValue);
 		}
 
+		[Fact]
+		public static void GetOldStyleValue() {
+			var config = new Configuration();
+			config.SetValue("a", true);
+
+			var result = config.GetValue("a", (object) true);
+			Assert.NotNull(result);
+			Assert.IsType<bool>(result);
+			Assert.Equal(true, (bool)result);
+
+			result = config.GetValue("b", null);
+			Assert.Null(result);
+		}
+
 		[Theory]
 		[InlineData(1, TestEnum.One)]
 		[InlineData("one", TestEnum.One)]

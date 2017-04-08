@@ -17,8 +17,22 @@
 
 using System;
 
-namespace Deveel.Data.Sql.Variables {
-	public interface IVariableResolver {
-		Variable ResolveVariable(string name, bool ignoreCase);
+using Deveel.Data.Services;
+
+namespace Deveel.Data.Configuration {
+	public static class ConfigurationContextExtensions {
+		public static T GetValue<T>(this IContext context, string key, T defaultValue) {
+			var current = context;
+			while (current != null) {
+				if (current.Scope.IsRegistered<IConfiguration>()) {
+					var config = current.Scope.Resolve<IConfiguration>();
+					return config.GetValue<T>(key, defaultValue);
+				}
+
+				current = current.ParentContext;
+			}
+
+			return defaultValue;
+		}
 	}
 }

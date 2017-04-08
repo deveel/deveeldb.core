@@ -1,5 +1,6 @@
 ﻿using System;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 using Moq;
@@ -13,6 +14,8 @@ namespace Deveel.Data.Sql.Variables {
 
 		public VariableManagerTests() {
 			var mock = new Mock<IContext>();
+			mock.SetupGet(x => x.Scope)
+				.Returns(new ServiceContainer());
 
 			context = mock.Object;
 			manager = new VariableManager();
