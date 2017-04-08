@@ -30,7 +30,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		Invoke,
 		Cast,
-		Conditional,
+		Condition,
 
 		// Logical / Conditional Binary
 		And,

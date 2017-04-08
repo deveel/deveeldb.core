@@ -59,6 +59,8 @@ namespace Deveel.Data.Sql.Expressions {
 					return VisitReferenceAssign((SqlReferenceAssignExpression) expression);
 				case SqlExpressionType.VariableAssign:
 					return VisitVariableAssign((SqlVariableAssignExpression) expression);
+				case SqlExpressionType.Condition:
+					return VisitCondition((SqlConditionExpression) expression);
 				case SqlExpressionType.Parameter:
 					return VisitParameter((SqlParameterExpression) expression);
 				case SqlExpressionType.Constant:
@@ -68,6 +70,22 @@ namespace Deveel.Data.Sql.Expressions {
 				default:
 					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
 			}
+		}
+
+		public virtual SqlExpression VisitCondition(SqlConditionExpression expression) {
+			var test = expression.Test;
+			if (test != null)
+				test = Visit(test);
+
+			var ifTrue = expression.IfTrue;
+			if (ifTrue != null)
+				ifTrue = Visit(ifTrue);
+
+			var ifFalse = expression.IfFalse;
+			if (ifFalse != null)
+				ifFalse = Visit(ifFalse);
+
+			return SqlExpression.Condition(test, ifTrue, ifFalse);
 		}
 
 		public virtual SqlExpression VisitVariableAssign(SqlVariableAssignExpression expression) {

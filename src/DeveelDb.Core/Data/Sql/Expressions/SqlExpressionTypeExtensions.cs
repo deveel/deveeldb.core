@@ -25,6 +25,7 @@ namespace Deveel.Data.Sql.Expressions {
 				case SqlExpressionType.Subtract:
 				case SqlExpressionType.Divide:
 				case SqlExpressionType.Multiply:
+				case SqlExpressionType.Modulo:
 				case SqlExpressionType.And:
 				case SqlExpressionType.Or:
 				case SqlExpressionType.XOr:

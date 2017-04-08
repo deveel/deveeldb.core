@@ -80,7 +80,7 @@ namespace Deveel.Data.Sql.Expressions {
 					return 88;
 
 				// Conditional
-				case SqlExpressionType.Conditional:
+				case SqlExpressionType.Condition:
 					return 80;
 				
 				// Assign
@@ -143,11 +143,44 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlBinaryExpression Subtract(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.Subtract, left, right);
 
+		public static SqlBinaryExpression Divide(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.Divide, left, right);
+
+		public static SqlBinaryExpression Modulo(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.Modulo, left, right);
+
+		public static SqlBinaryExpression Multiply(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.Multiply, left, right);
+
 		public static SqlBinaryExpression Equal(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.Equal, left, right);
 
 		public static SqlBinaryExpression NotEqual(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.NotEqual, left, right);
+
+		public static SqlBinaryExpression GreaterThan(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.GreaterThan, left, right);
+
+		public static SqlBinaryExpression GreaterThanOrEqual(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.GreaterThanOrEqual, left, right);
+
+		public static SqlBinaryExpression LessThan(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.LessThan, left, right);
+
+		public static SqlBinaryExpression LessThanOrEqual(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.LessThanOrEqual, left, right);
+
+		public static SqlBinaryExpression Is(SqlExpression left, SqlExpression rigth)
+			=> Binary(SqlExpressionType.Is, left, rigth);
+
+		public static SqlBinaryExpression And(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.And, left, right);
+
+		public static SqlBinaryExpression Or(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.Or, left, right);
+
+		public static SqlBinaryExpression XOr(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.XOr, left, right);
 
 		public static SqlUnaryExpression Unary(SqlExpressionType expressionType, SqlExpression operand) {
 			if (!expressionType.IsUnary())
@@ -187,6 +220,9 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlReferenceAssignExpression ReferenceAssign(ObjectName referenceName, SqlExpression value) {
 			return new SqlReferenceAssignExpression(referenceName, value);
 		}
+
+		public static SqlConditionExpression Condition(SqlExpression test, SqlExpression ifTrue, SqlExpression ifFalse)
+			=> new SqlConditionExpression(test, ifTrue, ifFalse);
 
 		public static SqlParameterExpression Parameter() => new SqlParameterExpression();
 
