@@ -247,7 +247,7 @@ namespace Deveel.Data.Configuration {
 			return config.GetValue(propertyKey, defaultValue);
 		}
 
-#endregion
+		#endregion
 
 		#endregion
 

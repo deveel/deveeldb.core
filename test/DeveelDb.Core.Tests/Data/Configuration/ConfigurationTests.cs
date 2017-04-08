@@ -155,6 +155,23 @@ namespace Deveel.Data.Configuration {
 		}
 
 		[Fact]
+		public static void MergeTwoConfigurations() {
+			var config1 = new Configuration();
+			config1.SetValue("a", 22);
+			config1.SetValue("b", new DateTime(2001, 02, 01));
+
+			var config2 = new Configuration();
+			config2.SetValue("a", 55);
+			config2.SetValue("c", true);
+
+			var merged = config1.MergeWith(config2);
+
+			var result = merged.GetInt16("a");
+			Assert.Equal(55, result);
+			Assert.True(merged.GetBoolean("c"));
+		}
+
+		[Fact]
 		public static void ConfigureByBuildConfiguration() {
 			var config = Configuration.Build(builder => {
 				builder.WithSetting("a", 43.01f)
