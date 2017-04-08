@@ -1,12 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-
-using Deveel.Data.Sql.Types;
 
 using Xunit;
 
 namespace Deveel.Data.Sql {
 	public static class SqlObjectTests {
+		[Fact]
+		public static void NullCheck() {
+			var obj = SqlObject.Null;
+
+			Assert.NotNull(obj);
+			Assert.IsType<SqlObject>(obj);
+			Assert.True(obj.IsNull);
+			Assert.False(obj.IsUnknown);
+			Assert.False(obj.IsTrue);
+			Assert.False(obj.IsFalse);
+		}
+
 		[Theory]
 		[InlineData(SqlTypeCode.Double, 16, -1, 36755.0912)]
 		[InlineData(SqlTypeCode.Integer, -1, -1, 54667)]

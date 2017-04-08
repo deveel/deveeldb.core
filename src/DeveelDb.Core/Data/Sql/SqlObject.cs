@@ -20,6 +20,7 @@ using System;
 namespace Deveel.Data.Sql {
 	public sealed class SqlObject : IComparable<SqlObject>, IComparable, ISqlFormattable, IEquatable<SqlObject> {
 		public static readonly SqlObject Unknown = new SqlObject(PrimitiveTypes.Boolean(), null);
+		public static readonly SqlObject Null = new SqlObject(PrimitiveTypes.Integer(), null);
 
 		public SqlObject(SqlType type, ISqlValue value) {
 			if (type == null)

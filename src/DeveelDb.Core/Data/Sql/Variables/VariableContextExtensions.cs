@@ -50,16 +50,7 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		public static VariableManager ResolveVariableManager(this IContext context) {
-			var current = context;
-			while (current != null) {
-				var manager = current.Scope.Resolve<VariableManager>(DbObjectType.Variable);
-				if (manager != null)
-					return manager;
-
-				current = current.ParentContext;
-			}
-
-			return null;
+			return context.ResolveObjectManager<VariableManager>(DbObjectType.Variable);
 		}
 	}
 }

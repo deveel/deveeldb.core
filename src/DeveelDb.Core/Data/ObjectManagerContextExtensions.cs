@@ -9,5 +9,18 @@ namespace Deveel.Data {
 			context.Scope.Register<IDbObjectManager, TManager>(objectType);
 			context.Scope.Register<TManager>(objectType);
 		}
+
+		public static TManager ResolveObjectManager<TManager>(this IContext context, DbObjectType objectType)
+			where TManager : IDbObjectManager {
+			var current = context;
+			while (current != null) {
+				if (current.Scope.IsRegistered<IDbObjectManager>(objectType))
+					return (TManager) current.Scope.Resolve<IDbObjectManager>(objectType);
+
+				current = current.ParentContext;
+			}
+
+			return default(TManager);
+		}
 	}
 }

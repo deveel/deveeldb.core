@@ -73,7 +73,7 @@ namespace Deveel.Data {
 		/// A program (<c>PROCEDURE</c> or <c>FUNCTION</c>) defined in a database, that
 		/// executes sequences of commands.
 		/// </summary>
-		Program = 20,
+		Method = 20,
 
 		/// <summary>
 		/// A cursor is a named, precomputed, query, that accepts optional parameters and
