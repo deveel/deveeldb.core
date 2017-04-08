@@ -17,6 +17,7 @@
 
 using System;
 
+using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -40,8 +41,8 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		public override SqlExpression VisitVariable(SqlVariableExpression expression) {
-			// TODO: resolve the configuration fore the context and see ignoreCase = true
-			var variable = context.ResolveVariable(expression.VariableName, true);
+			var ignoreCase = context.GetValue("ignoreCase", true);
+			var variable = context.ResolveVariable(expression.VariableName, ignoreCase);
 			if (variable != null)
 				Type = variable.Type;
 

@@ -46,6 +46,13 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		[Theory]
+		[InlineData("a", true)]
+		[InlineData("b", false)]
+		public void VarivableExists(string name, bool expected) {
+			Assert.Equal(expected, manager.VariableExists(name));
+		}
+
+		[Theory]
 		[InlineData("A", true, true)]
 		[InlineData("a_B", true, true)]
 		[InlineData("ab", false, false)]
@@ -73,10 +80,30 @@ namespace Deveel.Data.Sql.Variables {
 		[Theory]
 		[InlineData("a", true)]
 		[InlineData("b", false)]
+		[InlineData("a_b", true)]
+		[InlineData("a_B", false)]
+		public void ObjectManager_GetVariable(string name, bool expected) {
+			var objManager = (manager as IDbObjectManager);
+
+			var result = objManager.GetObject(new ObjectName(name));
+			Assert.Equal(expected, result != null);
+		}
+
+		[Theory]
+		[InlineData("a", true)]
+		[InlineData("b", false)]
 		public void ObjectManager_DropVariable(string name, bool expected) {
 			var objManager = (manager as IDbObjectManager);
 
 			Assert.Equal(expected, objManager.DropObject(new ObjectName(name)));
+		}
+
+		[Fact]
+		public void ObjectManager_AlterVariable() {
+			var variable = manager.GetVariable("a");
+
+			var objManager = (manager as IDbObjectManager);
+			Assert.Throws<NotSupportedException>(() => objManager.AlterObject(variable.VariableInfo));
 		}
 
 		public void Dispose() {
