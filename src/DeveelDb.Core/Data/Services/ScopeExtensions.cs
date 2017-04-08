@@ -90,11 +90,6 @@ namespace Deveel.Data.Services {
 
 		public static void RegisterInstance<TService>(this IScope scope, TService instance, object serviceKey)
 			where TService : class {
-			var interfaces = typeof(TService).GetTypeInfo().ImplementedInterfaces;
-			foreach (var interfaceType in interfaces) {
-				scope.RegisterInstance(interfaceType, instance, serviceKey);
-			}
-
 			scope.RegisterInstance(typeof(TService), instance, serviceKey);
 		}
 

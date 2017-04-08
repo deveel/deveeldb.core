@@ -23,7 +23,7 @@ namespace Deveel.Data {
 	/// </summary>
 	/// <remarks>
 	/// <para>
-	/// The information defined by implementations of <see cref="IObjectInfo"/>
+	/// The information defined by implementations of <see cref="IDbObjectInfo"/>
 	/// shape the behavior of the object they refer to.
 	/// </para>
 	/// <para>
@@ -37,7 +37,7 @@ namespace Deveel.Data {
 	/// </para>
 	/// </remarks>
 	/// <seealso cref="IDbObject"/>
-	public interface IObjectInfo {
+	public interface IDbObjectInfo {
 		/// <summary>
 		/// Gets the specific type of the database object.
 		/// </summary>

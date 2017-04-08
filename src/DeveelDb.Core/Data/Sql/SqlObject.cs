@@ -38,9 +38,9 @@ namespace Deveel.Data.Sql {
 
 		public SqlType Type { get; }
 
-		public bool IsNull => SqlNull.Value == Value;
+		public bool IsNull => !(Type is SqlBooleanType) && SqlNull.Value == Value;
 
-		public bool IsUnknown => Type is SqlBooleanType && IsNull;
+		public bool IsUnknown => Type is SqlBooleanType && SqlNull.Value == Value;
 
 		public bool IsTrue => Type is SqlBooleanType && (SqlBoolean)Value == SqlBoolean.True;
 
@@ -70,17 +70,18 @@ namespace Deveel.Data.Sql {
 		}
 
 		public int CompareTo(SqlObject obj) {
-			// If this is null
-			if (IsNull) {
-				// and value is null return 0 return less
-				if (obj.IsNull)
-					return 0;
-
+			if (IsUnknown && obj.IsUnknown)
+				return 0;
+			if (IsUnknown && !obj.IsUnknown)
 				return -1;
-			}
-			// If this is not null and value is null return +1
-			if (ReferenceEquals(null, obj) ||
-			    obj.IsNull)
+			if (!IsUnknown && obj.IsUnknown)
+				return 1;
+
+			if (IsNull && obj.IsNull)
+				return 0;
+			if (IsNull && !obj.IsNull)
+				return -1;
+			if (!IsNull && obj.IsNull)
 				return 1;
 
 			// otherwise both are non null so compare normally.
@@ -136,6 +137,8 @@ namespace Deveel.Data.Sql {
 
 		private SqlObject BinaryOperator(Func<SqlType, Func<ISqlValue, ISqlValue, ISqlValue>> selector, SqlObject other) {
 			if (IsNull || (other == null || other.IsNull))
+				return Unknown;
+			if (IsUnknown || other.IsUnknown)
 				return Unknown;
 
 			if (!Type.IsComparable(other.Type))
@@ -284,7 +287,7 @@ namespace Deveel.Data.Sql {
 		#region Unary Operators
 
 		private SqlObject UnaryOperator(Func<SqlType, Func<ISqlValue, ISqlValue>> selector) {
-			if (IsNull)
+			if (IsNull || IsUnknown)
 				return this;
 
 			var resultType = Type;

@@ -3,58 +3,51 @@
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Variables {
-	public sealed class Variable : ISqlFormattable {
+	public sealed class Variable : IDbObject, ISqlFormattable {
 		private static readonly char[] InvalidChars = " $.|\\:/#'".ToCharArray();
 
-		public Variable(string name, SqlType type) 
+		public Variable(VariableInfo variableInfo) {
+			if (variableInfo == null)
+				throw new ArgumentNullException(nameof(variableInfo));
+
+			VariableInfo = variableInfo;
+		}
+
+		public Variable(string name, SqlType type, bool constant, SqlExpression defaultValue)
+			: this(new VariableInfo(name, type, constant, defaultValue)) {
+		}
+
+		public Variable(string name, SqlType type)
 			: this(name, type, null) {
 		}
 
-		public Variable(string name, SqlType type, SqlExpression defaultValue) 
+		public Variable(string name, SqlType type, SqlExpression defaultValue)
 			: this(name, type, false, defaultValue) {
 		}
 
-		public Variable(string name, SqlType type, bool constant, SqlExpression defaultValue) {
-			if (String.IsNullOrWhiteSpace(name))
-				throw new ArgumentNullException(nameof(name));
-			if (type == null)
-				throw new ArgumentNullException(nameof(type));
+		public VariableInfo VariableInfo { get; }
 
-			if (!IsValidName(name))
-				throw new ArgumentException($"The variable name '{name}' is invalid");
+		public string Name => VariableInfo.Name;
 
-			if (constant && defaultValue == null)
-				throw new ArgumentNullException(nameof(defaultValue), "A constant variable must define a default value");
+		public bool Constant => VariableInfo.Constant;
 
-			Name = name;
-			Type = type;
-			Constant = constant;
-			DefaultValue = defaultValue;
-		}
-
-		public string Name { get; }
-
-		public bool Constant { get; }
-
-		public SqlType Type { get; }
-
-		public SqlExpression DefaultValue { get; }
-
-		public bool HasDefaultValue => DefaultValue != null;
+		public SqlType Type => VariableInfo.Type;
 
 		public SqlExpression Value { get; private set; }
+
+		IDbObjectInfo IDbObject.ObjectInfo => VariableInfo;
 
 		public SqlExpression SetValue(SqlExpression value, IContext context) {
 			if (value == null)
 				throw new ArgumentNullException(nameof(value));
 
-			if (Constant)
-				throw new VariableException($"Cannot set constant variable {Name}");
+			if (VariableInfo.Constant)
+				throw new VariableException($"Cannot set constant variable {VariableInfo.Name}");
 
 			var valueType = value.ReturnType(context);
-			if (!valueType.Equals(Type) &&
-				!valueType.IsComparable(Type))
-				throw new ArgumentException($"The type {valueType} of the value is not compatible with the variable type '{Type}'");
+			if (!valueType.Equals(VariableInfo.Type) &&
+				!valueType.IsComparable(VariableInfo.Type))
+				throw new ArgumentException($"The type {valueType} of the value is not compatible with the variable type '{VariableInfo.Type}'");
 
 			Value = value;
 			return Value;
@@ -63,25 +56,25 @@ namespace Deveel.Data.Sql.Variables {
 		public SqlExpression Evaluate(IContext context) {
 			var expression = Value;
 			if (expression == null)
-				expression = DefaultValue;
+				expression = VariableInfo.DefaultValue;
 
 			if (expression == null)
-				throw new VariableException($"Variable {Name} has no value set");
+				throw new VariableException($"Variable {VariableInfo.Name} has no value set");
 
 			return expression.Reduce(context);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
-			builder.AppendFormat(":{0}", Name);
+			builder.AppendFormat(":{0}", VariableInfo.Name);
 			builder.Append(" ");
-			if (Constant)
+			if (VariableInfo.Constant)
 				builder.Append("CONSTANT ");
 
-			Type.AppendTo(builder);
+			VariableInfo.Type.AppendTo(builder);
 
-			if (HasDefaultValue) {
+			if (VariableInfo.HasDefaultValue) {
 				builder.Append(" := ");
-				DefaultValue.AppendTo(builder);
+				VariableInfo.DefaultValue.AppendTo(builder);
 			}
 		}
 

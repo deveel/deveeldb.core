@@ -1,7 +1,5 @@
 ﻿using System;
 
-using Castle.DynamicProxy.Generators;
-
 using Deveel.Data.Sql.Expressions;
 
 using Xunit;
@@ -17,10 +15,12 @@ namespace Deveel.Data.Sql.Variables {
 			var type = PrimitiveTypes.Type(typeCode, new {precision = p, scale = s, maxSize = p});
 			var variable = new Variable(name, type, constant, exp);
 
+			Assert.NotNull(variable.VariableInfo);
+			Assert.Equal(name, variable.Name);
 			Assert.NotNull(variable.Type);
 			Assert.Equal(constant, variable.Constant);
 			Assert.Equal(type, variable.Type);
-			Assert.Equal(defaultValue != null, variable.HasDefaultValue);
+			Assert.Equal(defaultValue != null, variable.VariableInfo.HasDefaultValue);
 		}
 
 		[Theory]

@@ -24,12 +24,12 @@ namespace Deveel.Data {
 	/// </summary>
 	/// <remarks>
 	/// Database objects are defined by a set of information
-	/// that shape their behavior within the system (<see cref="IObjectInfo"/>).
+	/// that shape their behavior within the system (<see cref="IDbObjectInfo"/>).
 	/// </remarks>
 	public interface IDbObject {
 		/// <summary>
 		/// Gets the database object information.
 		/// </summary>
-		IObjectInfo ObjectInfo { get; }
+		IDbObjectInfo ObjectInfo { get; }
 	}
 }

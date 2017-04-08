@@ -31,7 +31,8 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var variable = context.ResolveVariable(VariableName);
+			// TODO: find out the configuration in context and see if it is ignoreCase
+			var variable = context.ResolveVariable(VariableName, true);
 
 			if (variable == null)
 				return Constant(SqlObject.Unknown);

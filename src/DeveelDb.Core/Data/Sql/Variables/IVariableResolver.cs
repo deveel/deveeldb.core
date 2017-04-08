@@ -2,6 +2,6 @@
 
 namespace Deveel.Data.Sql.Variables {
 	public interface IVariableResolver {
-		Variable ResolveVariable(string name);
+		Variable ResolveVariable(string name, bool ignoreCase);
 	}
 }

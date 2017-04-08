@@ -23,7 +23,8 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		public override SqlExpression VisitVariable(SqlVariableExpression expression) {
-			var variable = context.ResolveVariable(expression.VariableName);
+			// TODO: resolve the configuration fore the context and see ignoreCase = true
+			var variable = context.ResolveVariable(expression.VariableName, true);
 			if (variable != null)
 				Type = variable.Type;
 
@@ -31,7 +32,7 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		public override SqlExpression VisitVariableAssign(SqlVariableAssignExpression expression) {
-			var variable = context.ResolveVariable(expression.VariableName);
+			var variable = context.ResolveVariable(expression.VariableName, true);
 			if (variable != null)
 				Type = variable.Type;
 

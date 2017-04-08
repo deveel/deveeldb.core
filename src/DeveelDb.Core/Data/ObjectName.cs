@@ -241,18 +241,24 @@ namespace Deveel.Data {
 		/// </summary>
 		/// <param name="other">The other object reference to compare.</param>
 		/// <returns></returns>
-		public int CompareTo(ObjectName other) {
+		public int CompareTo(ObjectName other, bool ignoreCase) {
 			if (other == null)
 				return -1;
 
 			int v = 0;
 			if (Parent != null)
-				v = Parent.CompareTo(other.Parent);
+				v = Parent.CompareTo(other.Parent, ignoreCase);
 
-			if (v == 0)
-				v = String.Compare(Name, other.Name, StringComparison.Ordinal);
+			if (v == 0) {
+				var comparison = ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+				v = String.Compare(Name, other.Name, comparison);
+			}
 
 			return v;
+		}
+
+		public int CompareTo(ObjectName other) {
+			return CompareTo(other, false);
 		}
 
 		public override string ToString() {
@@ -300,9 +306,17 @@ namespace Deveel.Data {
 		}
 
 		public override int GetHashCode() {
-			var code = Name.GetHashCode() ^ 5623;
+			return GetHashCode(false);
+		}
+
+		public int GetHashCode(bool ignoreCase) {
+			var name = Name;
+			if (ignoreCase)
+				name = name.ToUpperInvariant();
+
+			var code = name.GetHashCode() ^ 5623;
 			if (Parent != null)
-				code ^= Parent.GetHashCode();
+				code ^= Parent.GetHashCode(ignoreCase);
 
 			return code;
 		}

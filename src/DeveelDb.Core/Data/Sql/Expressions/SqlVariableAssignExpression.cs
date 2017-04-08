@@ -28,12 +28,11 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var variable = context.ResolveVariable(VariableName);
+			var manager = context.ResolveVariableManager();
+			if (manager == null)
+				throw new SqlExpressionException("No variable manager was found in the context hierarchy");
 
-			if (variable == null)
-				return Constant(SqlObject.Unknown);
-
-			return variable.SetValue(Value, context);
+			return manager.AssignVariable(VariableName, Value, context);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {
