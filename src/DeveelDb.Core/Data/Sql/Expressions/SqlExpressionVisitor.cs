@@ -16,6 +16,10 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Deveel.Data.Query;
 
 namespace Deveel.Data.Sql.Expressions {
 	public class SqlExpressionVisitor : ISqlExpressionVisitor {
@@ -45,6 +49,9 @@ namespace Deveel.Data.Sql.Expressions {
 				case SqlExpressionType.Negate:
 				case SqlExpressionType.UnaryPlus:
 					return VisitUnary((SqlUnaryExpression) expression);
+				case SqlExpressionType.Any:
+				case SqlExpressionType.All:
+					return VisitQuantify((SqlQuantifyExpression) expression);
 				case SqlExpressionType.Cast:
 					return VisitCast((SqlCastExpression) expression);
 				case SqlExpressionType.Reference:
@@ -55,11 +62,41 @@ namespace Deveel.Data.Sql.Expressions {
 					return VisitReferenceAssign((SqlReferenceAssignExpression) expression);
 				case SqlExpressionType.VariableAssign:
 					return VisitVariableAssign((SqlVariableAssignExpression) expression);
+				case SqlExpressionType.Condition:
+					return VisitCondition((SqlConditionExpression) expression);
+				case SqlExpressionType.Parameter:
+					return VisitParameter((SqlParameterExpression) expression);
 				case SqlExpressionType.Constant:
 					return VisitConstant((SqlConstantExpression) expression);
+				case SqlExpressionType.Query:
+					return VisitQuery((SqlQueryExpression) expression);
 				default:
 					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
 			}
+		}
+
+		public virtual SqlExpression VisitQuantify(SqlQuantifyExpression expression) {
+			var exp = expression.Expression;
+			if (exp != null)
+				Visit(exp);
+
+			return SqlExpression.Quantify(expression.ExpressionType, exp);
+		}
+
+		public virtual SqlExpression VisitCondition(SqlConditionExpression expression) {
+			var test = expression.Test;
+			if (test != null)
+				test = Visit(test);
+
+			var ifTrue = expression.IfTrue;
+			if (ifTrue != null)
+				ifTrue = Visit(ifTrue);
+
+			var ifFalse = expression.IfFalse;
+			if (ifFalse != null)
+				ifFalse = Visit(ifFalse);
+
+			return SqlExpression.Condition(test, ifTrue, ifFalse);
 		}
 
 		public virtual SqlExpression VisitVariableAssign(SqlVariableAssignExpression expression) {
@@ -113,8 +150,120 @@ namespace Deveel.Data.Sql.Expressions {
 			return SqlExpression.Unary(expression.ExpressionType, operand);
 		}
 
-		public virtual SqlExpression VisitConstant(SqlConstantExpression constant) {
-			return SqlExpression.Constant(constant.Value);
+		public virtual SqlExpression VisitConstant(SqlConstantExpression expression) {
+			return SqlExpression.Constant(expression.Value);
+		}
+
+		public virtual SqlExpression VisitParameter(SqlParameterExpression expression) {
+			return expression;
+		}
+
+		public virtual SqlExpression VisitQuery(SqlQueryExpression expression) {
+			var items = VisitQueryItems(expression.Items);
+
+			var query = new SqlQueryExpression {
+				Distinct = expression.Distinct
+			};
+
+			if (items != null) {
+				foreach (var item in items) {
+					query.Items.Add(item);
+				}
+			}
+
+			var from = expression.From;
+			if (from != null)
+				from = VisitQueryFrom(from);
+
+			query.From = from;
+
+			var where = query.Where;
+			if (where != null)
+				where = Visit(where);
+
+			query.Where = where;
+
+			var having = query.Having;
+			if (having != null)
+				having = Visit(having);
+
+			query.Having = having;
+
+			query.GroupBy = VisitExpressionList(query.GroupBy);
+			query.GroupMax = query.GroupMax;
+
+			return query;
+		}
+
+		public virtual IList<SqlExpression> VisitExpressionList(IList<SqlExpression> list) {
+			if (list == null)
+				return null;
+
+			var result = new List<SqlExpression>();
+
+			for (int i = 0; i < list.Count; i++) {
+				result.Add(Visit(list[i]));
+			}
+
+			return result;
+		}
+
+		public virtual IList<SqlQueryExpressionItem> VisitQueryItems(IList<SqlQueryExpressionItem> items) {
+			List<SqlQueryExpressionItem> result = null;
+			if (items != null) {
+				result = new List<SqlQueryExpressionItem>(items.Count);
+				foreach (var item in items) {
+					result.Add(VisitQueryItem(item));
+				}
+			}
+
+			return result;
+		}
+
+		public virtual SqlQueryExpressionItem VisitQueryItem(SqlQueryExpressionItem item) {
+			var expression = item.Expression;
+			if (expression != null)
+				expression = Visit(expression);
+
+			return new SqlQueryExpressionItem(expression, item.Alias);
+		}
+
+		public virtual SqlQueryExpressionFrom VisitQueryFrom(SqlQueryExpressionFrom from) {
+			var result = new SqlQueryExpressionFrom();
+
+			var sources = from.Sources.ToList();
+			for (int i = 0; i < sources.Count; i++) {
+				result.Source(VisitQuerySource(sources[i]));
+
+				if (i > 0 && !from.IsNaturalJoin) {
+					var part = VisitJoinPart(from.GetJoinPart(i - 1));
+					result.Join(part.JoinType, part.OnExpression);
+				}
+			}
+
+			return result;
+		}
+
+		public virtual SqlQueryExpressionSource VisitQuerySource(SqlQueryExpressionSource source) {
+			if (source.IsTable)
+				return new SqlQueryExpressionSource(source.TableName, source.Alias);
+
+			var query = source.Query;
+			if (query != null)
+				query = (SqlQueryExpression) Visit(query);
+
+			return new SqlQueryExpressionSource(query, source.Alias);
+		}
+
+		public virtual JoinPart VisitJoinPart(JoinPart part) {
+			var onExpression = part.OnExpression;
+			if (onExpression != null)
+				onExpression = Visit(onExpression);
+
+			if (part.IsQuery)
+				return new JoinPart(part.JoinType, part.Query, onExpression);
+
+			return new JoinPart(part.JoinType, part.TableName, onExpression);
 		}
 	}
 }

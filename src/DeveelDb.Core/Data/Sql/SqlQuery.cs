@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
+using Deveel.Data.Sql.Expressions;
+
 namespace Deveel.Data.Sql {
 	/// <summary>
 	/// The remote request of a SQL query against a system
@@ -102,12 +104,14 @@ namespace Deveel.Data.Sql {
 		/// Gets a collection of parameters that will be applied to the
 		/// command, according to the references provided in the text
 		/// </summary>
-		public ICollection<SqlQueryParameter> Parameters { get; }
+		public IList<SqlQueryParameter> Parameters { get; }
 
 		/// <summary>
 		/// Gets the naming convention of the parameters in this query.
 		/// </summary>
 		public SqlQueryParameterNaming ParameterNaming { get; private set; }
+
+		public ISqlExpressionPreparer ExpressionPreparer => new QueryPreparer(this);
 
 		internal void ChangeNaming(SqlQueryParameterNaming naming) {
 			if (ParameterNaming != SqlQueryParameterNaming.Default)
@@ -158,6 +162,53 @@ namespace Deveel.Data.Sql {
 			protected override void SetItem(int index, SqlQueryParameter item) {
 				ValidateParameter(item, true);
 				base.SetItem(index, item);
+			}
+		}
+
+		#endregion
+
+		#region QueryPreparer
+
+		class QueryPreparer : ISqlExpressionPreparer {
+			private readonly SqlQuery query;
+			private int paramCount;
+
+			public QueryPreparer(SqlQuery query) {
+				this.query = query;
+				paramCount = -1;
+			}
+
+			public bool CanPrepare(SqlExpression expression) {
+				if (expression is SqlParameterExpression &&
+				    query.ParameterNaming == SqlQueryParameterNaming.Marker) {
+					return true;
+				}
+				if (expression is SqlVariableExpression &&
+					query.ParameterNaming == SqlQueryParameterNaming.Named) {
+					var varRef = (SqlVariableExpression) expression;
+					return query.Parameters.Any(x => x.Name == varRef.VariableName);
+				}
+
+				return false;
+			}
+
+			public SqlExpression Prepare(SqlExpression expression) {
+				SqlQueryParameter param = null;
+				if (expression is SqlParameterExpression) {
+					var index = ++paramCount;
+					param = query.Parameters[index];
+				} else if (expression is SqlVariableExpression) {
+					var varRef = (SqlVariableExpression) expression;
+
+					param = query.Parameters.FirstOrDefault(x => x.Name == varRef.VariableName);
+				}
+
+				if (param == null)
+					throw new InvalidOperationException();
+				if (param.Direction != SqlParameterDirection.In)
+					throw new InvalidOperationException($"Parameter {param.Name} is not INPUT");
+
+				return SqlExpression.Constant(new SqlObject(param.SqlType, param.Value));
 			}
 		}
 

@@ -31,6 +31,99 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
+		[InlineData(2201.112, 203, "2201.112 + 203")]
+		public static void GetAddString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.Add, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 - 2293.1102")]
+		public static void GetSubtractString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.Subtract, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 / 2293.1102")]
+		public static void GetDivideString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.Divide, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 * 2293.1102")]
+		public static void GetMultiplyString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.Multiply, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 % 2293.1102")]
+		public static void GetModuloString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.Modulo, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 = 2293.1102")]
+		public static void GetEqualString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.Equal, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 <> 2293.1102")]
+		public static void GetNotEqualString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.NotEqual, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 > 2293.1102")]
+		public static void GetGreaterThanString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.GreaterThan, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 < 2293.1102")]
+		public static void GetLessThanString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.LessThan, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 >= 2293.1102")]
+		public static void GetGreaterThanOrEqualString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.GreaterThanOrEqual, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(12, 2293.1102, "12 <= 2293.1102")]
+		public static void GetLessThanOrEqualString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.LessThanOrEqual, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(true, false, "TRUE AND FALSE")]
+		public static void GetAndString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.And, value1, value2, expected);
+		}
+
+		[Theory]
+		[InlineData(true, false, "TRUE OR FALSE")]
+		public static void GetOrString(object value1, object value2, string expected) {
+			AssertString(SqlExpression.Or, value1, value2, expected);
+		}
+
+		private static SqlBinaryExpression BinaryExpression(Func<SqlExpression, SqlExpression, SqlBinaryExpression> factory,
+			object value1, object value2) {
+			var left = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value1)));
+			var right = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value2)));
+
+			return factory(left, right);
+		}
+
+		private static void AssertString(Func<SqlExpression, SqlExpression, SqlBinaryExpression> factory,
+			object value1, object value2, string expected) {
+			var exp = BinaryExpression(factory, value1, value2);
+			var sql = exp.ToString();
+			Assert.Equal(expected, sql);
+		}
+
+		[Theory]
 		[InlineData(345)]
 		public static void ReduceConstant(object value) {
 			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
@@ -233,6 +326,37 @@ namespace Deveel.Data.Sql.Expressions {
 			var sql = refAssign.ToString();
 
 			Assert.Equal(expected, sql);
+		}
+
+		[Theory]
+		[InlineData(true, 223.21, 11, "CASE WHEN TRUE THEN 223.21 ELSE 11 END")]
+		public static void GetConditionString(bool test, object ifTrue, object ifFalse, string expected) {
+			var testExp = SqlExpression.Constant(SqlObject.Boolean(test));
+			var ifTrueExp = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(ifTrue)));
+			var ifFalseExp = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(ifFalse)));
+
+			var condition = SqlExpression.Condition(testExp, ifTrueExp, ifFalseExp);
+
+			var sql = condition.ToString();
+			Assert.Equal(expected, sql);
+		}
+
+		[Theory]
+		[InlineData(true, "I am", "You are", "I am")]
+		[InlineData(false, "I am", "You are", "You are")]
+		public static void ReduceCondition(bool test, object ifTrue, object ifFalse, object expected) {
+			var testExp = SqlExpression.Constant(SqlObject.Boolean(test));
+			var ifTrueExp = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(ifTrue)));
+			var ifFalseExp = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(ifFalse)));
+
+			var condition = SqlExpression.Condition(testExp, ifTrueExp, ifFalseExp);
+
+			var result = condition.Reduce(null);
+
+			Assert.IsType<SqlConstantExpression>(result);
+
+			var expectedValue = SqlObject.New(SqlValueUtil.FromObject(expected));
+			Assert.Equal(expectedValue, ((SqlConstantExpression)result).Value);
 		}
 	}
 }

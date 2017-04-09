@@ -30,7 +30,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		Invoke,
 		Cast,
-		Conditional,
+		Condition,
 
 		// Logical / Conditional Binary
 		And,
@@ -84,7 +84,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		ReferenceAssign,
 
-		Tuple,
+		Group,
 
 		/// <summary>
 		/// A query to the database to select data from
