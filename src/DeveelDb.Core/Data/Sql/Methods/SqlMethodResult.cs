@@ -7,50 +7,39 @@ using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
 	public sealed class SqlMethodResult {
-		private readonly Dictionary<string, SqlExpression> output;
-
-		public SqlMethodResult(SqlMethodInfo methodInfo) {
-			MethodInfo = methodInfo;
-			ResultValue = SqlExpression.Constant(SqlObject.Null);
-			output = new Dictionary<string, SqlExpression>();
+		internal SqlMethodResult(SqlExpression returned, bool hasReturn, IDictionary<string, SqlExpression> output) {
+			ReturnedValue = returned;
+			HasReturnedValue = hasReturn;
+			Output = new ReadOnlyDictionary<string, SqlExpression>(output);
 		}
 
-		public SqlMethodInfo MethodInfo { get; }
+		public SqlExpression ReturnedValue { get; }
 
-		public SqlExpression ResultValue { get; private set; }
+		public bool HasReturnedValue { get; }
 
-		public bool HasResult { get; private set; }
+		public IDictionary<string, SqlExpression> Output { get; }
 
-		public IDictionary<string, SqlExpression> Output => new ReadOnlyDictionary<string, SqlExpression>(output);
+		internal void Validate(SqlMethodInfo methodInfo, IContext context) {
+			if (methodInfo.IsFunction) {
+				var functionInfo = (SqlFunctionInfo) methodInfo;
+				if (!HasReturnedValue)
+					throw new InvalidOperationException();
 
-		public void SetOutput(string parameterName, SqlExpression value) {
-			if (String.IsNullOrWhiteSpace(parameterName))
-				throw new ArgumentNullException(nameof(parameterName));
+				var returnedType = ReturnedValue.ReturnType(context);
+				if (!returnedType.IsComparable(functionInfo.ReturnType))
+					throw new InvalidOperationException();
+			}
 
-			if (!MethodInfo.IsProcedure)
-				throw new InvalidOperationException($"The method {MethodInfo.FullName} is not a Procedure");
+			var output = methodInfo.Parameters.Where(x => x.IsOutput);
+			foreach (var requestedParam in output) {
+				SqlExpression outputValue;
+				if (!Output.TryGetValue(requestedParam.Name, out outputValue))
+					throw new InvalidOperationException();
 
-			SqlMethodParameterInfo parameter;
-			if (!MethodInfo.Parameters.ToDictionary(x => x.Name, y => y).TryGetValue(parameterName, out parameter))
-				throw new ArgumentException($"The method {MethodInfo.FullName} contains no parameter {parameterName}");
-
-			if (!parameter.IsOutput)
-				throw new ArgumentException($"The parameter {parameter.Name} is not an OUTPUT parameter");
-
-			output[parameterName] = value;
-		}
-
-		public void SetResult(SqlExpression value, IContext context) {
-			if (!MethodInfo.IsFunction)
-				throw new InvalidOperationException($"Trying to set the return type to the method {MethodInfo.FullName} that is not a function.");
-
-			var valueType = value.ReturnType(context);
-			if (!valueType.IsComparable(MethodInfo.ReturnType))
-				throw new InvalidOperationException($"The result type {valueType} of the expression is not compatible " +
-				                                    $"with the return type {MethodInfo.ReturnType} of the function {MethodInfo.FullName}");
-
-			ResultValue = value;
-			HasResult = true;
+				var outputType = outputValue.ReturnType(context);
+				if (!outputType.IsComparable(requestedParam.ParameterType))
+					throw new InvalidOperationException();
+			}
 		}
 	}
 }

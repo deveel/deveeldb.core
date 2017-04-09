@@ -4,12 +4,12 @@ using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Deveel.Data.Sql.Methods {
-	public sealed class SqlMethodInfo : IDbObjectInfo {
-		public SqlMethodInfo(ObjectName fullName, MethodType type) {
-			if (fullName == null)
-				throw new ArgumentNullException(nameof(fullName));
+	public abstract class SqlMethodInfo : IDbObjectInfo, ISqlFormattable {
+		internal SqlMethodInfo(ObjectName methodName, MethodType type) {
+			if (methodName == null)
+				throw new ArgumentNullException(nameof(methodName));
 
-			FullName = fullName;
+			MethodName = methodName;
 			Type = type;
 			Parameters = new ParameterCollection(this);
 		}
@@ -22,37 +22,44 @@ namespace Deveel.Data.Sql.Methods {
 
 		DbObjectType IDbObjectInfo.ObjectType => DbObjectType.Method;
 
-		public ObjectName FullName { get; }
+		public ObjectName MethodName { get; }
 
-		public ICollection<SqlMethodParameterInfo> Parameters { get; }
+		ObjectName IDbObjectInfo.FullName => MethodName;
 
-		public SqlType ReturnType { get; private set; }
+		public IList<SqlMethodParameterInfo> Parameters { get; }
 
 		public SqlMethodBody Body { get; set; }
 
-		public void SetReturnType(SqlType type) {
-			if (IsProcedure)
-				throw new InvalidOperationException($"Cannot set the return type for procedure {FullName}.");
-
-			ReturnType = type;
+		internal bool TryGetParameter(string name, bool ignoreCase, out SqlMethodParameterInfo paramInfo) {
+			var comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+			var dictionary = Parameters.ToDictionary(x => x.Name, y => y, comparer);
+			return dictionary.TryGetValue(name, out paramInfo);
 		}
 
-		internal void AppendTo(SqlStringBuilder builder) {
-			builder.Append(Type.ToString().ToUpperInvariant());
-			builder.Append(" ");
-			FullName.AppendTo(builder);
+		internal virtual void AppendTo(SqlStringBuilder builder) {
+		}
 
-			if (IsFunction &&
-			    ReturnType != null) {
-				builder.Append(" RETURNS ");
-				ReturnType.AppendTo(builder);
+		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
+			AppendTo(builder);
+		}
+
+		internal void AppendParametersTo(SqlStringBuilder builder) {
+			builder.Append("(");
+
+			if (Parameters == null) {
+				for (int i = 0; i < Parameters.Count; i++) {
+					Parameters[i].AppendTo(builder);
+
+					if (i < Parameters.Count - 1)
+						builder.Append(", ");
+				}
 			}
 
-			if (Body != null && Body is ISqlFormattable) {
-				builder.AppendLine(" IS");
-				builder.Indent();
-				(Body as ISqlFormattable).AppendTo(builder);
-			}
+			builder.Append(")");
+		}
+
+		public override string ToString() {
+			return this.ToSqlString();
 		}
 
 		#region ParameterCollection
@@ -66,12 +73,12 @@ namespace Deveel.Data.Sql.Methods {
 
 			private void AssertNotContains(string name) {
 				if (Items.Any(x => String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)))
-					throw new ArgumentException($"A parameter named {name} was already specified in method '{methodInfo.FullName}'.");
+					throw new ArgumentException($"A parameter named {name} was already specified in method '{methodInfo.MethodName}'.");
 			}
 
 			private void AssetNotOutputInFunction(SqlMethodParameterInfo parameter) {
 				if (parameter.IsOutput && methodInfo.IsFunction)
-					throw new ArgumentException($"Trying to add the OUT parameter {parameter.Name} to the function {methodInfo.FullName}");
+					throw new ArgumentException($"Trying to add the OUT parameter {parameter.Name} to the function {methodInfo.MethodName}");
 			}
 
 			protected override void InsertItem(int index, SqlMethodParameterInfo item) {
