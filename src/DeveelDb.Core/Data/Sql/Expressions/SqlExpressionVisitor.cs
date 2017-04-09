@@ -49,6 +49,9 @@ namespace Deveel.Data.Sql.Expressions {
 				case SqlExpressionType.Negate:
 				case SqlExpressionType.UnaryPlus:
 					return VisitUnary((SqlUnaryExpression) expression);
+				case SqlExpressionType.Any:
+				case SqlExpressionType.All:
+					return VisitQuantify((SqlQuantifyExpression) expression);
 				case SqlExpressionType.Cast:
 					return VisitCast((SqlCastExpression) expression);
 				case SqlExpressionType.Reference:
@@ -70,6 +73,14 @@ namespace Deveel.Data.Sql.Expressions {
 				default:
 					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
 			}
+		}
+
+		public virtual SqlExpression VisitQuantify(SqlQuantifyExpression expression) {
+			var exp = expression.Expression;
+			if (exp != null)
+				Visit(exp);
+
+			return SqlExpression.Quantify(expression.ExpressionType, exp);
 		}
 
 		public virtual SqlExpression VisitCondition(SqlConditionExpression expression) {

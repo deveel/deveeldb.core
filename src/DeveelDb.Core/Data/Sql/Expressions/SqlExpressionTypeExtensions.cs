@@ -43,11 +43,37 @@ namespace Deveel.Data.Sql.Expressions {
 			}
 		}
 
+		public static bool IsRelational(this SqlExpressionType expressionType) {
+			switch (expressionType) {
+				case SqlExpressionType.Equal:
+				case SqlExpressionType.NotEqual:
+				case SqlExpressionType.GreaterThan:
+				case SqlExpressionType.LessThan:
+				case SqlExpressionType.GreaterThanOrEqual:
+				case SqlExpressionType.LessThanOrEqual:
+				case SqlExpressionType.Is:
+				case SqlExpressionType.IsNot:
+					return true;
+				default:
+					return false;
+			}
+		}
+
 		public static bool IsUnary(this SqlExpressionType expressionType) {
 			switch (expressionType) {
 				case SqlExpressionType.UnaryPlus:
 				case SqlExpressionType.Not:
 				case SqlExpressionType.Negate:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public static bool IsQuantify(this SqlExpressionType expressionType) {
+			switch (expressionType) {
+				case SqlExpressionType.All:
+				case SqlExpressionType.Any:
 					return true;
 				default:
 					return false;

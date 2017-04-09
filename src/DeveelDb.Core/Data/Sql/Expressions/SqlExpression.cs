@@ -229,6 +229,19 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlGroupExpression Group(SqlExpression expression)
 			=> new SqlGroupExpression(expression);
 
+		public static SqlQuantifyExpression Quantify(SqlExpressionType expressionType, SqlBinaryExpression expression) {
+			if (!expressionType.IsQuantify())
+				throw new ArgumentException($"The expression type {expressionType} is not a quantification expression");
+
+			return new SqlQuantifyExpression(expressionType, expression);
+		}
+
+		public static SqlQuantifyExpression Any(SqlBinaryExpression expression)
+			=> Quantify(SqlExpressionType.Any, expression);
+
+		public static SqlQuantifyExpression All(SqlBinaryExpression expression)
+			=> Quantify(SqlExpressionType.All, expression);
+
 		#endregion
 	}
 }

@@ -124,7 +124,7 @@ namespace Deveel.Data.Sql.Expressions {
 			Right.AppendTo(builder);
 		}
 
-		private string GetOperatorString() {
+		internal string GetOperatorString() {
 			switch (ExpressionType) {
 				case SqlExpressionType.Add:
 					return "+";
