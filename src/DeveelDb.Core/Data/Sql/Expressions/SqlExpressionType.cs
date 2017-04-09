@@ -84,7 +84,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		ReferenceAssign,
 
-		Tuple,
+		Group,
 
 		/// <summary>
 		/// A query to the database to select data from

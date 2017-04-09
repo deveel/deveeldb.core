@@ -18,6 +18,7 @@
 using System;
 
 using Deveel.Data.Configuration;
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -55,6 +56,33 @@ namespace Deveel.Data.Sql.Expressions {
 				Type = variable.Type;
 
 			return base.VisitVariableAssign(expression);
+		}
+
+		public override SqlExpression VisitBinary(SqlBinaryExpression expression) {
+			switch (expression.ExpressionType) {
+				case SqlExpressionType.Add:
+				case SqlExpressionType.Subtract:
+				case SqlExpressionType.Multiply:
+				case SqlExpressionType.Modulo: {
+					var leftType = expression.Left.ReturnType(context);
+					var rightType = expression.Right.ReturnType(context);
+					Type = leftType.Wider(rightType);
+					break;
+				}
+				default:
+					Type = PrimitiveTypes.Boolean();
+					break;
+			}
+			return base.VisitBinary(expression);
+		}
+
+		public override SqlExpression VisitReference(SqlReferenceExpression expression) {
+			var resolver = context.Scope.Resolve<IReferenceResolver>();
+			var reference = resolver.ResolveReference(expression.ReferenceName);
+			if (reference != null)
+				Type = reference.Type;
+
+			return base.VisitReference(expression);
 		}
 	}
 }

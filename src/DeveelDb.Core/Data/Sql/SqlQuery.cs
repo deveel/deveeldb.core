@@ -111,6 +111,8 @@ namespace Deveel.Data.Sql {
 		/// </summary>
 		public SqlQueryParameterNaming ParameterNaming { get; private set; }
 
+		public ISqlExpressionPreparer ExpressionPreparer => new QueryPreparer(this);
+
 		internal void ChangeNaming(SqlQueryParameterNaming naming) {
 			if (ParameterNaming != SqlQueryParameterNaming.Default)
 				throw new InvalidOperationException("Cannot change the parameter style if it was not set to default");
@@ -119,11 +121,6 @@ namespace Deveel.Data.Sql {
 
 			ParameterNaming = naming;
 			((QueryParameterCollection)Parameters).ValidateAll();
-		}
-
-		public object Prepare(ISqlExpressionPreparable obj) {
-			var preparer = new QueryPreparer(this);
-			return obj.PrepareExpressions(preparer);
 		}
 
 		#region QueryParameterCollection

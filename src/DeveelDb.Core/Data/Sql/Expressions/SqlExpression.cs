@@ -89,7 +89,7 @@ namespace Deveel.Data.Sql.Expressions {
 					return 70;
 				
 				// Tuple
-				case SqlExpressionType.Tuple:
+				case SqlExpressionType.Group:
 					return 60;
 			}
 
@@ -225,6 +225,9 @@ namespace Deveel.Data.Sql.Expressions {
 			=> new SqlConditionExpression(test, ifTrue, ifFalse);
 
 		public static SqlParameterExpression Parameter() => new SqlParameterExpression();
+
+		public static SqlGroupExpression Group(SqlExpression expression)
+			=> new SqlGroupExpression(expression);
 
 		#endregion
 	}
