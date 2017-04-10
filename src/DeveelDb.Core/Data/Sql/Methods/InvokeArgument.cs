@@ -16,13 +16,19 @@ namespace Deveel.Data.Sql.Methods {
 			Value = value;
 		}
 
+		public InvokeArgument(SqlObject value)
+			: this(null, value) {
+		}
+
+		public InvokeArgument(string parameterName, SqlObject value)
+			: this(parameterName, SqlExpression.Constant(value)) {
+		}
+
 		public string ParameterName { get; }
 
 		public bool IsNamed => !String.IsNullOrEmpty(ParameterName);
 
 		public SqlExpression Value { get; }
-
-		public int Offset { get; internal set; }
 
 		public override string ToString() {
 			return this.ToSqlString();

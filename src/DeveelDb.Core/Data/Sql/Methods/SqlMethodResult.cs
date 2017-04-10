@@ -25,7 +25,7 @@ namespace Deveel.Data.Sql.Methods {
 				if (!HasReturnedValue)
 					throw new InvalidOperationException();
 
-				var returnedType = ReturnedValue.ReturnType(context);
+				var returnedType = ReturnedValue.GetSqlType(context);
 				if (!returnedType.IsComparable(functionInfo.ReturnType))
 					throw new InvalidOperationException();
 			}
@@ -36,7 +36,7 @@ namespace Deveel.Data.Sql.Methods {
 				if (!Output.TryGetValue(requestedParam.Name, out outputValue))
 					throw new InvalidOperationException();
 
-				var outputType = outputValue.ReturnType(context);
+				var outputType = outputValue.GetSqlType(context);
 				if (!outputType.IsComparable(requestedParam.ParameterType))
 					throw new InvalidOperationException();
 			}

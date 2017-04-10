@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
@@ -25,6 +26,27 @@ namespace Deveel.Data.Sql.Methods {
 
 				return result;
 			}
+		}
+
+		public Task<SqlMethodResult> ExecuteAsync(IContext context, params InvokeArgument[] args) {
+			var invoke = new Invoke(MethodInfo.MethodName);
+			foreach (var arg in args) {
+				invoke.Arguments.Add(arg);
+			}
+
+			return ExecuteAsync(context, invoke);
+		}
+
+		public Task<SqlMethodResult> ExecuteAsync(IContext context, params SqlExpression[] args) {
+			var invokeArgs = args == null ? new InvokeArgument[0] : args.Select(x => new InvokeArgument(x)).ToArray();
+			return ExecuteAsync(context, invokeArgs);
+		}
+
+		public Task<SqlMethodResult> ExecuteAsync(IContext context, params SqlObject[] args) {
+			var exps = args == null
+				? new SqlExpression[0]
+				: args.Select(SqlExpression.Constant).Cast<SqlExpression>().ToArray();
+			return ExecuteAsync(context, exps);
 		}
 
 		protected virtual Task ExecuteContextAsync(MethodContext context) {
@@ -62,7 +84,7 @@ namespace Deveel.Data.Sql.Methods {
 					paramInfo = MethodInfo.Parameters[i];
 				}
 
-				var argType = arg.Value.ReturnType(context);
+				var argType = arg.Value.GetSqlType(context);
 				if (!argType.IsComparable(paramInfo.ParameterType))
 					return false;
 			}

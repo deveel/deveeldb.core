@@ -7,7 +7,7 @@ using Deveel.Data.Sql.Expressions;
 using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Methods {
-	public sealed class Invoke : ISqlFormattable, IVariableResolver {
+	public sealed class Invoke : ISqlFormattable {
 		public Invoke(ObjectName methodName) {
 			if (methodName == null)
 				throw new ArgumentNullException(nameof(methodName));
@@ -40,17 +40,6 @@ namespace Deveel.Data.Sql.Methods {
 
 		public override string ToString() {
 			return this.ToSqlString();
-		}
-
-		Variable IVariableResolver.ResolveVariable(string name, bool ignoreCase) {
-			var dictionary = Arguments.Where(x => x.IsNamed).ToDictionary(x => x.ParameterName);
-			InvokeArgument arg;
-			if (!dictionary.TryGetValue(name, out arg))
-				return null;
-
-			// TODO: circumvent the limitation of reducing with a context
-			var type = arg.Value.ReturnType(null);
-			return new Variable(arg.ParameterName, type, true, arg.Value);
 		}
 
 		#region ArgumentList

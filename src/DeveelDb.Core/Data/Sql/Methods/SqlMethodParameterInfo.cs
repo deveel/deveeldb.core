@@ -1,12 +1,21 @@
 ﻿using System;
 
+using Deveel.Data.Sql.Expressions;
+
 namespace Deveel.Data.Sql.Methods {
 	public sealed class SqlMethodParameterInfo : ISqlFormattable {
 		public SqlMethodParameterInfo(string name, SqlType parameterType) 
-			: this(name, parameterType, SqlParameterDirection.In) {
+			: this(name, parameterType, null) {
 		}
 
-		public SqlMethodParameterInfo(string name, SqlType parameterType, SqlParameterDirection direction) {
+		public SqlMethodParameterInfo(string name, SqlType parameterType, SqlExpression defaultValue) 
+			: this(name, parameterType, defaultValue, SqlParameterDirection.In) {
+		}
+
+		public SqlMethodParameterInfo(string name, SqlType parameterType, SqlParameterDirection direction) : this(name, parameterType, null, direction) {
+		}
+
+		public SqlMethodParameterInfo(string name, SqlType parameterType, SqlExpression defaultValue, SqlParameterDirection direction) {
 			if (String.IsNullOrWhiteSpace(name))
 				throw new ArgumentNullException(nameof(name));
 			if (parameterType == null)
@@ -14,6 +23,7 @@ namespace Deveel.Data.Sql.Methods {
 
 			Name = name;
 			ParameterType = parameterType;
+			DefaultValue = defaultValue;
 			Direction = direction;
 		}
 
@@ -22,6 +32,10 @@ namespace Deveel.Data.Sql.Methods {
 		public string Name { get; }
 
 		public SqlParameterDirection Direction { get; }
+
+		public SqlExpression DefaultValue { get; }
+
+		public bool HasDefaultValue => DefaultValue != null;
 
 		public int Offset { get; internal set; }
 

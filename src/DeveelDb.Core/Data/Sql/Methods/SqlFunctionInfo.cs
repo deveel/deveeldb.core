@@ -1,8 +1,14 @@
 ﻿using System;
-using System.Reflection;
+using System.Threading.Tasks;
+
+using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
 	public sealed class SqlFunctionInfo : SqlMethodInfo {
+		public SqlFunctionInfo(ObjectName functionName, SqlType returnType)
+			: this(functionName, FunctionType.Scalar, returnType) {
+		}
+
 		public SqlFunctionInfo(ObjectName functionName, FunctionType functionType, SqlType returnType)
 			: base(functionName, MethodType.Function) {
 			if (returnType == null)
@@ -31,6 +37,17 @@ namespace Deveel.Data.Sql.Methods {
 				builder.Indent();
 				Body.AppendTo(builder);
 			}
+		}
+
+		public void SetFunctionBody(Func<MethodContext, Task<SqlObject>> body) {
+			if (!IsFunction)
+				throw new InvalidOperationException($"Trying to set a function body to {MethodName} that is not a function");
+
+			Body = SqlMethodDelegate.Function(this, body);
+		}
+
+		public void SetFunctionBody(Func<MethodContext, Task<SqlExpression>> body) {
+			
 		}
 	}
 }
