@@ -29,6 +29,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlObject Value { get; }
 
+		public override SqlType GetSqlType(IContext context) {
+			return Value.Type;
+		}
+
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitConstant(this);
 		}

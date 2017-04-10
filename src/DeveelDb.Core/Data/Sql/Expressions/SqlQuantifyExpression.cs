@@ -21,6 +21,10 @@ namespace Deveel.Data.Sql.Expressions {
 			return visitor.VisitQuantify(this);
 		}
 
+		public override SqlType GetSqlType(IContext context) {
+			return PrimitiveTypes.Boolean();
+		}
+
 		protected override void AppendTo(SqlStringBuilder builder) {
 			Expression.Left.AppendTo(builder);
 
@@ -41,7 +45,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (Expression.Right is SqlQueryExpression)
 				return ReduceQuery(context);
 
-			var resultType = Expression.Right.ReturnType(context);
+			var resultType = Expression.Right.GetSqlType(context);
 			if (resultType is SqlArrayType) {
 				return ReduceArray(context);
 			}

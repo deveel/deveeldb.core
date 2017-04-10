@@ -74,5 +74,9 @@ namespace Deveel.Data.Sql.Expressions {
 					throw new SqlExpressionException($"Expression type {ExpressionType} has no operator");
 			}
 		}
+
+		public override SqlType GetSqlType(IContext context) {
+			return Operand.Type;
+		}
 	}
 }

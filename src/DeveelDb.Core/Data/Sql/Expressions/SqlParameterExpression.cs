@@ -10,6 +10,10 @@ namespace Deveel.Data.Sql.Expressions {
 			return visitor.VisitParameter(this);
 		}
 
+		public override SqlType GetSqlType(IContext context) {
+			throw new InvalidOperationException();
+		}
+
 		protected override void AppendTo(SqlStringBuilder builder) {
 			builder.Append("?");
 		}

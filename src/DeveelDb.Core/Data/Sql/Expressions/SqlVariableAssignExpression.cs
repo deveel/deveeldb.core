@@ -21,10 +21,6 @@ using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlVariableAssignExpression : SqlExpression {
-		public string VariableName { get; }
-
-		public SqlExpression Value { get; }
-
 		internal SqlVariableAssignExpression(string variableName, SqlExpression value)
 			: base(SqlExpressionType.VariableAssign) {
 			if (String.IsNullOrWhiteSpace(variableName))
@@ -39,7 +35,13 @@ namespace Deveel.Data.Sql.Expressions {
 			Value = value;
 		}
 
+		public string VariableName { get; }
+
+		public SqlExpression Value { get; }
+
 		public override bool CanReduce => true;
+
+		public override bool IsReference => true;
 
 		public override SqlExpression Reduce(IContext context) {
 			if (context == null)
@@ -50,6 +52,21 @@ namespace Deveel.Data.Sql.Expressions {
 				throw new SqlExpressionException("No variable manager was found in the context hierarchy");
 
 			return manager.AssignVariable(VariableName, Value, context);
+		}
+
+		public override SqlType GetSqlType(IContext context) {
+			if (context == null)
+				throw new SqlExpressionException("A context is required to reduce a variable expression");
+
+			var manager = context.ResolveVariableManager();
+			if (manager == null)
+				throw new SqlExpressionException("No variable manager was found in the context hierarchy");
+
+			var variable = manager.GetVariable(VariableName);
+			if (variable == null)
+				throw new SqlExpressionException();
+
+			return variable.Type;
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

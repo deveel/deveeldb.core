@@ -28,10 +28,20 @@ namespace Deveel.Data.Sql.Expressions {
 			return visitor.VisitCondition(this);
 		}
 
+		public override SqlType GetSqlType(IContext context) {
+			return IfTrue.GetSqlType(context);
+		}
+
 		public override SqlExpression Reduce(IContext context) {
-			var returnType = Test.ReturnType(context);
+			var returnType = Test.GetSqlType(context);
 			if (!(returnType is SqlBooleanType))
 				throw new InvalidOperationException("The expression test has not a BOOLEAN result");
+
+			var ifTrueType = IfTrue.GetSqlType(context);
+			var ifFalseType = IfFalse.GetSqlType(context);
+
+			if (!ifTrueType.IsComparable(ifFalseType))
+				throw new SqlExpressionException("The value returned in case of TRUE and in case of FALSE must be compatible");
 
 			var testResult = Test.Reduce(context);
 			if (testResult.ExpressionType != SqlExpressionType.Constant)

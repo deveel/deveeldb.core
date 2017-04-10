@@ -37,6 +37,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public ObjectName GroupMax { get; set; }
 
+		public override SqlType GetSqlType(IContext context) {
+			throw new NotImplementedException();
+		}
+
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitQuery(this);
 		}
