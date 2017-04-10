@@ -20,6 +20,10 @@ namespace Deveel.Data.Sql.Methods {
 			return func(context);
 		}
 
+		protected override void AppendTo(SqlStringBuilder builder) {
+			builder.Append("[delegate]");
+		}
+
 		private static Func<MethodContext, Task> MakeFunction(Action<MethodContext> action) {
 			return context => {
 				action(context);

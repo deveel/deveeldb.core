@@ -58,6 +58,11 @@ namespace Deveel.Data.Sql.Methods {
 				if (IsOutput)
 					builder.Append("OUTPUT");
 			}
+
+			if (HasDefaultValue) {
+				builder.Append(" := ");
+				DefaultValue.AppendTo(builder);
+			}
 		}
 
 		public override string ToString() {

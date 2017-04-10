@@ -2,6 +2,6 @@
 
 namespace Deveel.Data.Sql.Methods {
 	public interface IMethodResolver {
-		SqlMethod ResolveMethod(Invoke invoke);
+		SqlMethod ResolveMethod(IContext context, Invoke invoke);
 	}
 }

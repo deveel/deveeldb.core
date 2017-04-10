@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
+using Deveel.Data.Configuration;
+
 namespace Deveel.Data.Sql.Methods {
 	public abstract class SqlMethodInfo : IDbObjectInfo, ISqlFormattable {
 		internal SqlMethodInfo(ObjectName methodName, MethodType type) {
@@ -46,7 +48,7 @@ namespace Deveel.Data.Sql.Methods {
 		internal void AppendParametersTo(SqlStringBuilder builder) {
 			builder.Append("(");
 
-			if (Parameters == null) {
+			if (Parameters != null) {
 				for (int i = 0; i < Parameters.Count; i++) {
 					Parameters[i].AppendTo(builder);
 
@@ -60,6 +62,38 @@ namespace Deveel.Data.Sql.Methods {
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+		public bool Matches(IContext context, Invoke invoke) {
+			return Matches(this, context, invoke);
+		}
+
+		public static bool Matches(SqlMethodInfo methodInfo, IContext context, Invoke invoke) {
+			var ignoreCase = context.GetValue("ignoreCase", true);
+
+			if (!methodInfo.MethodName.Equals(invoke.MethodName, ignoreCase))
+				return false;
+			if (methodInfo.Parameters.Count != invoke.Arguments.Count)
+				return false;
+
+			for (int i = 0; i < invoke.Arguments.Count; i++) {
+				var arg = invoke.Arguments[i];
+
+				SqlMethodParameterInfo paramInfo;
+				if (arg.IsNamed) {
+					if (!methodInfo.TryGetParameter(arg.ParameterName, ignoreCase, out paramInfo))
+						return false;
+				} else {
+					paramInfo = methodInfo.Parameters[i];
+				}
+
+				var argType = arg.Value.GetSqlType(context);
+				if (!argType.IsComparable(paramInfo.ParameterType))
+					return false;
+			}
+
+			return true;
+
 		}
 
 		#region ParameterCollection

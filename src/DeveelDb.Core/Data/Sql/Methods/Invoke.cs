@@ -3,17 +3,24 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-using Deveel.Data.Sql.Expressions;
-using Deveel.Data.Sql.Variables;
-
 namespace Deveel.Data.Sql.Methods {
 	public sealed class Invoke : ISqlFormattable {
-		public Invoke(ObjectName methodName) {
+		public Invoke(ObjectName methodName) 
+			: this(methodName, new InvokeArgument[0]) {
+		}
+
+		public Invoke(ObjectName methodName, InvokeArgument[] args) {
 			if (methodName == null)
 				throw new ArgumentNullException(nameof(methodName));
 
 			MethodName = methodName;
 			Arguments = new ArgumentList(this);
+
+			if (args != null) {
+				foreach (var arg in args) {
+					Arguments.Add(arg);
+				}
+			}
 		}
 
 		public ObjectName MethodName { get; }

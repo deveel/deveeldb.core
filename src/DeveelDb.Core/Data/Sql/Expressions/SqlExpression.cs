@@ -17,6 +17,8 @@
 
 using System;
 
+using Deveel.Data.Sql.Methods;
+
 namespace Deveel.Data.Sql.Expressions {
 	public abstract class SqlExpression : ISqlFormattable {
 		protected SqlExpression(SqlExpressionType expressionType) {
@@ -28,7 +30,7 @@ namespace Deveel.Data.Sql.Expressions {
 			switch (ExpressionType) {
 				// Primary
 				case SqlExpressionType.Reference:
-				case SqlExpressionType.Invoke:
+				case SqlExpressionType.Function:
 				case SqlExpressionType.Constant:
 				case SqlExpressionType.Variable:
 				case SqlExpressionType.Parameter:
@@ -247,6 +249,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public static SqlQuantifyExpression All(SqlBinaryExpression expression)
 			=> Quantify(SqlExpressionType.All, expression);
+
+		public static SqlFunctionExpression Function(ObjectName functionName, params InvokeArgument[] args) {
+			return new SqlFunctionExpression(functionName, args);
+		}
 
 		#endregion
 	}

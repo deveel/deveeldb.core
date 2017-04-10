@@ -47,7 +47,11 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		public void SetFunctionBody(Func<MethodContext, Task<SqlExpression>> body) {
-			
+			if (!IsFunction)
+				throw new InvalidOperationException($"Trying to set a function body to {MethodName} that is not a function");
+
+			Body = SqlMethodDelegate.Function(this, body);
+
 		}
 	}
 }

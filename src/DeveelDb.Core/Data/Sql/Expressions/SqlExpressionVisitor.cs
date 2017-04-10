@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Deveel.Data.Query;
+using Deveel.Data.Sql.Methods;
 
 namespace Deveel.Data.Sql.Expressions {
 	public class SqlExpressionVisitor : ISqlExpressionVisitor {
@@ -62,6 +63,8 @@ namespace Deveel.Data.Sql.Expressions {
 					return VisitReferenceAssign((SqlReferenceAssignExpression) expression);
 				case SqlExpressionType.VariableAssign:
 					return VisitVariableAssign((SqlVariableAssignExpression) expression);
+				case SqlExpressionType.Function:
+					return VisitFunction((SqlFunctionExpression) expression);
 				case SqlExpressionType.Condition:
 					return VisitCondition((SqlConditionExpression) expression);
 				case SqlExpressionType.Parameter:
@@ -75,6 +78,31 @@ namespace Deveel.Data.Sql.Expressions {
 				default:
 					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
 			}
+		}
+
+		public virtual InvokeArgument[] VisitInvokeArguments(IList<InvokeArgument> arguments) {
+			if (arguments == null)
+				return null;
+
+			var result = new InvokeArgument[arguments.Count];
+			for (int i = 0; i < arguments.Count; i++) {
+				result[i] = VisitInvokeArgument(arguments[i]);
+			}
+
+			return result;
+		}
+
+		public virtual InvokeArgument VisitInvokeArgument(InvokeArgument argument) {
+			var value = argument.Value;
+			if (value != null)
+				value = Visit(value);
+
+			return new InvokeArgument(argument.ParameterName, value);
+		}
+
+		public virtual SqlExpression VisitFunction(SqlFunctionExpression expression) {
+			var args = VisitInvokeArguments(expression.Arguments);
+			return SqlExpression.Function(expression.FunctionName, args);
 		}
 
 		public virtual SqlExpression VisitGroup(SqlGroupExpression expression) {

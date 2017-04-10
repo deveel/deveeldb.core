@@ -93,7 +93,16 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		Variable IVariableResolver.ResolveVariable(string name, bool ignoreCase) {
-			throw new NotImplementedException();
+			SqlMethodParameterInfo paramInfo;
+			if (!MethodInfo.TryGetParameter(name, ignoreCase, out paramInfo))
+				return null;
+
+			SqlExpression value;
+			if (!namedArgs.TryGetValue(name, out value)) {
+				value = SqlExpression.Constant(SqlObject.Null);
+			}
+
+			return new Variable(name, paramInfo.ParameterType, true, value);
 		}
 
 		internal SqlMethodResult CreateResult() {

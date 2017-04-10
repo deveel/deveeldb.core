@@ -65,31 +65,8 @@ namespace Deveel.Data.Sql.Methods {
 			return this.ToSqlString();
 		}
 
-		public bool MatchesInvoke(Invoke invoke, IContext context) {
-			var ignoreCase = context.GetValue("ignoreCase", true);
-
-			if (!MethodInfo.MethodName.Equals(invoke.MethodName, ignoreCase))
-				return false;
-			if (MethodInfo.Parameters.Count != invoke.Arguments.Count)
-				return false;
-
-			for (int i = 0; i < invoke.Arguments.Count; i++) {
-				var arg = invoke.Arguments[i];
-
-				SqlMethodParameterInfo paramInfo;
-				if (arg.IsNamed) {
-					if (!MethodInfo.TryGetParameter(arg.ParameterName, ignoreCase, out paramInfo))
-						return false;
-				} else {
-					paramInfo = MethodInfo.Parameters[i];
-				}
-
-				var argType = arg.Value.GetSqlType(context);
-				if (!argType.IsComparable(paramInfo.ParameterType))
-					return false;
-			}
-
-			return true;
+		public bool Matches(IContext context, Invoke invoke) {
+			return MethodInfo.Matches(context, invoke);
 		}
 	}
 }

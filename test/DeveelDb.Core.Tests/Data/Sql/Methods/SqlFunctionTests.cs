@@ -36,13 +36,40 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		[Fact]
+		public static void GetString() {
+			var name = ObjectName.Parse("a.func");
+			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
+			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.SetFunctionBody(ctx => {
+				var a = ctx.Value("a");
+				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
+			});
+
+			var function = new SqlFunction(info);
+
+			var sql = $"FUNCTION a.func(a INTEGER) RETURNS INTEGER IS{Environment.NewLine}  [delegate]";
+			Assert.Equal(sql, function.ToString());
+		}
+
+		[Fact]
+		public static void MatchInvoke() {
+			var name = ObjectName.Parse("a.func");
+			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
+			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+
+			var invoke = new Invoke(name, new []{new InvokeArgument(SqlObject.BigInt(11)) });
+
+			Assert.True(info.Matches(null, invoke));
+		}
+
+		[Fact]
 		public async Task ExecuteFunctionWithSequentialArgs() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
 			info.SetFunctionBody(ctx => {
-				var a = (SqlConstantExpression) ctx.Argument("a").Reduce(context);
-				return Task.FromResult(a.Value.Multiply(SqlObject.BigInt(2)));
+				var a = ctx.Value("a");
+				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
 			});
 
 			var function = new SqlFunction(info);
