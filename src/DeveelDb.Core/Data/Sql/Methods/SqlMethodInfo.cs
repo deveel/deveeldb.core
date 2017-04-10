@@ -37,6 +37,11 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		internal virtual void AppendTo(SqlStringBuilder builder) {
+			builder.Append(Type.ToString().ToUpperInvariant());
+			builder.Append(" ");
+			MethodName.AppendTo(builder);
+
+			AppendParametersTo(builder);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {

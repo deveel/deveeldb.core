@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Deveel.Data.Services;
@@ -46,7 +45,7 @@ namespace Deveel.Data.Sql.Methods {
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
 			});
 
-			var sql = $"FUNCTION a.func(a INTEGER) RETURNS INTEGER IS{Environment.NewLine}  [delegate]";
+			var sql = $"FUNCTION a.func(a INTEGER) RETURNS INTEGER";
 			Assert.Equal(sql, function.ToString());
 		}
 
@@ -62,7 +61,7 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		[Fact]
-		public async Task ExecuteFunctionWithSequentialArgs() {
+		public async Task ExecuteWithSequentialArgs() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
@@ -89,7 +88,7 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		[Fact]
-		public async Task ExecuteFunctionWithNamedArgs() {
+		public async Task ExecuteWithNamedArgs() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
@@ -115,7 +114,7 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		[Fact]
-		public async Task ExecuteFunctionWithNamedArgsAndDefaultValue() {
+		public async Task ExecuteWithNamedArgsAndDefaultValue() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));

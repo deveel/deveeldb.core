@@ -20,10 +20,6 @@ namespace Deveel.Data.Sql.Methods {
 			return func(context);
 		}
 
-		protected override void AppendTo(SqlStringBuilder builder) {
-			builder.Append("[delegate]");
-		}
-
 		private static Func<MethodContext, Task> MakeFunction(Action<MethodContext> action) {
 			return context => {
 				action(context);
@@ -31,7 +27,7 @@ namespace Deveel.Data.Sql.Methods {
 			};
 		}
 
-		public static SqlMethodDelegate Function(SqlFunctionInfo functionInfo, Func<MethodContext, Task<SqlExpression>> function) {
+		public static SqlMethodDelegate Function(SqlMethodInfo functionInfo, Func<MethodContext, Task<SqlExpression>> function) {
 			Func<MethodContext, Task> body = async context => {
 				var result = await function(context);
 				context.SetResult(result);
@@ -40,13 +36,26 @@ namespace Deveel.Data.Sql.Methods {
 			return new SqlMethodDelegate(functionInfo, MethodType.Function, body);
 		}
 
-		public static SqlMethodDelegate Function(SqlFunctionInfo functionInfo, Func<MethodContext, Task<SqlObject>> function) {
+		public static SqlMethodDelegate Function(SqlMethodInfo functionInfo, Func<MethodContext, Task<SqlObject>> function) {
 			Func<MethodContext, Task<SqlExpression>> body = async context => {
 				var result = await function(context);
 				return SqlExpression.Constant(result);
 			};
 
 			return Function(functionInfo, body);
+		}
+
+		public static SqlMethodDelegate Procedure(SqlMethodInfo methodInfo, Func<MethodContext, Task> procedure) {
+			return new SqlMethodDelegate(methodInfo, MethodType.Procedure, procedure);
+		}
+
+		public static SqlMethodDelegate Procedure(SqlMethodInfo methodInfo, Action<MethodContext> procedure) {
+			Func<MethodContext, Task> body = context => {
+				procedure(context);
+				return Task.CompletedTask;
+			};
+
+			return Procedure(methodInfo, body);
 		}
 	}
 }

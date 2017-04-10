@@ -62,8 +62,6 @@ namespace Deveel.Data.Sql.Methods {
 			MethodInfo.AppendTo(builder);
 
 			if (Body != null) {
-				builder.AppendLine(" IS");
-				builder.Indent();
 				Body.AppendTo(builder);
 			}
 		}
