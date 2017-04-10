@@ -55,10 +55,17 @@ namespace Deveel.Data.Sql {
 		[InlineData("true", typeof(bool), true)]
 		[InlineData("false", typeof(bool), false)]
 		[InlineData("4556.931", typeof(double), 4556.931)]
+		[InlineData("894.94", typeof(float), 894.94)]
+		[InlineData("1233344", typeof(int), 1233344)]
 		[InlineData("82211993", typeof(long), 82211993L)]
 		[InlineData("3", typeof(byte), (byte)3)]
+		[InlineData("-45", typeof(sbyte), (sbyte)-45)]
 		[InlineData("5466", typeof(short), (short) 5466)]
 		[InlineData("quick brown fox", typeof(string), "quick brown fox")]
+		[InlineData("674844665", typeof(uint), (uint)674844665)]
+		[InlineData("58484993394049", typeof(ulong), (ulong)58484993394049)]
+		[InlineData("54222", typeof(ushort), (ushort)54222)]
+		[InlineData("c", typeof(char), 'c')]
 		public static void Convert_ChangeType(string source, Type type, object expected) {
 			var s = new SqlString(source);
 			var result = Convert.ChangeType(s, type, CultureInfo.InvariantCulture);
@@ -187,6 +194,38 @@ namespace Deveel.Data.Sql {
 			var hashCode2 = sqlString2.GetHashCode();
 
 			Assert.Equal(expected, hashCode1.Equals(hashCode2));
+		}
+
+		[Theory]
+		[InlineData("The quick brown fox")]
+		public static void ReadInput(string s) {
+			var sqlString = new SqlString(s);
+
+			var input = sqlString.GetInput();
+			Assert.NotNull(input);
+
+			var text = input.ReadToEnd();
+			Assert.Equal(s, text);
+		}
+		
+		[Theory]
+		[InlineData("the quick brown fox", "the quick brown fox", true)]
+		[InlineData("the quick brown fox", "the brown fox", false)]
+		public static void Equality(string s1, string s2, bool expected) {
+			var sql1 = new SqlString(s1);
+			var sql2 = new SqlString(s2);
+
+			Assert.Equal(expected, sql1 == sql2);
+		}
+
+		[Theory]
+		[InlineData("the quick brown fox", "the quick brown fox", false)]
+		[InlineData("the quick brown fox", "the brown fox", true)]
+		public static void Inequality(string s1, string s2, bool expected) {
+			var sql1 = new SqlString(s1);
+			var sql2 = new SqlString(s2);
+
+			Assert.Equal(expected, sql1 != sql2);
 		}
 	}
 }

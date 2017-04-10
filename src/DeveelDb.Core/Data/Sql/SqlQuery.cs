@@ -204,9 +204,9 @@ namespace Deveel.Data.Sql {
 				}
 
 				if (param == null)
-					throw new InvalidOperationException();
+					throw new SqlExpressionException("Could not determine a parameter in the query context");
 				if (param.Direction != SqlParameterDirection.In)
-					throw new InvalidOperationException($"Parameter {param.Name} is not INPUT");
+					throw new SqlExpressionException($"Parameter {param.Name} is not INPUT");
 
 				return SqlExpression.Constant(new SqlObject(param.SqlType, param.Value));
 			}

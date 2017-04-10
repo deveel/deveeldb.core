@@ -70,9 +70,19 @@ namespace Deveel.Data.Sql.Expressions {
 					return VisitConstant((SqlConstantExpression) expression);
 				case SqlExpressionType.Query:
 					return VisitQuery((SqlQueryExpression) expression);
+				case SqlExpressionType.Group:
+					return VisitGroup((SqlGroupExpression) expression);
 				default:
 					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
 			}
+		}
+
+		public virtual SqlExpression VisitGroup(SqlGroupExpression expression) {
+			var child = expression.Expression;
+			if (child != null)
+				child = Visit(child);
+
+			return SqlExpression.Group(child);
 		}
 
 		public virtual SqlExpression VisitQuantify(SqlQuantifyExpression expression) {

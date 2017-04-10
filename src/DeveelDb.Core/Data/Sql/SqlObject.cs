@@ -16,6 +16,9 @@
 
 
 using System;
+using System.Linq;
+
+using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql {
 	public sealed class SqlObject : IComparable<SqlObject>, IComparable, ISqlFormattable, IEquatable<SqlObject> {
@@ -407,6 +410,38 @@ namespace Deveel.Data.Sql {
 
 		public static SqlObject String(SqlString value) {
 			return new SqlObject(PrimitiveTypes.String(), value);
+		}
+
+		#endregion
+
+		#region Numeric
+
+		public static SqlObject Integer(int value) {
+			return new SqlObject(PrimitiveTypes.Integer(), (SqlNumber)value);
+		}
+
+		public static SqlObject BigInt(long value) {
+			return new SqlObject(PrimitiveTypes.BigInt(), (SqlNumber)value);
+		}
+
+		public static SqlObject Numeric(SqlNumber value) {
+			return new SqlObject(PrimitiveTypes.Numeric(value.Precision, value.Scale), value);
+		}
+
+		#endregion
+
+		#region Array
+
+		public static SqlObject Array(SqlArray array) {
+			return new SqlObject(PrimitiveTypes.Array(array.Length), array);
+		}
+
+		public static SqlObject Array(params SqlObject[] items) {
+			var array = items == null
+				? new SqlArray(new SqlExpression[0])
+				: new SqlArray(items.Select(SqlExpression.Constant).Cast<SqlExpression>().ToArray());
+
+			return Array(array);
 		}
 
 		#endregion
