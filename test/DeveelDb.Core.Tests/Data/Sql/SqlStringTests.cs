@@ -55,7 +55,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("true", typeof(bool), true)]
 		[InlineData("false", typeof(bool), false)]
 		[InlineData("4556.931", typeof(double), 4556.931)]
-		[InlineData("894.94", typeof(float), 894.94)]
+		[InlineData("894.94", typeof(float), (float) 894.94)]
 		[InlineData("1233344", typeof(int), 1233344)]
 		[InlineData("82211993", typeof(long), 82211993L)]
 		[InlineData("3", typeof(byte), (byte)3)]
