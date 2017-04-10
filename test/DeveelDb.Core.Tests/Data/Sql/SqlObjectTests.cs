@@ -152,6 +152,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("the quick brown fox", "the quick brown fox ", false)]
 		[InlineData("the quick brown fox", "the quick brown fox", true)]
 		[InlineData(56, 45, false)]
+		[InlineData(546, null, SqlTypeCode.Unknown)]
 		public static void Operator_Equal(object value1, object value2, object expected) {
 			BinaryOp((x, y) => x.Equal(y), value1, value2, expected);
 		}
@@ -161,6 +162,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(true, false, true)]
 		[InlineData("The quick brown Fox", "the quick brown fox", true)]
 		[InlineData(9042.55f, 223.092f, true)]
+		[InlineData(null, 1902, SqlTypeCode.Unknown)]
 		public static void Operator_NotEqual(object value1, object value2, object expected) {
 			BinaryOp((x, y) => x.NotEqual(y), value1, value2, expected);
 		}
@@ -213,12 +215,15 @@ namespace Deveel.Data.Sql {
 
 		[Theory]
 		[InlineData(2334.0923e21, 0912.09e2, 2.3340923e24)]
+		[InlineData(99304, null, null)]
 		public static void Operator_Add(object value1, object value2, object expected) {
 			BinaryOp((x, y) => x.Add(y), value1, value2, expected);
 		}
 
 		[Theory]
 		[InlineData(56.0031, 0911.222, -855.2189)]
+		[InlineData(839440.331, null, null)]
+		[InlineData(3923, SqlTypeCode.Unknown, SqlTypeCode.Unknown)]
 		public static void Operator_Subtract(object value1, object value2, object expected) {
 			BinaryOp((x, y) => x.Subtract(y), value1, value2, expected);
 		}
@@ -309,7 +314,7 @@ namespace Deveel.Data.Sql {
 
 		private static SqlObject FromObject(object value) {
 			if (value == null)
-				return SqlObject.Unknown;
+				return SqlObject.Null;
 
 			if (value is SqlTypeCode &&
 				(SqlTypeCode)value == SqlTypeCode.Unknown)

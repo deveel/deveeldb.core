@@ -126,12 +126,36 @@ namespace Deveel.Data.Sql.Methods {
 			output[parameterName] = value;
 		}
 
-		public void SetResult(SqlExpression value, IContext context) {
+		public void SetResult(SqlObject value) {
+			if (!MethodInfo.IsFunction)
+				throw new InvalidOperationException();
+
+			if (value.IsNull) {
+				var functionInfo = (SqlFunctionInfo) MethodInfo;
+				value = SqlObject.NullOf(functionInfo.ReturnType);
+			}
+
+			SetResult(SqlExpression.Constant(value));
+		}
+
+		public void SetResult(SqlExpression value) {
 			if (!MethodInfo.IsFunction)
 				throw new InvalidOperationException($"Trying to set the return type to the method {MethodInfo.MethodName} that is not a function.");
 
-			var functionInfo = (SqlFunctionInfo) MethodInfo;
-			var valueType = value.GetSqlType(context);
+			var functionInfo = (SqlFunctionInfo)MethodInfo;
+
+			if (value.ExpressionType == SqlExpressionType.Constant) {
+				var exp = (SqlConstantExpression) value;
+				if (exp.Value.IsNull)
+					value = SqlExpression.Constant(SqlObject.NullOf(functionInfo.ReturnType));
+				if (exp.Value.IsUnknown || exp.Value.IsNull) {
+					ResultValue = value;
+					HasResult = true;
+					return;
+				}
+			}
+
+			var valueType = value.GetSqlType(this);
 			if (!valueType.IsComparable(functionInfo.ReturnType))
 				throw new InvalidOperationException($"The result type {valueType} of the expression is not compatible " +
 				                                    $"with the return type {functionInfo.ReturnType} of the function {MethodInfo.MethodName}");

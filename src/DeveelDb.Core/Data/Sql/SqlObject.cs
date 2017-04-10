@@ -141,7 +141,7 @@ namespace Deveel.Data.Sql {
 
 		private SqlObject BinaryOperator(Func<SqlType, Func<ISqlValue, ISqlValue, ISqlValue>> selector, SqlObject other) {
 			if (IsNull || (other == null || other.IsNull))
-				return Unknown;
+				return Null;
 			if (IsUnknown || other.IsUnknown)
 				return Unknown;
 
@@ -393,6 +393,10 @@ namespace Deveel.Data.Sql {
 
 		public static SqlObject New(ISqlValue value) {
 			return new SqlObject(GetSqlType(value), value);
+		}
+
+		public static SqlObject NullOf(SqlType type) {
+			return new SqlObject(type, SqlNull.Value);
 		}
 
 		#region Boolean Objects

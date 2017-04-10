@@ -34,7 +34,7 @@ namespace Deveel.Data.Sql.Methods {
 		public static SqlMethodDelegate Function(SqlFunctionInfo functionInfo, Func<MethodContext, Task<SqlExpression>> function) {
 			Func<MethodContext, Task> body = async context => {
 				var result = await function(context);
-				context.SetResult(result, context);
+				context.SetResult(result);
 			};
 
 			return new SqlMethodDelegate(functionInfo, MethodType.Function, body);

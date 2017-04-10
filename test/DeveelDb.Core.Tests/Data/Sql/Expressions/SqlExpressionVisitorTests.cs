@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Deveel.Data.Query;
+using Deveel.Data.Sql.Methods;
 
 using Xunit;
 
@@ -95,6 +96,15 @@ namespace Deveel.Data.Sql.Expressions {
 			var exp = SqlExpression.Quantify(SqlExpressionType.All, 
 				SqlExpression.Equal(SqlExpression.Constant(SqlObject.BigInt(43)), 
 				SqlExpression.Constant(SqlObject.Array(SqlObject.BigInt(33), SqlObject.Integer(1222)))));
+
+			Visit(exp);
+		}
+
+
+		[Fact]
+		public static void VisitFunction() {
+			var exp = SqlExpression.Function(ObjectName.Parse("sys.func1"),
+				new[] {new InvokeArgument("a", SqlObject.Integer(3))});
 
 			Visit(exp);
 		}
