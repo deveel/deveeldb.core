@@ -176,6 +176,8 @@ namespace Deveel.Data.Sql {
 		///</summary>
 		Array = 80,
 
+		Table = 91,
+
 		///<summary>
 		///</summary>
 		QueryPlan = 100,

@@ -203,6 +203,14 @@ namespace Deveel.Data.Sql {
 
 		#endregion
 
+		#region Table
+
+		public static SqlTableType Table() {
+			return new SqlTableType();
+		}
+
+		#endregion
+
 		/// <summary>
 		/// Checks if the given code represents a primitive type.
 		/// </summary>
@@ -283,6 +291,9 @@ namespace Deveel.Data.Sql {
 
 				case "YEAR TO MONTH":
 				case "DAY TO SECOND":
+					return true;
+
+				case "TABLE":
 					return true;
 			}
 
@@ -406,6 +417,9 @@ namespace Deveel.Data.Sql {
 				case "BLOB": {
 					return Blob();
 				}
+
+				case "TABLE":
+					return Table();
 
 				default:
 					return null;
