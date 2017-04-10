@@ -17,6 +17,8 @@
 
 using System;
 
+using Deveel.Data.Services;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlReferenceAssignExpression : SqlExpression {
 		internal SqlReferenceAssignExpression(ObjectName referenceName, SqlExpression value)
@@ -34,8 +36,22 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlExpression Value { get; }
 
+		public override bool IsReference => true;
+
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitReferenceAssign(this);
+		}
+
+		public override SqlType GetSqlType(IContext context) {
+			var resolver = context.Scope.Resolve<IReferenceResolver>();
+			if (resolver == null)
+				throw new InvalidOperationException();
+
+			var obj = resolver.ResolveReference(ReferenceName);
+			if (obj == null)
+				throw new InvalidOperationException();
+
+			return obj.Type;
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

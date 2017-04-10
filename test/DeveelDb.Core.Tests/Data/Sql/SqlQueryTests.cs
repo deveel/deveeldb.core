@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Reflection;
 
+using Deveel.Data.Sql.Expressions;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -97,5 +99,73 @@ namespace Deveel.Data.Sql {
 				throw ex.InnerException;
 			}
 		}
+
+
+		[Theory]
+		[InlineData(324, 112.022)]
+		public static void PrepareMarkerParameters(object value1, object value2) {
+			var input1 = SqlObject.New(SqlValueUtil.FromObject(value1));
+			var input2 = SqlObject.New(SqlValueUtil.FromObject(value2));
+
+			var query = new SqlQuery("SELECT * FROM a WHERE a.col1 = ? AND a.col2 = ?", SqlQueryParameterNaming.Marker);
+			query.Parameters.Add(new SqlQueryParameter("?", input1));
+			query.Parameters.Add(new SqlQueryParameter("?", input2));
+
+			var preparer = query.ExpressionPreparer;
+
+			Assert.NotNull(preparer);
+
+			var param1 = SqlExpression.Parameter();
+			var param2 = SqlExpression.Parameter();
+
+			Assert.True(preparer.CanPrepare(param1));
+			Assert.True(preparer.CanPrepare(param2));
+
+			var exp1 = preparer.Prepare(param1);
+			var exp2 = preparer.Prepare(param2);
+
+			Assert.NotNull(exp1);
+			Assert.NotNull(exp2);
+
+			Assert.IsType<SqlConstantExpression>(exp1);
+			Assert.IsType<SqlConstantExpression>(exp2);
+
+			Assert.Equal(input1, ((SqlConstantExpression)exp1).Value);
+			Assert.Equal(input2, ((SqlConstantExpression)exp2).Value);
+		}
+
+		[Theory]
+		[InlineData("var1", 324, "var2", 112.022)]
+		public static void PrepareNamedParameters(string paramName1, object value1, string paramName2, object value2) {
+			var input1 = SqlObject.New(SqlValueUtil.FromObject(value1));
+			var input2 = SqlObject.New(SqlValueUtil.FromObject(value2));
+
+			var query = new SqlQuery($"SELECT * FROM a WHERE a.col1 = {paramName1} AND a.col2 = {paramName2}", SqlQueryParameterNaming.Named);
+			query.Parameters.Add(new SqlQueryParameter(paramName1, input1));
+			query.Parameters.Add(new SqlQueryParameter(paramName2, input2));
+
+			var preparer = query.ExpressionPreparer;
+
+			Assert.NotNull(preparer);
+
+			var param1 = SqlExpression.Variable(paramName1);
+			var param2 = SqlExpression.Variable(paramName2);
+
+			Assert.True(preparer.CanPrepare(param1));
+			Assert.True(preparer.CanPrepare(param2));
+
+			var exp1 = preparer.Prepare(param1);
+			var exp2 = preparer.Prepare(param2);
+
+			Assert.NotNull(exp1);
+			Assert.NotNull(exp2);
+
+			Assert.IsType<SqlConstantExpression>(exp1);
+			Assert.IsType<SqlConstantExpression>(exp2);
+
+			Assert.Equal(input1, ((SqlConstantExpression)exp1).Value);
+			Assert.Equal(input2, ((SqlConstantExpression)exp2).Value);
+		}
+
 	}
 }

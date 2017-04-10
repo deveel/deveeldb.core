@@ -12,6 +12,14 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlExpression Expression { get; }
 
+		public override SqlType GetSqlType(IContext context) {
+			return Expression.GetSqlType(context);
+		}
+
+		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
+			return visitor.VisitGroup(this);
+		}
+
 		protected override void AppendTo(SqlStringBuilder builder) {
 			builder.Append("(");
 			Expression.AppendTo(builder);

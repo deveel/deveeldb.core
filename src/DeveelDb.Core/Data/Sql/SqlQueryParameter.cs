@@ -111,6 +111,10 @@ namespace Deveel.Data.Sql {
 			Direction = SqlParameterDirection.In;
 		}
 
+		public SqlQueryParameter(string name, SqlObject value)
+			: this(name, value.Type, value.Value) {
+		}
+
 		/// <summary>
 		/// The optional prefix character of a named parameter
 		/// </summary>

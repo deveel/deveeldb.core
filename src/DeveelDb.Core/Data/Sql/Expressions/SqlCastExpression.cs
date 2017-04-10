@@ -36,6 +36,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override bool CanReduce => true;
 
+		public override SqlType GetSqlType(IContext context) {
+			return TargetType;
+		}
+
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitCast(this);
 		}

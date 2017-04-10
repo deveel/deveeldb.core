@@ -19,11 +19,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Text;
-
-using Deveel.Data.Text;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
@@ -145,12 +142,10 @@ namespace Deveel.Data.Sql {
 			return GetEnumerator();
 		}
 
-		public long Length { get; private set; }
+		public long Length { get; }
 
 		public TextReader GetInput() {
-			var bytes = Encoding.Unicode.GetBytes(source);
-			var stream = new MemoryStream(bytes);
-			return new StreamReader(stream);
+			return new StringReader(source);
 		}
 
 		public SqlString Substring(int offset, int count) {

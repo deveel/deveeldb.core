@@ -102,7 +102,7 @@ namespace Deveel.Data.Sql.Variables {
 		public SqlExpression AssignVariable(string name, SqlExpression value, IContext context) {
 			var variable = FindVariable(name, context);
 			if (variable == null) {
-				var type = value.ReturnType(context);
+				var type = value.GetSqlType(context);
 				variable = new Variable(name, type);
 				variables.Add(new ObjectName(name),  variable);
 			}

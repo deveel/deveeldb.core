@@ -102,6 +102,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlExpressionType ExpressionType { get; }
 
+		public SqlType Type => GetSqlType(null);
+
+		public virtual bool IsReference => true;
+
 		internal int Precedence { get; }
 
 		public override string ToString() {
@@ -119,6 +123,8 @@ namespace Deveel.Data.Sql.Expressions {
 		public virtual SqlExpression Reduce(IContext context) {
 			return this;
 		}
+
+		public abstract SqlType GetSqlType(IContext context);
 
 		public virtual SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.Visit(this);

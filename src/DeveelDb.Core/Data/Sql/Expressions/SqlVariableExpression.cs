@@ -18,7 +18,6 @@
 using System;
 
 using Deveel.Data.Configuration;
-using Deveel.Data.Services;
 using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -36,6 +35,8 @@ namespace Deveel.Data.Sql.Expressions {
 		public string VariableName { get; }
 
 		public override bool CanReduce => true;
+
+		public override bool IsReference => true;
 
 		protected override void AppendTo(SqlStringBuilder builder) {
 			builder.AppendFormat(":{0}", VariableName);
@@ -56,6 +57,19 @@ namespace Deveel.Data.Sql.Expressions {
 				return Constant(SqlObject.Unknown);
 
 			return variable.Evaluate(context);
+		}
+
+		public override SqlType GetSqlType(IContext context) {
+			if (context == null)
+				throw new SqlExpressionException("A context is required to reduce a variable expression");
+
+			var ignoreCase = context.GetValue("ignoreCase", false);
+			var variable = context.ResolveVariable(VariableName, ignoreCase);
+
+			if (variable == null)
+				throw new SqlExpressionException();
+
+			return variable.Type;
 		}
 	}
 }

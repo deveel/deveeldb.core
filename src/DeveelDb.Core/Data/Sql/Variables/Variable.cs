@@ -61,7 +61,7 @@ namespace Deveel.Data.Sql.Variables {
 			if (VariableInfo.Constant)
 				throw new VariableException($"Cannot set constant variable {VariableInfo.Name}");
 
-			var valueType = value.ReturnType(context);
+			var valueType = value.GetSqlType(context);
 			if (!valueType.Equals(VariableInfo.Type) &&
 				!valueType.IsComparable(VariableInfo.Type))
 				throw new ArgumentException($"The type {valueType} of the value is not compatible with the variable type '{VariableInfo.Type}'");

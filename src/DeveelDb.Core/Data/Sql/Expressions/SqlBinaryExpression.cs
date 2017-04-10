@@ -38,6 +38,15 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override bool CanReduce => true;
 
+		public override SqlType GetSqlType(IContext context) {
+			if (ExpressionType.IsRelational())
+				return PrimitiveTypes.Boolean();
+
+			var leftType = Left.GetSqlType(context);
+			var rightType = Right.GetSqlType(context);
+			return leftType.Wider(rightType);
+		}
+
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitBinary(this);
 		}

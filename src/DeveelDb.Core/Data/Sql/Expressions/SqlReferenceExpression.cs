@@ -31,6 +31,8 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public ObjectName ReferenceName { get; }
 
+		public override bool IsReference => true;
+
 		protected override void AppendTo(SqlStringBuilder builder) {
 			ReferenceName.AppendTo(builder);
 		}
@@ -54,6 +56,21 @@ namespace Deveel.Data.Sql.Expressions {
 				value = SqlObject.Unknown;
 
 			return Constant(value);
+		}
+
+		public override SqlType GetSqlType(IContext context) {
+			if (context == null)
+				throw new SqlExpressionException("A reference cannot be reduced outside a context.");
+
+			var resolver = context.Scope.Resolve<IReferenceResolver>();
+			if (resolver == null)
+				throw new SqlExpressionException("No reference resolver was declared in this scope");
+
+			var value = resolver.ResolveReference(ReferenceName);
+			if (value == null)
+				throw new SqlExpressionException();
+
+			return value.Type;
 		}
 	}
 }
