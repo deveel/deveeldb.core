@@ -16,6 +16,8 @@ namespace Deveel.Data.Sql.Methods {
 
 		public SqlMethodInfo MethodInfo { get; }
 
+		public SqlMethodBody Body { get; set; }
+
 		public async Task<SqlMethodResult> ExecuteAsync(IContext context, Invoke invoke) {
 			using (var methodContext = new MethodContext(context, MethodInfo, invoke)) {
 				await ExecuteContextAsync(methodContext);
@@ -50,15 +52,20 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		protected virtual Task ExecuteContextAsync(MethodContext context) {
-			var body = MethodInfo.Body;
-			if (body == null)
+			if (Body == null)
 				throw new InvalidOperationException();
 
-			return body.ExecuteAsync(context);
+			return Body.ExecuteAsync(context);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			MethodInfo.AppendTo(builder);
+
+			if (Body != null) {
+				builder.AppendLine(" IS");
+				builder.Indent();
+				Body.AppendTo(builder);
+			}
 		}
 
 		public override string ToString() {

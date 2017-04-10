@@ -31,27 +31,6 @@ namespace Deveel.Data.Sql.Methods {
 
 			builder.Append(" RETURNS ");
 			ReturnType.AppendTo(builder);
-
-			if (Body != null) {
-				builder.AppendLine(" IS");
-				builder.Indent();
-				Body.AppendTo(builder);
-			}
-		}
-
-		public void SetFunctionBody(Func<MethodContext, Task<SqlObject>> body) {
-			if (!IsFunction)
-				throw new InvalidOperationException($"Trying to set a function body to {MethodName} that is not a function");
-
-			Body = SqlMethodDelegate.Function(this, body);
-		}
-
-		public void SetFunctionBody(Func<MethodContext, Task<SqlExpression>> body) {
-			if (!IsFunction)
-				throw new InvalidOperationException($"Trying to set a function body to {MethodName} that is not a function");
-
-			Body = SqlMethodDelegate.Function(this, body);
-
 		}
 	}
 }

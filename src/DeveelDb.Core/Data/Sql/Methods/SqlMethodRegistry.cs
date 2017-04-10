@@ -53,10 +53,6 @@ namespace Deveel.Data.Sql.Methods {
 			initialized = false;
 		}
 
-		public void RegisterFunction(SqlFunctionInfo functionInfo) {
-			Register(new SqlFunction(functionInfo));
-		}
-
 		SqlMethod IMethodResolver.ResolveMethod(IContext context, Invoke invoke) {
 			EnsureInitialized();
 

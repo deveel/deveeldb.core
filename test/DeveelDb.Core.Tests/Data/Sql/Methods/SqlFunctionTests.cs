@@ -40,12 +40,11 @@ namespace Deveel.Data.Sql.Methods {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			info.SetFunctionBody(ctx => {
+			var function = new SqlFunction(info);
+			function.SetBody(ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
 			});
-
-			var function = new SqlFunction(info);
 
 			var sql = $"FUNCTION a.func(a INTEGER) RETURNS INTEGER IS{Environment.NewLine}  [delegate]";
 			Assert.Equal(sql, function.ToString());
@@ -67,19 +66,19 @@ namespace Deveel.Data.Sql.Methods {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			info.SetFunctionBody(ctx => {
+			var function = new SqlFunction(info);
+
+			function.SetBody(ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
 			});
-
-			var function = new SqlFunction(info);
 
 			Assert.Equal(name, info.MethodName);
 			Assert.Equal(FunctionType.Scalar, info.FunctionType);
 			Assert.NotNull(info.ReturnType);
 			Assert.Equal(SqlTypeCode.Integer, info.ReturnType.TypeCode);
-			Assert.NotNull(info.Body);
-			Assert.IsType<SqlMethodDelegate>(info.Body);
+			Assert.NotNull(function.Body);
+			Assert.IsType<SqlMethodDelegate>(function.Body);
 
 			var result = await function.ExecuteAsync(context, SqlObject.Integer(22));
 
@@ -94,19 +93,18 @@ namespace Deveel.Data.Sql.Methods {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			info.SetFunctionBody(ctx => {
+			var function = new SqlFunction(info);
+			function.SetBody(ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
 			});
-
-			var function = new SqlFunction(info);
 
 			Assert.Equal(name, info.MethodName);
 			Assert.Equal(FunctionType.Scalar, info.FunctionType);
 			Assert.NotNull(info.ReturnType);
 			Assert.Equal(SqlTypeCode.Integer, info.ReturnType.TypeCode);
-			Assert.NotNull(info.Body);
-			Assert.IsType<SqlMethodDelegate>(info.Body);
+			Assert.NotNull(function.Body);
+			Assert.IsType<SqlMethodDelegate>(function.Body);
 
 			var result = await function.ExecuteAsync(context, new InvokeArgument("a", SqlObject.Integer(22)));
 
@@ -124,21 +122,21 @@ namespace Deveel.Data.Sql.Methods {
 			info.Parameters.Add(new SqlMethodParameterInfo("b",
 				PrimitiveTypes.String(),
 				SqlExpression.Constant(SqlObject.String(new SqlString("test")))));
-			info.SetFunctionBody(ctx => {
+
+			var function = new SqlFunction(info);
+			function.SetBody(ctx => {
 				var a = ctx.Value("a");
 				var b = ctx.Value("b");
 				Assert.NotNull(b);
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
 			});
 
-			var function = new SqlFunction(info);
-
 			Assert.Equal(name, info.MethodName);
 			Assert.Equal(FunctionType.Scalar, info.FunctionType);
 			Assert.NotNull(info.ReturnType);
 			Assert.Equal(SqlTypeCode.Integer, info.ReturnType.TypeCode);
-			Assert.NotNull(info.Body);
-			Assert.IsType<SqlMethodDelegate>(info.Body);
+			Assert.NotNull(function.Body);
+			Assert.IsType<SqlMethodDelegate>(function.Body);
 
 			var result = await function.ExecuteAsync(context, new InvokeArgument("a", SqlObject.Integer(22)));
 

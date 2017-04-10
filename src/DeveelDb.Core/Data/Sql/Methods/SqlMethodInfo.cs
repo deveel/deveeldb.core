@@ -30,8 +30,6 @@ namespace Deveel.Data.Sql.Methods {
 
 		public IList<SqlMethodParameterInfo> Parameters { get; }
 
-		public SqlMethodBody Body { get; set; }
-
 		internal bool TryGetParameter(string name, bool ignoreCase, out SqlMethodParameterInfo paramInfo) {
 			var comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 			var dictionary = Parameters.ToDictionary(x => x.Name, y => y, comparer);

@@ -27,19 +27,22 @@ namespace Deveel.Data.Sql.Methods {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			info.SetFunctionBody(ctx => {
+			var function = new SqlFunction(info);
+			function.SetBody(ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
 			});
 
-			registry.RegisterFunction(info);
+			registry.Register(function);
 
 			var invoke = new Invoke(name);
 			invoke.Arguments.Add(new InvokeArgument("a", SqlObject.Integer(11)));
 
-			var function = (registry as IMethodResolver).ResolveMethod(context, invoke);
+			var method = (registry as IMethodResolver).ResolveMethod(context, invoke);
 
-			Assert.NotNull(function);
+			Assert.NotNull(method);
+			Assert.True(method.MethodInfo.IsFunction);
+			Assert.Equal(name, method.MethodInfo.MethodName);
 		}
 
 		public void Dispose() {

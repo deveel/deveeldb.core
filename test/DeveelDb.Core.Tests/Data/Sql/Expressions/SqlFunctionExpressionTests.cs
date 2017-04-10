@@ -22,10 +22,11 @@ namespace Deveel.Data.Sql.Expressions {
 			methodInfo.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.VarChar(155)));
 			methodInfo.Parameters.Add(new SqlMethodParameterInfo("b", PrimitiveTypes.Integer(),
 				SqlExpression.Constant(SqlObject.Null)));
-			methodInfo.SetFunctionBody(ctx => {
+			var method = new SqlFunction(methodInfo);
+			method.SetBody(ctx => {
 				return Task.FromResult(ctx.Value("a").Add(ctx.Value("b")));
 			});
-			var method = new SqlFunction(methodInfo);
+
 			var resolver = new Mock<IMethodResolver>();
 			resolver.Setup(x => x.ResolveMethod(It.IsAny<IContext>(), It.IsAny<Invoke>()))
 				.Returns<IContext, Invoke>((context, invoke) => method);
