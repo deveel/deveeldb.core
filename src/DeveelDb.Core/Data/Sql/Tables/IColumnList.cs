@@ -6,5 +6,7 @@ namespace Deveel.Data.Sql.Tables {
 		int IndexOf(ObjectName columnName);
 
 		int IndexOf(string columnName);
+
+		ObjectName GetColumnName(int offset);
 	}
 }

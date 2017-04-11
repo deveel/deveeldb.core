@@ -20,8 +20,6 @@ namespace Deveel.Data.Sql.Tables {
 
 		public SqlExpression DefaultValue { get; set; }
 
-		public int Offset { get; internal set; }
-
 		public bool HasDefaultValue => DefaultValue != null;
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {

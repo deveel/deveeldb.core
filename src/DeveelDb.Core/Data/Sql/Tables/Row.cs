@@ -5,12 +5,17 @@ namespace Deveel.Data.Sql.Tables {
 	public sealed class Row {
 		private Dictionary<int, SqlObject> values;
 
+		public Row(ITable table) 
+			: this(table, -1) {
+		}
+
 		public Row(ITable table, long number) {
 			if (table == null)
 				throw new ArgumentNullException(nameof(table));
 
 			Table = table;
 			RowNumber = number;
+			Id = new RowId(TableInfo.TableId, number);
 			values = new Dictionary<int, SqlObject>();
 		}
 
@@ -33,10 +38,11 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public SqlObject GetValue(int column) {
+			SqlObject value;
 			if (column < 0 || column >= TableInfo.Columns.Count)
 				throw new ArgumentOutOfRangeException();
 
-			SqlObject value;
+			
 			if (!values.TryGetValue(column, out value)) {
 				value = Table.GetValue(Id.Number, column);
 				values[column] = value;
