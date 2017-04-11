@@ -138,5 +138,17 @@ namespace Deveel {
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
 		}
+
+		public static void Copy(BigArray<T> source, long sourceIndex, BigArray<T> target, long targetIndex, long length) {
+			if (sourceIndex >= source.Length)
+				throw new ArgumentOutOfRangeException(nameof(sourceIndex));
+			if (targetIndex + length > target.Length)
+				throw new ArgumentException();
+
+			long offset = 0;
+			for (long i = sourceIndex; i < length; i++) {
+				target[targetIndex + offset++] = source[i];
+			}
+		}
 	}
 }

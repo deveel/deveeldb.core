@@ -16,10 +16,11 @@
 
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Deveel.Data.Sql.Tables {
-	public sealed class Row {
+	public sealed class Row : IEnumerable<Field> {
 		private Dictionary<int, SqlObject> values;
 
 		public Row(ITable table) 
@@ -96,5 +97,43 @@ namespace Deveel.Data.Sql.Tables {
 
 			SetValue(offset, value);
 		}
+
+		public IEnumerator<Field> GetEnumerator() {
+			return new FieldEnumerator(this);
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() {
+			return GetEnumerator();
+		}
+
+		#region FieldEnumerator
+
+		class FieldEnumerator : IEnumerator<Field> {
+			private readonly Row row;
+			private int offset;
+
+			public FieldEnumerator(Row row) {
+				this.row = row;
+				Reset();
+			}
+
+			public void Reset() {
+				offset = -1;
+			}
+
+			public bool MoveNext() {
+				return ++offset < row.TableInfo.Columns.Count;
+			}
+
+			object IEnumerator.Current => Current;
+
+			public Field Current => new Field(row, offset);
+
+			public void Dispose() {
+				
+			}
+		}
+
+		#endregion
 	}
 }
