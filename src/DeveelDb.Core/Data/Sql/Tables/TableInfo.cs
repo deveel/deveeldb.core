@@ -11,6 +11,7 @@ namespace Deveel.Data.Sql.Tables {
 				throw new ArgumentNullException(nameof(tableName));
 
 			TableName = tableName;
+			TableId = -1;
 			Columns = new ColumnList(this);
 		}
 

@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using Xunit;
 
 namespace Deveel.Data.Sql.Tables {
-	public class CrossJoinedTableTests {
+	public class CrossTableTests {
 		private ITable left;
 		private ITable right;
 
-		public CrossJoinedTableTests() {
+		public CrossTableTests() {
 			var leftInfo = new TableInfo(ObjectName.Parse("tab1"));
 			leftInfo.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
 			leftInfo.Columns.Add(new ColumnInfo("b", PrimitiveTypes.Boolean()));
@@ -30,7 +30,7 @@ namespace Deveel.Data.Sql.Tables {
 
 		[Fact]
 		public void CreateJoinedTable() {
-			var table = new CrossJoinedTable(left, right);
+			var table = new CrossTable(left, right);
 
 			Assert.Equal(4, table.RowCount);
 			Assert.Equal(4, table.TableInfo.Columns.Count);
@@ -38,7 +38,7 @@ namespace Deveel.Data.Sql.Tables {
 
 		[Fact]
 		public void GetValueFromJoined() {
-			var table = new CrossJoinedTable(left, right);
+			var table = new CrossTable(left, right);
 
 			Assert.Equal(4, table.RowCount);
 
@@ -60,7 +60,7 @@ namespace Deveel.Data.Sql.Tables {
 
 		[Fact]
 		public void EnumerateRows() {
-			var table = new CrossJoinedTable(left, right);
+			var table = new CrossTable(left, right);
 			var row1 = table.ElementAt(0);
 			var row2 = table.ElementAt(1);
 		}

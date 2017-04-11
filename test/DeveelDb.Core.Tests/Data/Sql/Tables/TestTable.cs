@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Deveel.Data.Sql.Tables {
-	class TestTable : ITable {
+	class TestTable : IRootTable {
 		private readonly IList<SqlObject[]> rows;
 		private readonly TableInfo tableInfo;
 
@@ -42,6 +42,10 @@ namespace Deveel.Data.Sql.Tables {
 		public SqlObject GetValue(long row, int column) {
 			var objRow = rows[(int) row];
 			return objRow[column];
+		}
+
+		bool IEquatable<ITable>.Equals(ITable other) {
+			return this == other;
 		}
 	}
 }

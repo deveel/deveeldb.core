@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Deveel.Data.Sql.Tables {
-	public class CrossJoinedTable : JoinedTable {
+	public class CrossTable : JoinedTable {
 		private readonly long leftRowCount;
 		private readonly long rightRowCount;
  
@@ -13,7 +13,7 @@ namespace Deveel.Data.Sql.Tables {
 		private readonly bool leftIsSimpleEnum;
 		private readonly bool rightIsSimpleEnum;
 
-		public CrossJoinedTable(ITable left, ITable right)
+		public CrossTable(ITable left, ITable right)
 			: base(new[] {left, right}) {
 
 			leftRowCount = left.RowCount;

@@ -58,10 +58,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		protected virtual RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
-			if (!(Parent is IVirtualTable))
-				throw new InvalidOperationException();
-
-			return ((IVirtualTable) Parent).GetRawTableInfo(rootInfo);
+			return Parent.GetRawTableInfo(rootInfo);
 		}
 	}
 }

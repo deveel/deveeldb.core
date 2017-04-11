@@ -23,6 +23,32 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
+		public static void MakeReadOnly() {
+			var tableName = new ObjectName("tab1");
+			var tableInfo = new TableInfo(tableName);
+			tableInfo.Columns.Add(new ColumnInfo("a", PrimitiveTypes.BigInt()));
+			tableInfo.Columns.Add(new ColumnInfo("b", PrimitiveTypes.VarChar(22)));
+
+			tableInfo = TableInfo.ReadOnly(tableInfo);
+
+			Assert.True(tableInfo.Columns.IsReadOnly);
+		}
+
+		[Fact]
+		public static void RemoveColumn() {
+			var tableName = new ObjectName("tab1");
+			var tableInfo = new TableInfo(tableName);
+			tableInfo.Columns.Add(new ColumnInfo("a", PrimitiveTypes.BigInt()));
+			tableInfo.Columns.Add(new ColumnInfo("b", PrimitiveTypes.VarChar(22)));
+
+			var col = new ColumnInfo("c", PrimitiveTypes.TimeStamp());
+			tableInfo.Columns.Add(col);
+
+			Assert.True(tableInfo.Columns.Remove(col));
+			Assert.False(tableInfo.Columns.Remove(col));
+		}
+
+		[Fact]
 		public static void MutateReadOnlyTableInfo() {
 			var tableName = new ObjectName("tab1");
 			var tableInfo = new TableInfo(tableName);
@@ -32,6 +58,7 @@ namespace Deveel.Data.Sql.Tables {
 			tableInfo = TableInfo.ReadOnly(tableInfo);
 
 			Assert.Throws<InvalidOperationException>(() => tableInfo.Columns.RemoveAt(0));
+			Assert.Throws<InvalidOperationException>(() => tableInfo.Columns.Add(new ColumnInfo("v", PrimitiveTypes.Integer())));
 		}
 
 		[Fact]
@@ -81,12 +108,18 @@ namespace Deveel.Data.Sql.Tables {
 
 			var joinedInfo = new JoinedTableInfo(new TableInfo[]{tableInfo1, tableInfo2});
 
+			Assert.True(joinedInfo.Columns.IsReadOnly);
+
 			Assert.Equal(4, joinedInfo.Columns.Count);
 
 			Assert.Equal(0, joinedInfo.Columns.IndexOf(ObjectName.Parse("tab1.a")));
 			Assert.Equal(1, joinedInfo.Columns.IndexOf(ObjectName.Parse("tab1.b")));
 			Assert.Equal(2, joinedInfo.Columns.IndexOf(ObjectName.Parse("tab2.a")));
 			Assert.Equal(3, joinedInfo.Columns.IndexOf(ObjectName.Parse("tab2.b")));
+
+			// In this case both the tables have 'a' and 'b' columns
+			Assert.Equal(0, joinedInfo.Columns.IndexOf("a"));
+			Assert.Equal(1, joinedInfo.Columns.IndexOf("b"));
 
 			Assert.Equal(0, joinedInfo.GetTableOffset(0));
 			Assert.Equal(0, joinedInfo.GetTableOffset(1));
@@ -97,6 +130,16 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.Equal(ObjectName.Parse("tab1.b"), joinedInfo.Columns.GetColumnName(1));
 			Assert.Equal(ObjectName.Parse("tab2.a"), joinedInfo.Columns.GetColumnName(2));
 			Assert.Equal(ObjectName.Parse("tab2.b"), joinedInfo.Columns.GetColumnName(3));
+
+			var col1 = joinedInfo.Columns[0];
+			var col2 = joinedInfo.Columns[1];
+			var col3 = joinedInfo.Columns[2];
+			var col4 = joinedInfo.Columns[3];
+
+			Assert.Equal("a", col1.ColumnName);
+			Assert.Equal("b", col2.ColumnName);
+			Assert.Equal("a", col3.ColumnName);
+			Assert.Equal("b", col4.ColumnName);
 		}
 	}
 }

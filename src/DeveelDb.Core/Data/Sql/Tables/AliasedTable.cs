@@ -8,5 +8,9 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public override TableInfo TableInfo { get; }
+
+		bool IEquatable<ITable>.Equals(ITable other) {
+			return this == other;
+		}
 	}
 }

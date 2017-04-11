@@ -41,5 +41,9 @@ namespace Deveel.Data.Sql.Tables {
 		public override SqlObject GetValue(long row, int column) {
 			return base.GetValue(row, columns[column]);
 		}
+
+		bool IEquatable<ITable>.Equals(ITable other) {
+			return this == other;
+		}
 	}
 }

@@ -6,7 +6,7 @@ namespace Deveel.Data.Sql.Tables {
 		private BigArray<long>[] outerRows;
 		private long outerRowCount;
 
-		public OuterTable(ITable[] tables, IEnumerable<long>[] rows, IVirtualTable outside)
+		public OuterTable(ITable[] tables, IEnumerable<long>[] rows, ITable outside)
 			: base(tables, rows) {
 			MergeIn(outside);
 			
@@ -14,7 +14,7 @@ namespace Deveel.Data.Sql.Tables {
 
 		public override long RowCount => base.RowCount + outerRowCount;
 
-		private void MergeIn(IVirtualTable outsideTable) {
+		private void MergeIn(ITable outsideTable) {
 			outerRows = new BigArray<long>[Rows.Length];
 			var rawTableInfo = outsideTable.GetRawTableInfo(new RawTableInfo());
 
@@ -32,7 +32,7 @@ namespace Deveel.Data.Sql.Tables {
 				var btable = baseTables[i];
 				int index = -1;
 				for (int n = 0; n < tables.Length && index == -1; ++n) {
-					if (btable == tables[n]) {
+					if (tables[n].Equals(btable)) {
 						index = n;
 					}
 				}
@@ -70,6 +70,10 @@ namespace Deveel.Data.Sql.Tables {
 
 			row = outerRows[tableNum][row];
 			return parentTable.GetValue(row, TableInfo.GetColumnOffset(column));
+		}
+
+		bool IEquatable<ITable>.Equals(ITable other) {
+			return this == other;
 		}
 	}
 }
