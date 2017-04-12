@@ -57,7 +57,7 @@ namespace Deveel.Data {
 		/// </summary>
 		Column = 11,
 
-		Constrain = 13,
+		Constraint = 13,
 
 		/// <summary>
 		/// A <c>TRIGGER</c> fired at provided write events (<c>INSERT</c>, <c>UPDATE</c> or
