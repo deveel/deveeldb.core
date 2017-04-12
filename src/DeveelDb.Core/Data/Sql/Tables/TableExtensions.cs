@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Deveel.Data.Sql.Tables {
@@ -34,6 +35,17 @@ namespace Deveel.Data.Sql.Tables {
 			rootInfo.Add(table, rows);
 
 			return rootInfo;
+		}
+
+		internal static IEnumerable<long> ResolveRows(this ITable table, int column, IEnumerable<long> rows,
+			ITable ancestor) {
+			if (table is IVirtualTable)
+				return ((IVirtualTable) table).ResolveRows(column, rows, ancestor);
+
+			if (table != ancestor)
+				throw new InvalidOperationException();
+
+			return rows;
 		}
 
 		public static Row GetRow(this ITable table, long row) {

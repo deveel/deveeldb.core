@@ -59,7 +59,7 @@ namespace Deveel {
 
 		public long Count => size;
 
-		public bool IsReadOnly { get; }
+		public bool IsReadOnly => false;
 
 		int IList<T>.IndexOf(T item) {
 			return (int) IndexOf(item);
