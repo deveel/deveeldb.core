@@ -150,5 +150,29 @@ namespace Deveel {
 				target[targetIndex + offset++] = source[i];
 			}
 		}
+
+		public static void Clear(BigArray<T> array, long startIndex, long count) {
+			if ((startIndex < 0) || (startIndex > array.Length)) {
+				throw new ArgumentOutOfRangeException(nameof(startIndex));
+			}
+
+			if ((count < 0) || (count > (array.Length - startIndex))) {
+				throw new ArgumentOutOfRangeException(nameof(count));
+			}
+
+			long blockIndex = startIndex / array.blockSize;
+			int start = (int)(startIndex % array.blockSize);
+			count += startIndex;
+			for (long i = startIndex; i < count && blockIndex < array.items.Length; blockIndex++) {
+				int len = array.items[blockIndex].Length;
+				if (i + len > count) {
+					len = (int)(count - i);
+				}
+
+				Array.Clear(array.items[blockIndex], start, len);
+				start = 0;
+				i += len;
+			}
+		}
 	}
 }
