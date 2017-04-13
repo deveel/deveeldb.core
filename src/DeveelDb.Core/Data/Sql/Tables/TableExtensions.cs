@@ -55,5 +55,33 @@ namespace Deveel.Data.Sql.Tables {
 		public static Row NewRow(this ITable table) {
 			return new Row(table, -1);
 		}
+
+		public static IEnumerable<long> OrderRowsByColumns(this ITable table, int[] columns) {
+			var work = table.OrderBy(columns);
+			// 'work' is now sorted by the columns,
+			// Get the rows in this tables domain,
+			var rowList = work.Select(row => row.Id.Number);
+
+			return work.ResolveRows(0, rowList, table);
+		}
+
+		public static ITable OrderBy(this ITable table, int[] columns) {
+			// Sort by the column list.
+			ITable resultTable = table;
+			for (int i = columns.Length - 1; i >= 0; --i) {
+				resultTable = resultTable.OrderBy(columns[i], true);
+			}
+
+			// A nice post condition to check on.
+			if (resultTable.RowCount != table.RowCount)
+				throw new InvalidOperationException("The final row count mismatches.");
+
+			return resultTable;
+		}
+
+		public static ITable OrderBy(this ITable table, int columnIndex, bool ascending) {
+			//TODO: use indexes!
+			throw new NotImplementedException();
+		}
 	}
 }
