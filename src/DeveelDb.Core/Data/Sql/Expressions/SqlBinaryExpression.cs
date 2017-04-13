@@ -77,8 +77,8 @@ namespace Deveel.Data.Sql.Expressions {
 			if (right.ExpressionType != SqlExpressionType.Constant)
 				throw new SqlExpressionException("The reduced right side of a binary expression is not constant.");
 
-			var value1 = ((SqlConstantExpression)Left).Value;
-			var value2 = ((SqlConstantExpression)Right).Value;
+			var value1 = ((SqlConstantExpression)left).Value;
+			var value2 = ((SqlConstantExpression)right).Value;
 
 			var result = ReduceBinary(value1, value2);
 

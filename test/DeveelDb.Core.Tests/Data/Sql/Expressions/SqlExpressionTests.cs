@@ -199,6 +199,21 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(expected, s);
 		}
 
+
+		[Theory]
+		[InlineData(SqlExpressionType.Add, 445, 9032.11)]
+		public static void GetBinarySqlType(SqlExpressionType expressionType, object value1, object value2) {
+			var obj1 = SqlObject.New(SqlValueUtil.FromObject(value1));
+			var obj2 = SqlObject.New(SqlValueUtil.FromObject(value2));
+
+			var exp = SqlExpression.Binary(expressionType, SqlExpression.Constant(obj1), SqlExpression.Constant(obj2));
+
+			var sqltType = exp.Type;
+			var wider = obj1.Type.Wider(obj2.Type);
+
+			Assert.Equal(wider, sqltType);
+		}
+
 		[Theory]
 		[InlineData(SqlExpressionType.UnaryPlus, 22.34)]
 		[InlineData(SqlExpressionType.Negate, 455.43)]
@@ -249,6 +264,19 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
+		[InlineData(SqlExpressionType.UnaryPlus, 22.34)]
+		[InlineData(SqlExpressionType.Negate, 455.43)]
+		[InlineData(SqlExpressionType.Not, true)]
+		public static void GetUnaryType(SqlExpressionType expressionType, object value) {
+			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
+			var operand = SqlExpression.Constant(obj);
+			var exp = SqlExpression.Unary(expressionType, operand);
+
+			var sqlType = exp.Type;
+			Assert.Equal(obj.Type, sqlType);
+		}
+
+		[Theory]
 		[InlineData(5634.99, SqlTypeCode.Double, -1, -1)]
 		public static void NewCast(object value, SqlTypeCode destTypeCode, int p, int s) {
 			var targetType = PrimitiveTypes.Type(destTypeCode, new {precision = p, scale = s, maxSize = p, size = p});
@@ -284,6 +312,19 @@ namespace Deveel.Data.Sql.Expressions {
 
 			var expectedResult = SqlObject.New(SqlValueUtil.FromObject(expected));
 			Assert.Equal(expectedResult, result);
+		}
+
+		[Theory]
+		[InlineData(5634.99, SqlTypeCode.Double, -1, -1)]
+		[InlineData("TRUE", SqlTypeCode.Boolean, -1, -1)]
+		public static void GetCastType(object value, SqlTypeCode destTypeCode, int p, int s) {
+			var targetType = PrimitiveTypes.Type(destTypeCode, new { precision = p, scale = s, maxSize = p, size = p });
+			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
+			var exp = SqlExpression.Constant(obj);
+
+			var cast = SqlExpression.Cast(exp, targetType);
+
+			Assert.Equal(targetType, cast.TargetType);
 		}
 
 		[Theory]

@@ -121,6 +121,28 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.IsType<SqlConstantExpression>(result);
 		}
 
+		[Theory]
+		[InlineData("b", "test", SqlTypeCode.VarChar, 50)]
+		public void GetSqlTypeOfVarAssign(string name, object value, SqlTypeCode typeCode, int p) {
+			var exp = SqlExpression.VariableAssign(name, SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value))));
+
+			var varType = exp.GetSqlType(context);
+			var type = PrimitiveTypes.Type(typeCode, new {precision = p, maxSize = p, size = p});
+
+			Assert.Equal(type, varType);
+		}
+
+		[Theory]
+		[InlineData("a", SqlTypeCode.Boolean, 50)]
+		public void GetSqlType(string name, SqlTypeCode typeCode, int p) {
+			var exp = SqlExpression.Variable(name);
+
+			var varType = exp.GetSqlType(context);
+			var type = PrimitiveTypes.Type(typeCode, new { precision = p, maxSize = p, size = p });
+
+			Assert.Equal(type, varType);
+		}
+
 		public void Dispose() {
 			if (context != null)
 				context.Dispose();

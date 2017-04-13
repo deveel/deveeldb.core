@@ -66,11 +66,11 @@ namespace Deveel.Data.Sql.Expressions {
 			if (resolver == null)
 				throw new SqlExpressionException("No reference resolver was declared in this scope");
 
-			var value = resolver.ResolveReference(ReferenceName);
+			var value = resolver.ResolveType(ReferenceName);
 			if (value == null)
 				throw new SqlExpressionException();
 
-			return value.Type;
+			return value;
 		}
 	}
 }

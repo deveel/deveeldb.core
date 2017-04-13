@@ -14,6 +14,8 @@ namespace Deveel.Data.Sql.Expressions {
 			var resolver = new Mock<IReferenceResolver>();
 			resolver.Setup(x => x.ResolveReference(It.Is<ObjectName>(name => name.Name == "a")))
 				.Returns<ObjectName>(name => SqlObject.String(new SqlString("test string to resolve")));
+			resolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
+				.Returns(PrimitiveTypes.String());
 
 			var mock = new Mock<IContext>();
 			mock.SetupGet(x => x.Scope)
@@ -79,6 +81,15 @@ namespace Deveel.Data.Sql.Expressions {
 			var exp = SqlExpression.Reference(objName);
 
 			Assert.Throws<SqlExpressionException>(() => exp.Reduce(null));
+		}
+
+		[Fact]
+		public void GetSqlType() {
+			var name = ObjectName.Parse("a.b");
+			var exp = SqlExpression.Reference(name);
+
+			var type = exp.GetSqlType(context);
+			Assert.Equal(PrimitiveTypes.String(), type);
 		}
 
 		public void Dispose() {
