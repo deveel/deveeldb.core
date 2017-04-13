@@ -29,6 +29,10 @@ namespace Deveel.Data.Sql.Indexes {
 
 		protected ITable Table { get; private set; }
 
+		public bool IsAttached { get; private set; }
+
+		public virtual bool IsReadOnly => false;
+
 		public IndexInfo IndexInfo { get; }
 
 		protected IndexKey NullKey => new IndexKey(Columns.Select(x => SqlObject.Null).ToArray());
@@ -38,15 +42,23 @@ namespace Deveel.Data.Sql.Indexes {
 		public void AttachTo(ITable table) {
 			Table = table;
 			Columns = IndexInfo.ColumnNames.Select(x => table.TableInfo.Columns.IndexOf(x)).ToArray();
+			IsAttached = true;
 		}
 
 		protected IndexKey GetKey(long row) {
+			ThrowIfNotAttached();
+
 			var values = new SqlObject[Columns.Length];
 			for (int i = 0; i < Columns.Length; i++) {
 				values[i] = Table.GetValue(row, Columns[i]);
 			}
 
 			return new IndexKey(values);
+		}
+
+		protected void ThrowIfNotAttached() {
+			if (!IsAttached)
+				throw new InvalidOperationException("The index is not attached to any table");
 		}
 
 		protected IEnumerable<long> OrderRows(IEnumerable<long> rows) {
@@ -203,7 +215,7 @@ namespace Deveel.Data.Sql.Indexes {
 
 		public Index Subset(ITable table, int[] columns) {
 			if (table == null)
-				throw new ArgumentNullException("table");
+				throw new ArgumentNullException(nameof(table));
 			if (columns.Length > 1)
 				throw new NotSupportedException("multi-columns subset not implemented yet");
 

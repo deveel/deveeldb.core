@@ -13,8 +13,6 @@ namespace Deveel.Data.Sql.Indexes {
 
 		protected virtual IndexKey Last => GetKey(RowCount - 1);
 
-		public virtual bool IsReadOnly => false;
-
 		protected void ThrowIfReadOnly() {
 			if (IsReadOnly)
 				throw new InvalidOperationException("The index is read-only");

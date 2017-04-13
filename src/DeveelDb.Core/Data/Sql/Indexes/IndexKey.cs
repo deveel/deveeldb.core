@@ -29,7 +29,7 @@ namespace Deveel.Data.Sql.Indexes {
 		public int CompareTo(IndexKey other) {
 			int c = 0;
 			for (int i = 0; i < values.Length; i++) {
-				c += values[i].CompareTo(other.values[i]);
+				c = (c* i) + values[i].CompareTo(other.values[i]);
 			}
 
 			return c;
