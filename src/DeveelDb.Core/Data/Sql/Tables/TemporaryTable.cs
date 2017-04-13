@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Deveel.Data.Sql.Tables {
-	public class TemporaryTable : IVirtualTable, IRootTable {
+	public class TemporaryTable : DataTableBase {
 		private List<SqlObject[]> rows;
 
 		public TemporaryTable(TableInfo tableInfo) {
@@ -20,11 +20,9 @@ namespace Deveel.Data.Sql.Tables {
 			: this(MakeTableInfo(tableName, columns)) {
 		}
 
-		public TableInfo TableInfo { get; }
+		public override TableInfo TableInfo { get; }
 
-		IDbObjectInfo IDbObject.ObjectInfo => TableInfo;
-
-		public long RowCount => rows.Count;
+		public override long RowCount => rows.Count;
 
 		private static TableInfo MakeTableInfo(ObjectName tableName, IEnumerable<ColumnInfo> columns) {
 			var tableInfo = new TableInfo(tableName);
@@ -34,44 +32,17 @@ namespace Deveel.Data.Sql.Tables {
 			return tableInfo;
 		}
 
-		int IComparable.CompareTo(object obj) {
-			throw new NotSupportedException();
-		}
-
-		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			throw new NotSupportedException();
-		}
-
-		bool ISqlValue.IsComparableTo(ISqlValue other) {
-			return false;
-		}
-
-		bool IEquatable<ITable>.Equals(ITable other) {
-			return this == other;
-		}
-
-		IEnumerator IEnumerable.GetEnumerator() {
-			return GetEnumerator();
-		}
-
-		public IEnumerator<Row> GetEnumerator() {
+		public override IEnumerator<Row> GetEnumerator() {
 			return new SimpleRowEnumerator(this);
 		}
 
-		IEnumerable<long> IVirtualTable.ResolveRows(int column, IEnumerable<long> rowSet, ITable ancestor) {
-			if (ancestor != this)
-				throw new ArgumentException("Method routed to wrong accessor");
-
-			return rowSet;
-		}
-
-		RawTableInfo IVirtualTable.GetRawTableInfo(RawTableInfo rootInfo) {
+		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
 			var tableRows = rows.Select((item, index) => (long) index).ToBigArray();
 			rootInfo.Add(this, tableRows);
 			return rootInfo;
 		}
 
-		public SqlObject GetValue(long row, int column) {
+		public override SqlObject GetValue(long row, int column) {
 			if (row > Int32.MaxValue)
 				throw new ArgumentOutOfRangeException("row");
 

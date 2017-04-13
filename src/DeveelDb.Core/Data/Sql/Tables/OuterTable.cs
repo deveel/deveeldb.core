@@ -73,12 +73,12 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public override SqlObject GetValue(long row, int column) {
-			int tableNum = TableInfo.GetTableOffset(column);
+			int tableNum = JoinedTableInfo.GetTableOffset(column);
 			var parentTable = Tables[tableNum];
 
 			if (row >= outerRowCount) {
 				row = Rows[tableNum][row - outerRowCount];
-				return parentTable.GetValue(row, TableInfo.GetColumnOffset(column));
+				return parentTable.GetValue(row, JoinedTableInfo.GetColumnOffset(column));
 			}
 
 			if (outerRows[tableNum] == null)
@@ -86,7 +86,7 @@ namespace Deveel.Data.Sql.Tables {
 				return new SqlObject(TableInfo.Columns[column].ColumnType, null);
 
 			row = outerRows[tableNum][row];
-			return parentTable.GetValue(row, TableInfo.GetColumnOffset(column));
+			return parentTable.GetValue(row, JoinedTableInfo.GetColumnOffset(column));
 		}
 
 		bool IEquatable<ITable>.Equals(ITable other) {

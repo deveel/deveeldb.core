@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Deveel.Data.Sql.Tables {
-	public abstract class JoinedTable : IVirtualTable {
+	public abstract class JoinedTable : TableBase {
 		protected JoinedTable(ITable[] tables) 
 			: this(new ObjectName("#VIRTUAL_TABLE#"), tables) {
 		}
@@ -29,45 +29,25 @@ namespace Deveel.Data.Sql.Tables {
 		protected JoinedTable(ObjectName tableName, ITable[] tables) {
 			var tableInfos = tables.Select(x => x.ObjectInfo).Cast<TableInfo>().ToArray();
 
-			TableInfo = new JoinedTableInfo(tableName, tableInfos);
+			JoinedTableInfo = new JoinedTableInfo(tableName, tableInfos);
 			Tables = tables;
 		}
 
-		IDbObjectInfo IDbObject.ObjectInfo => TableInfo;
+		public override TableInfo TableInfo => JoinedTableInfo;
 
-		public JoinedTableInfo TableInfo { get; }
-
-		TableInfo ITable.TableInfo => TableInfo;
+		protected JoinedTableInfo JoinedTableInfo { get; }
 
 		protected ITable[] Tables { get; }
 
-		int IComparable.CompareTo(object obj) {
-			throw new NotSupportedException();
-		}
-
-		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			throw new NotSupportedException();
-		}
-
-		bool ISqlValue.IsComparableTo(ISqlValue other) {
-			return false;
-		}
-
-		public IEnumerator<Row> GetEnumerator() {
+		public override IEnumerator<Row> GetEnumerator() {
 			return new SimpleRowEnumerator(this);
 		}
 
-		IEnumerator IEnumerable.GetEnumerator() {
-			return GetEnumerator();
-		}
-
-		public abstract long RowCount { get; }
-
-		public virtual SqlObject GetValue(long row, int column) {
-			int tableNum = TableInfo.GetTableOffset(column);
+		public override SqlObject GetValue(long row, int column) {
+			int tableNum = JoinedTableInfo.GetTableOffset(column);
 			var parentTable = Tables[tableNum];
 			var resolvedRow = ResolveTableRow(row, tableNum);
-			return parentTable.GetValue(resolvedRow, TableInfo.GetColumnOffset(column));
+			return parentTable.GetValue(resolvedRow, JoinedTableInfo.GetColumnOffset(column));
 		}
 
 		protected abstract IEnumerable<long> ResolveTableRows(IEnumerable<long> rowSet, int tableNum);
@@ -76,19 +56,11 @@ namespace Deveel.Data.Sql.Tables {
 			return ResolveTableRows(new[] {row}, tableNum).First();
 		}
 
-		RawTableInfo IVirtualTable.GetRawTableInfo(RawTableInfo tableInfo) {
-			return GetRawTableInfo(tableInfo);
-		}
-
-		IEnumerable<long> IVirtualTable.ResolveRows(int column, IEnumerable<long> rowSet, ITable ancestor) {
-			return ResolveRows(column, rowSet, ancestor);
-		}
-
-		protected virtual IEnumerable<long> ResolveRows(int column, IEnumerable<long> rowSet, ITable ancestor) {
+		protected override IEnumerable<long> ResolveRows(int column, IEnumerable<long> rowSet, ITable ancestor) {
 			if (ancestor == this)
 				return new BigArray<long>(0);
 
-			int tableNum = TableInfo.GetTableOffset(column);
+			int tableNum = JoinedTableInfo.GetTableOffset(column);
 			var parentTable = Tables[tableNum];
 
 			if (!(parentTable is IVirtualTable))
@@ -97,12 +69,12 @@ namespace Deveel.Data.Sql.Tables {
 			// Resolve the rows into the parents indices
 			var rows = ResolveTableRows(rowSet, tableNum);
 
-			return ((IVirtualTable) parentTable).ResolveRows(TableInfo.GetColumnOffset(column), rows, ancestor);
+			return parentTable.ResolveRows(JoinedTableInfo.GetColumnOffset(column), rows, ancestor);
 		}
 
 		
 
-		protected virtual RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
+		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
 			var size = RowCount;
 			var allList = new BigArray<long>(size);
 
