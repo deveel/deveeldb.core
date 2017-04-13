@@ -1,16 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Deveel.Data.Services;
+using Deveel.Data.Sql.Expressions;
+
+using Moq;
+
 using Xunit;
 
 namespace Deveel.Data.Sql.Tables {
 	public class RowTests {
+		private IContext context;
 		private ITable left;
 
 		public RowTests() {
 			var leftInfo = new TableInfo(ObjectName.Parse("tab1"));
 			leftInfo.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
-			leftInfo.Columns.Add(new ColumnInfo("b", PrimitiveTypes.Boolean()));
+			leftInfo.Columns.Add(new ColumnInfo("b", PrimitiveTypes.Boolean()) {
+				DefaultValue = SqlExpression.GreaterThan(SqlExpression.Reference(new ObjectName("a")),
+					SqlExpression.Constant(SqlObject.Integer(5)))
+			});
 			leftInfo.Columns.Add(new ColumnInfo("c", PrimitiveTypes.Double()));
 
 			left = new TestTable(leftInfo, new List<SqlObject[]> {
@@ -18,6 +27,11 @@ namespace Deveel.Data.Sql.Tables {
 				new[] {SqlObject.Integer(54), SqlObject.Boolean(null), SqlObject.Double(921.001)},
 				new[] {SqlObject.Integer(23), SqlObject.Boolean(true), SqlObject.Double(2010.221)}
 			});
+
+			var mock = new Mock<IContext>();
+			mock.SetupGet(x => x.Scope)
+				.Returns(new ServiceContainer());
+			context = mock.Object;
 		}
 
 		[Fact]
@@ -67,6 +81,17 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.Equal(SqlObject.Integer(23), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);
 			Assert.Equal(SqlObject.Double(5563.22), value3);
+		}
+
+		[Fact]
+		public void SetDefaultValues() {
+			var row = left.NewRow();
+
+			row["a"] = SqlObject.Integer(345);
+			row.SetDefault(context);
+
+			var value = row["b"];
+			Assert.Equal(SqlObject.Boolean(true), value);
 		}
 	}
 }

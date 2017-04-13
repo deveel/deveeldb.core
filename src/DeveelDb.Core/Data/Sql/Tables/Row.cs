@@ -21,6 +21,7 @@ using System.Collections.Generic;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Services;
+using Deveel.Data.Sql.Constraints;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Tables {
@@ -109,7 +110,9 @@ namespace Deveel.Data.Sql.Tables {
 			var columnInfo = TableInfo.Columns[column];
 			if (!columnInfo.HasDefaultValue) {
 				// TODO: query to see if the column is constrained to NOT NULL
-				
+				if (context.IsNotNull(TableInfo.TableName, columnInfo.ColumnName))
+					throw new NullViolationException("", TableInfo.TableName, columnInfo.ColumnName,
+						ConstraintDeferrability.InitiallyImmediate);
 			}
 
 			SqlObject value;
