@@ -7,8 +7,7 @@ using Xunit;
 namespace Deveel.Data {
 	public class ContextTests : IDisposable {
 		public ContextTests() {
-			var mock = new Mock<Context>();
-			context = mock.Object;
+			context = new Context("test");
 		}
 
 		private Context context;
@@ -17,7 +16,7 @@ namespace Deveel.Data {
 		public void IsEmpty() {
 			Assert.Null((context as IContext).Scope);
 			Assert.Null((context as IContext).ParentContext);
-			Assert.Null((context as IContext).ContextName);
+			Assert.NotNull((context as IContext).ContextName);
 		}
 
 		[Fact]

@@ -37,7 +37,7 @@ namespace Deveel.Data.Sql.Expressions {
 			builder.Append(")");
 		}
 
-		private SqlFunction ResolveFunction(IContext context) {
+		private SqlFunctionBase ResolveFunction(IContext context) {
 			if (context == null)
 				throw new SqlExpressionException();
 
@@ -49,10 +49,10 @@ namespace Deveel.Data.Sql.Expressions {
 			if (method == null)
 				throw new SqlExpressionException();
 
-			if (!method.MethodInfo.IsFunction)
+			if (!method.IsFunction)
 				throw new SqlExpressionException();
 
-			return ((SqlFunction) method);
+			return ((SqlFunctionBase) method);
 		}
 
 		public override SqlType GetSqlType(IContext context) {

@@ -6,21 +6,14 @@ using System.Linq;
 using Deveel.Data.Configuration;
 
 namespace Deveel.Data.Sql.Methods {
-	public abstract class SqlMethodInfo : IDbObjectInfo, ISqlFormattable {
-		internal SqlMethodInfo(ObjectName methodName, MethodType type) {
+	public class SqlMethodInfo : IDbObjectInfo, ISqlFormattable {
+		public SqlMethodInfo(ObjectName methodName) {
 			if (methodName == null)
 				throw new ArgumentNullException(nameof(methodName));
 
 			MethodName = methodName;
-			Type = type;
 			Parameters = new ParameterCollection(this);
 		}
-
-		public MethodType Type { get; }
-
-		public bool IsFunction => Type == MethodType.Function;
-
-		public bool IsProcedure => Type == MethodType.Procedure;
 
 		DbObjectType IDbObjectInfo.ObjectType => DbObjectType.Method;
 
@@ -37,8 +30,6 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		internal virtual void AppendTo(SqlStringBuilder builder) {
-			builder.Append(Type.ToString().ToUpperInvariant());
-			builder.Append(" ");
 			MethodName.AppendTo(builder);
 
 			AppendParametersTo(builder);
@@ -113,20 +104,13 @@ namespace Deveel.Data.Sql.Methods {
 					throw new ArgumentException($"A parameter named {name} was already specified in method '{methodInfo.MethodName}'.");
 			}
 
-			private void AssetNotOutputInFunction(SqlMethodParameterInfo parameter) {
-				if (parameter.IsOutput && methodInfo.IsFunction)
-					throw new ArgumentException($"Trying to add the OUT parameter {parameter.Name} to the function {methodInfo.MethodName}");
-			}
-
 			protected override void InsertItem(int index, SqlMethodParameterInfo item) {
 				AssertNotContains(item.Name);
-				AssetNotOutputInFunction(item);
 				item.Offset = index;
 				base.InsertItem(index, item);
 			}
 
 			protected override void SetItem(int index, SqlMethodParameterInfo item) {
-				AssetNotOutputInFunction(item);
 				item.Offset = index;
 				base.SetItem(index, item);
 			}

@@ -22,8 +22,7 @@ namespace Deveel.Data.Sql.Expressions {
 			methodInfo.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.VarChar(155)));
 			methodInfo.Parameters.Add(new SqlMethodParameterInfo("b", PrimitiveTypes.Integer(),
 				SqlExpression.Constant(SqlObject.Null)));
-			var method = new SqlFunction(methodInfo);
-			method.SetBody(ctx => {
+			var method = new SqlFunctionDelegate(methodInfo, ctx => {
 				return Task.FromResult(ctx.Value("a").Add(ctx.Value("b")));
 			});
 
