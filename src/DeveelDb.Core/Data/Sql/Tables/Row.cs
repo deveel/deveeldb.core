@@ -19,6 +19,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+using Deveel.Data.Configuration;
+using Deveel.Data.Services;
+using Deveel.Data.Sql.Expressions;
+
 namespace Deveel.Data.Sql.Tables {
 	public sealed class Row : IEnumerable<Field> {
 		private Dictionary<int, SqlObject> values;
@@ -98,6 +102,52 @@ namespace Deveel.Data.Sql.Tables {
 			SetValue(offset, value);
 		}
 
+		public void SetDefault(IContext context, int column) {
+			if (column < 0 || column >= TableInfo.Columns.Count)
+				throw new ArgumentOutOfRangeException(nameof(column));
+
+			var columnInfo = TableInfo.Columns[column];
+			if (!columnInfo.HasDefaultValue) {
+				// TODO: query to see if the column is constrained to NOT NULL
+				
+			}
+
+			SqlObject value;
+			if (columnInfo.HasDefaultValue) {
+				value = ReduceDefault(context, columnInfo.DefaultValue);
+			} else {
+				value = SqlObject.NullOf(columnInfo.ColumnType);
+			}
+
+			SetValue(column, value);
+		}
+
+		public void SetDefault(IContext context) {
+			for (int i = 0; i < TableInfo.Columns.Count; i++) {
+				if (!values.ContainsKey(i))
+					SetDefault(context, i);
+			}
+		}
+
+		private SqlObject ReduceDefault(IContext context, SqlExpression expression) {
+			var ignoreCase = context.GetValue("ignoreCase", true);
+
+			// Resolve any variables to the table_def for this expression.
+			expression = Table.TableInfo.ResolveColumns(expression, ignoreCase);
+
+			using (var rowContext = new Context(context, "Row")) {
+				// Get the variable resolver and evaluate over this data.
+				var vresolver = new ReferenceResolver(this);
+				(rowContext as IContext).Scope.RegisterInstance<IReferenceResolver>(vresolver);
+
+				var reduced = expression.Reduce(rowContext);
+				if (reduced.ExpressionType != SqlExpressionType.Constant)
+					throw new InvalidOperationException("The DEFAULT expression of the column cannot be reduced to a constant");
+
+				return ((SqlConstantExpression) reduced).Value;
+			}
+		}
+
 		public IEnumerator<Field> GetEnumerator() {
 			return new FieldEnumerator(this);
 		}
@@ -105,6 +155,48 @@ namespace Deveel.Data.Sql.Tables {
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
 		}
+
+		#region ReferenceResolver
+
+		class ReferenceResolver : IReferenceResolver {
+			private readonly Row row;
+
+			public ReferenceResolver(Row row) {
+				this.row = row;
+			}
+
+			public SqlObject ResolveReference(ObjectName referenceName) {
+				if (referenceName.Parent != null &&
+				    !row.TableInfo.TableName.Equals(referenceName.Parent))
+					return null;
+
+				var columnName = referenceName.Name;
+				var index = row.TableInfo.Columns.IndexOf(columnName);
+				if (index == -1)
+					throw new InvalidOperationException($"Column {columnName} not found in table {row.TableInfo.TableName}");
+
+				SqlObject value;
+				if (!row.values.TryGetValue(index, out value))
+					throw new InvalidOperationException($"Value of column {columnName} in row was not set");
+
+				return value;
+			}
+
+			public SqlType ResolveType(ObjectName referenceName) {
+				if (referenceName.Parent != null &&
+				    !row.TableInfo.TableName.Equals(referenceName.Parent))
+					return null;
+
+				var columnName = referenceName.Name;
+				var index = row.TableInfo.Columns.IndexOf(columnName);
+				if (index == -1)
+					throw new InvalidOperationException($"Column {columnName} not found in table {row.TableInfo.TableName}");
+
+				return row.TableInfo.Columns[index].ColumnType;
+			}
+		}
+
+		#endregion
 
 		#region FieldEnumerator
 

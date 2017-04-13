@@ -19,6 +19,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+using Deveel.Data.Sql.Expressions;
+
 namespace Deveel.Data.Sql.Tables {
 	public class TableInfo : IDbObjectInfo, ISqlFormattable {
 		private bool readOnly;
@@ -82,6 +84,11 @@ namespace Deveel.Data.Sql.Tables {
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+		public SqlExpression ResolveColumns(SqlExpression expression, bool ignoreCase) {
+			var visitor = new ColumnResolverVisitor(this, ignoreCase);
+			return visitor.Visit(expression);
 		}
 
 		#region ColumnList
