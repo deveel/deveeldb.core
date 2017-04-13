@@ -52,9 +52,9 @@ namespace Deveel.Data.Sql.Tables {
 		public void ResolveReference() {
 			var resolver = new RowReferenceResolver(left, 0);
 
-			var type1 = resolver.ReturnType(ObjectName.Parse("tab1.a"));
-			var type2 = resolver.ReturnType(ObjectName.Parse("tab1.b"));
-			var type3 = resolver.ReturnType(ObjectName.Parse("tab1.c"));
+			var type1 = resolver.ResolveType(ObjectName.Parse("tab1.a"));
+			var type2 = resolver.ResolveType(ObjectName.Parse("tab1.b"));
+			var type3 = resolver.ResolveType(ObjectName.Parse("tab1.c"));
 
 			Assert.Equal(PrimitiveTypes.Integer(), type1);
 			Assert.Equal(PrimitiveTypes.Boolean(), type2);

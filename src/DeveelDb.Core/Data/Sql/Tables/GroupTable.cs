@@ -321,7 +321,7 @@ namespace Deveel.Data.Sql.Tables {
 					return groupResolver.ResolveReference(referenceName, index);
 				}
 
-				public SqlType ReturnType(ObjectName referenceName) {
+				public SqlType ResolveType(ObjectName referenceName) {
 					var columnOffset = groupResolver.table.TableInfo.Columns.IndexOf(referenceName);
 					if (columnOffset < 0)
 						throw new InvalidOperationException($"Cannot find column {referenceName} in table {groupResolver.table.TableInfo.TableName}");

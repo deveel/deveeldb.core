@@ -35,7 +35,7 @@ namespace Deveel.Data.Sql.Tables {
 			return table.GetValue(row, columnIndex);
 		}
 
-		public SqlType ReturnType(ObjectName referenceName) {
+		public SqlType ResolveType(ObjectName referenceName) {
 			var columnIndex = table.TableInfo.Columns.IndexOf(referenceName);
 			if (columnIndex < 0)
 				return null;
