@@ -47,7 +47,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (resolver == null)
 				throw new InvalidOperationException();
 
-			var obj = resolver.ReturnType(ReferenceName);
+			var obj = resolver.ResolveType(ReferenceName);
 			if (obj == null)
 				throw new InvalidOperationException();
 
