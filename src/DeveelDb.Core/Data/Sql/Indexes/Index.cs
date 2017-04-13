@@ -31,6 +31,8 @@ namespace Deveel.Data.Sql.Indexes {
 
 		public IndexInfo IndexInfo { get; }
 
+		protected IndexKey NullKey => new IndexKey(Columns.Select(x => SqlObject.Null).ToArray());
+
 		IDbObjectInfo IDbObject.ObjectInfo => IndexInfo;
 
 		public void AttachTo(ITable table) {
@@ -101,12 +103,136 @@ namespace Deveel.Data.Sql.Indexes {
 
 		public abstract IEnumerable<long> SelectRange(IndexRange[] ranges);
 
+		public IEnumerable<long> SelectRange(IndexRange range) {
+			return SelectRange(new[] { range });
+		}
+
+		public IEnumerable<long> SelectAll()
+			=> SelectRange(IndexRange.FullRange);
+
+		// NOTE: This will find NULL at start which is probably wrong.  The
+		//   first value should be the first non null value.
+		public IEnumerable<long> SelectFirst()
+			=> SelectRange(new IndexRange(
+				RangeFieldOffset.FirstValue, IndexRange.FirstInSet,
+				RangeFieldOffset.LastValue, IndexRange.FirstInSet));
+
+		public IEnumerable<long> SelectLast()
+			=> SelectRange(new IndexRange(
+				RangeFieldOffset.FirstValue, IndexRange.LastInSet,
+				RangeFieldOffset.LastValue, IndexRange.LastInSet));
+
+		public IEnumerable<long> SelectNotNull()
+			=> SelectRange(new IndexRange(
+				RangeFieldOffset.AfterLastValue, NullKey,
+				RangeFieldOffset.LastValue, IndexRange.LastInSet));
+
+		public IEnumerable<long> SelectEqual(IndexKey key) {
+			if (key.IsNull)
+				return new long[0];
+
+			return SelectRange(new IndexRange(
+				RangeFieldOffset.FirstValue, key,
+				RangeFieldOffset.LastValue, key));
+		}
+
+		public IEnumerable<long> SelectNotEqual(IndexKey key) {
+			if (key.IsNull)
+				return new long[0];
+
+			return SelectRange(new[] {
+				new IndexRange(
+					RangeFieldOffset.AfterLastValue, key.NullKey,
+					RangeFieldOffset.BeforeFirstValue, key),
+				new IndexRange(
+					RangeFieldOffset.AfterLastValue, key,
+					RangeFieldOffset.LastValue, IndexRange.LastInSet)
+			});
+		}
+
+		public IEnumerable<long> SelectGreater(IndexKey key) {
+			if (key.IsNull)
+				return new long[0];
+
+			return SelectRange(
+				new IndexRange(
+					RangeFieldOffset.AfterLastValue, key,
+					RangeFieldOffset.LastValue, IndexRange.LastInSet));
+		}
+
+		public IEnumerable<long> SelectLess(IndexKey key) {
+			if (key.IsNull)
+				return new long[0];
+
+			return SelectRange(new IndexRange(
+				RangeFieldOffset.AfterLastValue, key.NullKey,
+				RangeFieldOffset.BeforeFirstValue, key));
+		}
+
+		public IEnumerable<long> SelectGreaterOrEqual(IndexKey key) {
+			if (key.IsNull)
+				return new long[0];
+
+			return SelectRange(new IndexRange(
+				RangeFieldOffset.FirstValue, key,
+				RangeFieldOffset.LastValue, IndexRange.LastInSet));
+		}
+
+		public IEnumerable<long> SelectLessOrEqual(IndexKey key) {
+			if (key.IsNull)
+				return new long[0];
+
+			return SelectRange(new IndexRange(
+				RangeFieldOffset.AfterLastValue, key.NullKey,
+				RangeFieldOffset.LastValue, key));
+		}
+
+		public IEnumerable<long> SelectBetween(IndexKey key1, IndexKey key2) {
+			if (key1.IsNull ||
+			    key2.IsNull)
+				return new long[0];
+
+			return SelectRange(new IndexRange(
+				RangeFieldOffset.FirstValue, key1,
+				RangeFieldOffset.BeforeFirstValue, key2));
+		}
+
 		public abstract void Insert(long row);
 
 		public abstract void Remove(long row);
 
 		public Index Subset(ITable table, int[] columns) {
-			throw new NotImplementedException();
+			if (table == null)
+				throw new ArgumentNullException("table");
+			if (columns.Length > 1)
+				throw new NotSupportedException("multi-columns subset not implemented yet");
+
+			// Resolve table rows in this table scheme domain.
+			var rowSet = new BigList<long>(table.RowCount);
+			foreach (var row in table) {
+				rowSet.Add(row.Id.Number);
+			}
+
+			var rows = table.ResolveRows(columns[0], rowSet, Table);
+
+			// Generates an IIndex which contains indices into 'rowSet' in
+			// sorted order.
+			var newSet = OrderRows(rows).ToBigArray();
+
+			// Our 'new_set' should be the same size as 'rowSet'
+			if (newSet.Length != rowSet.Count) {
+				throw new Exception("Internal sort error in finding sub-set.");
+			}
+
+			return CreateSubset(table, columns[0], newSet);
+		}
+
+		protected virtual Index CreateSubset(ITable table, int column, IEnumerable<long> rows) {
+			var columnName = table.TableInfo.Columns.GetColumnName(column);
+			var indexInfo = new IndexInfo(new ObjectName("subset"), table.TableInfo.TableName, new[] {columnName.Name});
+			var index = new InsertSearchIndex(indexInfo, rows);
+			index.AttachTo(table);
+			return index;
 		}
 
 		public void Dispose() {
@@ -119,37 +245,6 @@ namespace Deveel.Data.Sql.Indexes {
 		}
 
 		#region IndexKey
-
-		protected struct IndexKey : IComparable<IndexKey>, IEquatable<IndexKey> {
-			private readonly SqlObject[] values;
-
-			internal IndexKey(SqlObject[] values) {
-				this.values = values;
-			}
-
-			public int CompareTo(IndexKey other) {
-				int result = 0;
-				for (int i = 0; i < values.Length; i++) {
-					result = values[i].CompareTo(other.values[i]);
-					if (result != 0)
-						return result;
-				}
-
-				return result;
-			}
-
-			public bool Equals(IndexKey other) {
-				if (values.Length != other.values.Length)
-					return false;
-
-				for (int i = 0; i < values.Length; i++) {
-					if (!values[i].Equals(other.values[i]))
-						return false;
-				}
-
-				return true;
-			}
-		}
 
 		#endregion
 

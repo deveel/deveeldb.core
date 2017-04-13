@@ -22,12 +22,12 @@ namespace Deveel.Data.Sql.Indexes {
 		/// <summary>
 		/// 
 		/// </summary>
-		public static readonly SqlObject FirstInSet = new SqlObject(new SpecialType(), new SqlString("FirstInSet"));
+		public static readonly IndexKey FirstInSet = new IndexKey(new SqlObject(new SpecialType(), new SqlString("FirstInSet")));
 
 		/// <summary>
 		/// 
 		/// </summary>
-		public static readonly SqlObject LastInSet = new SqlObject(new SpecialType(), new SqlString("LastInSet"));
+		public static readonly IndexKey LastInSet = new IndexKey(new SqlObject(new SpecialType(), new SqlString("LastInSet")));
 
 		/// <summary>
 		/// Constructs the range given a start and an end location
@@ -36,7 +36,7 @@ namespace Deveel.Data.Sql.Indexes {
 		/// <param name="firstValue">The first value of the range</param>
 		/// <param name="lastOffset">The offset within the range of the last value.</param>
 		/// <param name="endValue">The last value of the range.</param>
-		public IndexRange(RangeFieldOffset startOffset, SqlObject firstValue, RangeFieldOffset lastOffset, SqlObject endValue)
+		public IndexRange(RangeFieldOffset startOffset, IndexKey firstValue, RangeFieldOffset lastOffset, IndexKey endValue)
 			: this(false) {
 			StartOffset = startOffset;
 			StartValue = firstValue;
@@ -49,7 +49,7 @@ namespace Deveel.Data.Sql.Indexes {
 			IsNull = isNull;
 		}
 
-		public bool IsNull { get; private set; }
+		public bool IsNull { get; }
 
 		/// <summary>
 		/// The entire range of values in an index (including <c>NULL</c>)
@@ -57,11 +57,11 @@ namespace Deveel.Data.Sql.Indexes {
 		public static readonly IndexRange FullRange = 
 			new IndexRange(RangeFieldOffset.FirstValue, FirstInSet, RangeFieldOffset.LastValue, LastInSet);
 
-		/// <summary>
-		/// The entire range of values in an index (not including <c>NULL</c>)
-		/// </summary>
-		public static readonly IndexRange FullRangeNotNull = 
-			new IndexRange(RangeFieldOffset.AfterLastValue, SqlObject.Null, RangeFieldOffset.LastValue, LastInSet);
+		///// <summary>
+		///// The entire range of values in an index (not including <c>NULL</c>)
+		///// </summary>
+		//public static readonly IndexRange FullRangeNotNull = 
+		//	new IndexRange(RangeFieldOffset.AfterLastValue, SqlObject.Null, RangeFieldOffset.LastValue, LastInSet);
 
 		public static readonly IndexRange Null = new IndexRange(true);
 
@@ -73,7 +73,7 @@ namespace Deveel.Data.Sql.Indexes {
 		/// <summary>
 		/// Gets the first value of the range.
 		/// </summary>
-		public SqlObject StartValue { get; private set; }
+		public IndexKey StartValue { get; private set; }
 
 		/// <summary>
 		/// Gets the offset of the last value of the range.
@@ -83,7 +83,7 @@ namespace Deveel.Data.Sql.Indexes {
 		/// <summary>
 		/// Gets the last value of the range.
 		/// </summary>
-		public SqlObject EndValue { get; private set; }
+		public IndexKey EndValue { get; private set; }
 
 		public bool Equals(IndexRange other) {
 			if (IsNull && other.IsNull)
@@ -93,8 +93,8 @@ namespace Deveel.Data.Sql.Indexes {
 			if (!IsNull && other.IsNull)
 				return false;
 
-			return (StartValue.Value.Equals(other.StartValue.Value) &&
-			        EndValue.Value.Equals(other.EndValue.Value) &&
+			return (StartValue.Equals(other.StartValue) &&
+			        EndValue.Equals(other.EndValue) &&
 			        StartOffset == other.StartOffset &&
 			        EndOffset == other.EndOffset);
 		}
@@ -112,26 +112,6 @@ namespace Deveel.Data.Sql.Indexes {
 			return base.GetHashCode();
 		}
 
-		/// <inheritdoc/>
-		public override string ToString() {
-			var sb = new StringBuilder();
-			if (StartOffset == RangeFieldOffset.FirstValue) {
-				sb.Append("FIRST_VALUE ");
-			} else if (StartOffset == RangeFieldOffset.AfterLastValue) {
-				sb.Append("AFTER_LAST_VALUE ");
-			}
-
-			sb.Append(StartValue.Value);
-			sb.Append(" -> ");
-			if (EndOffset == RangeFieldOffset.LastValue) {
-				sb.Append("LAST_VALUE ");
-			} else if (EndOffset == RangeFieldOffset.BeforeFirstValue) {
-				sb.Append("BEFORE_FIRST_VALUE ");
-			}
-			sb.Append(EndValue.Value);
-			return sb.ToString();
-		}
-
 		public static bool operator ==(IndexRange a, IndexRange b) {
 			return a.Equals(b);
 		}
@@ -146,6 +126,8 @@ namespace Deveel.Data.Sql.Indexes {
 			public SpecialType()
 				: base((SqlTypeCode) 255) {
 			}
+
+			public override bool IsIndexable => true;
 
 			public override bool IsInstanceOf(ISqlValue value) {
 				return value is SqlString;

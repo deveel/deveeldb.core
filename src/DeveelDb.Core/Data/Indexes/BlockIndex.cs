@@ -146,7 +146,7 @@ namespace Deveel.Data.Indexes {
 			protected virtual BigArray<TValue> GetArray(bool readOnly) {
 				if (readOnly) {
 					var newArray = new BigArray<TValue>(BaseArray.Length);
-					BigArray<TValue>.Copy(BaseArray, 0, newArray, 0, BaseArray.Length);
+					BaseArray.CopyTo(0, newArray, 0, BaseArray.Length);
 					return newArray;
 				}
 				return BaseArray;
@@ -186,7 +186,7 @@ namespace Deveel.Data.Indexes {
 				changed = true;
 				var arr = GetArray(false);
 				var val = arr[index];
-				BigArray<TValue>.Copy(BaseArray, index + 1, arr, index, (count - index));
+				BaseArray.CopyTo(index + 1, arr, index, (count - index));
 				--count;
 				return val;
 			}
@@ -215,7 +215,7 @@ namespace Deveel.Data.Indexes {
 			public void Insert(TValue value, long index) {
 				changed = true;
 				var arr = GetArray(false);
-				BigArray<TValue>.Copy(BaseArray, index, arr, index + 1, (count - index));
+				BaseArray.CopyTo(index, arr, index + 1, (count - index));
 				++count;
 				arr[index] = value;
 			}
@@ -230,11 +230,11 @@ namespace Deveel.Data.Indexes {
 				// Make room in the destination block
 				long destbSize = block.Count;
 				if (destbSize > 0) {
-					BigArray<TValue>.Copy(destArr, 0, destArr, length, destbSize);
+					destArr.CopyTo(0, destArr, length, destbSize);
 				}
 
 				// Copy from this block into the destination block.
-				BigArray<TValue>.Copy(arr, count - length, destArr, 0, length);
+				arr.CopyTo(count - length, destArr, 0, length);
 				// Alter size of destination and source block.
 				block.count += length;
 				count -= length;
@@ -247,14 +247,14 @@ namespace Deveel.Data.Indexes {
 			public void CopyTo(IIndexBlock<TKey, TValue> destBlock) {
 				var block = (Block) destBlock;
 				var destArr = block.GetArray(false);
-				BigArray<TValue>.Copy(GetArray(true), 0, destArr, 0, count);
+				GetArray(true).CopyTo(0, destArr, 0, count);
 				block.count = count;
 				block.changed = true;
 			}
 
 			/// <inheritdoc/>
 			public long CopyTo(BigArray<TValue> destArray, long arrayIndex) {
-				BigArray<TValue>.Copy(GetArray(true), 0, destArray, arrayIndex, count);
+				GetArray(true).CopyTo(0, destArray, arrayIndex, count);
 				return count;
 			}
 
