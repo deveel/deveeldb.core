@@ -197,14 +197,14 @@ namespace Deveel {
 			return false;
 		}
 
-		int ICollection<T>.Count => (int) Count;
+		int ICollection<T>.Count => (int)Count;
 
 		public long Count => size;
 
 		bool ICollection<T>.IsReadOnly => false;
 
 		int IList<T>.IndexOf(T item) {
-			return (int) IndexOf(item);
+			return (int)IndexOf(item);
 		}
 
 		public long IndexOf(T item) {

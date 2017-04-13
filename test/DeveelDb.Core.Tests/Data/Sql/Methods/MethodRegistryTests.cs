@@ -27,8 +27,7 @@ namespace Deveel.Data.Sql.Methods {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			var function = new SqlFunction(info);
-			function.SetBody(ctx => {
+			var function = new SqlFunctionDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
 			});
@@ -41,7 +40,7 @@ namespace Deveel.Data.Sql.Methods {
 			var method = (registry as IMethodResolver).ResolveMethod(context, invoke);
 
 			Assert.NotNull(method);
-			Assert.True(method.MethodInfo.IsFunction);
+			Assert.True(method.IsFunction);
 			Assert.Equal(name, method.MethodInfo.MethodName);
 		}
 
