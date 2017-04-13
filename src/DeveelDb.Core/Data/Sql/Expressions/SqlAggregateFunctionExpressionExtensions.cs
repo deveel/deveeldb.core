@@ -1,5 +1,8 @@
 ﻿using System;
 
+using Deveel.Data.Sql.Methods;
+using Deveel.Data.Services;
+
 namespace Deveel.Data.Sql.Expressions {
 	static class SqlAggregateFunctionExpressionExtensions {
 		public static bool HasAggregate(this SqlExpression expression, IContext context) {
@@ -20,10 +23,20 @@ namespace Deveel.Data.Sql.Expressions {
 			public bool HasAggregates { get; private set; }
 
 			public override SqlExpression VisitFunction(SqlFunctionExpression expression) {
-				// TODO: resolve the function and gett its type
+				var resolver = context.Scope.Resolve<IMethodResolver>();
+				if (resolver == null)
+					throw new SqlExpressionException();
+
+				var method = resolver.ResolveMethod(context, new Invoke(expression.FunctionName, expression.Arguments));
+				if (method != null && method.IsFunction &&
+					((SqlFunctionBase)method).FunctionType == FunctionType.Aggregate &&
+					!HasAggregates) {
+					HasAggregates = true;
+				}
 
 				return base.VisitFunction(expression);
 			}
+
 		}
 
 		#endregion

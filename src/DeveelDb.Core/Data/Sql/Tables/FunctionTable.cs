@@ -25,7 +25,7 @@ namespace Deveel.Data.Sql.Tables {
 
 			Table = table;
 			RowCount = table.RowCount;
-			Context = new TableContext(context);
+			Context = new Context(context, "#FUNCTION#");
 
 			var refResolver = new RowReferenceResolver(table, 0);
 			Context.Scope.Register<IReferenceResolver>(refResolver);
@@ -91,7 +91,7 @@ namespace Deveel.Data.Sql.Tables {
 
 			SqlExpression exp;
 
-			using (var context = new RowContext(Context, row)) {
+			using (var context = new Context(Context, $"#FUNCTION#({row})")) {
 				PrepareRowContext(context, row);
 
 				exp = expr.Reduce(context);
@@ -153,32 +153,5 @@ namespace Deveel.Data.Sql.Tables {
 
 			base.Dispose(disposing);
 		}
-
-		#region TableContext
-
-		class TableContext : Context {
-			public TableContext(IContext context)
-				: base(context) {	
-			}
-
-			protected override string ContextName => "#FUNCTION#";
-		}
-
-		#endregion
-
-		#region RowContext
-
-		class RowContext : Context {
-			private readonly long row;
-
-			public RowContext(IContext parent, long row)
-				: base(parent) {
-				this.row = row;
-			}
-
-			protected override string ContextName => $"#FUNCTION#({row})";
-		}
-
-		#endregion
 	}
 }
