@@ -14,27 +14,24 @@ namespace Deveel.Data.Sql.Methods {
 		private IContext context;
 
 		public SqlAggreateFunctionTests() {
-			var groups = new Dictionary<string, List<SqlObject>> {
-				{
-					"a", new List<SqlObject> {
-						SqlObject.Integer(33),
-						SqlObject.Integer(22),
-						SqlObject.Integer(1)
-					}
-				}
+			var group = new List<SqlObject> {
+				SqlObject.Integer(33),
+				SqlObject.Integer(22),
+				SqlObject.Integer(1)
+
 			};
 
 			var refResolver = new Mock<IReferenceResolver>();
 			refResolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
 				.Returns<ObjectName>(name => PrimitiveTypes.Integer());
 			refResolver.Setup(x => x.ResolveReference(It.IsAny<ObjectName>()))
-				.Returns<ObjectName>(name => groups[name.Name][0]);
+				.Returns<ObjectName>(name => group[0]);
 
 			var resolverMock = new Mock<IGroupResolver>();
 			resolverMock.SetupGet(x => x.Size)
-				.Returns(groups.Count);
+				.Returns(group.Count);
 			resolverMock.Setup(x => x.ResolveReference(It.IsAny<ObjectName>(), It.IsAny<long>()))
-				.Returns<ObjectName, long>((name, index) => groups[name.Name][(int)index]);
+				.Returns<ObjectName, long>((name, index) => group[(int)index]);
 			resolverMock.Setup(x => x.GetResolver(It.IsAny<long>()))
 				.Returns(refResolver.Object);
 
@@ -77,7 +74,7 @@ namespace Deveel.Data.Sql.Methods {
 
 			var value = ((SqlConstantExpression) result.ReturnedValue).Value;
 
-			Assert.Equal(SqlObject.BigInt(56), value);
+			Assert.Equal(SqlObject.Integer(56), value);
 		}
 
 		[Fact]
@@ -112,7 +109,7 @@ namespace Deveel.Data.Sql.Methods {
 
 			var value = ((SqlConstantExpression)result.ReturnedValue).Value;
 
-			Assert.Equal(SqlObject.BigInt(66), value);
+			Assert.Equal(SqlObject.Integer(198), value);
 		}
 
 		public void Dispose() {
