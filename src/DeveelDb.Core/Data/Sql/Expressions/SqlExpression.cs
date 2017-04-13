@@ -28,10 +28,15 @@ namespace Deveel.Data.Sql.Expressions {
 
 		private int GetPrecedence() {
 			switch (ExpressionType) {
-				// Primary
+				// Group
+				case SqlExpressionType.Group:
+					return 151;
+
+				// References
 				case SqlExpressionType.Reference:
 				case SqlExpressionType.Function:
-				case SqlExpressionType.Constant:
+				case SqlExpressionType.VariableAssign:
+				case SqlExpressionType.ReferenceAssign:
 				case SqlExpressionType.Variable:
 				case SqlExpressionType.Parameter:
 					return 150;
@@ -84,15 +89,10 @@ namespace Deveel.Data.Sql.Expressions {
 				// Conditional
 				case SqlExpressionType.Condition:
 					return 80;
-				
-				// Assign
-				case SqlExpressionType.VariableAssign:
-				case SqlExpressionType.ReferenceAssign:
+
+				// Constant
+				case SqlExpressionType.Constant:
 					return 70;
-				
-				// Tuple
-				case SqlExpressionType.Group:
-					return 60;
 			}
 
 			return -1;

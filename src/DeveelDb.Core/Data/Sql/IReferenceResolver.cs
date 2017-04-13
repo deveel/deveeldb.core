@@ -21,6 +21,6 @@ namespace Deveel.Data.Sql {
 	public interface IReferenceResolver {
 		SqlObject ResolveReference(ObjectName referenceName);
 
-		SqlType ReturnType(ObjectName referenceName);
+		SqlType ResolveType(ObjectName referenceName);
 	}
 }

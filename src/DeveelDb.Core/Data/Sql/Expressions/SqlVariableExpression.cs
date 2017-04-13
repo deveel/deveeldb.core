@@ -67,7 +67,7 @@ namespace Deveel.Data.Sql.Expressions {
 			var variable = context.ResolveVariable(VariableName, ignoreCase);
 
 			if (variable == null)
-				throw new SqlExpressionException();
+				throw new InvalidOperationException();
 
 			return variable.Type;
 		}
