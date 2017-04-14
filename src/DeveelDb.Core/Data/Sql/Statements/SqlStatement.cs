@@ -7,7 +7,7 @@ using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
-	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable {
+	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement> {
 		public virtual bool CanPrepare => true;
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
@@ -18,7 +18,7 @@ namespace Deveel.Data.Sql.Statements {
 			
 		}
 
-		object ISqlExpressionPreparable.PrepareExpressions(ISqlExpressionPreparer preparer) {
+		SqlStatement ISqlExpressionPreparable<SqlStatement>.PrepareExpressions(ISqlExpressionPreparer preparer) {
 			return PrepareExpressions(preparer);
 		}
 

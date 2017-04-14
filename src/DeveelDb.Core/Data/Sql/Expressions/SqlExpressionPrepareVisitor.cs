@@ -14,5 +14,13 @@ namespace Deveel.Data.Sql.Expressions {
 
 			return base.Visit(expression);
 		}
+
+		public override SqlQueryExpressionFrom VisitQueryFrom(SqlQueryExpressionFrom @from) {
+			var result = @from;
+			if (result != null)
+				result = result.PrepareExpressions(preparer);
+
+			return result;
+		}
 	}
 }

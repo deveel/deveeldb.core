@@ -233,20 +233,20 @@ namespace Deveel.Data.Sql.Expressions {
 
 			query.From = from;
 
-			var where = query.Where;
+			var where = expression.Where;
 			if (where != null)
 				where = Visit(where);
 
 			query.Where = where;
 
-			var having = query.Having;
+			var having = expression.Having;
 			if (having != null)
 				having = Visit(having);
 
 			query.Having = having;
 
-			query.GroupBy = VisitExpressionList(query.GroupBy);
-			query.GroupMax = query.GroupMax;
+			query.GroupBy = VisitExpressionList(expression.GroupBy);
+			query.GroupMax = expression.GroupMax;
 
 			return query;
 		}

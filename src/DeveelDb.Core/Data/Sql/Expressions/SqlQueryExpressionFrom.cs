@@ -5,7 +5,7 @@ using System.Linq;
 using Deveel.Data.Query;
 
 namespace Deveel.Data.Sql.Expressions {
-	public sealed class SqlQueryExpressionFrom : ISqlFormattable, ISqlExpressionPreparable {
+	public sealed class SqlQueryExpressionFrom : ISqlFormattable, ISqlExpressionPreparable<SqlQueryExpressionFrom> {
 		private int sourceKey = -1;
 		private List<string> aliases;
 		private List<SqlQueryExpressionSource> sources;
@@ -79,7 +79,7 @@ namespace Deveel.Data.Sql.Expressions {
 			return joinParts[offset];
 		}
 
-		object ISqlExpressionPreparable.PrepareExpressions(ISqlExpressionPreparer preparer) {
+		SqlQueryExpressionFrom ISqlExpressionPreparable<SqlQueryExpressionFrom>.PrepareExpressions(ISqlExpressionPreparer preparer) {
 			var obj = new SqlQueryExpressionFrom();
 
 			foreach (var part in joinParts) {
@@ -98,7 +98,7 @@ namespace Deveel.Data.Sql.Expressions {
 			obj.aliases = new List<string>(aliases);
 
 			foreach (var source in sources) {
-				var prepared = (SqlQueryExpressionSource) (source as ISqlExpressionPreparable).PrepareExpressions(preparer);
+				var prepared = source.PrepareExpressions(preparer);
 				obj.sources.Add(prepared);
 			}
 

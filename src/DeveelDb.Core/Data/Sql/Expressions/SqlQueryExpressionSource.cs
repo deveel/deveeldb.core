@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace Deveel.Data.Sql.Expressions {
-	public sealed class SqlQueryExpressionSource : ISqlExpressionPreparable, ISqlFormattable {
+	public sealed class SqlQueryExpressionSource : ISqlExpressionPreparable<SqlQueryExpressionSource>, ISqlFormattable {
 		private SqlQueryExpressionSource(ObjectName tableName, SqlQueryExpression query, string alias) {
 			TableName = tableName;
 			Query = query;
@@ -52,7 +52,7 @@ namespace Deveel.Data.Sql.Expressions {
 			return this.ToSqlString();
 		}
 
-		object ISqlExpressionPreparable.PrepareExpressions(ISqlExpressionPreparer preparer) {
+		SqlQueryExpressionSource ISqlExpressionPreparable<SqlQueryExpressionSource>.PrepareExpressions(ISqlExpressionPreparer preparer) {
 			var query = Query;
 			if (query != null)
 				query = (SqlQueryExpression) query.Prepare(preparer);
