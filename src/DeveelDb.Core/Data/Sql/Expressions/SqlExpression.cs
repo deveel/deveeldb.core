@@ -190,6 +190,18 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlBinaryExpression XOr(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.XOr, left, right);
 
+
+		public static SqlStringMatchExpression StringMatch(SqlExpressionType expressionType, SqlExpression left,
+			SqlExpression pattern, SqlExpression escape) {
+			return new SqlStringMatchExpression(expressionType, left, pattern, escape);
+		}
+
+		public static SqlStringMatchExpression Like(SqlExpression left, SqlExpression pattern, SqlExpression escape)
+			=> StringMatch(SqlExpressionType.Like, left, pattern, escape);
+
+		public static SqlStringMatchExpression NotLike(SqlExpression left, SqlExpression pattern, SqlExpression escape)
+			=> StringMatch(SqlExpressionType.NotLike, left, pattern, escape);
+
 		public static SqlUnaryExpression Unary(SqlExpressionType expressionType, SqlExpression operand) {
 			if (!expressionType.IsUnary())
 				throw new ArgumentException($"Expression type {expressionType} is not unary");
