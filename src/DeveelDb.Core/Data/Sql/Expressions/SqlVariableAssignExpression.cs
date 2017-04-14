@@ -47,7 +47,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var manager = context.ResolveVariableManager();
+			var manager = context.ResolveService<VariableManager>();
 			if (manager == null)
 				throw new SqlExpressionException("No variable manager was found in the context hierarchy");
 
@@ -58,7 +58,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var manager = context.ResolveVariableManager();
+			var manager = context.ResolveService<VariableManager>();
 			if (manager == null)
 				throw new SqlExpressionException("No variable manager was found in the context hierarchy");
 
