@@ -61,11 +61,12 @@ namespace Deveel.Data.Sql.Tables {
 			values[column] = value;
 		}
 
-		public void AddRow(SqlObject[] values) {
+		public int AddRow(SqlObject[] values) {
 			if (values.Length != TableInfo.Columns.Count)
 				throw new ArgumentException();
 
 			rows.Add(values);
+			return rows.Count - 1;
 		}
 
 		public int NewRow() {

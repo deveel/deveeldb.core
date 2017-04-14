@@ -108,12 +108,8 @@ namespace Deveel.Data.Sql.Tables {
 				throw new ArgumentOutOfRangeException(nameof(column));
 
 			var columnInfo = TableInfo.Columns[column];
-			if (!columnInfo.HasDefaultValue) {
-				// TODO: query to see if the column is constrained to NOT NULL
-				if (context.IsNotNull(TableInfo.TableName, columnInfo.ColumnName))
-					throw new NullViolationException("", TableInfo.TableName, columnInfo.ColumnName,
-						ConstraintDeferrability.InitiallyImmediate);
-			}
+
+			// a NOT NULL constraint check will be done later
 
 			SqlObject value;
 			if (columnInfo.HasDefaultValue) {
