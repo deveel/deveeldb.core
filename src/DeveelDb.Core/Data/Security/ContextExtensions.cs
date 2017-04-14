@@ -8,8 +8,8 @@ namespace Deveel.Data.Security {
 		public static User User(this IContext context) {
 			var current = context;
 			while (current != null) {
-				if (current is ISecurityContext)
-					return ((ISecurityContext) current).User;
+				if (current is ISession)
+					return ((ISession) current).User;
 
 				current = current.ParentContext;
 			}

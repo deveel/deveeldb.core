@@ -23,7 +23,7 @@ namespace Deveel.Data.Sql.Statements {
 
 			container.RegisterInstance<ISecurityResolver>(cache);
 
-			var mock = new Mock<ISecurityContext>();
+			var mock = new Mock<ISession>();
 			mock.Setup(x => x.Scope)
 				.Returns(container);
 			mock.SetupGet(x => x.User)
