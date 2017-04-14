@@ -7,14 +7,14 @@ using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Tables {
 	public class FunctionTable : DataTableBase {
+		private readonly ITable table;
 		private int uniqueId;
-		private readonly byte[] expInfo;
-		private readonly SqlExpression[] expList;
+		private readonly FunctionColumnInfo[] columns;
 
 		private static int uniqueKeySeq = 0;
 		private static readonly ObjectName FunctionTableName = new ObjectName("#FUNCTION_TABLE#");
 
-		private FunctionTable(IContext context, ITable table) {
+		public FunctionTable(IContext context, ITable table, FunctionColumnInfo[] columns) {
 			// Make sure we are synchronized over the class.
 			lock (typeof(FunctionTable)) {
 				uniqueId = uniqueKeySeq;
@@ -23,56 +23,20 @@ namespace Deveel.Data.Sql.Tables {
 
 			uniqueId = (uniqueId & 0x0FFFFFFF) | 0x010000000;
 
-			Table = table;
-			RowCount = table.RowCount;
-			Context = new Context(context, "#FUNCTION#");
-
-			var refResolver = new RowReferenceResolver(table, 0);
-			Context.Scope.Register<IReferenceResolver>(refResolver);
-		}
-
-		protected FunctionTable(IContext context, FunctionTable parent)
-			: this(context, parent.Table) {
-			TableInfo = parent.TableInfo;
-			expInfo = (byte[]) parent.expInfo.Clone();
-			expList = (SqlExpression[]) parent.expList.Clone();
-		}
-
-		public FunctionTable(IContext context, ITable table, SqlExpression[] functionList, string[] columnNames)
-			: this(context, table) {
 			var tableInfo = new TableInfo(FunctionTableName);
 
-			expList = new SqlExpression[functionList.Length];
-			expInfo = new byte[functionList.Length];
-
-			// Create a new DataColumnInfo for each expression, and work out if the
-			// expression is simple or not.
-			for (int i = 0; i < functionList.Length; ++i) {
-				var expr = functionList[i];
-				// Examine the expression and determine if it is simple or not
-				if (!expr.IsConstant() && !expr.HasAggregate(Context)) {
-					// If expression is a constant, solve it
-					var result = expr.Reduce(Context);
-					if (result.ExpressionType != SqlExpressionType.Constant)
-						throw new InvalidOperationException();
-
-					expr = result;
-					expList[i] = expr;
-					expInfo[i] = 1;
-				} else {
-					// Otherwise must be dynamic
-					expList[i] = expr;
-					expInfo[i] = 0;
-				}
-
-				// Make the column info
-				tableInfo.Columns.Add(new ColumnInfo(columnNames[i], expr.GetSqlType(Context)));
+			for (int i = 0; i < columns.Length; i++) {
+				tableInfo.Columns.Add(columns[i].ColumnInfo);
 			}
 
 			TableInfo = tableInfo;
-		}
+			this.columns = columns;
 
-		protected internal ITable Table { get; }
+			this.table = table;
+			RowCount = table.RowCount;
+
+			Context = new Context(context, "#FUNCTION#");
+		}
 
 		public override TableInfo TableInfo { get; }
 
@@ -80,43 +44,50 @@ namespace Deveel.Data.Sql.Tables {
 
 		protected IContext Context { get; }
 
+		private ITableCache Cache => Context.ResolveService<ITableCache>();
+
 		protected virtual void PrepareRowContext(IContext context, long row) {
-			context.Scope.RegisterInstance<IReferenceResolver>(new RowReferenceResolver(Table, row));
+			context.RegisterInstance<IReferenceResolver>(new RowReferenceResolver(table, row));
 		}
 
 		public override SqlObject GetValue(long row, int column) {
-			// TODO: implement caching!
+			var cache = Cache;
+			var expr = columns[column];
 
-			var expr = expList[column];
+			SqlObject value;
 
-			SqlExpression exp;
-
-			using (var context = new Context(Context, $"#FUNCTION#({row})")) {
-				PrepareRowContext(context, row);
-
-				exp = expr.Reduce(context);
+			if (cache != null && !expr.IsReduced) {
+				var fieldId = new FieldId(new RowId(TableInfo.TableId, row), column);
+				if (!cache.TryGetValue(fieldId, out value)) {
+					value = GetValueDirect(expr.Function, row);
+				}
+			} else {
+				value = GetValueDirect(expr.Function, row);
 			}
-
-			if (exp.ExpressionType != SqlExpressionType.Constant)
-				throw new ArgumentException();
-
-			var value = ((SqlConstantExpression)exp).Value;
-
-			// TODO: implement cache!
 
 			return value;
 		}
 
-		public GroupTable GroupBy(ObjectName[] columns) {
-			return new GroupTable(Context, this, columns);
+		private SqlObject GetValueDirect(SqlExpression expression, long row) {
+			SqlExpression result;
+
+			using (var context = Context.Create($"#FUNCTION#({row})")) {
+				PrepareRowContext(context, row);
+
+				result = expression.Reduce(context);
+			}
+
+			if (result.ExpressionType != SqlExpressionType.Constant)
+				throw new ArgumentException();
+
+			return ((SqlConstantExpression)result).Value;
 		}
 
 		public virtual VirtualTable GroupMax(ObjectName maxColumn) {
-			var table = Table;
-			IList<long> rowList;
+			BigList<long> rowList;
 
 			if (table.RowCount <= 0) {
-				rowList = new List<long>(0);
+				rowList = new BigList<long>(0);
 			} else {
 				// OPTIMIZATION: This should be optimized.  It should be fairly trivial
 				//   to generate a Table implementation that efficiently merges this

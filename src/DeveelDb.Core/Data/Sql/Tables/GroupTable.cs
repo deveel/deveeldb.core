@@ -5,6 +5,7 @@ using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Tables {
 	public sealed class GroupTable : FunctionTable {
+		private readonly ITable table;
 		private BigList<long> groupLinks;
 		private BigList<long> groupLookup;
 		private bool wholeTableAsGroup;
@@ -14,8 +15,10 @@ namespace Deveel.Data.Sql.Tables {
 
 		private GroupResolver groupResolver;
 
-		public GroupTable(IContext context, FunctionTable table, ObjectName[] columns)
-			: base(context, table) {
+		public GroupTable(IContext context, ITable table, FunctionColumnInfo[] columnInfo, ObjectName[] columns)
+			: base(context, table, columnInfo) {
+
+			this.table = table;
 
 			if (columns != null && columns.Length > 0) {
 				CreateMatrix(columns);
@@ -31,14 +34,14 @@ namespace Deveel.Data.Sql.Tables {
 			// TODO: create a new table ...
 			wholeTableAsGroup = true;
 
-			wholeTableGroupSize = Table.RowCount;
+			wholeTableGroupSize = table.RowCount;
 
 			// Set up 'whole_table_group' to the list of all rows in the reference
 			// table.
-			var en = Table.GetEnumerator();
+			var en = table.GetEnumerator();
 			wholeTableIsSimpleEnum = en is SimpleRowEnumerator;
 			if (!wholeTableIsSimpleEnum) {
-				wholeTableGroup = new BigList<long>(Table.RowCount);
+				wholeTableGroup = new BigList<long>(table.RowCount);
 				while (en.MoveNext()) {
 					wholeTableGroup.Add(en.Current.Id.Number);
 				}
@@ -46,7 +49,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		private void CreateMatrix(ObjectName[] columns) {
-			var rootTable = Table;
+			var rootTable = table;
 			long rowCount = rootTable.RowCount;
 			int[] colLookup = new int[columns.Length];
 			for (int i = columns.Length - 1; i >= 0; --i) {
@@ -114,8 +117,6 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public override VirtualTable GroupMax(ObjectName maxColumn) {
-			var table = Table;
-
 			IList<long> rowList;
 
 			if (wholeTableAsGroup) {
@@ -140,7 +141,7 @@ namespace Deveel.Data.Sql.Tables {
 				if (maxColumn == null) {
 					rowList = GetTopRowsFromEachGroup();
 				} else {
-					var colNum = Table.TableInfo.Columns.IndexOf(maxColumn);
+					var colNum = table.TableInfo.Columns.IndexOf(maxColumn);
 					rowList = GetMaxFromEachGroup(colNum);
 				}
 			} else {
@@ -183,7 +184,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		private IList<long> GetMaxFromEachGroup(int colNum) {
-			var refTab = Table;
+			var refTab = table;
 
 			var extractRows = new BigList<long>();
 			var size = groupLinks.Count;
@@ -289,9 +290,9 @@ namespace Deveel.Data.Sql.Tables {
 			}
 
 			public SqlObject ResolveReference(ObjectName reference, long index) {
-				int colIndex = table.Table.TableInfo.Columns.IndexOf(reference);
+				int colIndex = table.table.TableInfo.Columns.IndexOf(reference);
 				if (colIndex == -1)
-					throw new InvalidOperationException($"Column {reference} not found in table {table.Table.TableInfo.TableName}.");
+					throw new InvalidOperationException($"Column {reference} not found in table {table.table.TableInfo.TableName}.");
 
 				EnsureGroup();
 
@@ -299,7 +300,7 @@ namespace Deveel.Data.Sql.Tables {
 				if (group != null)
 					rowIndex = group[index];
 
-				return table.Table.GetValue(rowIndex, colIndex);
+				return table.table.GetValue(rowIndex, colIndex);
 			}
 
 			public IReferenceResolver GetResolver(long index) {
