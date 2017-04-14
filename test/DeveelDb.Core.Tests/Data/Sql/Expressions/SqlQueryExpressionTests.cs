@@ -19,35 +19,41 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(expected, source.ToString());
 		}
 
-		[Theory]
-		[InlineData("a", null, "(SELECT * FROM a)")]
-		[InlineData("a", "b", "(SELECT * FROM a) AS b")]
-		public static void CreateNewQuerySource(string fromTableName, string alias, string expected) {
-			var fromTable = ObjectName.Parse(fromTableName);
+		[Fact]
+		public static void CreateNewQuerySource() {
+			var fromTable = ObjectName.Parse("table1");
 			var query = new SqlQueryExpression();
 			query.All = true;
 			query.From.Table(fromTable);
-			var source = new SqlQueryExpressionSource(query, alias);
+			var source = new SqlQueryExpressionSource(query, "a");
 			
 			Assert.True(source.IsQuery);
 			Assert.False(source.IsTable);
-			Assert.Equal(!String.IsNullOrWhiteSpace(alias), source.IsAliased);
-			Assert.Equal(alias, source.Alias);
+			Assert.True(source.IsAliased);
+			Assert.Equal("a", source.Alias);
 			Assert.True(source.Query.All);
-			Assert.Equal(expected, source.ToString());
+
+			var expected = new SqlStringBuilder();
+			expected.AppendLine("(SELECT *");
+			expected.Append("  FROM table1) AS a");
+
+			Assert.Equal(expected.ToString(), source.ToString());
 		}
 
-		[Theory]
-		[InlineData("a", "b", "table1", "SELECT a, b FROM table1")]
-		[InlineData("a.*", "b", "a", "SELECT a.*, b FROM a")]
-		public static void CreateNewSimpleQuery(string item1, string item2, string tableName, string expected) {
+		[Fact]
+		public static void CreateNewSimpleQuery() {
 			var query = new SqlQueryExpression();
-			query.Items.Add(SqlExpression.Reference(ObjectName.Parse(item1)));
-			query.Items.Add(SqlExpression.Reference(ObjectName.Parse(item2)));
-			query.From.Table(ObjectName.Parse(tableName));
+			query.Items.Add(SqlExpression.Reference(ObjectName.Parse("a.*")));
+			query.Items.Add(SqlExpression.Reference(ObjectName.Parse("b")));
+			query.From.Table(ObjectName.Parse("tab1"));
+
+
+			var expected = new SqlStringBuilder();
+			expected.AppendLine("SELECT a.*, b");
+			expected.Append("  FROM tab1");
 
 			Assert.False(query.From.IsEmpty);
-			Assert.Equal(expected, query.ToString());
+			Assert.Equal(expected.ToString(), query.ToString());
 		}
 
 		[Fact]
@@ -58,8 +64,10 @@ namespace Deveel.Data.Sql.Expressions {
 			query.From.Table(ObjectName.Parse("table1"), "a");
 			query.From.Table(ObjectName.Parse("table2"), "b");
 
-			const string expected = "SELECT a.*, b.* FROM table1 AS a, table2 AS b";
-			Assert.Equal(expected, query.ToString());
+			var expected = new SqlStringBuilder();
+			expected.AppendLine("SELECT a.*, b.*");
+			expected.Append("  FROM table1 AS a, table2 AS b");
+			Assert.Equal(expected.ToString(), query.ToString());
 		}
 
 		[Fact]
@@ -73,8 +81,11 @@ namespace Deveel.Data.Sql.Expressions {
 					SqlExpression.Reference(ObjectName.Parse("b.a_id"))));
 			query.From.Table(ObjectName.Parse("table2"), "b");
 
-			const string expected = "SELECT a.*, b.* FROM table1 AS a INNER JOIN table2 AS b ON a.id = b.a_id";
-			Assert.Equal(expected, query.ToString());
+			var expected = new SqlStringBuilder();
+			expected.AppendLine("SELECT a.*, b.*");
+			expected.Append("  FROM table1 AS a INNER JOIN table2 AS b ON a.id = b.a_id");
+
+			Assert.Equal(expected.ToString(), query.ToString());
 		}
 	}
 }

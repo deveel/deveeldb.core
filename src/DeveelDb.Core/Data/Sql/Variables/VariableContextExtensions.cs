@@ -43,14 +43,5 @@ namespace Deveel.Data.Sql.Variables {
 			return resolvers.Select(resolver => resolver.ResolveVariable(name, ignoreCase))
 				.FirstOrDefault(variable => variable != null);
 		}
-
-		public static void RegisterVariableManager(this IContext context) {
-			context.RegisterObjectManager<VariableManager>(DbObjectType.Variable);
-			context.Scope.Register<IVariableResolver, VariableManager>();
-		}
-
-		public static VariableManager ResolveVariableManager(this IContext context) {
-			return context.ResolveObjectManager<VariableManager>(DbObjectType.Variable);
-		}
 	}
 }
