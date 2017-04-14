@@ -108,6 +108,25 @@ namespace Deveel {
 			return index;
 		}
 
+		public void CopyTo(long index, BigArray<T> destinationArray, long destinationIndex, long count) {
+			if (destinationArray == null) {
+				throw new ArgumentNullException(nameof(destinationArray));
+			}
+			if ((index < 0) || (index > this.Length)) {
+				throw new ArgumentOutOfRangeException(nameof(index));
+			}
+			if ((destinationIndex < 0) || (destinationIndex > destinationArray.Length)) {
+				throw new ArgumentOutOfRangeException(nameof(destinationIndex));
+			}
+			if ((count < 0) || (count > (this.Length - index)) || (count > (destinationArray.Length - destinationIndex))) {
+				throw new ArgumentOutOfRangeException(nameof(count));
+			}
+
+			long destIndex = destinationIndex;
+			for (long i = index; i < index + count; i++)
+				destinationArray[destIndex++] = this[i];
+		}
+
 		public void CopyTo(long index, T[] destinationArray, long count) {
 			this.CopyTo(index, destinationArray, 0, count);
 		}
@@ -137,18 +156,6 @@ namespace Deveel {
 
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
-		}
-
-		public static void Copy(BigArray<T> source, long sourceIndex, BigArray<T> target, long targetIndex, long length) {
-			if (sourceIndex >= source.Length)
-				throw new ArgumentOutOfRangeException(nameof(sourceIndex));
-			if (targetIndex + length > target.Length)
-				throw new ArgumentException();
-
-			long offset = 0;
-			for (long i = sourceIndex; i < length; i++) {
-				target[targetIndex + offset++] = source[i];
-			}
 		}
 
 		public static void Clear(BigArray<T> array, long startIndex, long count) {

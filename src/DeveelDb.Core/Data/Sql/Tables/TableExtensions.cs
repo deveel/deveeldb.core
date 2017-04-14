@@ -37,13 +37,13 @@ namespace Deveel.Data.Sql.Tables {
 			return rootInfo;
 		}
 
-		internal static IEnumerable<long> ResolveRows(this ITable table, int columnOffset, IEnumerable<long> rows,
+		internal static IEnumerable<long> ResolveRows(this ITable table, int column, IEnumerable<long> rows,
 			ITable ancestor) {
 			if (table is IVirtualTable)
-				return ((IVirtualTable)table).ResolveRows(columnOffset, rows, ancestor);
+				return ((IVirtualTable) table).ResolveRows(column, rows, ancestor);
 
 			if (table != ancestor)
-				throw new ArgumentException();
+				throw new InvalidOperationException();
 
 			return rows;
 		}

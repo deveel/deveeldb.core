@@ -49,7 +49,7 @@ namespace Deveel {
 					if (value > 0) {
 						var newItems = new BigArray<T>(value);
 						if (size > 0) {
-							BigArray<T>.Copy(items, 0, newItems, 0, size);
+							items.CopyTo(0, newItems, 0, size);
 						}
 						items = newItems;
 					} else {
@@ -131,15 +131,15 @@ namespace Deveel {
 					Allocate(count);
 
 					if (index < size) {
-						BigArray<T>.Copy(items, index, items, index + count, size - index);
+						items.CopyTo(index, items, index + count, size - index);
 					}
 
 					// If we're inserting a List into itself, we want to be able to deal with that.
 					if (this == c) {
 						// Copy first part of _items to insert location
-						BigArray<T>.Copy(items, 0, items, index, index);
+						items.CopyTo(0, items, index, index);
 						// Copy last part of _items back to inserted location
-						BigArray<T>.Copy(items, index + count, items, index * 2, size - index);
+						items.CopyTo(index + count, items, index * 2, size - index);
 					} else {
 						var array = new T[c.Count];
 						c.CopyTo(array, (int) index);
@@ -219,7 +219,7 @@ namespace Deveel {
 			Allocate(1);
 
 			if (index < size)
-				BigArray<T>.Copy(items, index, items, index + 1, size - index);
+				items.CopyTo(index, items, index + 1, size - index);
 
 			items[index] = item;
 			size++;
@@ -236,7 +236,7 @@ namespace Deveel {
 
 			size--;
 			if (index < size) {
-				BigArray<T>.Copy(items, index + 1, items, index, size - index);
+				items.CopyTo(index + 1, items, index, size - index);
 			}
 			version++;
 		}
