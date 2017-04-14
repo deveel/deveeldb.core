@@ -72,9 +72,9 @@ namespace Deveel.Data.Sql.Methods {
 			for (long i = 0; i < groupResolver.Size; i++) {
 				SqlObject value;
 
-				using (var reduce = new Context(context, "reduce")) {
+				using (var reduce = context.Create("reduce")) {
 					var resolver = groupResolver.GetResolver(i);
-					(reduce as IContext).Scope.RegisterInstance<IReferenceResolver>(resolver);
+					reduce.RegisterInstance<IReferenceResolver>(resolver);
 
 					var reduced = input.Reduce(reduce);
 					if (reduced.ExpressionType != SqlExpressionType.Constant)

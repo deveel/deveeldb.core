@@ -35,7 +35,7 @@ namespace Deveel.Data {
 		/// <summary>
 		/// Gets the reference to the user owning the session
 		/// </summary>
-		IUser User { get; }
+		User User { get; }
 
 		/// <summary>
 		/// Gets the instance of <see cref="ITransaction"/> that handles the

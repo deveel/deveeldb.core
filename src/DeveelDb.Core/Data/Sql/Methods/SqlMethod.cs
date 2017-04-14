@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
@@ -21,6 +20,8 @@ namespace Deveel.Data.Sql.Methods {
 		public bool IsFunction => Type == MethodType.Function;
 
 		public bool IsProcedure => Type == MethodType.Procedure;
+
+		public virtual bool IsSystem => true;
 
 		public async Task<SqlMethodResult> ExecuteAsync(IContext context, Invoke invoke) {
 			using (var methodContext = new MethodContext(context, this, invoke)) {

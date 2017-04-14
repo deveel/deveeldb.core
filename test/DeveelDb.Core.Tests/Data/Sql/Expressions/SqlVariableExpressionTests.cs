@@ -24,8 +24,9 @@ namespace Deveel.Data.Sql.Expressions {
 			resolver.Setup(x => x.ResolveVariable(It.Is<string>(s => s == "a"), It.IsAny<bool>()))
 				.Returns<string, bool>((name, ignoreCase) => variable);
 
-			context.RegisterVariableManager();
-			var manager = context.ResolveVariableManager();
+			context.RegisterService<IVariableResolver, VariableManager>();
+			context.RegisterService<VariableManager>();
+			var manager = context.ResolveService<VariableManager>();
 			manager.CreateVariable(new VariableInfo("b", PrimitiveTypes.VarChar(150), false, null));
 
 			context.Scope.RegisterInstance<IVariableResolver>(resolver.Object);

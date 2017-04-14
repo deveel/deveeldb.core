@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Security;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
@@ -28,6 +30,10 @@ namespace Deveel.Data.Sql.Statements {
 			return this;
 		}
 
+		protected virtual void Require(IRequirementCollection requirements) {
+			
+		}
+
 		public SqlStatement Prepare(IContext context) {
 			var preparers = context.Scope.ResolveAll<ISqlExpressionPreparer>();
 			var result = this;
@@ -42,7 +48,20 @@ namespace Deveel.Data.Sql.Statements {
 			return result;
 		}
 
-		public Task ExecuteAsync(IRequest context) {
+		private void CheckRequirements(IContext context) {
+			var registry = new RequirementCollection();
+			Require(registry);
+
+			using (var securityContext = context.Create($"Statement{GetType().Name}.Security")) {
+				securityContext.RegisterInstance<IRequirementCollection>(registry);
+
+				securityContext.CheckRequirements();
+			}
+		}
+
+		public Task ExecuteAsync(IContext context) {
+			CheckRequirements(context);
+
 			try {
 				return ExecuteStatementAsync(context);
 			} catch (SqlStatementException) {
@@ -52,7 +71,7 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
-		protected abstract Task ExecuteStatementAsync(IRequest context);
+		protected abstract Task ExecuteStatementAsync(IContext context);
 
 		public override string ToString() {
 			return this.ToSqlString();

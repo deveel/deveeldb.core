@@ -1,5 +1,6 @@
 ﻿using System;
 
+using Deveel.Data.Security;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Methods;
 
@@ -63,6 +64,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlExpression Reduce(IContext context) {
 			var function = ResolveFunction(context);
+
+			if (!function.IsSystem && !context.UserCanExecute(FunctionName))
+				throw new UnauthorizedAccessException();
+
 			// TODO: provide an asyn Reduce?
 			var result = function.ExecuteAsync(context, Arguments).Result;
 			if (!result.HasReturnedValue)
