@@ -103,5 +103,42 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.NotNull(value1);
 			Assert.Equal(SqlObject.Integer(77), value1);
 		}
+
+		[Fact]
+		public void GroupMaxOverGroupBy() {
+			var exp = SqlExpression.Function(new ObjectName("count"),
+				new InvokeArgument(SqlExpression.Reference(ObjectName.Parse("tab1.a"))));
+
+			var cols = new[] {
+				new FunctionColumnInfo(exp, "exp1", PrimitiveTypes.Integer())
+			};
+
+			var table = new GroupTable(context, left, cols, new[] { ObjectName.Parse("tab1.a") });
+			var groupMax = table.GroupMax(ObjectName.Parse("tab1.a"));
+
+			Assert.NotNull(groupMax);
+			Assert.Equal(1, groupMax.RowCount);
+
+			var value = groupMax.GetValue(0, 0);
+
+			Assert.NotNull(value);
+			Assert.False(value.IsFalse);
+
+			Assert.Equal(SqlObject.Integer(54), value);
+		}
+
+		[Fact]
+		public void MakeFullGroupTable() {
+			var exp = SqlExpression.Function(new ObjectName("count"),
+				new InvokeArgument(SqlExpression.Reference(ObjectName.Parse("tab1.a"))));
+
+			var cols = new[] {
+				new FunctionColumnInfo(exp, "exp1", PrimitiveTypes.Integer())
+			};
+
+			var table = new GroupTable(context, left, cols, new ObjectName[0]);
+
+			Assert.Equal(2, table.RowCount);
+		}
 	}
 }

@@ -112,13 +112,13 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public override VirtualTable GroupMax(ObjectName maxColumn) {
-			IList<long> rowList;
+			IEnumerable<long> rows;
 
 			if (wholeTableAsGroup) {
 				// Whole table is group, so take top entry of table.
 
-				rowList = new BigList<long>(1);
-				using (var rowEnum = table.GetEnumerator()) { 
+				var rowList = new BigList<long>(1);
+				using (var rowEnum = table.GetEnumerator()) {
 					if (rowEnum.MoveNext()) {
 						rowList.Add(rowEnum.Current.Id.Number);
 					} else {
@@ -128,17 +128,19 @@ namespace Deveel.Data.Sql.Tables {
 						//   This is to fix the 'SELECT COUNT(*) FROM empty_table' bug.
 						rowList.Add(Int64.MaxValue - 1);
 					}
-					}
+				}
+
+				rows = rowList;
 			} else if (table.RowCount == 0) {
-				rowList = new BigList<long>(0);
+				rows = new BigList<long>(0);
 			} else if (groupLinks != null) {
 				// If we are grouping, reduce down to only include one row from each
 				// group.
 				if (maxColumn == null) {
-					rowList = GetTopRowsFromEachGroup();
+					rows = GetTopRowsFromEachGroup();
 				} else {
 					var colNum = table.TableInfo.Columns.IndexOf(maxColumn);
-					rowList = GetMaxFromEachGroup(colNum);
+					rows = GetMaxFromEachGroup(colNum);
 				}
 			} else {
 				// OPTIMIZATION: This should be optimized.  It should be fairly trivial
@@ -147,23 +149,25 @@ namespace Deveel.Data.Sql.Tables {
 
 				// This means there is no grouping, so merge with entire table,
 				var rowCount = table.RowCount;
-				rowList = new BigList<long>(rowCount);
+				var rowList = new BigList<long>(rowCount);
 				var en = table.GetEnumerator();
 				while (en.MoveNext()) {
 					rowList.Add(en.Current.Id.Number);
 				}
+
+				rows = rowList;
 			}
 
 			// Create a virtual table that's the new group table merged with the
 			// functions in this...
 
 			var tabs = new[] { table, this };
-			var rowSets = new IEnumerable<long>[] { rowList, rowList };
+			var rowSets = new [] { rows, rows };
 
 			return new VirtualTable(tabs, rowSets);
 		}
 
-		private IList<long> GetTopRowsFromEachGroup() {
+		private IEnumerable<long> GetTopRowsFromEachGroup() {
 			var extractRows = new BigList<long>();
 			var size = groupLinks.Count;
 
@@ -175,7 +179,7 @@ namespace Deveel.Data.Sql.Tables {
 			return extractRows;
 		}
 
-		private IList<long> GetMaxFromEachGroup(int colNum) {
+		private IEnumerable<long> GetMaxFromEachGroup(int colNum) {
 			var refTab = table;
 
 			var extractRows = new BigList<long>();

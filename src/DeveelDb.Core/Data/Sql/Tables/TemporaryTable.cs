@@ -70,8 +70,9 @@ namespace Deveel.Data.Sql.Tables {
 			rows.Add(values);
 		}
 
-		public void NewRow() {
+		public int NewRow() {
 			rows.Add(new SqlObject[TableInfo.Columns.Count]);
+			return rows.Count - 1;
 		}
 
 		public static TemporaryTable SingleColumnTable(string columnName, SqlType columnType) {

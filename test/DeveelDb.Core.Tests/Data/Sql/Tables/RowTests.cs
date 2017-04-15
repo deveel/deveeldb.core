@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Xunit;
 
@@ -67,6 +68,19 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.Equal(SqlObject.Integer(23), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);
 			Assert.Equal(SqlObject.Double(5563.22), value3);
+		}
+
+		[Fact]
+		public void EnumerateFields() {
+			var row = left.GetRow(0);
+
+			var field = row.First();
+
+			Assert.NotNull(field);
+			Assert.NotNull(field.Value);
+			Assert.Equal("a", field.ColumnName);
+			Assert.Equal(PrimitiveTypes.Integer(), field.ColumnType);
+			Assert.Equal(SqlObject.Integer(23), field.Value);
 		}
 	}
 }

@@ -110,19 +110,13 @@ namespace Deveel.Data.Indexes {
 			}
 
 			/// <inheritdoc/>
-			public bool IsFull {
-				get { return count >= ArrayLength; }
-			}
+			public bool IsFull => count >= ArrayLength;
 
 			/// <inheritdoc/>
-			public bool IsEmpty {
-				get { return count <= 0; }
-			}
+			public bool IsEmpty => count <= 0;
 
 			/// <inheritdoc/>
-			public virtual TValue Top {
-				get { return GetArray(true)[count - 1]; }
-			}
+			public virtual TValue Top => GetArray(true)[count - 1];
 
 			/// <inheritdoc/>
 			public virtual TValue Bottom {
