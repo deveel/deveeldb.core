@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Deveel.Data.Sql.Indexes;
+
 namespace Deveel.Data.Sql.Tables {
 	public static class TableExtensions {
 		internal static RawTableInfo GetRawTableInfo(this ITable table, RawTableInfo rootInfo) {
@@ -48,6 +50,13 @@ namespace Deveel.Data.Sql.Tables {
 			return rows;
 		}
 
+		internal static Index GetColumnIndex(this ITable table, int column, int originalColumn, ITable ancestor) {
+			if (table is IVirtualTable)
+				return ((IVirtualTable) table).GetColumnIndex(column, column, ancestor);
+
+			throw new NotSupportedException();
+		}
+
 		public static Row GetRow(this ITable table, long row) {
 			return new Row(table, row);
 		}
@@ -55,6 +64,19 @@ namespace Deveel.Data.Sql.Tables {
 		public static Row NewRow(this ITable table) {
 			return new Row(table, -1);
 		}
+
+
+		#region Select
+
+		public static IEnumerable<long> SelectAllRows(this ITable table, int columnOffset) {
+			return table.GetColumnIndex(columnOffset).SelectAll();
+		}
+
+
+		#endregion
+
+
+		#region Order By
 
 		public static IEnumerable<long> OrderRowsByColumns(this ITable table, int[] columns) {
 			var work = table.OrderBy(columns);
@@ -80,8 +102,18 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public static ITable OrderBy(this ITable table, int columnIndex, bool ascending) {
-			//TODO: use indexes!
-			throw new NotImplementedException();
+			if (table == null)
+				return null;
+
+			var rows = table.SelectAllRows(columnIndex);
+
+			// Reverse the list if we are not ascending
+			if (@ascending == false)
+				rows = rows.Reverse();
+
+			return new VirtualTable(new[] {table}, new IEnumerable<long>[] {rows});
 		}
+
+		#endregion
 	}
 }

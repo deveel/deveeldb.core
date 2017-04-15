@@ -48,7 +48,7 @@ namespace Deveel.Data.Sql.Methods {
 		[Fact]
 		public async Task ExecuteWithReference() {
 			var info = new SqlFunctionInfo(new ObjectName("count"), PrimitiveTypes.BigInt());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.VarChar()));
+			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.BigInt()));
 
 			var function = new SqlAggregateFunctionDelegate(info, accumulate => {
 				SqlObject r;

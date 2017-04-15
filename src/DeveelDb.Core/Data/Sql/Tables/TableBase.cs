@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+using Deveel.Data.Sql.Indexes;
+
 namespace Deveel.Data.Sql.Tables {
 	public abstract class TableBase : IVirtualTable, IDisposable {
 		public abstract TableInfo TableInfo { get; }
@@ -26,6 +28,18 @@ namespace Deveel.Data.Sql.Tables {
 
 		RawTableInfo IVirtualTable.GetRawTableInfo(RawTableInfo rootInfo) {
 			return GetRawTableInfo(rootInfo);
+		}
+
+		Index IVirtualTable.GetColumnIndex(int column, int originalColumn, ITable ancestor) {
+			return GetColumnIndex(column, originalColumn, ancestor);
+		}
+
+		protected virtual Index GetColumnIndex(int column, int originalColumn, ITable ancestor) {
+			return GetColumnIndex(column);
+		}
+
+		public virtual Index GetColumnIndex(int column) {
+			return GetColumnIndex(column, column, this);
 		}
 
 		public abstract SqlObject GetValue(long row, int column);

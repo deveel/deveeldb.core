@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using Deveel.Data.Sql.Indexes;
+
 namespace Deveel.Data.Sql.Tables {
 	class TestTable : IRootTable {
 		private readonly IList<SqlObject[]> rows;
@@ -46,6 +48,10 @@ namespace Deveel.Data.Sql.Tables {
 
 		bool IEquatable<ITable>.Equals(ITable other) {
 			return this == other;
+		}
+
+		public Index GetColumnIndex(int column) {
+			throw new NotImplementedException();
 		}
 	}
 }

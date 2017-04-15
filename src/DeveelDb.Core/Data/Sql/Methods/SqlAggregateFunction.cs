@@ -69,7 +69,7 @@ namespace Deveel.Data.Sql.Methods {
 		private async Task<SqlObject> AccumulateValues(MethodContext context, SqlExpression input, IGroupResolver groupResolver) {
 			SqlObject result = null;
 
-			for (long i = 0; i < groupResolver.Size; i++) {
+			for (int i = 0; i < groupResolver.Size; i++) {
 				SqlObject value;
 
 				using (var reduce = context.Create("reduce")) {
@@ -99,7 +99,7 @@ namespace Deveel.Data.Sql.Methods {
 		private async Task<SqlObject> AccumulateReference(MethodContext context, ObjectName refName, IGroupResolver groupResolver) {
 			SqlObject result = null;
 
-			for (long i = 0; i < groupResolver.Size; i++) {
+			for (int i = 0; i < groupResolver.Size; i++) {
 				var rowValue = groupResolver.ResolveReference(refName, i);
 				var current = rowValue;
 
@@ -108,7 +108,7 @@ namespace Deveel.Data.Sql.Methods {
 					await IterateAsync(accumulate);
 
 					if (accumulate.Result == null)
-						throw new InvalidOperationException();
+						throw new InvalidOperationException("No result was returned from the accumulation");
 
 					result = accumulate.Result;
 				}

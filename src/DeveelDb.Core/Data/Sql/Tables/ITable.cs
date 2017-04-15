@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 
+using Deveel.Data.Sql.Indexes;
+
 namespace Deveel.Data.Sql.Tables {
 	public interface ITable : IDbObject, ISqlValue, IEnumerable<Row> {
 		TableInfo TableInfo { get; }
@@ -26,5 +28,7 @@ namespace Deveel.Data.Sql.Tables {
 
 
 		SqlObject GetValue(long row, int column);
+
+		Index GetColumnIndex(int column);
 	}
 }

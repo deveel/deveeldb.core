@@ -18,10 +18,14 @@
 using System;
 using System.Collections.Generic;
 
+using Deveel.Data.Sql.Indexes;
+
 namespace Deveel.Data.Sql.Tables {
 	public interface IVirtualTable : ITable {
 		IEnumerable<long> ResolveRows(int column, IEnumerable<long> rowSet, ITable ancestor);
 
 		RawTableInfo GetRawTableInfo(RawTableInfo rootInfo);
+
+		Index GetColumnIndex(int column, int originalColumn, ITable table);
 	}
 }

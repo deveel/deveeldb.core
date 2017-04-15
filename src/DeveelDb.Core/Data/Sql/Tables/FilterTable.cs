@@ -19,8 +19,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+using Deveel.Data.Sql.Indexes;
+
 namespace Deveel.Data.Sql.Tables {
 	public class FilterTable : TableBase {
+		private Index[] columnIndices;
+
 		public FilterTable(ITable parent) {
 			Parent = parent;
 		}
@@ -47,6 +51,39 @@ namespace Deveel.Data.Sql.Tables {
 
 		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
 			return Parent.GetRawTableInfo(rootInfo);
+		}
+
+		protected override Index GetColumnIndex(int column, int originalColumn, ITable ancestor) {
+			if (columnIndices == null) {
+				columnIndices = new Index[Parent.TableInfo.Columns.Count];
+			}
+
+			// Is there a local index available?
+			var index = columnIndices[column];
+			if (index == null) {
+				// If we are asking for the index of this table we must
+				// tell the parent we are looking for its index.
+				var t = ancestor;
+				if (ancestor == this)
+					t = Parent;
+
+				// Index is not cached in this table so ask the parent.
+				index = Parent.GetColumnIndex(column, originalColumn, t);
+
+				if (ancestor == this)
+					columnIndices[column] = index;
+
+			} else {
+				// If this has a cached scheme and we are in the correct domain then
+				// return it.
+				if (ancestor == this)
+					return index;
+
+				// Otherwise we must calculate the subset of the scheme
+				return index.Subset(ancestor, originalColumn);
+			}
+
+			return index;
 		}
 	}
 }

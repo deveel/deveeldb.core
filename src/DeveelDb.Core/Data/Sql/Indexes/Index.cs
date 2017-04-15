@@ -213,6 +213,10 @@ namespace Deveel.Data.Sql.Indexes {
 
 		public abstract void Remove(long row);
 
+		public Index Subset(ITable table, int column) {
+			return Subset(table, new[] {column});
+		}
+
 		public Index Subset(ITable table, int[] columns) {
 			if (table == null)
 				throw new ArgumentNullException(nameof(table));
