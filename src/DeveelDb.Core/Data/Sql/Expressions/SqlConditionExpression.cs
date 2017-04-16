@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlConditionExpression : SqlExpression {
@@ -49,7 +50,7 @@ namespace Deveel.Data.Sql.Expressions {
 			return IfTrue.GetSqlType(context);
 		}
 
-		public override SqlExpression Reduce(IContext context) {
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
 			var returnType = Test.GetSqlType(context);
 			if (!(returnType is SqlBooleanType))
 				throw new InvalidOperationException("The expression test has not a BOOLEAN result");
@@ -60,7 +61,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (!ifTrueType.IsComparable(ifFalseType))
 				throw new SqlExpressionException("The value returned in case of TRUE and in case of FALSE must be compatible");
 
-			var testResult = Test.Reduce(context);
+			var testResult = await Test.ReduceAsync(context);
 			if (testResult.ExpressionType != SqlExpressionType.Constant)
 				throw new InvalidOperationException();
 
@@ -69,11 +70,11 @@ namespace Deveel.Data.Sql.Expressions {
 				return Constant(value);
 
 			if (value.IsTrue)
-				return IfTrue.Reduce(context);
+				return await IfTrue.ReduceAsync(context);
 			if (value.IsFalse)
-				return IfFalse.Reduce(context);
+				return await IfFalse.ReduceAsync(context);
 
-			return base.Reduce(context);
+			return await base.ReduceAsync(context);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

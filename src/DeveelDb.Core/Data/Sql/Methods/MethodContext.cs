@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
@@ -135,6 +136,14 @@ namespace Deveel.Data.Sql.Methods {
 			}
 
 			return new Variable(name, paramInfo.ParameterType, true, value);
+		}
+
+		SqlType IVariableResolver.ResolveVariableType(string name, bool ignoreCase) {
+			SqlMethodParameterInfo paramInfo;
+			if (!Method.MethodInfo.TryGetParameter(name, ignoreCase, out paramInfo))
+				return null;
+
+			return paramInfo.ParameterType;
 		}
 
 		internal SqlMethodResult CreateResult() {

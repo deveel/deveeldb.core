@@ -18,7 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Expressions;
@@ -88,6 +88,16 @@ namespace Deveel.Data.Sql.Variables {
 				return null;
 
 			return variable;
+		}
+
+		public SqlType ResolveVariableType(string name, bool ignoreCase) {
+			var comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+			var dictionary = variables.ToDictionary(x => x.Key.FullName, y => y.Value, comparer);
+			Variable variable;
+			if (!dictionary.TryGetValue(name, out variable))
+				return null;
+
+			return variable.Type;
 		}
 
 		public Variable GetVariable(string name) {

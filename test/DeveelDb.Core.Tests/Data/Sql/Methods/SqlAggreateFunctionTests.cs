@@ -25,7 +25,7 @@ namespace Deveel.Data.Sql.Methods {
 			refResolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
 				.Returns<ObjectName>(name => PrimitiveTypes.Integer());
 			refResolver.Setup(x => x.ResolveReference(It.IsAny<ObjectName>()))
-				.Returns<ObjectName>(name => group[0]);
+				.Returns<ObjectName>(name => Task.FromResult(group[0]));
 
 			var resolverMock = new Mock<IGroupResolver>();
 			resolverMock.SetupGet(x => x.Size)

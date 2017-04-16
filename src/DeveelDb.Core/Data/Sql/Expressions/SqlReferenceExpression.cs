@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
@@ -43,7 +44,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override bool CanReduce => true;
 
-		public override SqlExpression Reduce(IContext context) {
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
 			if (context == null)
 				throw new SqlExpressionException("A reference cannot be reduced outside a context.");
 
@@ -51,7 +52,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (resolver == null)
 				throw new SqlExpressionException("No reference resolver was declared in this scope");
 
-			var value = resolver.ResolveReference(ReferenceName);
+			var value = await resolver.ResolveReference(ReferenceName);
 			if (value == null)
 				value = SqlObject.Unknown;
 

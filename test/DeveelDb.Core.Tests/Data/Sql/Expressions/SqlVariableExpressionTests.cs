@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Variables;
@@ -23,6 +24,8 @@ namespace Deveel.Data.Sql.Expressions {
 			var resolver = new Mock<IVariableResolver>();
 			resolver.Setup(x => x.ResolveVariable(It.Is<string>(s => s == "a"), It.IsAny<bool>()))
 				.Returns<string, bool>((name, ignoreCase) => variable);
+			resolver.Setup(x => x.ResolveVariableType(It.Is<string>(s => s == "a"), It.IsAny<bool>()))
+				.Returns<string, bool>((name, ignoreCase) => PrimitiveTypes.Boolean());
 
 			context.RegisterService<IVariableResolver, VariableManager>();
 			context.RegisterService<VariableManager>();
@@ -78,11 +81,11 @@ namespace Deveel.Data.Sql.Expressions {
 
 		[Theory]
 		[InlineData("a")]
-		public void ReduceVariable(string name) {
+		public async Task ReduceVariable(string name) {
 			var varRef = SqlExpression.Variable(name);
 
 			Assert.True(varRef.CanReduce);
-			var result = varRef.Reduce(context);
+			var result = await varRef.ReduceAsync(context);
 
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
@@ -93,11 +96,11 @@ namespace Deveel.Data.Sql.Expressions {
 
 		[Theory]
 		[InlineData("b")]
-		public void ReduceNotFoundVariable(string name) {
+		public async Task ReduceNotFoundVariable(string name) {
 			var varRef = SqlExpression.Variable(name);
 
 			Assert.True(varRef.CanReduce);
-			var result = varRef.Reduce(context);
+			var result = await varRef.ReduceAsync(context);
 
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
@@ -108,7 +111,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		[Theory]
 		[InlineData("a", true)]
-		public void ReduceVarAssign(string name, object value) {
+		public async Task ReduceVarAssign(string name, object value) {
 			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
 			var exp = SqlExpression.Constant(obj);
 
@@ -116,7 +119,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.True(varRef.CanReduce);
 
-			var result = varRef.Reduce(context);
+			var result = await varRef.ReduceAsync(context);
 
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);

@@ -93,7 +93,7 @@ namespace Deveel.Data.Sql.Methods {
 					var resolver = groupResolver.GetResolver(i);
 					reduce.RegisterInstance<IReferenceResolver>(resolver);
 
-					var reduced = input.Reduce(reduce);
+					var reduced = await input.ReduceAsync(reduce);
 					if (reduced.ExpressionType != SqlExpressionType.Constant)
 						throw new InvalidOperationException();
 

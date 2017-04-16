@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlQuantifyExpression : SqlExpression {
@@ -58,7 +59,7 @@ namespace Deveel.Data.Sql.Expressions {
 				builder.Append(")");
 		}
 
-		public override SqlExpression Reduce(IContext context) {
+		public override Task<SqlExpression> ReduceAsync(IContext context) {
 			if (Expression.Right is SqlQueryExpression)
 				return ReduceQuery(context);
 
@@ -70,12 +71,12 @@ namespace Deveel.Data.Sql.Expressions {
 			throw new NotSupportedException();
 		}
 
-		private SqlExpression ReduceQuery(IContext context) {
+		private Task<SqlExpression> ReduceQuery(IContext context) {
 			throw new NotImplementedException();
 		}
 
-		private SqlExpression ReduceArray(IContext context) {
-			var rightResult = Expression.Right.Reduce(context);
+		private async Task<SqlExpression> ReduceArray(IContext context) {
+			var rightResult = await Expression.Right.ReduceAsync(context);
 			if (!(rightResult is SqlConstantExpression))
 				throw new InvalidOperationException();
 
@@ -86,7 +87,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (!(rightValue.Type is SqlArrayType))
 				throw new InvalidOperationException("Invalid value for a quantification");
 
-			var leftResult = Expression.Left.Reduce(context);
+			var leftResult = await Expression.Left.ReduceAsync(context);
 			if (!(leftResult is SqlConstantExpression))
 				throw new NotSupportedException();
 
@@ -95,9 +96,9 @@ namespace Deveel.Data.Sql.Expressions {
 
 			switch (ExpressionType) {
 				case SqlExpressionType.Any:
-					return IsArrayAny(Expression.ExpressionType, leftValue, array, context);
+					return await IsArrayAny(Expression.ExpressionType, leftValue, array, context);
 				case SqlExpressionType.All:
-					return IsArrayAll(Expression.ExpressionType, leftValue, array, context);
+					return await IsArrayAll(Expression.ExpressionType, leftValue, array, context);
 				default:
 					throw new NotSupportedException();
 			}
@@ -126,17 +127,17 @@ namespace Deveel.Data.Sql.Expressions {
 			}
 		}
 
-		private static SqlObject ItemValue(SqlExpression item, IContext context) {
-			var value = item.Reduce(context);
+		private static async Task<SqlObject> ItemValue(SqlExpression item, IContext context) {
+			var value = await item.ReduceAsync(context);
 			if (!(value is SqlConstantExpression))
 				return SqlObject.Unknown;
 
 			return ((SqlConstantExpression) value).Value;
 		}
 
-		private SqlExpression IsArrayAll(SqlExpressionType opType, SqlObject value, SqlArray array, IContext context) {
+		private async Task<SqlExpression> IsArrayAll(SqlExpressionType opType, SqlObject value, SqlArray array, IContext context) {
 			foreach (var item in array) {
-				var itemValue = ItemValue(item, context);
+				var itemValue = await ItemValue(item, context);
 				var result = Relational(opType, value, itemValue);
 				if (result.IsUnknown)
 					return Constant(SqlObject.Unknown);
@@ -148,9 +149,9 @@ namespace Deveel.Data.Sql.Expressions {
 			return Constant(SqlObject.Boolean(true));
 		}
 
-		private SqlExpression IsArrayAny(SqlExpressionType opType, SqlObject value, SqlArray array, IContext context) {
+		private async Task<SqlExpression> IsArrayAny(SqlExpressionType opType, SqlObject value, SqlArray array, IContext context) {
 			foreach (var item in array) {
-				var itemValue = ItemValue(item, context);
+				var itemValue = await ItemValue(item, context);
 				var result = Relational(opType, value, itemValue);
 				if (result.IsUnknown)
 					return Constant(SqlObject.Unknown);

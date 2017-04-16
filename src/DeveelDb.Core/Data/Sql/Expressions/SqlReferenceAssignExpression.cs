@@ -47,11 +47,11 @@ namespace Deveel.Data.Sql.Expressions {
 			if (resolver == null)
 				throw new InvalidOperationException();
 
-			var obj = resolver.ResolveReference(ReferenceName);
+			var obj = resolver.ResolveType(ReferenceName);
 			if (obj == null)
 				throw new InvalidOperationException();
 
-			return obj.Type;
+			return obj;
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

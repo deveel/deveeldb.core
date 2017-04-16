@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Methods;
 
@@ -98,9 +99,7 @@ namespace Deveel.Data.Sql.Expressions {
 			return -1;
 		}
 
-		public virtual bool CanReduce {
-			get { return false; }
-		}
+		public virtual bool CanReduce => IsReference;
 
 		public SqlExpressionType ExpressionType { get; }
 
@@ -122,8 +121,12 @@ namespace Deveel.Data.Sql.Expressions {
 			
 		}
 
-		public virtual SqlExpression Reduce(IContext context) {
-			return this;
+		public SqlExpression Reduce(IContext context) {
+			return ReduceAsync(context).Result;
+		}
+
+		public virtual Task<SqlExpression> ReduceAsync(IContext context) {
+			return Task.FromResult(this);
 		}
 
 		public abstract SqlType GetSqlType(IContext context);
