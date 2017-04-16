@@ -18,12 +18,13 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Security {
 	public static class SecurityRequirementExtensions {
-		public static void CheckRequirements(this IContext context) {
+		public static async Task CheckRequirementsAsync(this IContext context) {
 			var registry = context.Scope.Resolve<IRequirementCollection>();
 			if (registry == null)
 				return;
@@ -34,18 +35,18 @@ namespace Deveel.Data.Security {
 
 				var handlers = context.Scope.ResolveAll(handlerType);
 				foreach (var handler in handlers) {
-					HandleRequirement(context, handlerType, handler, reqType, requirement);
+					await HandleRequirement(context, handlerType, handler, reqType, requirement);
 				}
 			}
 		}
 
-		private static void HandleRequirement(IContext context, Type handlerType, object handler, Type reqType, IRequirement requirement) {
-			var method = handlerType.GetRuntimeMethod("HandleRequirement", new[] {typeof(IContext), reqType});
+		private static Task HandleRequirement(IContext context, Type handlerType, object handler, Type reqType, IRequirement requirement) {
+			var method = handlerType.GetRuntimeMethod("HandleRequirementAsync", new[] {typeof(IContext), reqType});
 			if (method == null)
 				throw new InvalidOperationException();
 
 			try {
-				method.Invoke(handler, new object[] {context, requirement});
+				return (Task) method.Invoke(handler, new object[] {context, requirement});
 			} catch (TargetInvocationException e) {
 				throw e.InnerException;
 			}

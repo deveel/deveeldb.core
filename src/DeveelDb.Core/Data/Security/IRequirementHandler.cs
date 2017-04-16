@@ -16,9 +16,10 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Security {
 	public interface IRequirementHandler<T> where T : IRequirement {
-		void HandleRequirement(IContext context, T requirement);
+		Task HandleRequirementAsync(IContext context, T requirement);
 	}
 }

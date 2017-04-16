@@ -16,9 +16,10 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Security {
 	public interface ISecurityResolver {
-		bool HasPrivileges(string grantee, DbObjectType objType, ObjectName objName, Privileges privileges);
+		Task<bool> HasPrivilegesAsync(string grantee, DbObjectType objType, ObjectName objName, Privileges privileges);
 	}
 }

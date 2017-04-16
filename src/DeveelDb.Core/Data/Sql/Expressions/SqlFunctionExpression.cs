@@ -83,7 +83,7 @@ namespace Deveel.Data.Sql.Expressions {
 		public override async Task<SqlExpression> ReduceAsync(IContext context) {
 			var function = ResolveFunction(context);
 
-			if (!function.IsSystem && !context.UserCanExecute(FunctionName))
+			if (!function.IsSystem && !await context.UserCanExecute(FunctionName))
 				throw new UnauthorizedAccessException();
 
 			var result = await function.ExecuteAsync(context, Arguments);
