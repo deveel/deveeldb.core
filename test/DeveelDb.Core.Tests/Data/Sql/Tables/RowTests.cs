@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -50,7 +51,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void ResolveReference() {
+		public async Task ResolveReference() {
 			var resolver = new RowReferenceResolver(left, 0);
 
 			var type1 = resolver.ResolveType(ObjectName.Parse("tab1.a"));
@@ -61,9 +62,9 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.Equal(PrimitiveTypes.Boolean(), type2);
 			Assert.Equal(PrimitiveTypes.Double(), type3);
 
-			var value1 = resolver.ResolveReference(ObjectName.Parse("tab1.a"));
-			var value2 = resolver.ResolveReference(ObjectName.Parse("tab1.b"));
-			var value3 = resolver.ResolveReference(ObjectName.Parse("tab1.c"));
+			var value1 = await resolver.ResolveReferenceAsync(ObjectName.Parse("tab1.a"));
+			var value2 = await resolver.ResolveReferenceAsync(ObjectName.Parse("tab1.b"));
+			var value3 = await resolver.ResolveReferenceAsync(ObjectName.Parse("tab1.c"));
 
 			Assert.Equal(SqlObject.Integer(23), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);

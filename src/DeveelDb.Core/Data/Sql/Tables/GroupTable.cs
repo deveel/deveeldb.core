@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
@@ -266,7 +267,7 @@ namespace Deveel.Data.Sql.Tables {
 				return new GroupResolver(table, groupId);
 			}
 
-			public SqlObject ResolveReference(ObjectName reference, long index) {
+			public async Task<SqlObject> ResolveReferenceAsync(ObjectName reference, long index) {
 				int colIndex = table.table.TableInfo.Columns.IndexOf(reference);
 				if (colIndex == -1)
 					throw new InvalidOperationException($"Column {reference} not found in table {table.table.TableInfo.TableName}.");
@@ -295,8 +296,8 @@ namespace Deveel.Data.Sql.Tables {
 					this.index = index;
 				}
 
-				public SqlObject ResolveReference(ObjectName referenceName) {
-					return groupResolver.ResolveReference(referenceName, index);
+				public Task<SqlObject> ResolveReferenceAsync(ObjectName referenceName) {
+					return groupResolver.ResolveReferenceAsync(referenceName, index);
 				}
 
 				public SqlType ResolveType(ObjectName referenceName) {

@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public class RowReferenceResolver : IReferenceResolver {
@@ -27,7 +28,7 @@ namespace Deveel.Data.Sql.Tables {
 			this.row = row;
 		}
 
-		public SqlObject ResolveReference(ObjectName referenceName) {
+		public async Task<SqlObject> ResolveReferenceAsync(ObjectName referenceName) {
 			var columnIndex = table.TableInfo.Columns.IndexOf(referenceName);
 			if (columnIndex < 0)
 				return null;
