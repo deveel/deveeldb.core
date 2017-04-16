@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
@@ -12,8 +13,8 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlReferenceExpressionTests() {
 			var resolver = new Mock<IReferenceResolver>();
-			resolver.Setup(x => x.ResolveReference(It.Is<ObjectName>(name => name.Name == "a")))
-				.Returns<ObjectName>(name => SqlObject.String(new SqlString("test string to resolve")));
+			resolver.Setup(x => x.ResolveReferenceAsync(It.Is<ObjectName>(name => name.Name == "a")))
+				.Returns<ObjectName>(name => Task.FromResult(SqlObject.String(new SqlString("test string to resolve"))));
 			resolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
 				.Returns(PrimitiveTypes.String());
 
@@ -49,22 +50,22 @@ namespace Deveel.Data.Sql.Expressions {
 
 		[Theory]
 		[InlineData("a")]
-		public void ReduceReference(string name) {
+		public async Task ReduceReference(string name) {
 			var objName = ObjectName.Parse(name);
 
 			var exp = SqlExpression.Reference(objName);
-			var result = exp.Reduce(context);
+			var result = await exp.ReduceAsync(context);
 
 			Assert.NotNull(result);
 		}
 
 		[Theory]
 		[InlineData("b")]
-		public void ReduceNotFoundReference(string name) {
+		public async Task ReduceNotFoundReference(string name) {
 			var objName = ObjectName.Parse(name);
 
 			var exp = SqlExpression.Reference(objName);
-			var result = exp.Reduce(context);
+			var result = await exp.ReduceAsync(context);
 
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
@@ -75,12 +76,12 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Fact]
-		public void ReduceOutsideScope() {
+		public async Task ReduceOutsideScope() {
 			var objName = ObjectName.Parse("a.b");
 
 			var exp = SqlExpression.Reference(objName);
 
-			Assert.Throws<SqlExpressionException>(() => exp.Reduce(null));
+			await Assert.ThrowsAsync<SqlExpressionException>(() => exp.ReduceAsync(null));
 		}
 
 		[Fact]

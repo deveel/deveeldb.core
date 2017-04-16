@@ -18,7 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Expressions;
@@ -38,46 +38,50 @@ namespace Deveel.Data.Sql.Variables {
 
 		DbObjectType IDbObjectManager.ObjectType => DbObjectType.Variable;
 
-		void IDbObjectManager.CreateObject(IDbObjectInfo objInfo) {
+		Task IDbObjectManager.CreateObjectAsync(IDbObjectInfo objInfo) {
 			CreateVariable((VariableInfo)objInfo);
+			return Task.CompletedTask;
 		}
 
 		public void CreateVariable(VariableInfo variableInfo) {
 			variables.Add(new ObjectName(variableInfo.Name), new Variable(variableInfo));
 		}
 
-		bool IDbObjectManager.RealObjectExists(ObjectName objName) {
-			return VariableExists(objName.FullName);
+		Task<bool> IDbObjectManager.RealObjectExistsAsync(ObjectName objName) {
+			var value = VariableExists(objName.FullName);
+			return Task.FromResult(value);
 		}
 
-		bool IDbObjectManager.ObjectExists(ObjectName objName) {
-			return VariableExists(objName.FullName);
+		Task<bool> IDbObjectManager.ObjectExistsAsync(ObjectName objName) {
+			var value = VariableExists(objName.FullName);
+			return Task.FromResult(value);
 		}
 
 		public bool VariableExists(string name) {
 			return variables.ContainsKey(new ObjectName(name));
 		}
 
-		IDbObject IDbObjectManager.GetObject(ObjectName objName) {
-			return GetVariable(objName.FullName);
+		Task<IDbObject> IDbObjectManager.GetObjectAsync(ObjectName objName) {
+			var result = GetVariable(objName.FullName);
+			return Task.FromResult((IDbObject) result);
 		}
 
-		bool IDbObjectManager.AlterObject(IDbObjectInfo objInfo) {
+		Task<bool> IDbObjectManager.AlterObjectAsync(IDbObjectInfo objInfo) {
 			throw new NotSupportedException();
 		}
 
-		bool IDbObjectManager.DropObject(ObjectName objName) {
-			return RemoveVariable(objName.FullName);
+		Task<bool> IDbObjectManager.DropObjectAsync(ObjectName objName) {
+			return Task.FromResult(RemoveVariable(objName.FullName));
 		}
 
-		ObjectName IDbObjectManager.ResolveName(ObjectName objName, bool ignoreCase) {
+		Task<ObjectName> IDbObjectManager.ResolveNameAsync(ObjectName objName, bool ignoreCase) {
 			var comparer = ignoreCase ? ObjectNameComparer.IgnoreCase : ObjectNameComparer.Ordinal;
 			var dictionary = new Dictionary<ObjectName, Variable>(variables, comparer);
 			Variable variable;
 			if (!dictionary.TryGetValue(objName, out variable))
-				return null;
+				return Task.FromResult<ObjectName>(null);
 
-			return (variable.VariableInfo as IDbObjectInfo).FullName;
+			return Task.FromResult((variable.VariableInfo as IDbObjectInfo).FullName);
 		}
 
 		public Variable ResolveVariable(string name, bool ignoreCase) {
@@ -88,6 +92,16 @@ namespace Deveel.Data.Sql.Variables {
 				return null;
 
 			return variable;
+		}
+
+		public SqlType ResolveVariableType(string name, bool ignoreCase) {
+			var comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+			var dictionary = variables.ToDictionary(x => x.Key.FullName, y => y.Value, comparer);
+			Variable variable;
+			if (!dictionary.TryGetValue(name, out variable))
+				return null;
+
+			return variable.Type;
 		}
 
 		public Variable GetVariable(string name) {

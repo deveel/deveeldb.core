@@ -93,7 +93,7 @@ namespace Deveel.Data.Sql.Methods {
 					var resolver = groupResolver.GetResolver(i);
 					reduce.RegisterInstance<IReferenceResolver>(resolver);
 
-					var reduced = input.Reduce(reduce);
+					var reduced = await input.ReduceAsync(reduce);
 					if (reduced.ExpressionType != SqlExpressionType.Constant)
 						throw new InvalidOperationException();
 
@@ -116,8 +116,8 @@ namespace Deveel.Data.Sql.Methods {
 		private async Task<SqlObject> AccumulateReference(MethodContext context, ObjectName refName, IGroupResolver groupResolver) {
 			SqlObject result = null;
 
-			for (int i = 0; i < groupResolver.Size; i++) {
-				var rowValue = groupResolver.ResolveReference(refName, i);
+			for (long i = 0; i < groupResolver.Size; i++) {
+				var rowValue = await groupResolver.ResolveReferenceAsync(refName, i);
 				var current = rowValue;
 
 				using (var accumulate = new IterateContext(context, result, current)) {

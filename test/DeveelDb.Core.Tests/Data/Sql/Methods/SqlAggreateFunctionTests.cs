@@ -24,14 +24,14 @@ namespace Deveel.Data.Sql.Methods {
 			var refResolver = new Mock<IReferenceResolver>();
 			refResolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
 				.Returns<ObjectName>(name => PrimitiveTypes.Integer());
-			refResolver.Setup(x => x.ResolveReference(It.IsAny<ObjectName>()))
-				.Returns<ObjectName>(name => group[0]);
+			refResolver.Setup(x => x.ResolveReferenceAsync(It.IsAny<ObjectName>()))
+				.Returns<ObjectName>(name => Task.FromResult(group[0]));
 
 			var resolverMock = new Mock<IGroupResolver>();
 			resolverMock.SetupGet(x => x.Size)
 				.Returns(group.Count);
-			resolverMock.Setup(x => x.ResolveReference(It.IsAny<ObjectName>(), It.IsAny<long>()))
-				.Returns<ObjectName, long>((name, index) => group[(int)index]);
+			resolverMock.Setup(x => x.ResolveReferenceAsync(It.IsAny<ObjectName>(), It.IsAny<long>()))
+				.Returns<ObjectName, long>((name, index) => Task.FromResult(group[(int)index]));
 			resolverMock.Setup(x => x.GetResolver(It.IsAny<long>()))
 				.Returns(refResolver.Object);
 

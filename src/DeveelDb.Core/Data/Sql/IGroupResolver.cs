@@ -16,12 +16,13 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql {
 	public interface IGroupResolver {
 		long Size { get; }
 
-		SqlObject ResolveReference(ObjectName reference, long index);
+		Task<SqlObject> ResolveReferenceAsync(ObjectName referecne, long index);
 
 		IReferenceResolver GetResolver(long index);
 	}

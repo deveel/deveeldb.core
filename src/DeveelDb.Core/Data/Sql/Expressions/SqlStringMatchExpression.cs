@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Text;
 
@@ -48,9 +49,9 @@ namespace Deveel.Data.Sql.Expressions {
 			return visitor.VisitStringMatch(this);
 		}
 
-		public override SqlExpression Reduce(IContext context) {
-			var left = Left.Reduce(context);
-			var pattern = Pattern.Reduce(context);
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
+			var left = await Left.ReduceAsync(context);
+			var pattern = await Pattern.ReduceAsync(context);
 
 			if (left.ExpressionType != SqlExpressionType.Constant ||
 				!(((SqlConstantExpression)left).Type is SqlCharacterType))
@@ -64,7 +65,7 @@ namespace Deveel.Data.Sql.Expressions {
 			var patternString = ((SqlConstantExpression) pattern).Value.Value.ToString();
 
 			if (Escape != null) {
-				var escape = Escape.Reduce(context);
+				var escape = await Escape.ReduceAsync(context);
 				if (escape.ExpressionType != SqlExpressionType.Constant ||
 				    !(((SqlConstantExpression)escape).Type is SqlCharacterType))
 					throw new SqlExpressionException("The escape expression was not reduced to a constant string");
