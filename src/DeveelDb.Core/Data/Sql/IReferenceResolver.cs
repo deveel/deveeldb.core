@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql {
 	public interface IReferenceResolver {
-		Task<SqlObject> ResolveReference(ObjectName referenceName);
+		Task<SqlObject> ResolveReferenceAsync(ObjectName referenceName);
 
 		SqlType ResolveType(ObjectName referenceName);
 	}

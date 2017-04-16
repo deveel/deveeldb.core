@@ -52,7 +52,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (resolver == null)
 				throw new SqlExpressionException("No reference resolver was declared in this scope");
 
-			var value = await resolver.ResolveReference(ReferenceName);
+			var value = await resolver.ResolveReferenceAsync(ReferenceName);
 			if (value == null)
 				value = SqlObject.Unknown;
 

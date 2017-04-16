@@ -117,7 +117,7 @@ namespace Deveel.Data.Sql.Methods {
 			SqlObject result = null;
 
 			for (long i = 0; i < groupResolver.Size; i++) {
-				var rowValue = groupResolver.ResolveReference(refName, i);
+				var rowValue = await groupResolver.ResolveReferenceAsync(refName, i);
 				var current = rowValue;
 
 				using (var accumulate = new IterateContext(context, result, current)) {

@@ -13,7 +13,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlReferenceExpressionTests() {
 			var resolver = new Mock<IReferenceResolver>();
-			resolver.Setup(x => x.ResolveReference(It.Is<ObjectName>(name => name.Name == "a")))
+			resolver.Setup(x => x.ResolveReferenceAsync(It.Is<ObjectName>(name => name.Name == "a")))
 				.Returns<ObjectName>(name => Task.FromResult(SqlObject.String(new SqlString("test string to resolve"))));
 			resolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
 				.Returns(PrimitiveTypes.String());
