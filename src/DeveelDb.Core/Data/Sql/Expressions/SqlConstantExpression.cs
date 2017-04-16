@@ -29,6 +29,8 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlObject Value { get; }
 
+		public override bool CanReduce => false;
+
 		public override SqlType GetSqlType(IContext context) {
 			return Value.Type;
 		}
