@@ -19,6 +19,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Indexes;
 
@@ -60,11 +61,11 @@ namespace Deveel.Data.Sql.Tables {
 			return new SimpleRowEnumerator(this);
 		}
 
-		public override SqlObject GetValue(long row, int column) {
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
 			int tableNum = JoinedTableInfo.GetTableOffset(column);
 			var parentTable = Tables[tableNum];
 			var resolvedRow = ResolveTableRow(row, tableNum);
-			return parentTable.GetValue(resolvedRow, JoinedTableInfo.GetColumnOffset(column));
+			return parentTable.GetValueAsync(resolvedRow, JoinedTableInfo.GetColumnOffset(column));
 		}
 
 		protected abstract IEnumerable<long> ResolveTableRows(IEnumerable<long> rowSet, int tableNum);

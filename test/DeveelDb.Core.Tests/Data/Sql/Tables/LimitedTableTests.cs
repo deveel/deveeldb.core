@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -22,35 +23,35 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void LimitWithOffsetAndTotal() {
+		public async Task LimitWithOffsetAndTotal() {
 			var limited = new LimitedTable(left, 1, 1);
 
 			Assert.Equal(1, limited.RowCount);
 			Assert.Equal(3, limited.TableInfo.Columns.Count);
 
-			var value1 = limited.GetValue(0, 0);
-			var value2 = limited.GetValue(0, 1);
+			var value1 = await limited.GetValueAsync(0, 0);
+			var value2 = await limited.GetValueAsync(0, 1);
 
 			Assert.Equal(SqlObject.Integer(54), value1);
 			Assert.Equal(SqlObject.Boolean(null), value2);
 		}
 
 		[Fact]
-		public void LimitWithTotal() {
+		public async Task LimitWithTotal() {
 			var limited = new LimitedTable(left, -1, 2);
 
 			Assert.Equal(2, limited.RowCount);
 			Assert.Equal(3, limited.TableInfo.Columns.Count);
 
-			var value1 = limited.GetValue(0, 0);
-			var value2 = limited.GetValue(0, 1);
+			var value1 = await limited.GetValueAsync(0, 0);
+			var value2 = await limited.GetValueAsync(0, 1);
 
 			Assert.Equal(SqlObject.Integer(23), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);
 		}
 
 		[Fact]
-		public void EnumerateLimited() {
+		public async Task EnumerateLimited() {
 			var limited = new LimitedTable(left, -1, 2);
 
 			Assert.Equal(2, limited.RowCount);
@@ -58,7 +59,7 @@ namespace Deveel.Data.Sql.Tables {
 
 			var row1 = limited.First();
 
-			var value1 = row1.GetValue("a");
+			var value1 = await row1.GetValueAsync("a");
 
 			Assert.Equal(SqlObject.Integer(23), value1);
 		}

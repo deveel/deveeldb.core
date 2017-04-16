@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
@@ -50,7 +51,7 @@ namespace Deveel.Data.Sql.Tables {
 			context.RegisterInstance<IReferenceResolver>(new RowReferenceResolver(table, row));
 		}
 
-		public override SqlObject GetValue(long row, int column) {
+		public override async Task<SqlObject> GetValueAsync(long row, int column) {
 			var cache = Cache;
 			var expr = columns[column];
 
@@ -59,22 +60,22 @@ namespace Deveel.Data.Sql.Tables {
 			if (cache != null && !expr.IsReduced) {
 				var fieldId = new FieldId(new RowId(TableInfo.TableId, row), column);
 				if (!cache.TryGetValue(fieldId, out value)) {
-					value = GetValueDirect(expr.Function, row);
+					value = await GetValueDirect(expr.Function, row);
 				}
 			} else {
-				value = GetValueDirect(expr.Function, row);
+				value = await GetValueDirect(expr.Function, row);
 			}
 
 			return value;
 		}
 
-		private SqlObject GetValueDirect(SqlExpression expression, long row) {
+		private async Task<SqlObject> GetValueDirect(SqlExpression expression, long row) {
 			SqlExpression result;
 
 			using (var context = Context.Create($"#FUNCTION#({row})")) {
 				PrepareRowContext(context, row);
 
-				result = expression.Reduce(context);
+				result = await expression.ReduceAsync(context);
 			}
 
 			if (result.ExpressionType != SqlExpressionType.Constant)

@@ -23,6 +23,10 @@ using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
 	public static class TableExtensions {
+		public static SqlObject GetValue(this ITable table, long row, int column) {
+			return table.GetValueAsync(row, column).Result;
+		}
+
 		internal static RawTableInfo GetRawTableInfo(this ITable table, RawTableInfo rootInfo) {
 			if (table is IVirtualTable)
 				return ((IVirtualTable)table).GetRawTableInfo(rootInfo);

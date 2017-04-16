@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Xunit;
 
 namespace Deveel.Data.Sql.Tables {
 	public class TemporaryTableTests {
 		[Fact]
-		public static void CreateAndAddRows() {
+		public static async Task CreateAndAddRows() {
 			var tableInfo = new TableInfo(new ObjectName("table1"));
 			tableInfo.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
 			tableInfo.Columns.Add(new ColumnInfo("b", PrimitiveTypes.VarChar(22)));
@@ -19,8 +20,8 @@ namespace Deveel.Data.Sql.Tables {
 
 			Assert.Equal(1, table.RowCount);
 
-			var value1 = table.GetValue(0, 0);
-			var value2 = table.GetValue(0, 1);
+			var value1 = await table.GetValueAsync(0, 0);
+			var value2 = await table.GetValueAsync(0, 1);
 
 			Assert.Equal(SqlObject.Integer(22), value1);
 			Assert.Equal(SqlObject.String(new SqlString("test")), value2);
@@ -53,7 +54,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public static void SetRowValues() {
+		public static async Task SetRowValues() {
 			var tableInfo = new TableInfo(new ObjectName("table1"));
 			tableInfo.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
 			tableInfo.Columns.Add(new ColumnInfo("b", PrimitiveTypes.VarChar(22)));
@@ -66,7 +67,7 @@ namespace Deveel.Data.Sql.Tables {
 
 			Assert.Equal(1, table.RowCount);
 
-			var value1 = table.GetValue(0, 0);
+			var value1 = await table.GetValueAsync(0, 0);
 			Assert.Equal(SqlObject.Integer(45), value1);
 		}
 	}

@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public class OuterTable : VirtualTable, IRootTable {
@@ -72,21 +73,21 @@ namespace Deveel.Data.Sql.Tables {
 			}
 		}
 
-		public override SqlObject GetValue(long row, int column) {
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
 			int tableNum = JoinedTableInfo.GetTableOffset(column);
 			var parentTable = Tables[tableNum];
 
 			if (row >= outerRowCount) {
 				row = Rows[tableNum][row - outerRowCount];
-				return parentTable.GetValue(row, JoinedTableInfo.GetColumnOffset(column));
+				return parentTable.GetValueAsync(row, JoinedTableInfo.GetColumnOffset(column));
 			}
 
 			if (outerRows[tableNum] == null)
 				// Special case, handling outer entries (NULL)
-				return new SqlObject(TableInfo.Columns[column].ColumnType, null);
+				return Task.FromResult(new SqlObject(TableInfo.Columns[column].ColumnType, null));
 
 			row = outerRows[tableNum][row];
-			return parentTable.GetValue(row, JoinedTableInfo.GetColumnOffset(column));
+			return parentTable.GetValueAsync(row, JoinedTableInfo.GetColumnOffset(column));
 		}
 
 		bool IEquatable<ITable>.Equals(ITable other) {

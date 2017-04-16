@@ -28,12 +28,12 @@ namespace Deveel.Data.Sql.Tables {
 			this.row = row;
 		}
 
-		public async Task<SqlObject> ResolveReferenceAsync(ObjectName referenceName) {
+		public Task<SqlObject> ResolveReferenceAsync(ObjectName referenceName) {
 			var columnIndex = table.TableInfo.Columns.IndexOf(referenceName);
 			if (columnIndex < 0)
 				return null;
 
-			return table.GetValue(row, columnIndex);
+			return table.GetValueAsync(row, columnIndex);
 		}
 
 		public SqlType ResolveType(ObjectName referenceName) {

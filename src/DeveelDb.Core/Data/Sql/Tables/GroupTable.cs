@@ -267,7 +267,7 @@ namespace Deveel.Data.Sql.Tables {
 				return new GroupResolver(table, groupId);
 			}
 
-			public async Task<SqlObject> ResolveReferenceAsync(ObjectName reference, long index) {
+			public Task<SqlObject> ResolveReferenceAsync(ObjectName reference, long index) {
 				int colIndex = table.table.TableInfo.Columns.IndexOf(reference);
 				if (colIndex == -1)
 					throw new InvalidOperationException($"Column {reference} not found in table {table.table.TableInfo.TableName}.");
@@ -278,7 +278,7 @@ namespace Deveel.Data.Sql.Tables {
 				if (group != null)
 					rowIndex = group[index];
 
-				return table.table.GetValue(rowIndex, colIndex);
+				return table.table.GetValueAsync(rowIndex, colIndex);
 			}
 
 			public IReferenceResolver GetResolver(long index) {

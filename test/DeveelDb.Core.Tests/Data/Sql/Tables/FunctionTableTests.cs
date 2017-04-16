@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
@@ -48,7 +49,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void CreateNewFunctionTable() {
+		public async Task CreateNewFunctionTable() {
 			var exp = SqlExpression.Equal(SqlExpression.Reference(ObjectName.Parse("tab1.a")), 
 				SqlExpression.Constant(SqlObject.Integer(2)));
 
@@ -61,14 +62,14 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.NotNull(table.TableInfo);
 			Assert.Equal(2, table.RowCount);
 
-			var value = table.GetValue(0, 0);
+			var value = await table.GetValueAsync(0, 0);
 
 			Assert.NotNull(value);
 			Assert.True(value.IsFalse);
 		}
 
 		[Fact]
-		public void GroupMax() {
+		public async Task GroupMax() {
 			var exp = SqlExpression.Equal(SqlExpression.Reference(ObjectName.Parse("tab1.a")),
 				SqlExpression.Constant(SqlObject.Integer(2)));
 
@@ -82,14 +83,14 @@ namespace Deveel.Data.Sql.Tables {
 
 			Assert.NotNull(result);
 
-			var value1 = result.GetValue(0, 0);
+			var value1 = await result.GetValueAsync(0, 0);
 
 			Assert.NotNull(value1);
 			Assert.Equal(SqlObject.Integer(23), value1);
 		}
 
 		[Fact]
-		public void GroupByCount() {
+		public async Task GroupByCount() {
 			var exp = SqlExpression.Function(new ObjectName("count"),
 				new InvokeArgument(SqlExpression.Reference(ObjectName.Parse("tab1.a"))));
 			
@@ -98,14 +99,14 @@ namespace Deveel.Data.Sql.Tables {
 			};
 
 			var table = new GroupTable(context, left, cols, new []{ObjectName.Parse("tab1.a") });
-			var value1 = table.GetValue(0, 0);
+			var value1 = await table.GetValueAsync(0, 0);
 
 			Assert.NotNull(value1);
 			Assert.Equal(SqlObject.Integer(77), value1);
 		}
 
 		[Fact]
-		public void GroupMaxOverGroupBy() {
+		public async Task GroupMaxOverGroupBy() {
 			var exp = SqlExpression.Function(new ObjectName("count"),
 				new InvokeArgument(SqlExpression.Reference(ObjectName.Parse("tab1.a"))));
 
@@ -119,7 +120,7 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.NotNull(groupMax);
 			Assert.Equal(1, groupMax.RowCount);
 
-			var value = groupMax.GetValue(0, 0);
+			var value = await groupMax.GetValueAsync(0, 0);
 
 			Assert.NotNull(value);
 			Assert.False(value.IsFalse);

@@ -18,6 +18,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Indexes;
 
@@ -35,8 +36,8 @@ namespace Deveel.Data.Sql.Tables {
 		
 		public override long RowCount => Parent.RowCount;
 
-		public override SqlObject GetValue(long row, int column) {
-			return Parent.GetValue(row, column);
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
+			return Parent.GetValueAsync(row, column);
 		}
 
 		public override IEnumerator<Row> GetEnumerator()

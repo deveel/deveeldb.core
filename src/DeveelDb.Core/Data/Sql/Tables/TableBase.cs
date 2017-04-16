@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Indexes;
 
@@ -42,7 +43,7 @@ namespace Deveel.Data.Sql.Tables {
 			return GetColumnIndex(column, column, this);
 		}
 
-		public abstract SqlObject GetValue(long row, int column);
+		public abstract Task<SqlObject> GetValueAsync(long row, int column);
 
 		public void Dispose() {
 			Dispose(true);

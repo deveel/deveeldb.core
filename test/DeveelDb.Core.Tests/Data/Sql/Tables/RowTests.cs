@@ -23,14 +23,14 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void GetValueFromRow() {
+		public async Task GetValueFromRow() {
 			var row = left.GetRow(0);
 
 			Assert.Equal(-1, row.Id.TableId);
 			Assert.Equal(0, row.Id.Number);
 
-			var value1 = row.GetValue("a");
-			var value2 = row.GetValue("b");
+			var value1 = await row.GetValueAsync("a");
+			var value2 = await row.GetValueAsync("b");
 
 			Assert.Equal(SqlObject.Integer(23), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);
@@ -78,10 +78,10 @@ namespace Deveel.Data.Sql.Tables {
 			var field = row.First();
 
 			Assert.NotNull(field);
-			Assert.NotNull(field.Value);
+			Assert.NotNull(field.GetValue());
 			Assert.Equal("a", field.ColumnName);
 			Assert.Equal(PrimitiveTypes.Integer(), field.ColumnType);
-			Assert.Equal(SqlObject.Integer(23), field.Value);
+			Assert.Equal(SqlObject.Integer(23), field.GetValue());
 		}
 	}
 }
