@@ -173,10 +173,10 @@ namespace Deveel.Data.Sql.Tables {
 				this.row = row;
 			}
 
-			public SqlObject ResolveReference(ObjectName referenceName) {
+			public Task<SqlObject> ResolveReferenceAsync(ObjectName referenceName) {
 				if (referenceName.Parent != null &&
 				    !row.TableInfo.TableName.Equals(referenceName.Parent))
-					return null;
+					return Task.FromResult<SqlObject>(null);
 
 				var columnName = referenceName.Name;
 				var index = row.TableInfo.Columns.IndexOf(columnName);
@@ -187,7 +187,7 @@ namespace Deveel.Data.Sql.Tables {
 				if (!row.values.TryGetValue(index, out value))
 					throw new InvalidOperationException($"Value of column {columnName} in row was not set");
 
-				return value;
+				return Task.FromResult(value);
 			}
 
 			public SqlType ResolveType(ObjectName referenceName) {
