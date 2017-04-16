@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -37,15 +38,15 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void GetValueFromJoined() {
+		public async Task GetValueFromJoined() {
 			var table = new CrossTable(left, right);
 
 			Assert.Equal(4, table.RowCount);
 
-			var value1 = table.GetValue(0, 0);
-			var value2 = table.GetValue(1, 0);
-			var value3 = table.GetValue(2, 0);
-			var value4 = table.GetValue(3, 0);
+			var value1 = await table.GetValueAsync(0, 0);
+			var value2 = await table.GetValueAsync(1, 0);
+			var value3 = await table.GetValueAsync(2, 0);
+			var value4 = await table.GetValueAsync(3, 0);
 
 			Assert.NotNull(value1);
 			Assert.NotNull(value2);

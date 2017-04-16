@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
 	public abstract class TableBase : IVirtualTable, IDisposable {
@@ -28,7 +31,19 @@ namespace Deveel.Data.Sql.Tables {
 			return GetRawTableInfo(rootInfo);
 		}
 
-		public abstract SqlObject GetValue(long row, int column);
+		Index IVirtualTable.GetColumnIndex(int column, int originalColumn, ITable ancestor) {
+			return GetColumnIndex(column, originalColumn, ancestor);
+		}
+
+		protected virtual Index GetColumnIndex(int column, int originalColumn, ITable ancestor) {
+			return GetColumnIndex(column);
+		}
+
+		public virtual Index GetColumnIndex(int column) {
+			return GetColumnIndex(column, column, this);
+		}
+
+		public abstract Task<SqlObject> GetValueAsync(long row, int column);
 
 		public void Dispose() {
 			Dispose(true);

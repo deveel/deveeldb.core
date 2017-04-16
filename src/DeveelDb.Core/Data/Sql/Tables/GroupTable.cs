@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Tables {
 	public sealed class GroupTable : FunctionTable {
-		private BigList<long> groupLinks;
-		private BigList<long> groupLookup;
+		private readonly ITable table;
+		private Dictionary<int, BigList<long>> groupLinks;
+		private BigList<int> groupLookup;
 		private bool wholeTableAsGroup;
 		private BigList<long> wholeTableGroup;
 		private long wholeTableGroupSize;
@@ -14,8 +16,10 @@ namespace Deveel.Data.Sql.Tables {
 
 		private GroupResolver groupResolver;
 
-		public GroupTable(IContext context, FunctionTable table, ObjectName[] columns)
-			: base(context, table) {
+		public GroupTable(IContext context, ITable table, FunctionColumnInfo[] columnInfo, ObjectName[] columns)
+			: base(context, table, columnInfo) {
+
+			this.table = table;
 
 			if (columns != null && columns.Length > 0) {
 				CreateMatrix(columns);
@@ -31,14 +35,14 @@ namespace Deveel.Data.Sql.Tables {
 			// TODO: create a new table ...
 			wholeTableAsGroup = true;
 
-			wholeTableGroupSize = Table.RowCount;
+			wholeTableGroupSize = table.RowCount;
 
 			// Set up 'whole_table_group' to the list of all rows in the reference
 			// table.
-			var en = Table.GetEnumerator();
+			var en = table.GetEnumerator();
 			wholeTableIsSimpleEnum = en is SimpleRowEnumerator;
 			if (!wholeTableIsSimpleEnum) {
-				wholeTableGroup = new BigList<long>(Table.RowCount);
+				wholeTableGroup = new BigList<long>(table.RowCount);
 				while (en.MoveNext()) {
 					wholeTableGroup.Add(en.Current.Id.Number);
 				}
@@ -46,7 +50,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		private void CreateMatrix(ObjectName[] columns) {
-			var rootTable = Table;
+			var rootTable = table;
 			long rowCount = rootTable.RowCount;
 			int[] colLookup = new int[columns.Length];
 			for (int i = columns.Length - 1; i >= 0; --i) {
@@ -64,13 +68,14 @@ namespace Deveel.Data.Sql.Tables {
 			// contains consequtive links to each row in the group until -1 is reached
 			// indicating the end of the group;
 
-			groupLookup = new BigList<long>(rowCount);
-			groupLinks = new BigList<long>(rowCount);
-			long currentGroup = 0;
+			groupLookup = new BigList<int>(rowCount);
+			groupLinks = new Dictionary<int, BigList<long>>();
+			int currentGroup = 0;
+			var groupRows = new BigList<long>(rowCount);
 			long previousRow = -1;
+			bool lastNotEqual = false;
 			for (long i = 0; i < rowCount; i++) {
 				var rowIndex = rowList[i];
-
 				if (previousRow != -1) {
 					bool equal = true;
 					// Compare cell in column in this row with previous row.
@@ -80,68 +85,63 @@ namespace Deveel.Data.Sql.Tables {
 						equal = (c1.CompareTo(c2) == 0);
 					}
 
+					groupRows.Add(previousRow);
+
 					if (!equal) {
-						// If end of group, set bit 15
-						groupLinks.Add(previousRow | 0x040000000);
+						groupLinks[currentGroup]= groupRows;
+						lastNotEqual = true;
+					} else if (lastNotEqual) {
 						currentGroup = groupLinks.Count;
-					} else {
-						groupLinks.Add(previousRow);
+						groupRows = new BigList<long>(rowCount);
+						lastNotEqual = false;
 					}
 				}
 
-				// groupLookup.Insert(row_index, current_group);
-				PlaceAt(groupLookup, rowIndex, currentGroup);
+				groupLookup.Insert(rowIndex, currentGroup);
 
 				previousRow = rowIndex;
 			}
 
-			// Add the final row.
-			groupLinks.Add(previousRow | 0x040000000);
-		}
-
-		private static void PlaceAt(BigList<long> list, long index, long value) {
-			while (index > list.Count) {
-				list.Add(0);
-			}
-
-			list.Insert(index, value);
+			groupRows.Add(previousRow);
 		}
 
 		protected override void PrepareRowContext(IContext context, long row) {
 			var rowResolver = groupResolver.GetRowResolver(row);
-			context.Scope.RegisterInstance<IGroupResolver>(rowResolver);
+			context.RegisterInstance<IGroupResolver>(rowResolver);
+
 			base.PrepareRowContext(context, row);
 		}
 
 		public override VirtualTable GroupMax(ObjectName maxColumn) {
-			var table = Table;
-
-			IList<long> rowList;
+			IEnumerable<long> rows;
 
 			if (wholeTableAsGroup) {
 				// Whole table is group, so take top entry of table.
 
-				rowList = new BigList<long>(1);
-				var rowEnum = table.GetEnumerator();
-				if (rowEnum.MoveNext()) {
-					rowList.Add(rowEnum.Current.Id.Number);
-				} else {
-					// MAJOR HACK: If the referencing table has no elements then we choose
-					//   an arbitrary index from the reference table to merge so we have
-					//   at least one element in the table.
-					//   This is to fix the 'SELECT COUNT(*) FROM empty_table' bug.
-					rowList.Add(Int32.MaxValue - 1);
+				var rowList = new BigList<long>(1);
+				using (var rowEnum = table.GetEnumerator()) {
+					if (rowEnum.MoveNext()) {
+						rowList.Add(rowEnum.Current.Id.Number);
+					} else {
+						// MAJOR HACK: If the referencing table has no elements then we choose
+						//   an arbitrary index from the reference table to merge so we have
+						//   at least one element in the table.
+						//   This is to fix the 'SELECT COUNT(*) FROM empty_table' bug.
+						rowList.Add(Int64.MaxValue - 1);
+					}
 				}
+
+				rows = rowList;
 			} else if (table.RowCount == 0) {
-				rowList = new BigList<long>(0);
+				rows = new BigList<long>(0);
 			} else if (groupLinks != null) {
 				// If we are grouping, reduce down to only include one row from each
 				// group.
 				if (maxColumn == null) {
-					rowList = GetTopRowsFromEachGroup();
+					rows = GetTopRowsFromEachGroup();
 				} else {
-					var colNum = Table.TableInfo.Columns.IndexOf(maxColumn);
-					rowList = GetMaxFromEachGroup(colNum);
+					var colNum = table.TableInfo.Columns.IndexOf(maxColumn);
+					rows = GetMaxFromEachGroup(colNum);
 				}
 			} else {
 				// OPTIMIZATION: This should be optimized.  It should be fairly trivial
@@ -150,93 +150,73 @@ namespace Deveel.Data.Sql.Tables {
 
 				// This means there is no grouping, so merge with entire table,
 				var rowCount = table.RowCount;
-				rowList = new BigList<long>(rowCount);
+				var rowList = new BigList<long>(rowCount);
 				var en = table.GetEnumerator();
 				while (en.MoveNext()) {
 					rowList.Add(en.Current.Id.Number);
 				}
+
+				rows = rowList;
 			}
 
 			// Create a virtual table that's the new group table merged with the
 			// functions in this...
 
 			var tabs = new[] { table, this };
-			var rowSets = new IEnumerable<long>[] { rowList, rowList };
+			var rowSets = new [] { rows, rows };
 
 			return new VirtualTable(tabs, rowSets);
 		}
 
-		private IList<long> GetTopRowsFromEachGroup() {
+		private IEnumerable<long> GetTopRowsFromEachGroup() {
 			var extractRows = new BigList<long>();
 			var size = groupLinks.Count;
-			var take = true;
 
 			for (int i = 0; i < size; ++i) {
 				var r = groupLinks[i];
-				if (take)
-					extractRows.Add(r & 0x03FFFFFFF);
-
-				take = (r & 0x040000000) != 0;
+				extractRows.Add(r[0]);
 			}
 
 			return extractRows;
 		}
 
-		private IList<long> GetMaxFromEachGroup(int colNum) {
-			var refTab = Table;
+		private IEnumerable<long> GetMaxFromEachGroup(int colNum) {
+			var refTab = table;
 
 			var extractRows = new BigList<long>();
 			var size = groupLinks.Count;
 
-			long toTakeInGroup = -1;
-			SqlObject max = null;
-
 			for (int i = 0; i < size; ++i) {
-				var row = groupLinks[i];
+				var group = groupLinks[i];
+				SqlObject max = null;
+				long toTakeInGroup = -1;
 
-				var actRIndex = row & 0x03FFFFFFF;
-				var cell = refTab.GetValue(actRIndex, colNum);
+				for (int j = 0; j < group.Count; j++) {
+					var groupRow = group[j];
+					var value = refTab.GetValue(groupRow, colNum);
 
-				if (max == null || cell.CompareTo(max) > 0) {
-					max = cell;
-					toTakeInGroup = actRIndex;
+					if (max == null || value.CompareTo(max) > 0) {
+						max = value;
+						toTakeInGroup = groupRow;
+					}
 				}
 
-				if ((row & 0x040000000) != 0) {
-					extractRows.Add(toTakeInGroup);
-					max = null;
-				}
+				extractRows.Add(toTakeInGroup);
 			}
 
 			return extractRows;
 		}
 
-		private long GetGroupSize(long groupNumber) {
-			int groupSize = 1;
-			var i = groupLinks[groupNumber];
-			while ((i & 0x040000000) == 0) {
-				++groupSize;
-				++groupNumber;
-				i = groupLinks[groupNumber];
-			}
-			return groupSize;
+		private long GetGroupSize(int groupNumber) {
+			var group = groupLinks[groupNumber];
+			return group.Count;
 		}
 
-		private BigList<long> GetGroupRows(long groupNumber) {
-			var rows = new BigList<long>();
-			var row = groupLinks[groupNumber];
-
-			while ((row & 0x040000000) == 0) {
-				rows.Add(row);
-				++groupNumber;
-				row = groupLinks[groupNumber];
-			}
-
-			rows.Add(row & 0x03FFFFFFF);
-			return rows;
+		private BigList<long> GetGroupRows(int groupNumber) {
+			return groupLinks[groupNumber];
 		}
 
-		private long GetRowGroup(long rowIndex) {
+		private int GetRowGroup(long rowIndex) {
 			return groupLookup[rowIndex];
 		}
 
@@ -244,10 +224,9 @@ namespace Deveel.Data.Sql.Tables {
 
 		class GroupResolver : IGroupResolver {
 			private BigList<long> group;
-			private IReferenceResolver groupRefResolver;
 			private readonly GroupTable table;
 
-			private GroupResolver(GroupTable table, long groupId) {
+			private GroupResolver(GroupTable table, int groupId) {
 				this.table = table;
 				GroupId = groupId;
 			}
@@ -267,7 +246,7 @@ namespace Deveel.Data.Sql.Tables {
 				}
 			}
 
-			public long GroupId { get; }
+			public int GroupId { get; }
 
 			private void EnsureGroup() {
 				if (group == null) {
@@ -288,10 +267,10 @@ namespace Deveel.Data.Sql.Tables {
 				return new GroupResolver(table, groupId);
 			}
 
-			public SqlObject ResolveReference(ObjectName reference, long index) {
-				int colIndex = table.Table.TableInfo.Columns.IndexOf(reference);
+			public Task<SqlObject> ResolveReferenceAsync(ObjectName reference, long index) {
+				int colIndex = table.table.TableInfo.Columns.IndexOf(reference);
 				if (colIndex == -1)
-					throw new InvalidOperationException($"Column {reference} not found in table {table.Table.TableInfo.TableName}.");
+					throw new InvalidOperationException($"Column {reference} not found in table {table.table.TableInfo.TableName}.");
 
 				EnsureGroup();
 
@@ -299,7 +278,7 @@ namespace Deveel.Data.Sql.Tables {
 				if (group != null)
 					rowIndex = group[index];
 
-				return table.Table.GetValue(rowIndex, colIndex);
+				return table.table.GetValueAsync(rowIndex, colIndex);
 			}
 
 			public IReferenceResolver GetResolver(long index) {
@@ -317,8 +296,8 @@ namespace Deveel.Data.Sql.Tables {
 					this.index = index;
 				}
 
-				public SqlObject ResolveReference(ObjectName referenceName) {
-					return groupResolver.ResolveReference(referenceName, index);
+				public Task<SqlObject> ResolveReferenceAsync(ObjectName referenceName) {
+					return groupResolver.ResolveReferenceAsync(referenceName, index);
 				}
 
 				public SqlType ResolveType(ObjectName referenceName) {

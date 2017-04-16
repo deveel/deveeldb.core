@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -21,7 +22,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void MapTwoColumns() {
+		public async Task MapTwoColumns() {
 			var subset = new SubsetTable(left, new[] {1, 2},
 				new ObjectName[] {ObjectName.Parse("tab1.b1"), ObjectName.Parse("tab1.c1"),});
 
@@ -33,8 +34,8 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.Equal(0, subset.TableInfo.Columns.IndexOf("b1"));
 			Assert.Equal(1, subset.TableInfo.Columns.IndexOf("c1"));
 
-			var value1 = subset.GetValue(0, 1);
-			var value2 = subset.GetValue(2, 0);
+			var value1 = await subset.GetValueAsync(0, 1);
+			var value2 = await subset.GetValueAsync(2, 0);
 
 			Assert.Equal(SqlObject.Double(5563.22), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);

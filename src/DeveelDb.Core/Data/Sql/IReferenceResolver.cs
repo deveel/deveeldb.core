@@ -16,10 +16,11 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql {
 	public interface IReferenceResolver {
-		SqlObject ResolveReference(ObjectName referenceName);
+		Task<SqlObject> ResolveReferenceAsync(ObjectName referenceName);
 
 		SqlType ResolveType(ObjectName referenceName);
 	}

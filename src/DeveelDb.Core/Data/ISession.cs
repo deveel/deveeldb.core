@@ -16,9 +16,9 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Security;
-using Deveel.Data.Storage;
 using Deveel.Data.Transactions;
 
 namespace Deveel.Data {
@@ -58,12 +58,12 @@ namespace Deveel.Data {
 		/// Commits the latest changes made by the user in the session.
 		/// </summary>
 		/// <seealso cref="ITransaction"/>
-		void Commit();
+		Task CommitAsync();
 
 		/// <summary>
 		/// Rolls-back all the modifications made by the user in this session
 		/// </summary>
 		/// <seealse cref="ITransaction"/>
-		void Rollback();
+		Task RollbackAsync();
 	}
 }

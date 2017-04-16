@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
@@ -35,14 +37,14 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void GetValueFromRow() {
+		public async Task GetValueFromRow() {
 			var row = left.GetRow(0);
 
 			Assert.Equal(-1, row.Id.TableId);
 			Assert.Equal(0, row.Id.Number);
 
-			var value1 = row.GetValue("a");
-			var value2 = row.GetValue("b");
+			var value1 = await row.GetValueAsync("a");
+			var value2 = await row.GetValueAsync("b");
 
 			Assert.Equal(SqlObject.Integer(23), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);
@@ -63,7 +65,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void ResolveReference() {
+		public async Task ResolveReference() {
 			var resolver = new RowReferenceResolver(left, 0);
 
 			var type1 = resolver.ResolveType(ObjectName.Parse("tab1.a"));
@@ -74,14 +76,28 @@ namespace Deveel.Data.Sql.Tables {
 			Assert.Equal(PrimitiveTypes.Boolean(), type2);
 			Assert.Equal(PrimitiveTypes.Double(), type3);
 
-			var value1 = resolver.ResolveReference(ObjectName.Parse("tab1.a"));
-			var value2 = resolver.ResolveReference(ObjectName.Parse("tab1.b"));
-			var value3 = resolver.ResolveReference(ObjectName.Parse("tab1.c"));
+			var value1 = await resolver.ResolveReferenceAsync(ObjectName.Parse("tab1.a"));
+			var value2 = await resolver.ResolveReferenceAsync(ObjectName.Parse("tab1.b"));
+			var value3 = await resolver.ResolveReferenceAsync(ObjectName.Parse("tab1.c"));
 
 			Assert.Equal(SqlObject.Integer(23), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);
 			Assert.Equal(SqlObject.Double(5563.22), value3);
 		}
+
+		[Fact]
+		public void EnumerateFields() {
+			var row = left.GetRow(0);
+
+			var field = row.First();
+
+			Assert.NotNull(field);
+			Assert.NotNull(field.GetValue());
+			Assert.Equal("a", field.ColumnName);
+			Assert.Equal(PrimitiveTypes.Integer(), field.ColumnType);
+			Assert.Equal(SqlObject.Integer(23), field.GetValue());
+		}
+
 
 		[Fact]
 		public void SetDefaultValues() {

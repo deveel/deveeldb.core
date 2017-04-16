@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -27,10 +28,10 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void GetLastValueOfOneTableSource() {
+		public async Task GetLastValueOfOneTableSource() {
 			var table = new VirtualTable(ObjectName.Parse("#table#"), left, new long[] { 1 });
 
-			var value = table.GetValue(0, 1);
+			var value = await table.GetValueAsync(0, 1);
 
 			Assert.NotNull(value);
 			Assert.IsType<SqlBooleanType>(value.Type);

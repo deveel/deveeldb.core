@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public class SubsetTable : FilterTable, IRootTable {
@@ -55,8 +56,8 @@ namespace Deveel.Data.Sql.Tables {
 			return base.ResolveRows(columns[column], rows, ancestor);
 		}
 
-		public override SqlObject GetValue(long row, int column) {
-			return base.GetValue(row, columns[column]);
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
+			return base.GetValueAsync(row, columns[column]);
 		}
 
 		bool IEquatable<ITable>.Equals(ITable other) {

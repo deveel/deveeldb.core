@@ -10,6 +10,8 @@ namespace Deveel.Data.Sql.Indexes {
 		private static readonly BlockIndex<SqlObject, long> EmptyList;
 		private static readonly BlockIndex<SqlObject, long> OneList;
 
+		private const int OptimalSize = 250000;
+
 		protected Index(IndexInfo indexInfo) {
 			if (indexInfo == null)
 				throw new ArgumentNullException(nameof(indexInfo));
@@ -78,7 +80,7 @@ namespace Deveel.Data.Sql.Indexes {
 			// contain indices to rowSet entries.
 			var newSet = new BlockIndex<IndexKey, long>();
 
-			if (rowSetLength <= 250000) {
+			if (rowSetLength <= OptimalSize) {
 				// If the subset is less than or equal to 250,000 elements, we generate
 				// an array in memory that contains all values in the set and we sort
 				// it.  This requires use of memory from the heap but is faster than
@@ -213,6 +215,10 @@ namespace Deveel.Data.Sql.Indexes {
 
 		public abstract void Remove(long row);
 
+		public Index Subset(ITable table, int column) {
+			return Subset(table, new[] {column});
+		}
+
 		public Index Subset(ITable table, int[] columns) {
 			if (table == null)
 				throw new ArgumentNullException(nameof(table));
@@ -263,16 +269,16 @@ namespace Deveel.Data.Sql.Indexes {
 		#region IndexComparer
 
 		private class IndexComparer : IIndexComparer<IndexKey, long> {
-			private readonly Index scheme;
+			private readonly Index index;
 			private readonly BigArray<long> rowSet;
 
-			public IndexComparer(Index scheme, BigArray<long> rowSet) {
-				this.scheme = scheme;
+			public IndexComparer(Index index, BigArray<long> rowSet) {
+				this.index = index;
 				this.rowSet = rowSet;
 			}
 
-			public int Compare(long index, IndexKey val) {
-				var key = scheme.GetKey(rowSet[index]);
+			public int Compare(long indexed, IndexKey val) {
+				var key = index.GetKey(rowSet[indexed]);
 				return key.CompareTo(val);
 			}
 		}

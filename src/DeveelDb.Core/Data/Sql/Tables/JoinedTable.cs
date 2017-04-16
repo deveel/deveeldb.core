@@ -19,18 +19,32 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
 	public abstract class JoinedTable : TableBase {
 		protected JoinedTable(ITable[] tables) 
-			: this(new ObjectName("#VIRTUAL_TABLE#"), tables) {
+			: this(tables, -1) {
 		}
 
-		protected JoinedTable(ObjectName tableName, ITable[] tables) {
+		protected JoinedTable(ITable[] tables, int sortColumn) 
+			: this(new ObjectName("#VIRTUAL_TABLE#"), tables, sortColumn) {
+		}
+
+		protected JoinedTable(ObjectName tableName, ITable[] tables) 
+			: this(tableName, tables, -1) {
+		}
+
+		protected JoinedTable(ObjectName tableName, ITable[] tables, int sortColumn) {
 			var tableInfos = tables.Select(x => x.ObjectInfo).Cast<TableInfo>().ToArray();
 
 			JoinedTableInfo = new JoinedTableInfo(tableName, tableInfos);
 			Tables = tables;
+
+			Indexes = new Index[JoinedTableInfo.Columns.Count];
+			SortColumn = sortColumn;
 		}
 
 		public override TableInfo TableInfo => JoinedTableInfo;
@@ -39,15 +53,19 @@ namespace Deveel.Data.Sql.Tables {
 
 		protected ITable[] Tables { get; }
 
+		protected Index[] Indexes { get; }
+
+		protected int SortColumn { get; }
+
 		public override IEnumerator<Row> GetEnumerator() {
 			return new SimpleRowEnumerator(this);
 		}
 
-		public override SqlObject GetValue(long row, int column) {
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
 			int tableNum = JoinedTableInfo.GetTableOffset(column);
 			var parentTable = Tables[tableNum];
 			var resolvedRow = ResolveTableRow(row, tableNum);
-			return parentTable.GetValue(resolvedRow, JoinedTableInfo.GetColumnOffset(column));
+			return parentTable.GetValueAsync(resolvedRow, JoinedTableInfo.GetColumnOffset(column));
 		}
 
 		protected abstract IEnumerable<long> ResolveTableRows(IEnumerable<long> rowSet, int tableNum);
@@ -115,5 +133,43 @@ namespace Deveel.Data.Sql.Tables {
 			return info;
 		}
 
+		protected override Index GetColumnIndex(int column, int originalColumn, ITable ancestor) {
+			// First check if the given SelectableScheme is in the column_scheme array
+			var scheme = Indexes[column];
+			if (scheme != null) {
+				if (ancestor == this)
+					return scheme;
+
+				return scheme.Subset(ancestor, originalColumn);
+			}
+
+			// If it isn't then we need to calculate it
+			Index index;
+
+			// Optimization: The table may be naturally ordered by a column.  If it
+			// is we don't try to generate an ordered set.
+			if (SortColumn != -1 &&
+			    SortColumn == column) {
+				var columnName = JoinedTableInfo.Columns[column].ColumnName;
+				var indexInfo = new IndexInfo(new ObjectName(TableInfo.TableName, $"column[{column}]"), TableInfo.TableName, columnName);
+				var isop = new InsertSearchIndex(indexInfo, CalculateTableRows());
+				index = isop;
+				Indexes[column] = index;
+				if (ancestor != this) {
+					index = index.Subset(ancestor, originalColumn);
+				}
+
+			} else {
+				// Otherwise we must generate the ordered set from the information in
+				// a parent index.
+				var parentTable = Tables[JoinedTableInfo.GetTableOffset(column)];
+				index = parentTable.GetColumnIndex(JoinedTableInfo.GetColumnOffset(column), originalColumn, ancestor);
+				if (ancestor == this) {
+					Indexes[column] = index;
+				}
+			}
+
+			return index;
+		}
 	}
 }

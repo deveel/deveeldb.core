@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Security;
 using Deveel.Data.Services;
@@ -75,18 +76,17 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlType GetSqlType(IContext context) {
 			var function = ResolveFunction(context);
-			var functionInfo = (SqlFunctionInfo) function.MethodInfo;
+			var functionInfo = function.MethodInfo;
 			return functionInfo.ReturnType;
 		}
 
-		public override SqlExpression Reduce(IContext context) {
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
 			var function = ResolveFunction(context);
 
-			if (!function.IsSystem && !context.UserCanExecute(FunctionName))
+			if (!function.IsSystem && !await context.UserCanExecute(FunctionName))
 				throw new UnauthorizedAccessException();
 
-			// TODO: provide an asyn Reduce?
-			var result = function.ExecuteAsync(context, Arguments).Result;
+			var result = await function.ExecuteAsync(context, Arguments);
 			if (!result.HasReturnedValue)
 				throw new SqlExpressionException();
 

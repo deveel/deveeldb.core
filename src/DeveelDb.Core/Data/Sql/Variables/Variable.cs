@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Expressions;
 
@@ -70,7 +71,7 @@ namespace Deveel.Data.Sql.Variables {
 			return Value;
 		}
 
-		public SqlExpression Evaluate(IContext context) {
+		public Task<SqlExpression> Evaluate(IContext context) {
 			var expression = Value;
 			if (expression == null)
 				expression = VariableInfo.DefaultValue;
@@ -78,7 +79,7 @@ namespace Deveel.Data.Sql.Variables {
 			if (expression == null)
 				throw new VariableException($"Variable {VariableInfo.Name} has no value set");
 
-			return expression.Reduce(context);
+			return expression.ReduceAsync(context);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {

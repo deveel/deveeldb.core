@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
 	class TestTable : IRootTable {
@@ -39,13 +42,17 @@ namespace Deveel.Data.Sql.Tables {
 
 		public long RowCount => rows.Count;
 
-		public SqlObject GetValue(long row, int column) {
+		public Task<SqlObject> GetValueAsync(long row, int column) {
 			var objRow = rows[(int) row];
-			return objRow[column];
+			return Task.FromResult(objRow[column]);
 		}
 
 		bool IEquatable<ITable>.Equals(ITable other) {
 			return this == other;
+		}
+
+		public Index GetColumnIndex(int column) {
+			throw new NotImplementedException();
 		}
 	}
 }

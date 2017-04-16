@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
 	public class TemporaryTable : DataTableBase {
@@ -42,7 +45,7 @@ namespace Deveel.Data.Sql.Tables {
 			return rootInfo;
 		}
 
-		public override SqlObject GetValue(long row, int column) {
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
 			if (row > Int32.MaxValue)
 				throw new ArgumentOutOfRangeException("row");
 
@@ -50,7 +53,7 @@ namespace Deveel.Data.Sql.Tables {
 				throw new ArgumentOutOfRangeException(nameof(row));
 
 			var values = rows[(int) row];
-			return values[column];
+			return Task.FromResult(values[column]);
 		}
 
 		public void SetValue(long row, int column, SqlObject value) {
@@ -78,6 +81,14 @@ namespace Deveel.Data.Sql.Tables {
 			var tableInfo = new TableInfo(new ObjectName("single"));
 			tableInfo.Columns.Add(new ColumnInfo(columnName, columnType));
 			return new TemporaryTable(tableInfo);
+		}
+
+		public void BuildIndex() {
+			SetupIndexes(typeof(BlindSearchIndex));
+
+			for (int i = 0; i < RowCount; i++) {
+				AddRowToIndex(i);
+			}
 		}
 	}
 }

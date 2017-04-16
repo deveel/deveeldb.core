@@ -65,22 +65,22 @@ namespace Deveel.Data.Sql.Statements {
 			return result;
 		}
 
-		private void CheckRequirements(IContext context) {
+		private async Task CheckRequirements(IContext context) {
 			var registry = new RequirementCollection();
 			Require(registry);
 
 			using (var securityContext = context.Create($"Statement{GetType().Name}.Security")) {
 				securityContext.RegisterInstance<IRequirementCollection>(registry);
 
-				securityContext.CheckRequirements();
+				await securityContext.CheckRequirementsAsync();
 			}
 		}
 
-		public Task ExecuteAsync(IContext context) {
-			CheckRequirements(context);
+		public async Task ExecuteAsync(IContext context) {
+			await CheckRequirements(context);
 
 			try {
-				return ExecuteStatementAsync(context);
+				await ExecuteStatementAsync(context);
 			} catch (SqlStatementException) {
 				throw;
 			} catch (Exception ex) {

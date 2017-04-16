@@ -17,16 +17,15 @@
 
 using System;
 
-using Deveel.Data.Services;
-
 namespace Deveel.Data.Configuration {
-	public static class ConfigurationContextExtensions {
+	public static class ContextExtensions {
 		public static T GetValue<T>(this IContext context, string key, T defaultValue) {
 			var current = context;
 			while (current != null) {
-				if (current.Scope.IsRegistered<IConfiguration>()) {
-					var config = current.Scope.Resolve<IConfiguration>();
-					return config.GetValue<T>(key, defaultValue);
+				if (current is IConfigurationScope) {
+					var scope = (IConfigurationScope) current;
+					var config = scope.Configuration;
+					return config.GetValue(key, defaultValue);
 				}
 
 				current = current.ParentContext;
@@ -34,5 +33,8 @@ namespace Deveel.Data.Configuration {
 
 			return defaultValue;
 		}
+
+		public static T GetValue<T>(this IContext context, string key)
+			=> context.GetValue<T>(key, default(T));
 	}
 }
