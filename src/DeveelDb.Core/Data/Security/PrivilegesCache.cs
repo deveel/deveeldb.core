@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Security {
 	public sealed class PrivilegesCache : ISecurityResolver, IDisposable {
@@ -26,7 +27,7 @@ namespace Deveel.Data.Security {
 			Dispose(false);
 		}
 
-		bool ISecurityResolver.HasPrivileges(string grantee, DbObjectType objectType, ObjectName objectName, Privileges privileges) {
+		async Task<bool> ISecurityResolver.HasPrivilegesAsync(string grantee, DbObjectType objectType, ObjectName objectName, Privileges privileges) {
 			Privileges userPrivileges;
 			if (!TryGetPrivileges(objectType, objectName, grantee, out userPrivileges))
 				return false;

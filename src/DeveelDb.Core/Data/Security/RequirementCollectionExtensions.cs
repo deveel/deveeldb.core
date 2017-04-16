@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Security {
 	public static class RequirementCollectionExtensions {
@@ -29,7 +30,7 @@ namespace Deveel.Data.Security {
 			}
 		}
 
-		public static void AddRequirement(this IRequirementCollection requirements, Func<IContext, bool> requirement) {
+		public static void AddRequirement(this IRequirementCollection requirements, Func<IContext, Task<bool>> requirement) {
 			requirements.Require(new DelegatedRequirement(requirement));
 		}
 

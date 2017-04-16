@@ -16,11 +16,13 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Security {
 	public sealed class DelegatedRequirementHandler : IRequirementHandler<DelegatedRequirement> {
-		public void HandleRequirement(IContext context, DelegatedRequirement requirement) {
-			if (!requirement.Body(context))
+		public async Task HandleRequirementAsync(IContext context, DelegatedRequirement requirement) {
+			var result = await requirement.Body(context);
+			if (!result)
 				throw new UnauthorizedAccessException();
 		}
 	}

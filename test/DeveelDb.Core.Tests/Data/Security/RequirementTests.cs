@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
@@ -50,28 +51,28 @@ namespace Deveel.Data.Security {
 		[InlineData(Privileges.Insert, true)]
 		[InlineData(Privileges.Compact, false)]
 		[InlineData(Privileges.Insert | Privileges.Alter, true)]
-		public void AssertUserHasPrivileges(Privileges privileges, bool expected) {
-			Assert.Equal(expected, context.UserHasPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), privileges));
+		public async Task AssertUserHasPrivileges(Privileges privileges, bool expected) {
+			Assert.Equal(expected, await context.UserHasPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), privileges));
 		}
 
 		[Fact]
-		public void CheckRequirements() {
+		public async Task CheckRequirements() {
 			var requirements = new RequirementCollection();
 			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Insert);
 
 			context.Scope.RegisterInstance<IRequirementCollection>(requirements);
 
-			context.CheckRequirements();
+			await context.CheckRequirementsAsync();
 		}
 
 		[Fact]
-		public void FailedCheckRequirements() {
+		public async Task FailedCheckRequirements() {
 			var requirements = new RequirementCollection();
 			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Alter);
 
 			context.Scope.RegisterInstance<IRequirementCollection>(requirements);
 
-			Assert.ThrowsAny<UnauthorizedAccessException>(() => context.CheckRequirements());
+			await Assert.ThrowsAnyAsync<UnauthorizedAccessException>(() => context.CheckRequirementsAsync());
 		}
 
 		public void Dispose() {
