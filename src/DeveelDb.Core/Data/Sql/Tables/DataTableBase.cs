@@ -35,6 +35,9 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public override Index GetColumnIndex(int column) {
+			if (indexes == null)
+				throw new InvalidOperationException("The indexes for the table were not built");
+
 			return indexes[column];
 		}
 

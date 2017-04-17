@@ -23,21 +23,37 @@ namespace Deveel.Data.Sql.Tables {
 		private long rowCount;
 
 		public VirtualTable(ITable[] tables, IEnumerable<long>[] rows)
-			: base(tables) {
+			: this(tables, rows, -1) {
+		}
+
+		public VirtualTable(ITable[] tables, IEnumerable<long>[] rows, int sortColumn)
+			: base(tables, sortColumn) {
 			InitRows(rows);
 		}
 
 		public VirtualTable(ITable table, IEnumerable<long> rows)
-			: this(new[] {table}, new []{ rows}) {
+			: this(table, rows, -1) {
+		}
+
+		public VirtualTable(ITable table, IEnumerable<long> rows, int sortColumn)
+			: this(new[] {table}, new []{ rows}, sortColumn) {
 		}
 
 		public VirtualTable(ObjectName tableName, ITable[] tables, IEnumerable<long>[] rows)
-			: base(tableName, tables) {
+			: this(tableName, tables, rows, -1) {
+		}
+
+		public VirtualTable(ObjectName tableName, ITable[] tables, IEnumerable<long>[] rows, int sortColumn)
+			: base(tableName, tables, sortColumn) {
 			InitRows(rows);
 		}
 
 		public VirtualTable(ObjectName tableName, ITable table, IEnumerable<long> rows)
-			: this(tableName, new[] {table}, new[]{ rows}) {
+			: this(tableName, table, rows, -1) {
+		}
+
+		public VirtualTable(ObjectName tableName, ITable table, IEnumerable<long> rows, int sortColumn)
+			: this(tableName, new[] {table}, new[]{ rows}, sortColumn) {
 		}
 
 		public override long RowCount => rowCount;
