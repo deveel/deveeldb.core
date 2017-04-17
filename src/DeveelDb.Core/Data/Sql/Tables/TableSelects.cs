@@ -283,5 +283,36 @@ namespace Deveel.Data.Sql.Tables {
 
 			return new VirtualTable(table, rows.ToArray());
 		}
+
+		public static async Task<ITable> FullSelectAsync(IContext context, ITable table, SqlExpression expression) {
+			var result = table;
+
+			// Exit early if there's nothing in the table to select from
+			var rowCount = table.RowCount;
+			if (rowCount > 0) {
+				var selectedSet = new BigList<long>(rowCount);
+
+				foreach (var row in table) {
+					var resolver = new RowReferenceResolver(table, row.Id.Number);
+					var rowNumber = row.Id.Number;
+
+					// Resolve expression into a constant.
+					SqlObject value;
+					using (var rowContext = context.Create($"row_{rowNumber}")) {
+						rowContext.RegisterInstance<IReferenceResolver>(resolver);
+						value = await expression.ReduceToConstantAsync(rowContext);
+					}
+
+					// If resolved to true then include in the selected set.
+					if (!value.IsNull && value.IsTrue) {
+						selectedSet.Add(rowNumber);
+					}
+				}
+
+				result = new VirtualTable(table, selectedSet); ;
+			}
+
+			return result;
+		}
 	}
 }
