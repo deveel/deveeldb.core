@@ -47,7 +47,7 @@ namespace Deveel.Data.Sql.Tables {
 			var exp1 = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value1)));
 			var exp2 = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value2)));
 			var array = SqlExpression.Constant(SqlObject.Array(new SqlArray(new[] {exp1, exp2})));
-			var result = await left.QuantifiedSelectAsync(null, columnName, op, subOp, array);
+			var result = await left.SelectNonCorrelatedAsync(null, columnName, op, subOp, array);
 
 			Assert.NotNull(result);
 			Assert.Equal(expected, result.RowCount);

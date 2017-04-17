@@ -101,6 +101,10 @@ namespace Deveel.Data.Sql.Tables {
 			return new SubsetTable(table, columnMap, aliases);
 		}
 
+		public static ITable Union(this ITable table, ITable other) {
+			return TableComposites.Union(table, other);
+		}
+
 		#region GetValue
 
 		public static Task<SqlObject> GetValueAsync(this ITable table, long row, string columnName) {
@@ -344,24 +348,28 @@ namespace Deveel.Data.Sql.Tables {
 			return new VirtualTable(table, new long[0]);
 		}
 
-		public static Task<ITable> SelectNonCorrelatedAsync(this ITable table, IContext context,
-			ObjectName[] columnNames, SqlExpressionType op, SqlExpressionType subOp, ITable other) {
+		public static Task<ITable> FullSelectAsync(this ITable table, IContext context, SqlExpression expression) {
+			return TableSelects.FullSelectAsync(context, table, expression);
+		}
+
+		public static Task<ITable> SelectNonCorrelatedAsync(this ITable table, ObjectName[] columnNames, SqlExpressionType op,
+			SqlExpressionType subOp, ITable other) {
 			if (!op.IsQuantify())
 				throw new ArgumentException();
 
 			var isAll = op == SqlExpressionType.All;
-			return TableSelects.SelectNonCorrelatedAsync(table, columnNames, op, isAll, other);
+			return TableSelects.SelectNonCorrelatedAsync(table, columnNames, subOp, isAll, other);
 		}
 
-		public static async Task<ITable> QuantifiedSelectAsync(this ITable table, IContext context, SqlQuantifyExpression expression) {
+		public static async Task<ITable> SelectNonCorrelatedAsync(this ITable table, IContext context, SqlQuantifyExpression expression) {
 			return await TableSelects.QuantifiedSelectAsync(table, context, expression);
 		}
 
-		public static Task<ITable> QuantifiedSelectAsync(this ITable table, IContext context, ObjectName columnName,
+		public static Task<ITable> SelectNonCorrelatedAsync(this ITable table, IContext context, ObjectName columnName,
 			SqlExpressionType op, SqlExpressionType subOp, SqlExpression expression) {
 			var quantified = SqlExpression.Quantify(op,
 				SqlExpression.Binary(subOp, SqlExpression.Reference(columnName), expression));
-			return table.QuantifiedSelectAsync(context, quantified);
+			return table.SelectNonCorrelatedAsync(context, quantified);
 		}
 
 		public static async Task<ITable> SimpleSelectAsync(this ITable table, IContext context, ObjectName columnName,
@@ -371,7 +379,7 @@ namespace Deveel.Data.Sql.Tables {
 
 		public static async Task<ITable> Select(this ITable table, IContext context, SqlExpression expression) {
 			if (expression is SqlQuantifyExpression) {
-				return await table.QuantifiedSelectAsync(context, (SqlQuantifyExpression) expression);
+				return await table.SelectNonCorrelatedAsync(context, (SqlQuantifyExpression) expression);
 			}
 			if (expression is SqlBinaryExpression) {
 				var binary = (SqlBinaryExpression) expression;
@@ -425,6 +433,24 @@ namespace Deveel.Data.Sql.Tables {
 				rows = rows.Reverse();
 
 			return new VirtualTable(new[] {table}, new IEnumerable<long>[] {rows});
+		}
+
+		public static ITable OrderBy(this ITable table, ObjectName columnName, bool ascending) {
+			var columnOffset = table.TableInfo.Columns.IndexOf(columnName);
+			if (columnOffset == -1)
+				throw new ArgumentException(String.Format("Column '{0}' was not found in table.", columnName));
+
+			return table.OrderBy(columnOffset, ascending);
+		}
+
+		public static ITable OrderBy(this ITable table, ObjectName[] columnNames, bool[] ascending) {
+			var result = table;
+			// Sort the results by the columns in reverse-safe order.
+			int sz = ascending.Length;
+			for (int n = sz - 1; n >= 0; --n) {
+				result = result.OrderBy(columnNames[n], ascending[n]);
+			}
+			return result;
 		}
 
 		#endregion
