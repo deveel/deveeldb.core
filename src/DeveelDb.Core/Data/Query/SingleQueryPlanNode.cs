@@ -7,5 +7,7 @@ namespace Deveel.Data.Query {
 		}
 
 		public IQueryPlanNode Child { get; }
+
+		protected override IQueryPlanNode[] ChildNodes => new[] {Child};
 	}
 }

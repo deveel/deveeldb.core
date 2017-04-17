@@ -18,6 +18,23 @@ namespace Deveel.Data.Query {
 			return false;
 		}
 
+		string IQueryPlanNode.NodeName => NodeName;
+
+		protected virtual string NodeName {
+			get {
+				var typeName = GetType().Name;
+				if (typeName.EndsWith("Node", StringComparison.OrdinalIgnoreCase)) {
+					typeName = typeName.Substring(0, typeName.Length - 4);
+				}
+
+				return typeName;
+			}
+		}
+
+		protected virtual IQueryPlanNode[] ChildNodes => new IQueryPlanNode[0];
+
+		IQueryPlanNode[] IQueryPlanNode.ChildNodes => ChildNodes;
+
 		public abstract Task<ITable> ReduceAsync(IContext context);
 	}
 }

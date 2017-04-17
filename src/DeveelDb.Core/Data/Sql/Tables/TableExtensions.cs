@@ -92,7 +92,10 @@ namespace Deveel.Data.Sql.Tables {
 
 		public static async Task<SqlObject> GetLastValueAsync(this ITable table, int column) {
 			var rows = table.SelectLastRows(column).ToBigArray();
-			return rows.Length > 0 ? await table.GetValueAsync(rows[0], column) : null;
+			if (rows.Length > 0)
+				return await table.GetValueAsync(rows[0], column);
+
+			return SqlObject.NullOf(table.TableInfo.Columns[column].ColumnType);
 		}
 
 		public static async Task<SqlObject[]> GetFirstValuesAsync(this ITable table, int[] columns) {
@@ -104,20 +107,26 @@ namespace Deveel.Data.Sql.Tables {
 
 		public static async Task<SqlObject> GetFirstValueAsync(this ITable table, int column) {
 			var rows = table.SelectFirstRows(column).ToBigArray();
-			return rows.Length > 0 ? await table.GetValueAsync(rows[0], column) : null;
+			if (rows.Length > 0)
+				return await table.GetValueAsync(rows[0], column);
+
+			return SqlObject.NullOf(table.TableInfo.Columns[column].ColumnType);
 		}
 
-		public static async Task<SqlObject> GetSingleValueAsync(this ITable table, int columnOffset) {
-			var rows = table.SelectFirstRows(columnOffset).ToBigArray();
+		public static async Task<SqlObject> GetSingleValueAsync(this ITable table, int column) {
+			var rows = table.SelectFirstRows(column).ToBigArray();
 			var sz = rows.Length;
-			return sz == table.RowCount && sz > 0 ? await table.GetValueAsync(rows[0], columnOffset) : null;
+			if (sz == table.RowCount && sz > 0)
+				return await table.GetValueAsync(rows[0], column);
+
+			return SqlObject.NullOf(table.TableInfo.Columns[column].ColumnType);
 		}
 
-		public static async Task<SqlObject[]> GetSingleValuesAsync(this ITable table, int[] columnOffsets) {
-			if (columnOffsets.Length > 1)
+		public static async Task<SqlObject[]> GetSingleValuesAsync(this ITable table, int[] columns) {
+			if (columns.Length > 1)
 				throw new ArgumentException("Multi-column gets not supported.");
 
-			return new[] { await table.GetSingleValueAsync(columnOffsets[0]) };
+			return new[] { await table.GetSingleValueAsync(columns[0]) };
 		}
 
 		#endregion
