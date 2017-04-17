@@ -15,7 +15,7 @@ namespace Deveel.Data.Query {
 
 		public override async Task<ITable> ReduceAsync(IContext context) {
 			var table = await Child.ReduceAsync(context);
-			return await table.QuantifiedSelectAsync(context, Expression);
+			return await table.SelectNonCorrelatedAsync(context, Expression);
 		}
 	}
 }

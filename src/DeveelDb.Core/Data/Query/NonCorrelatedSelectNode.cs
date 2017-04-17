@@ -24,7 +24,7 @@ namespace Deveel.Data.Query {
 			var leftResult = await Left.ReduceAsync(context);
 			var rightResult = await Right.ReduceAsync(context);
 
-			return await leftResult.SelectNonCorrelatedAsync(context, LeftColumnNames, Operator, SubOperator, rightResult);
+			return await leftResult.SelectNonCorrelatedAsync(LeftColumnNames, Operator, SubOperator, rightResult);
 		}
 	}
 }
