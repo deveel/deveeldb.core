@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Expressions;
@@ -19,6 +20,15 @@ namespace Deveel.Data.Query {
 		public SqlExpressionType Operator { get; }
 
 		public SqlExpressionType SubOperator { get; }
+
+		protected override void GetData(IDictionary<string, object> data) {
+			for (int i = 0; i < LeftColumnNames.Length; i++) {
+				data[$"column[{i}]"] = LeftColumnNames[i];
+			}
+
+			data["operator"] = Operator.ToString().ToUpperInvariant();
+			data["sub-operator"] = SubOperator.ToString().ToUpperInvariant();
+		}
 
 		public override async Task<ITable> ReduceAsync(IContext context) {
 			var leftResult = await Left.ReduceAsync(context);

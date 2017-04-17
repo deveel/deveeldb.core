@@ -454,5 +454,50 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		#endregion
+
+		#region Joins
+
+		public static ITable Outside(this ITable table, ITable rightTable) {
+			// Form the row list for right hand table,
+			var rowList = rightTable.Select(x => x.Id.Number).ToBigList();
+
+			int colIndex = rightTable.TableInfo.Columns.IndexOf(table.TableInfo.Columns.GetColumnName(0));
+			rowList = rightTable.ResolveRows(colIndex, rowList, table).ToBigList();
+
+			// This row set
+			var thisTableSet = table.Select(x => x.Id.Number).ToBigList();
+
+			thisTableSet.Sort();
+			rowList.Sort();
+
+			// Find all rows that are in 'this table' and not in 'right'
+			var resultList = new BigList<long>(96);
+			var size = thisTableSet.Count;
+			var rowListIndex = 0;
+			var rowListSize = rowList.Count;
+			for (long i = 0; i < size; ++i) {
+				var thisVal = thisTableSet[i];
+				if (rowListIndex < rowListSize) {
+					var inVal = rowList[rowListIndex];
+					if (thisVal < inVal) {
+						resultList.Add(thisVal);
+					} else if (thisVal == inVal) {
+						while (rowListIndex < rowListSize &&
+						       rowList[rowListIndex] == inVal) {
+							++rowListIndex;
+						}
+					} else {
+						throw new InvalidOperationException("'this_val' > 'in_val'");
+					}
+				} else {
+					resultList.Add(thisVal);
+				}
+			}
+
+			// Return the new VirtualTable
+			return new VirtualTable(table, resultList);
+		}
+
+		#endregion
 	}
 }

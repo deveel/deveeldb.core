@@ -28,7 +28,7 @@ namespace Deveel.Data.Sql.Tables {
 		public SubsetTable(ITable table, int[] columns, ObjectName[] aliases)
 			: base(table) {
 			if (columns.Length != aliases.Length)
-				throw new ArgumentException();
+				throw new ArgumentException("The number of column offsets and the number of aliases do not match");
 
 			this.columns = columns;
 			this.aliases = aliases;

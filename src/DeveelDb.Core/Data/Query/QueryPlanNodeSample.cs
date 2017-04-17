@@ -16,11 +16,13 @@ namespace Deveel.Data.Query {
 			childNodes = new List<QueryPlanNodeSample>();
 		}
 
-		public IQueryPlanNode Node { get; }
+		private IQueryPlanNode Node { get; }
 
 		public string NodeName => Node.NodeName;
 
 		public QueryPlanNodeSampleInfo SampleInfo { get; }
+
+		public IDictionary<string, object> Data => Node.Data;
 
 		public IEnumerable<QueryPlanNodeSample> ChildNodes => childNodes.AsEnumerable();
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Services;
@@ -21,25 +22,39 @@ namespace Deveel.Data.Query {
 
 			context = mock.Object;
 
-			var tableInfo = new TableInfo(new ObjectName("tab1"));
-			tableInfo.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
-			tableInfo.Columns.Add(new ColumnInfo("b", PrimitiveTypes.Boolean()));
-			tableInfo.Columns.Add(new ColumnInfo("c", PrimitiveTypes.Double()));
+			var tableInfo1 = new TableInfo(new ObjectName("tab1"));
+			tableInfo1.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
+			tableInfo1.Columns.Add(new ColumnInfo("b", PrimitiveTypes.Boolean()));
+			tableInfo1.Columns.Add(new ColumnInfo("c", PrimitiveTypes.Double()));
 
-			var table = new TemporaryTable(tableInfo);
-			table.AddRow(new[] { SqlObject.Integer(23), SqlObject.Boolean(true), SqlObject.Double(5563.22) });
-			table.AddRow(new[] { SqlObject.Integer(54), SqlObject.Boolean(null), SqlObject.Double(921.001) });
-			table.AddRow(new[] { SqlObject.Integer(23), SqlObject.Boolean(true), SqlObject.Double(2010.221) });
+			var table1 = new TemporaryTable(tableInfo1);
+			table1.AddRow(new[] { SqlObject.Integer(23), SqlObject.Boolean(true), SqlObject.Double(5563.22) });
+			table1.AddRow(new[] { SqlObject.Integer(54), SqlObject.Boolean(null), SqlObject.Double(921.001) });
+			table1.AddRow(new[] { SqlObject.Integer(23), SqlObject.Boolean(true), SqlObject.Double(2010.221) });
 
-			table.BuildIndex();
+			table1.BuildIndex();
+
+			var tableInfo2 = new TableInfo(new ObjectName("tab2"));
+			tableInfo2.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
+			tableInfo2.Columns.Add(new ColumnInfo("aa", PrimitiveTypes.BigInt()));
+			tableInfo2.Columns.Add(new ColumnInfo("b1", PrimitiveTypes.Boolean()));
+
+			var table2 = new TemporaryTable(tableInfo2);
+			table2.AddRow(new []{SqlObject.Integer(89), SqlObject.BigInt(120111233), SqlObject.Boolean(true) });
+			table2.AddRow(new[] { SqlObject.Integer(127), SqlObject.BigInt(-21445665), SqlObject.Boolean(false) });
+
+			table2.BuildIndex();
 
 			var tableManager = new Mock<IDbObjectManager>();
 			tableManager.SetupGet(x => x.ObjectType)
 				.Returns(DbObjectType.Table);
-			tableManager.Setup(x => x.GetObjectAsync(It.IsAny<ObjectName>()))
-				.Returns<ObjectName>(name => Task.FromResult((IDbObject) table));
+			tableManager.Setup(x => x.GetObjectAsync(It.Is<ObjectName>(name => name.Name == "tab1")))
+				.Returns<ObjectName>(name => Task.FromResult((IDbObject) table1));
+			tableManager.Setup(x => x.GetObjectAsync(It.Is<ObjectName>(name => name.Name == "tab2")))
+				.Returns<ObjectName>(name => Task.FromResult<IDbObject>(table2));
 
 			context.RegisterInstance<IDbObjectManager>(tableManager.Object);
+			context.RegisterService<ITableCache, InMemoryTableCache>();
 		}
 
 		[Fact]
@@ -78,6 +93,131 @@ namespace Deveel.Data.Query {
 			var result = await selectNode.ReduceAsync(context);
 
 			Assert.Equal(2, result.RowCount);
+		}
+
+		[Fact]
+		public async Task UnionWithSelf() {
+			var fetchNode1 = new FetchTableNode(new ObjectName("tab1"));
+			var fetchNode2 = new FetchTableNode(new ObjectName("tab1"));
+			var unionNode = new LogicalUnionNode(fetchNode1, fetchNode2);
+
+			var result = await unionNode.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(5, result.RowCount);
+		}
+
+		[Fact]
+		public async Task SampleSimpleSelect() {
+			var fetchNode = new FetchTableNode(new ObjectName("tab1"));
+			var selectNode = new SimpleSelectNode(fetchNode, ObjectName.Parse("tab1.a"), SqlExpressionType.Equal,
+				SqlExpression.Constant(SqlObject.Integer(23)));
+
+			var sample = await selectNode.SampleAsync(context);
+
+			Assert.NotNull(sample);
+			Assert.NotNull(sample.SampleInfo);
+			Assert.Equal(2, sample.SampleInfo.RowCount);
+			Assert.NotNull(sample.ChildNodes);
+			Assert.NotEmpty(sample.ChildNodes);
+			Assert.Equal(1, sample.ChildNodes.Count());
+			Assert.Equal(3, sample.ChildNodes.ElementAt(0).SampleInfo.RowCount);
+		}
+
+		[Fact]
+		public async Task Subset() {
+			var tableName = new ObjectName("tab1");
+			var columnName = new ObjectName(tableName, "a");
+			var fetchNode = new FetchTableNode(tableName);
+			var subsetNode = new SubsetNode(fetchNode, new[] {columnName}, new[] {columnName});
+
+			var result = await subsetNode.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(1, result.TableInfo.Columns.Count);
+			Assert.Equal(3, result.RowCount);
+		}
+
+		[Fact]
+		public async Task FullSelectOfRoot() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var exp = SqlExpression.Equal(SqlExpression.Reference(new ObjectName(tableName, "a")),
+				SqlExpression.Constant(SqlObject.Integer(23)));
+			var fullSelectNode = new FullSelectNode(fetchNode, exp);
+
+			var result = await fullSelectNode.ReduceAsync(context);
+
+			Assert.Equal(2, result.RowCount);
+		}
+
+		[Fact]
+		public async Task SimpleSort() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var sortNode = new SortNode(fetchNode, new ObjectName[] {new ObjectName(tableName, "a")}, new bool[] {false});
+
+			var result = await sortNode.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(3, result.RowCount);
+
+			var value1 = await result.GetValueAsync(0, 0);
+			Assert.Equal(SqlObject.Integer(54), value1);
+		}
+
+		[Fact]
+		public async Task ConstantSelect() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var constantNode = new ConstantSelectNode(fetchNode, SqlExpression.Constant(SqlObject.Boolean(false)));
+
+			var result = await constantNode.ReduceAsync(context);
+
+			Assert.Equal(0, result.RowCount);
+		}
+
+		[Fact]
+		public async Task LimitSelect() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var limitNode = new LimitResultNode(fetchNode, 1, 1);
+
+			var result = await limitNode.ReduceAsync(context);
+
+			Assert.Equal(1, result.RowCount);
+		}
+
+		[Fact]
+		public async Task NonCorrelatedSelect() {
+			var tableName1 = new ObjectName("tab1");
+			var fetchNode1 = new FetchTableNode(tableName1);
+			var subset1 = new SubsetNode(fetchNode1, new []{new ObjectName(tableName1, "a")});
+			var tableName2 = new ObjectName("tab2");
+			var fetchNode2 = new FetchTableNode(tableName2);
+			var subset2 = new SubsetNode(fetchNode2, new[] { new ObjectName(tableName2, "a") });
+			var nonCorrelated = new NonCorrelatedSelectNode(subset1, subset2, new[] {new ObjectName(tableName1, "a")},
+				SqlExpressionType.All, SqlExpressionType.LessThan);
+
+			var result = await nonCorrelated.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(3, result.RowCount);
+		}
+
+		[Fact]
+		public async Task SimplePatternSelect() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var exp = SqlExpression.Equal(SqlExpression.Reference(new ObjectName(tableName, "a")),
+				SqlExpression.Constant(SqlObject.Integer(23)));
+
+			var simplePattern = new SimplePatternSelectNode(fetchNode, exp);
+
+			var result = await simplePattern.ReduceAsync(context);
+
+			Assert.Equal(2, result.RowCount);
+
 		}
 
 		public void Dispose() {

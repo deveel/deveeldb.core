@@ -41,8 +41,13 @@ namespace Deveel.Data.Sql.Tables {
 
 		[Theory]
 		[InlineData("a", SqlExpressionType.All, SqlExpressionType.LessThan, 45, 77, 2)]
+		[InlineData("a", SqlExpressionType.Any, SqlExpressionType.LessThan, 45, 77, 3)]
 		[InlineData("a", SqlExpressionType.All, SqlExpressionType.NotEqual, 23, 54, 0)]
-		public async Task QuantifiedSelect(string column, SqlExpressionType op, SqlExpressionType subOp, object value1, object value2, long expected) {
+		[InlineData("a", SqlExpressionType.Any, SqlExpressionType.NotEqual, 23, 78, 0)]
+		[InlineData("a", SqlExpressionType.Any, SqlExpressionType.Equal, 23, 190, 2)]
+		[InlineData("a", SqlExpressionType.All, SqlExpressionType.GreaterThan, 2, 22, 3)]
+		[InlineData("a", SqlExpressionType.Any, SqlExpressionType.GreaterThan, 22, 67, 3)]
+		public async Task NonCorrelatedSelect(string column, SqlExpressionType op, SqlExpressionType subOp, object value1, object value2, long expected) {
 			var columnName = new ObjectName(left.TableInfo.TableName, column);
 			var exp1 = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value1)));
 			var exp2 = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value2)));

@@ -7,7 +7,7 @@ namespace Deveel {
 
 		private class ItemComparer : IComparer<T> {
 			public int Compare(T x, T y) {
-				if (x is IComparer<T>) {
+				if (x is IComparable<T>) {
 					var a = (IComparable<T>) x;
 					return a.CompareTo(y);
 				} else if (x is IComparable) {

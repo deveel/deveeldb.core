@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Sql;
@@ -6,6 +7,8 @@ using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Query {
 	public abstract class QueryPlanNodeBase : IQueryPlanNode {
+		private Dictionary<string, object> metadata;
+
 		int IComparable.CompareTo(object obj) {
 			throw new NotSupportedException();
 		}
@@ -28,6 +31,18 @@ namespace Deveel.Data.Query {
 				}
 
 				return typeName;
+			}
+		}
+
+		protected virtual void GetData(IDictionary<string, object> data) {
+			
+		}
+
+		IDictionary<string, object> IQueryPlanNode.Data {
+			get {
+				metadata = new Dictionary<string, object>();
+				GetData(metadata);
+				return metadata;
 			}
 		}
 

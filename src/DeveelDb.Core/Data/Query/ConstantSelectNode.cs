@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Expressions;
@@ -12,6 +13,10 @@ namespace Deveel.Data.Query {
 		}
 
 		public SqlExpression Expression { get; }
+
+		protected override void GetData(IDictionary<string, object> data) {
+			data["constant"] = Expression;
+		}
 
 		public override async Task<ITable> ReduceAsync(IContext context) {
 			var result = await Expression.ReduceAsync(context);

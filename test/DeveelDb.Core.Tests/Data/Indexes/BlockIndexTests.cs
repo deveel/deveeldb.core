@@ -101,7 +101,7 @@ namespace Deveel.Data.Indexes {
 		}
 
 		[Fact]
-		public static void AddAndRemoveItem_NoSort() {
+		public static void AddAndRemoveItemAt_NoSort() {
 			var index = new BlockIndex<SqlObject, long>();
 			index.Add(566);
 			index.Add(54);
@@ -113,6 +113,18 @@ namespace Deveel.Data.Indexes {
 			Assert.Equal(902, index[2]);
 
 			Assert.Equal(566, index.RemoveAt(0));
+		}
+
+		[Fact]
+		public static void AddAndRemoveItem_NaturalSort() {
+			var index = new BlockIndex<SqlObject, long>();
+			index.InsertSort(566);
+			index.InsertSort(54);
+			index.InsertSort(902);
+
+			Assert.True(index.RemoveSort(902));
+			Assert.False(index.RemoveSort(102));
+			Assert.False(index.RemoveSort(902));
 		}
 
 		[Fact]
@@ -190,6 +202,37 @@ namespace Deveel.Data.Indexes {
 
 			Assert.True(index.Contains(SqlObject.Integer(435), comparer));
 			Assert.False(index.Contains(SqlObject.Integer(21), comparer));
+		}
+
+		[Fact]
+		public static void InsertInNonEmptyIndex() {
+			var index = new BlockIndex<SqlObject, long>();
+			FillIndexWith(index, 300);
+
+			Assert.Equal(300, index.Count);
+			index.Insert(29, 45);
+
+			Assert.Equal(301, index.Count);
+			Assert.Equal(45, index[29]);
+		}
+
+		[Fact]
+		public static void RemoveFromEnumerator() {
+			var index = new BlockIndex<SqlObject, long>();
+			FillIndexWith(index, 1024);
+
+			var enumerator = index.GetEnumerator();
+			Assert.True(enumerator.MoveNext());
+			enumerator.Remove();
+			Assert.True(enumerator.MoveNext());
+			enumerator.Remove();
+
+			while (enumerator.MoveNext()) {
+				enumerator.Remove();
+			}
+
+			Assert.False(enumerator.MoveNext());
+			Assert.Equal(0, index.Count);
 		}
 
 		private static void FillIndexWith(BlockIndex<SqlObject, long> index, int count) {

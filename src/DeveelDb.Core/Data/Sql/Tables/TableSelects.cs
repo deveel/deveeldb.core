@@ -203,37 +203,45 @@ namespace Deveel.Data.Sql.Tables {
 				//   does we select all from 'source' that equals the value, otherwise an
 				//   empty table.
 				//   For <> type ALL we use the 'not in' algorithm.
-
-				if (op == SqlExpressionType.GreaterThan ||
-				    op == SqlExpressionType.GreaterThanOrEqual) {
-					// Select the last from the set (the highest value),
-					var highestCells = await rightTable.GetLastValuesAsync(rightColMap);
-					// Select from the source table all rows that are > or >= to the
-					// highest cell,
-					rows = table.SelectRows(leftColMap, op, highestCells);
-				} else if (op == SqlExpressionType.LessThan ||
-				           op == SqlExpressionType.LessThanOrEqual) {
-					// Select the first from the set (the lowest value),
-					var lowestCells = await rightTable.GetFirstValuesAsync(rightColMap);
-					// Select from the source table all rows that are < or <= to the
-					// lowest cell,
-					rows = table.SelectRows(leftColMap, op, lowestCells);
-				} else if (op == SqlExpressionType.Equal) {
-					// Select the single value from the set (if there is one).
-					var singleCell = await rightTable.GetSingleValuesAsync(rightColMap);
-					if (singleCell != null) {
-						// Select all from source_table all values that = this cell
-						rows = table.SelectRows(leftColMap, op, singleCell);
-					} else {
-						// No single value so return empty set (no value in LHS will equal
-						// a value in RHS).
-						return table.EmptySelect();
+				switch (op) {
+					case SqlExpressionType.GreaterThan:
+					case SqlExpressionType.GreaterThanOrEqual: {
+						// Select the last from the set (the highest value),
+						var highestCells = await rightTable.GetLastValuesAsync(rightColMap);
+						// Select from the source table all rows that are > or >= to the
+						// highest cell,
+						rows = table.SelectRows(leftColMap, op, highestCells);
+						break;
 					}
-				} else if (op == SqlExpressionType.NotEqual) {
-					// Equiv. to NOT IN
-					rows = table.SelectRowsNotIn(rightTable, leftColMap, rightColMap);
-				} else {
-					throw new ArgumentException(String.Format("Operator of type {0} is not valid in ALL functions.", op));
+					case SqlExpressionType.LessThan:
+					case SqlExpressionType.LessThanOrEqual: {
+						// Select the first from the set (the lowest value),
+						var lowestCells = await rightTable.GetFirstValuesAsync(rightColMap);
+						// Select from the source table all rows that are < or <= to the
+						// lowest cell,
+						rows = table.SelectRows(leftColMap, op, lowestCells);
+						break;
+					}
+					case SqlExpressionType.Equal: {
+						// Select the single value from the set (if there is one).
+						var singleCell = await rightTable.GetSingleValuesAsync(rightColMap);
+						if (singleCell != null) {
+							// Select all from source_table all values that = this cell
+							rows = table.SelectRows(leftColMap, op, singleCell);
+						} else {
+							// No single value so return empty set (no value in LHS will equal
+							// a value in RHS).
+							return table.EmptySelect();
+						}
+						break;
+					}
+					case SqlExpressionType.NotEqual: {
+						// Equiv. to NOT IN
+						rows = table.SelectRowsNotIn(rightTable, leftColMap, rightColMap);
+						break;
+					}
+					default:
+						throw new ArgumentException($"Operator of type {op} is not valid in ALL functions.");
 				}
 			} else {
 				// ----- ANY operation -----
@@ -248,36 +256,46 @@ namespace Deveel.Data.Sql.Tables {
 				//   For <> type ANY we iterate through 'source' only including those
 				//   rows that a <> query on 'table' returns size() != 0.
 
-				if (op == SqlExpressionType.GreaterThan ||
-				    op == SqlExpressionType.LessThanOrEqual) {
-					// Select the first from the set (the lowest value),
-					var lowestCells = await rightTable.GetFirstValuesAsync(rightColMap);
-					// Select from the source table all rows that are > or >= to the
-					// lowest cell,
-					rows = table.SelectRows(leftColMap, op, lowestCells);
-				} else if (op == SqlExpressionType.LessThan ||
-				           op == SqlExpressionType.LessThanOrEqual) {
-					// Select the last from the set (the highest value),
-					var highestCells = await rightTable.GetLastValuesAsync(rightColMap);
-					// Select from the source table all rows that are < or <= to the
-					// highest cell,
-					rows = table.SelectRows(leftColMap, op, highestCells);
-				} else if (op == SqlExpressionType.Equal) {
-					// Equiv. to IN
-					rows = table.SelectRowsIn(rightTable, leftColMap, rightColMap);
-				} else if (op == SqlExpressionType.NotEqual) {
-					// Select the value that is the same of the entire column
-					var cells = await rightTable.GetSingleValuesAsync(rightColMap);
-					if (cells != null) {
-						// All values from 'source_table' that are <> than the given cell.
-						rows = table.SelectRows(leftColMap, op, cells);
-					} else {
-						// No, this means there are different values in the given set so the
-						// query evaluates to the entire table.
-						return table;
+				switch (op) {
+					case SqlExpressionType.GreaterThan:
+					case SqlExpressionType.GreaterThanOrEqual: {
+						// Select the first from the set (the lowest value),
+						var lowestCells = await rightTable.GetFirstValuesAsync(rightColMap);
+						// Select from the source table all rows that are > or >= to the
+						// lowest cell,
+						rows = table.SelectRows(leftColMap, op, lowestCells);
+						break;
 					}
-				} else {
-					throw new ArgumentException(String.Format("Operator of type {0} is not valid in ANY functions.", op));
+					case SqlExpressionType.LessThan:
+					case SqlExpressionType.LessThanOrEqual: {
+						// Select the last from the set (the highest value),
+						var highestCells = await rightTable.GetLastValuesAsync(rightColMap);
+						// Select from the source table all rows that are < or <= to the
+						// highest cell,
+						rows = table.SelectRows(leftColMap, op, highestCells);
+							break;
+					}
+					case SqlExpressionType.Equal: {
+						// Equiv. to IN
+						rows = table.SelectRowsIn(rightTable, leftColMap, rightColMap);
+							break;
+					}
+					case SqlExpressionType.NotEqual: {
+						// Select the value that is the same of the entire column
+						var cells = await rightTable.GetSingleValuesAsync(rightColMap);
+						if (cells != null) {
+							// All values from 'source_table' that are <> than the given cell.
+							rows = table.SelectRows(leftColMap, op, cells);
+						} else {
+							// No, this means there are different values in the given set so the
+							// query evaluates to the entire table.
+							return table;
+						}
+						break;
+					}
+					default:
+						throw new ArgumentException($"Operator of type {op} is not valid in ANY functions.");
+
 				}
 			}
 

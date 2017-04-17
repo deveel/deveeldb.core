@@ -45,7 +45,7 @@ namespace Deveel.Data.Sql.Tables {
 
 		protected IContext Context { get; }
 
-		private ITableCache Cache => Context.ResolveService<ITableCache>();
+		private ITableFieldCache Cache => Context.ResolveService<ITableFieldCache>();
 
 		protected virtual void PrepareRowContext(IContext context, long row) {
 			context.RegisterInstance<IReferenceResolver>(new RowReferenceResolver(table, row));

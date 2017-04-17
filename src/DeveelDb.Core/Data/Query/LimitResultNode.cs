@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Tables;
@@ -12,8 +13,13 @@ namespace Deveel.Data.Query {
 		}
 
 		public long Offset { get; }
-
+		
 		public long Count { get; }
+
+		protected override void GetData(IDictionary<string, object> data) {
+			data["offset"] = Offset;
+			data["count"] = Count;
+		}
 
 		public override async Task<ITable> ReduceAsync(IContext context) {
 			var table = await Child.ReduceAsync(context);

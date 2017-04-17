@@ -96,8 +96,8 @@ namespace Deveel.Data.Sql.Tables {
 			var size = RowCount;
 			var allList = new BigList<long>(size);
 
-			for (int i = 0; i < size; ++i) {
-				allList[i] = i;
+			for (long i = 0; i < size; ++i) {
+				allList.Add(i);
 			}
 
 			return GetRawTableInfo(rootInfo, allList);
@@ -107,7 +107,7 @@ namespace Deveel.Data.Sql.Tables {
 			var size = RowCount;
 			var allList = new BigList<long>(size);
 			for (int i = 0; i < size; ++i) {
-				allList[i] = i;
+				allList.Add(i);
 			}
 			return allList;
 		}

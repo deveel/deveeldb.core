@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Sql;
@@ -8,6 +9,8 @@ namespace Deveel.Data.Query {
 	public interface IQueryPlanNode : ISqlValue {
 		string NodeName { get; }
 
+		IDictionary<string, object> Data { get; }
+		
 		IQueryPlanNode[] ChildNodes { get; }
 
 
