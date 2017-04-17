@@ -69,7 +69,7 @@ namespace Deveel.Data.Sql.Expressions {
 			return this.ToSqlString();
 		}
 
-		SqlQueryExpressionSource ISqlExpressionPreparable<SqlQueryExpressionSource>.PrepareExpressions(ISqlExpressionPreparer preparer) {
+		SqlQueryExpressionSource ISqlExpressionPreparable<SqlQueryExpressionSource>.Prepare(ISqlExpressionPreparer preparer) {
 			var query = Query;
 			if (query != null)
 				query = (SqlQueryExpression) query.Prepare(preparer);

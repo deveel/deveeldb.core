@@ -25,6 +25,7 @@ namespace Deveel.Data.Sql.Expressions {
 			this.preparer = preparer;
 		}
 
+		// TODO: find a way to make it async
 		public override SqlExpression Visit(SqlExpression expression) {
 			if (preparer.CanPrepare(expression))
 				expression = preparer.Prepare(expression);
