@@ -1,19 +1,31 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Query {
 	public sealed class QueryPlanNodeSample {
-		internal QueryPlanNodeSample(TableInfo tableInfo, long rowCount, TimeSpan executionTime) {
-			TableInfo = tableInfo;
-			RowCount = rowCount;
-			ExecutionTime = executionTime;
+		private List<QueryPlanNodeSample> childNodes;
+
+		internal QueryPlanNodeSample(IQueryPlanNode node, QueryPlanNodeSampleInfo sampleInfo) {
+			Node = node;
+			SampleInfo = sampleInfo;
+			childNodes = new List<QueryPlanNodeSample>();
 		}
 
-		public TableInfo TableInfo { get; }
+		public IQueryPlanNode Node { get; }
 
-		public long RowCount { get; }
+		public string NodeName => Node.NodeName;
 
-		public TimeSpan ExecutionTime { get; }
+		public QueryPlanNodeSampleInfo SampleInfo { get; }
+
+		public IEnumerable<QueryPlanNodeSample> ChildNodes => childNodes.AsEnumerable();
+
+		internal void AddChild(QueryPlanNodeSample child) {
+			childNodes.Add(child);
+		}
 	}
 }
