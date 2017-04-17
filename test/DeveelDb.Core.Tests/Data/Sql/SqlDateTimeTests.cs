@@ -284,6 +284,18 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData("12:25:01", "13:25:01 +01:00")]
+		public static void AtTimeZoneName(string s, string expected) {
+			var date = SqlDateTime.Parse(s);
+			var timeZoneName = TimeZoneInfo.GetSystemTimeZones().First(x => x.BaseUtcOffset.Hours == 1).StandardName;
+			var result = date.AtTimeZone(timeZoneName);
+
+			var expectedResult = SqlDateTime.Parse(expected);
+			Assert.Equal(expectedResult, result);
+		}
+
+
+		[Theory]
 		[InlineData("2011-10-23T23:22:10 +02:00", "2011-10-23T21:22:10.000 +00:00")]
 		public static void ToUtc(string s, string expected) {
 			var date = SqlDateTime.Parse(s);
@@ -347,66 +359,53 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(date.Month, back.Month);
 		}
 
-
 		[Fact]
-		public static void InvalidConvert_Int32() {
-			InvalidConvertTo(typeof(int));
-		}
+		public static void Convert_ToUInt64() {
+			var date = new SqlDateTime(2018, 02, 04, 14, 02, 00, 00);
+			var result = Convert.ChangeType(date, typeof(ulong), CultureInfo.InvariantCulture);
 
-		[Fact]
-		public static void InvalidConvert_Int16() {
-			InvalidConvertTo(typeof(short));
-		}
+			Assert.NotNull(result);
+			Assert.IsType<ulong>(result);
 
-		[Fact]
-		public static void InvalidConvert_Byte() {
-			InvalidConvertTo(typeof(byte));
-		}
+			Assert.Equal((ulong)date.Ticks, (ulong)result);
 
-		[Fact]
-		public static void InvalidConvert_SByte() {
-			InvalidConvertTo(typeof(sbyte));
-		}
+			var back = new SqlDateTime((long)(ulong)result);
 
-		[Fact]
-		public static void InvalidConvert_UInt32() {
-			InvalidConvertTo(typeof(uint));
-		}
-
-		[Fact]
-		public static void InvalidConvert_Char() {
-			InvalidConvertTo(typeof(char));
-		}
-
-		[Fact]
-		public static void InvalidConvert_UInt16() {
-			InvalidConvertTo(typeof(ushort));
-		}
-
-		[Fact]
-		public static void InvalidConvert_Decimal() {
-			InvalidConvertTo(typeof(decimal));
-		}
-
-		[Fact]
-		public static void InvalidConvert_Boolean() {
-			InvalidConvertTo(typeof(bool));
-		}
-
-		[Fact]
-		public static void InvalidConvert_Single() {
-			InvalidConvertTo(typeof(float));
-		}
-
-		[Fact]
-		public static void InvalidConvert_Double() {
-			InvalidConvertTo(typeof(double));
+			Assert.Equal(date.Year, back.Year);
+			Assert.Equal(date.Month, back.Month);
 		}
 
 
-		private static void InvalidConvertTo(Type type) {
+
+		[Theory]
+		[InlineData(typeof(byte))]
+		[InlineData(typeof(sbyte))]
+		[InlineData(typeof(short))]
+		[InlineData(typeof(int))]
+		[InlineData(typeof(double))]
+		[InlineData(typeof(float))]
+		[InlineData(typeof(bool))]
+		[InlineData(typeof(decimal))]
+		[InlineData(typeof(ushort))]
+		[InlineData(typeof(uint))]
+		[InlineData(typeof(char))]
+		public static void InvalidConvertTo(Type type) {
 			var date = new SqlDateTime(2001, 12, 01);
 			Assert.Throws<InvalidCastException>(() => Convert.ChangeType(date, type));
+		}
+
+		[Fact]
+		public static void Now() {
+			var sqlNow = SqlDateTime.Now;
+			var now = DateTime.Now;
+
+			Assert.NotNull(sqlNow);
+			Assert.Equal(now.Year, sqlNow.Year);
+			Assert.Equal(now.Month, sqlNow.Month);
+			Assert.Equal(now.Day, sqlNow.Day);
+			Assert.Equal(now.Hour, sqlNow.Hour);
+			Assert.Equal(now.Minute, sqlNow.Minute);
+			Assert.Equal(now.Second, sqlNow.Second);
 		}
 	}
 }

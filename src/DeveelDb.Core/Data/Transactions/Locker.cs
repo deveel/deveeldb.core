@@ -90,17 +90,6 @@ namespace Deveel.Data.Transactions {
 			}
 		}
 
-		public void Wait(ILockable[] lockables, AccessType accessType, int timeout) {
-			if (openHandles == null || lockables == null)
-				return;
-
-			foreach (var handle in openHandles) {
-				foreach (var lockable in lockables) {
-					if (handle.IsHandled(lockable))
-						handle.Wait(lockable, accessType, timeout);
-				}
-			}
-		}
 
 		private void ReleaseAll() {
 			lock (this) {
