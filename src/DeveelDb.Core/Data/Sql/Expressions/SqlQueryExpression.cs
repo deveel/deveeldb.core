@@ -21,7 +21,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Deveel.Data.Sql.Expressions {
-	public sealed class SqlQueryExpression : SqlExpression {
+	public sealed class SqlQueryExpression : SqlExpression,ISqlExpressionPreparable<SqlQueryExpression> {
 		public SqlQueryExpression()
 			: base(SqlExpressionType.Query) {
 			From = new SqlQueryExpressionFrom();
@@ -91,6 +91,47 @@ namespace Deveel.Data.Sql.Expressions {
 			}
 
 			// TODO: continue
+		}
+
+		SqlQueryExpression ISqlExpressionPreparable<SqlQueryExpression>.Prepare(ISqlExpressionPreparer preparer) {
+			var query = new SqlQueryExpression {
+				GroupMax = GroupMax,
+				Distinct = Distinct,
+			};
+
+			foreach (var item in Items) {
+				var preparedItem = item.Prepare(preparer);
+				query.Items.Add(preparedItem);
+			}
+
+			var from = this.From;
+			if (from != null)
+				from = from.Prepare(preparer);
+
+			query.From = from;
+
+			var where = Where;
+			if (where != null)
+				where = where.Prepare(preparer);
+
+			query.Where = where;
+
+			var having = Having;
+			if (having != null)
+				having = having.Prepare(preparer);
+
+			query.Having = having;
+
+			if (GroupBy != null) {
+				query.GroupBy = new List<SqlExpression>();
+
+				foreach (var groupByItem in GroupBy) {
+					var exp = groupByItem.Prepare(preparer);
+					query.GroupBy.Add(exp);
+				}
+			}
+
+			return query;
 		}
 
 		#region ItemList

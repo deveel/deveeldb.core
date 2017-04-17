@@ -36,7 +36,7 @@ namespace Deveel.Data.Sql.Expressions {
 		public override SqlQueryExpressionFrom VisitQueryFrom(SqlQueryExpressionFrom @from) {
 			var result = @from;
 			if (result != null)
-				result = result.PrepareExpressions(preparer);
+				result = result.Prepare(preparer);
 
 			return result;
 		}

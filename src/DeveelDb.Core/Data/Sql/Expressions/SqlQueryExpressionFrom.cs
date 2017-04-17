@@ -115,7 +115,7 @@ namespace Deveel.Data.Sql.Expressions {
 			obj.aliases = new List<string>(aliases);
 
 			foreach (var source in sources) {
-				var prepared = source.PrepareExpressions(preparer);
+				var prepared = source.Prepare(preparer);
 				obj.sources.Add(prepared);
 			}
 
