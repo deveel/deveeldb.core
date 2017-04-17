@@ -94,7 +94,7 @@ namespace Deveel.Data.Sql.Tables {
 
 		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
 			var size = RowCount;
-			var allList = new BigArray<long>(size);
+			var allList = new BigList<long>(size);
 
 			for (int i = 0; i < size; ++i) {
 				allList[i] = i;
@@ -103,23 +103,23 @@ namespace Deveel.Data.Sql.Tables {
 			return GetRawTableInfo(rootInfo, allList);
 		}
 
-		private BigArray<long> CalculateTableRows() {
+		private BigList<long> CalculateTableRows() {
 			var size = RowCount;
-			var allList = new BigArray<long>(size);
+			var allList = new BigList<long>(size);
 			for (int i = 0; i < size; ++i) {
 				allList[i] = i;
 			}
 			return allList;
 		}
 
-		private RawTableInfo GetRawTableInfo(RawTableInfo info, BigArray<long> rows) {
+		private RawTableInfo GetRawTableInfo(RawTableInfo info, BigList<long> rows) {
 			if (this is IRootTable) {
 				info.Add((IRootTable)this, CalculateTableRows());
 			} else {
 				for (int i = 0; i < Tables.Length; ++i) {
 
 					// Resolve the rows into the parents indices.
-					var newRowSet = ResolveTableRows(rows, i).ToBigArray();
+					var newRowSet = ResolveTableRows(rows, i).ToBigList();
 
 					var table = Tables[i];
 					if (table is IRootTable) {

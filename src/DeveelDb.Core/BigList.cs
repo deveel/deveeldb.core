@@ -409,6 +409,10 @@ namespace Deveel {
 			return this.GetEnumerator();
 		}
 
+		public void Sort() {
+			BigArraySortUtil<T>.QuickSort(_items, 0, Count-1);
+		}
+
 		// Ensures the capacity.
 		private void EnsureCapacity(long minCapacityRequired) {
 			if (this._items.Length < minCapacityRequired) {
@@ -434,5 +438,17 @@ namespace Deveel {
 			}
 		}
 		#endregion
+
+		private void Swap(ref long valOne, ref long valTwo) {
+			valOne = valOne + valTwo;
+			valTwo = valOne - valTwo;
+			valOne = valOne - valTwo;
+		}
+
+		private void SwapWithTemp(ref long valOne, ref long valTwo) {
+			long temp = valOne;
+			valOne = valTwo;
+			valTwo = temp;
+		}
 	}
 }
