@@ -40,7 +40,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
-			var tableRows = rows.Select((item, index) => (long) index).ToBigArray();
+			var tableRows = rows.Select((item, index) => (long) index).ToBigList();
 			rootInfo.Add(this, tableRows);
 			return rootInfo;
 		}

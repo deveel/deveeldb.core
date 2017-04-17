@@ -249,5 +249,13 @@ namespace Deveel {
 				i += len;
 			}
 		}
+
+		public static void QuickSort(BigArray<T> array, long offset, long count) {
+			BigArraySortUtil<T>.QuickSort(array, offset, count);
+		}
+
+		public static void QuickSort(BigArray<T> array) {
+			QuickSort(array, 0, array.Length - 1);
+		}
 	}
 }

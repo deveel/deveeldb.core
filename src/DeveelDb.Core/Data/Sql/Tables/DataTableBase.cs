@@ -21,7 +21,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
-			var rows = this.Select(row => row.Id.Number).ToBigArray();
+			var rows = this.Select(row => row.Id.Number).ToBigList();
 			rootInfo.Add(this, rows);
 			return rootInfo;
 		}

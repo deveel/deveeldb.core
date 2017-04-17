@@ -39,8 +39,11 @@ namespace Deveel.Data.Sql.Tables {
 			throw new NotSupportedException();
 		}
 
+		internal static RawTableInfo GetRawTableInfo(this ITable table)
+			=> table.GetRawTableInfo(new RawTableInfo());
+
 		internal static RawTableInfo GetRawTableInfo(this IRootTable table, RawTableInfo rootInfo) {
-			var rows = table.Select(x => x.Id.Number).ToBigArray();
+			var rows = table.Select(x => x.Id.Number).ToBigList();
 			rootInfo.Add(table, rows);
 
 			return rootInfo;
@@ -70,6 +73,32 @@ namespace Deveel.Data.Sql.Tables {
 
 		public static Row NewRow(this ITable table) {
 			return new Row(table, -1);
+		}
+
+		public static ITable Limit(this ITable table, long offset, long count) {
+			return new LimitedTable(table, offset, count);
+		}
+
+		public static ITable Limit(this ITable table, long count) {
+			return table.Limit(0, count);
+		}
+
+		public static ITable Subset(this ITable table, ObjectName[] columnNames, ObjectName[] aliases) {
+			var columnMap = new int[columnNames.Length];
+
+			for (int i = 0; i < columnMap.Length; i++) {
+				var columnName = columnNames[i];
+
+				var offset = table.TableInfo.Columns.IndexOf(columnName);
+
+				if (offset < 0)
+					throw new InvalidOperationException(String.Format("The column '{0}' was not found in table '{1}'.", columnName,
+						table.TableInfo.TableName));
+
+				columnMap[i] = offset;
+			}
+
+			return new SubsetTable(table, columnMap, aliases);
 		}
 
 		#region GetValue
@@ -313,6 +342,15 @@ namespace Deveel.Data.Sql.Tables {
 				return table;
 
 			return new VirtualTable(table, new long[0]);
+		}
+
+		public static Task<ITable> SelectNonCorrelatedAsync(this ITable table, IContext context,
+			ObjectName[] columnNames, SqlExpressionType op, SqlExpressionType subOp, ITable other) {
+			if (!op.IsQuantify())
+				throw new ArgumentException();
+
+			var isAll = op == SqlExpressionType.All;
+			return TableSelects.SelectNonCorrelatedAsync(table, columnNames, op, isAll, other);
 		}
 
 		public static async Task<ITable> QuantifiedSelectAsync(this ITable table, IContext context, SqlQuantifyExpression expression) {
