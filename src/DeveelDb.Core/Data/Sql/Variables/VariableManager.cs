@@ -61,6 +61,12 @@ namespace Deveel.Data.Sql.Variables {
 			return variables.ContainsKey(new ObjectName(name));
 		}
 
+		Task<IDbObjectInfo> IDbObjectManager.GetObjectInfoAsync(ObjectName objectName) {
+			var variable = GetVariable(objectName.Name);
+			var objInfo = (IDbObjectInfo) variable?.VariableInfo;
+			return Task.FromResult(objInfo);
+		}
+			
 		Task<IDbObject> IDbObjectManager.GetObjectAsync(ObjectName objName) {
 			var result = GetVariable(objName.FullName);
 			return Task.FromResult((IDbObject) result);
