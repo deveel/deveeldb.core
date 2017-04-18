@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using Deveel.Data.Sql.Indexes;
 
@@ -14,7 +13,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		protected override IEnumerable<long> ResolveRows(int column, IEnumerable<long> rows, ITable ancestor) {
-			if (ancestor != this)
+			if (this != ancestor)
 				throw new Exception("Method routed to incorrect table ancestor.");
 
 			return rows;
@@ -28,7 +27,7 @@ namespace Deveel.Data.Sql.Tables {
 
 		protected override Index GetColumnIndex(int column, int originalColumn, ITable ancestor) {
 			var index = GetColumnIndex(column);
-			if (ancestor == this)
+			if (this == ancestor)
 				return index;
 
 			return index.Subset(ancestor, originalColumn);

@@ -19,45 +19,38 @@ namespace Deveel {
 			}
 		}
 
-		public static void QuickSort(BigArray<T> inputArray, long left, long right) {
-			var pivotNewIndex = Partition(inputArray, left, right);
-			T pivot = inputArray[(left + right) / 2];
-			if (left < pivotNewIndex - 1)
-				QuickSort(inputArray, left, pivotNewIndex - 1);
-			if (pivotNewIndex < right)
-				QuickSort(inputArray, pivotNewIndex, right);
-		}
-
-		private static long Partition(BigArray<T> inputArray, long left, long right) {
+		public static void QuickSort(BigArray<T> elements, long left, long right) {
 			long i = left, j = right;
-			var pivot = inputArray[(left + right) / 2];
+			var pivot = elements[(left + right) / 2];
 
 			while (i <= j) {
-				while (comparer.Compare(inputArray[i], pivot) < 0)
+				while (comparer.Compare(elements[i], pivot) < 0) {
 					i++;
-				while (comparer.Compare(inputArray[j], pivot) < 0)
+				}
+
+				while (comparer.Compare(elements[j], pivot) > 0) {
 					j--;
+				}
+
 				if (i <= j) {
-					T x = inputArray[i], y = inputArray[j];
-					SwapWithTemp(ref x, ref y);
-					inputArray[i] = x;
-					inputArray[j] = y;
-					i++; j--;
+					// Swap
+					var tmp = elements[i];
+					elements[i] = elements[j];
+					elements[j] = tmp;
+
+					i++;
+					j--;
 				}
 			}
-			return i;
-		}
 
-		private static void Swap(ref long valOne, ref long valTwo) {
-			valOne = valOne + valTwo;
-			valTwo = valOne - valTwo;
-			valOne = valOne - valTwo;
-		}
+			// Recursive calls
+			if (left < j) {
+				QuickSort(elements, left, j);
+			}
 
-		private static void SwapWithTemp(ref T valOne, ref T valTwo) {
-			var temp = valOne;
-			valOne = valTwo;
-			valTwo = temp;
+			if (i < right) {
+				QuickSort(elements, i, right);
+			}
 		}
 	}
 }

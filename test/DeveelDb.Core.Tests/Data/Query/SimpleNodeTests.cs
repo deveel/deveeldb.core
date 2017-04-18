@@ -104,7 +104,7 @@ namespace Deveel.Data.Query {
 			var result = await unionNode.ReduceAsync(context);
 
 			Assert.NotNull(result);
-			Assert.Equal(5, result.RowCount);
+			Assert.Equal(3, result.RowCount);
 		}
 
 		[Fact]
@@ -258,6 +258,59 @@ namespace Deveel.Data.Query {
 
 			Assert.NotNull(result);
 			Assert.Equal(2, result.RowCount);
+		}
+
+		[Fact]
+		public async Task CacheMarkJoinNode() {
+			var tableName1 = new ObjectName("tab1");
+			var fetchNode1 = new FetchTableNode(tableName1);
+			var tableName2 = new ObjectName("tab2");
+			var fetchNode2 = new FetchTableNode(tableName2);
+			var joinNode = new JoinNode(fetchNode1,
+				fetchNode2,
+				ObjectName.Parse("tab1.b"),
+				SqlExpressionType.Equal,
+				SqlExpression.Reference(ObjectName.Parse("tab2.b1")));
+
+			var markNode = new CacheMarkNode(joinNode, "JOIN");
+
+			var result = await markNode.ReduceAsync(context);
+
+			var cache = context.ResolveService<ITableCache>();
+			ITable cachedTable;
+			Assert.True(cache.TryGetTable("JOIN", out cachedTable));
+
+			Assert.Equal(result.GetHashCode(), cachedTable.GetHashCode());
+		}
+
+		[Fact]
+		public async Task DistinctByOneColumn() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+
+			var distinctNode = new DistinctNode(fetchNode, new []{new ObjectName(tableName, "a") });
+
+			var result = await distinctNode.ReduceAsync(context);
+
+			Assert.Equal(2, result.RowCount);
+		}
+
+		[Fact]
+		public async Task LeftOuterJoin() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var distinctNode = new DistinctNode(fetchNode, new[] { new ObjectName(tableName, "a") });
+
+			var table = await fetchNode.ReduceAsync(context);
+			var cache = context.ResolveService<ITableCache>();
+			cache.SetTable("JOIN", table);
+
+			var leftOuterNode = new LeftOuterJoinNode(distinctNode, "JOIN");
+
+			var result = await leftOuterNode.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(3, result.RowCount);		// all rows in the original table includes all rows in the computed one
 		}
 
 		public void Dispose() {

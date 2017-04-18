@@ -49,8 +49,7 @@ namespace Deveel.Data.Sql.Tables {
 			return rootInfo;
 		}
 
-		internal static IEnumerable<long> ResolveRows(this ITable table, int column, IEnumerable<long> rows,
-			ITable ancestor) {
+		internal static IEnumerable<long> ResolveRows(this ITable table, int column, IEnumerable<long> rows, ITable ancestor) {
 			if (table is IVirtualTable)
 				return ((IVirtualTable) table).ResolveRows(column, rows, ancestor);
 
@@ -456,6 +455,46 @@ namespace Deveel.Data.Sql.Tables {
 			return new VirtualTable(table, rows.ToArray(), column);
 		}
 
+		public static ITable DistinctBy(this ITable table, int[] columns) {
+			var resultList = new BigList<long>();
+			var rowList = table.OrderRowsByColumns(columns);
+
+			long previousRow = -1;
+			foreach (var rowIndex in rowList) {
+				if (previousRow != -1) {
+
+					bool equal = true;
+					// Compare cell in column in this row with previous row.
+					for (int n = 0; n < columns.Length && equal; ++n) {
+						var c1 = table.GetValue(rowIndex, columns[n]);
+						var c2 = table.GetValue(previousRow, columns[n]);
+						equal = (c1.CompareTo(c2) == 0);
+					}
+
+					if (!equal) {
+						resultList.Add(rowIndex);
+					}
+				} else {
+					resultList.Add(rowIndex);
+				}
+
+				previousRow = rowIndex;
+			}
+
+			// Return the new table with distinct rows only.
+			return new VirtualTable(table, resultList);
+		}
+
+		public static ITable DistinctBy(this ITable table, ObjectName[] columnNames) {
+			var mapSize = columnNames.Length;
+			var map = new int[mapSize];
+			for (int i = 0; i < mapSize; i++) {
+				map[i] = table.TableInfo.Columns.IndexOf(columnNames[i]);
+			}
+
+			return table.DistinctBy(map);
+		}
+
 
 		#endregion
 
@@ -523,7 +562,7 @@ namespace Deveel.Data.Sql.Tables {
 			// Form the row list for right hand table,
 			var rowList = rightTable.Select(x => x.Id.Number).ToBigList();
 
-			int colIndex = rightTable.TableInfo.Columns.IndexOf(table.TableInfo.Columns.GetColumnName(0));
+			var colIndex = rightTable.TableInfo.Columns.IndexOf(table.TableInfo.Columns.GetColumnName(0));
 			rowList = rightTable.ResolveRows(colIndex, rowList, table).ToBigList();
 
 			// This row set
@@ -549,14 +588,13 @@ namespace Deveel.Data.Sql.Tables {
 							++rowListIndex;
 						}
 					} else {
-						throw new InvalidOperationException("'this_val' > 'in_val'");
+						throw new InvalidOperationException("'thisVal' > 'inVal'");
 					}
 				} else {
 					resultList.Add(thisVal);
 				}
 			}
 
-			// Return the new VirtualTable
 			return new VirtualTable(table, resultList);
 		}
 

@@ -17,14 +17,14 @@ namespace Deveel.Data.Query {
 			if (cache == null)
 				throw new InvalidOperationException("No table cache was registered");
 
-			ITable left;
-			if (!cache.TryGetTable(CacheKey, out left))
+			ITable completeLeft;
+			if (!cache.TryGetTable(CacheKey, out completeLeft))
 				throw new InvalidOperationException($"No table with key {CacheKey} was cached");
 
-			var right = await Child.ReduceAsync(context);
-			var outside = left.Outside(right);
+			var left = await Child.ReduceAsync(context);
+			var outside = completeLeft.Outside(left);
 
-			return right.Outer(outside);
+			return left.Outer(outside);
 		}
 	}
 }
