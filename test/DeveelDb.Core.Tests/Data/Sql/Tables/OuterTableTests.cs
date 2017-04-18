@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -30,7 +31,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		[Fact]
-		public void RightOuterTable() {
+		public async Task RightOuterTable() {
 			var leftRows = left.Select(x => x.Id.Number);
 			var rightRows = right.Select(x => x.Id.Number);
 
@@ -47,15 +48,15 @@ namespace Deveel.Data.Sql.Tables {
 			// | tab1.a | tab1.b | tab2.a | tab2.b |
 			// +-----------------------------------+
 			//
-			var value1 = result.GetValue(0, 2);
-			var value2 = result.GetValue(0, 3);
+			var value1 = await result.GetValueAsync(0, 2);
+			var value2 = await result.GetValueAsync(0, 3);
 
 			Assert.Equal(SqlObject.Integer(15), value1);
 			Assert.Equal(SqlObject.Boolean(true), value2);
 		}
 
 		[Fact]
-		public void LeftOuterTable() {
+		public async Task LeftOuterTable() {
 			var leftRows = left.Select(x => x.Id.Number);
 			var rightRows = right.Select(x => x.Id.Number);
 
@@ -72,8 +73,8 @@ namespace Deveel.Data.Sql.Tables {
 			// | tab1.a | tab1.b | tab2.a | tab2.b |
 			// +-----------------------------------+
 			//
-			var value1 = result.GetValue(1, 0);
-			var value2 = result.GetValue(1, 1);
+			var value1 = await result.GetValueAsync(1, 0);
+			var value2 = await result.GetValueAsync(1, 1);
 
 			Assert.Equal(SqlObject.Integer(54), value1);
 			Assert.Equal(SqlObject.Boolean(null), value2);

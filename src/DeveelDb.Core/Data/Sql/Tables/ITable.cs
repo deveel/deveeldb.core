@@ -17,6 +17,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
 	public interface ITable : IDbObject, ISqlValue, IEnumerable<Row> {
@@ -25,6 +28,8 @@ namespace Deveel.Data.Sql.Tables {
 		long RowCount { get; }
 
 
-		SqlObject GetValue(long row, int column);
+		Task<SqlObject> GetValueAsync(long row, int column);
+
+		Index GetColumnIndex(int column);
 	}
 }

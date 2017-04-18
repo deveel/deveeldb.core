@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Methods;
 
@@ -28,10 +29,15 @@ namespace Deveel.Data.Sql.Expressions {
 
 		private int GetPrecedence() {
 			switch (ExpressionType) {
-				// Primary
+				// Group
+				case SqlExpressionType.Group:
+					return 151;
+
+				// References
 				case SqlExpressionType.Reference:
 				case SqlExpressionType.Function:
-				case SqlExpressionType.Constant:
+				case SqlExpressionType.VariableAssign:
+				case SqlExpressionType.ReferenceAssign:
 				case SqlExpressionType.Variable:
 				case SqlExpressionType.Parameter:
 					return 150;
@@ -84,23 +90,16 @@ namespace Deveel.Data.Sql.Expressions {
 				// Conditional
 				case SqlExpressionType.Condition:
 					return 80;
-				
-				// Assign
-				case SqlExpressionType.VariableAssign:
-				case SqlExpressionType.ReferenceAssign:
+
+				// Constant
+				case SqlExpressionType.Constant:
 					return 70;
-				
-				// Tuple
-				case SqlExpressionType.Group:
-					return 60;
 			}
 
 			return -1;
 		}
 
-		public virtual bool CanReduce {
-			get { return false; }
-		}
+		public virtual bool CanReduce => IsReference;
 
 		public SqlExpressionType ExpressionType { get; }
 
@@ -122,8 +121,12 @@ namespace Deveel.Data.Sql.Expressions {
 			
 		}
 
-		public virtual SqlExpression Reduce(IContext context) {
-			return this;
+		public SqlExpression Reduce(IContext context) {
+			return ReduceAsync(context).Result;
+		}
+
+		public virtual Task<SqlExpression> ReduceAsync(IContext context) {
+			return Task.FromResult(this);
 		}
 
 		public abstract SqlType GetSqlType(IContext context);
@@ -189,6 +192,18 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public static SqlBinaryExpression XOr(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.XOr, left, right);
+
+
+		public static SqlStringMatchExpression StringMatch(SqlExpressionType expressionType, SqlExpression left,
+			SqlExpression pattern, SqlExpression escape) {
+			return new SqlStringMatchExpression(expressionType, left, pattern, escape);
+		}
+
+		public static SqlStringMatchExpression Like(SqlExpression left, SqlExpression pattern, SqlExpression escape)
+			=> StringMatch(SqlExpressionType.Like, left, pattern, escape);
+
+		public static SqlStringMatchExpression NotLike(SqlExpression left, SqlExpression pattern, SqlExpression escape)
+			=> StringMatch(SqlExpressionType.NotLike, left, pattern, escape);
 
 		public static SqlUnaryExpression Unary(SqlExpressionType expressionType, SqlExpression operand) {
 			if (!expressionType.IsUnary())

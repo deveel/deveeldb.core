@@ -18,6 +18,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public sealed class Row : IEnumerable<Field> {
@@ -55,21 +56,25 @@ namespace Deveel.Data.Sql.Tables {
 			set => SetValue(columnName, value);
 		}
 
-		public SqlObject GetValue(int column) {
+		public async Task<SqlObject> GetValueAsync(int column) {
 			SqlObject value;
 			if (column < 0 || column >= TableInfo.Columns.Count)
 				throw new ArgumentOutOfRangeException();
 
 			
 			if (!values.TryGetValue(column, out value)) {
-				value = Table.GetValue(Id.Number, column);
+				value = await Table.GetValueAsync(Id.Number, column);
 				values[column] = value;
 			}
 
 			return value;
 		}
 
-		public SqlObject GetValue(string columnName) {
+		public SqlObject GetValue(int column) {
+			return GetValueAsync(column).Result;
+		}
+
+		public Task<SqlObject> GetValueAsync(string columnName) {
 			if (String.IsNullOrWhiteSpace(columnName))
 				throw new ArgumentNullException(nameof(columnName));
 
@@ -77,7 +82,11 @@ namespace Deveel.Data.Sql.Tables {
 			if (offset < 0)
 				throw new ArgumentException();
 
-			return GetValue(offset);
+			return GetValueAsync(offset);
+		}
+
+		public SqlObject GetValue(string columnName) {
+			return GetValueAsync(columnName).Result;
 		}
 
 		public void SetValue(int column, SqlObject value) {

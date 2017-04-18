@@ -18,7 +18,7 @@
 using System;
 
 namespace Deveel.Data.Sql.Tables {
-	public struct RowId {
+	public struct RowId : IEquatable<RowId> {
 		public RowId(int tableId, long number)
 			: this() {
 			TableId = tableId;
@@ -29,13 +29,17 @@ namespace Deveel.Data.Sql.Tables {
 
 		public long Number { get; }
 
+		public bool Equals(RowId other) {
+			return Number == other.Number &&
+			       TableId == other.TableId;
+		}
+
 		public override bool Equals(object obj) {
 			if (!(obj is RowId))
 				return false;
 
 			var other = (RowId) obj;
-			return Number == other.Number &&
-			       TableId == other.TableId;
+			return Equals(other);
 		}
 
 		public override int GetHashCode() {

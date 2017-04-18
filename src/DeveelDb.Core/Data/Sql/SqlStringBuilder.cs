@@ -91,8 +91,7 @@ namespace Deveel.Data.Sql {
 		private bool lastNewLine;
 
 		public void AppendLine() {
-			Append(Environment.NewLine);
-
+			builder.AppendLine();
 			lastNewLine = true;
 		}
 

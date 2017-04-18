@@ -25,7 +25,7 @@ namespace Deveel.Data {
 	/// A system to manage database objects and provide
 	/// access to them
 	/// </summary>
-	public interface IDatabaseSystem : IContext {
+	public interface IDatabaseSystem : IContext, IConfigurationScope {
 		/// <summary>
 		/// Gets a list of the names of all the databases handled
 		/// by this system.

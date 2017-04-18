@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -124,15 +125,107 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
+		[InlineData(SqlExpressionType.Like, "antonello", "anto%")]
+		[InlineData(SqlExpressionType.NotLike, "the quick brown fox", "the brown%")]
+		public static void CreateStringMatch(SqlExpressionType expressionType, string value, string pattern) {
+			var exp = SqlExpression.StringMatch(expressionType,
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(pattern))), null);
+
+			Assert.NotNull(exp);
+			Assert.Equal(expressionType, exp.ExpressionType);
+			Assert.NotNull(exp.Left);
+			Assert.NotNull(exp.Pattern);
+		}
+
+		[Theory]
+		[InlineData(SqlExpressionType.Like, "antonello", "anto%", true)]
+		[InlineData(SqlExpressionType.Like, "antonello", "apto%", false)]
+		[InlineData(SqlExpressionType.NotLike, "the quick brown fox", "the brown%", true)]
+		[InlineData(SqlExpressionType.NotLike, "the quick brown fox", "the quick%", false)]
+		public static async Task ReduceStringMatch(SqlExpressionType expressionType, string value, string pattern, bool expected) {
+			var exp = SqlExpression.StringMatch(expressionType,
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(pattern))), null);
+
+			Assert.NotNull(exp);
+			Assert.Equal(expressionType, exp.ExpressionType);
+			Assert.NotNull(exp.Left);
+			Assert.NotNull(exp.Pattern);
+
+			var reduced = await exp.ReduceAsync(null);
+
+			Assert.NotNull(reduced);
+			Assert.IsType<SqlConstantExpression>(reduced);
+
+			var result = ((SqlConstantExpression) reduced).Value;
+			Assert.IsType<SqlBoolean>(result.Value);
+			Assert.Equal(expected, (bool) ((SqlBoolean)result.Value));
+		}
+
+		[Theory]
+		[InlineData(SqlExpressionType.Like, "antonello", "anto%", "\\", true)]
+		[InlineData(SqlExpressionType.Like, "antonello", "apto%", "|", false)]
+		[InlineData(SqlExpressionType.NotLike, "the quick brown fox", "the brown%", "\\", true)]
+		[InlineData(SqlExpressionType.NotLike, "the quick brown fox", "the quick%", "\\", false)]
+		public static async Task ReduceStringMatchWithEscape(SqlExpressionType expressionType, string value, string pattern, string escape, bool expected) {
+			var exp = SqlExpression.StringMatch(expressionType,
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(pattern))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(escape))));
+
+			Assert.NotNull(exp);
+			Assert.Equal(expressionType, exp.ExpressionType);
+			Assert.NotNull(exp.Left);
+			Assert.NotNull(exp.Pattern);
+
+			var reduced = await exp.ReduceAsync(null);
+
+			Assert.NotNull(reduced);
+			Assert.IsType<SqlConstantExpression>(reduced);
+
+			var result = ((SqlConstantExpression)reduced).Value;
+			Assert.IsType<SqlBoolean>(result.Value);
+			Assert.Equal(expected, (bool)((SqlBoolean)result.Value));
+		}
+
+
+		[Theory]
+		[InlineData(SqlExpressionType.Like, "antonello", "anto%", "'antonello' LIKE 'anto%'")]
+		[InlineData(SqlExpressionType.NotLike, "the quick brown fox", "the quick%", "'the quick brown fox' NOT LIKE 'the quick%'")]
+		public static void GetStringMatchString(SqlExpressionType expressionType, string value, string pattern, string expected) {
+			var exp = SqlExpression.StringMatch(expressionType,
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(pattern))), null);
+
+			var sql = exp.ToString();
+			Assert.Equal(expected, sql);
+		}
+
+
+		[Theory]
+		[InlineData(SqlExpressionType.Like, "antonello", "anto%", "\\", "'antonello' LIKE 'anto%' ESCAPE '\\'")]
+		public static void GetStringMatchStringWithEscape(SqlExpressionType expressionType, string value, string pattern, string escape, string expected) {
+			var exp = SqlExpression.StringMatch(expressionType,
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(pattern))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(escape))));
+
+			var sql = exp.ToString();
+			Assert.Equal(expected, sql);
+		}
+
+
+		[Theory]
 		[InlineData(345)]
-		public static void ReduceConstant(object value) {
+		public static async Task ReduceConstant(object value) {
 			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
 			var exp = SqlExpression.Constant(obj);
 
 			Assert.False(exp.CanReduce);
 			Assert.NotNull(exp.Value);
 
-			var reduced = exp.Reduce(null);
+			var reduced = await exp.ReduceAsync(null);
 
 			Assert.IsType<SqlConstantExpression>(reduced);
 			Assert.Equal(obj, ((SqlConstantExpression) reduced).Value);
@@ -154,7 +247,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[InlineData(SqlExpressionType.Or, true, false, true)]
 		[InlineData(SqlExpressionType.XOr, 113, 56, 73)]
 		[InlineData(SqlExpressionType.And, true, false, false)]
-		public static void ReduceBinary(SqlExpressionType expressionType, object value1, object value2, object expected) {
+		public static async Task ReduceBinary(SqlExpressionType expressionType, object value1, object value2, object expected) {
 			var obj1 = SqlObject.New(SqlValueUtil.FromObject(value1));
 			var obj2 = SqlObject.New(SqlValueUtil.FromObject(value2));
 
@@ -162,7 +255,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.True(exp.CanReduce);
 
-			var reduced = exp.Reduce(null);
+			var reduced = await exp.ReduceAsync(null);
 
 			Assert.NotNull(reduced);
 			Assert.IsType<SqlConstantExpression>(reduced);
@@ -199,6 +292,21 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(expected, s);
 		}
 
+
+		[Theory]
+		[InlineData(SqlExpressionType.Add, 445, 9032.11)]
+		public static void GetBinarySqlType(SqlExpressionType expressionType, object value1, object value2) {
+			var obj1 = SqlObject.New(SqlValueUtil.FromObject(value1));
+			var obj2 = SqlObject.New(SqlValueUtil.FromObject(value2));
+
+			var exp = SqlExpression.Binary(expressionType, SqlExpression.Constant(obj1), SqlExpression.Constant(obj2));
+
+			var sqltType = exp.Type;
+			var wider = obj1.Type.Wider(obj2.Type);
+
+			Assert.Equal(wider, sqltType);
+		}
+
 		[Theory]
 		[InlineData(SqlExpressionType.UnaryPlus, 22.34)]
 		[InlineData(SqlExpressionType.Negate, 455.43)]
@@ -216,7 +324,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[InlineData(SqlExpressionType.UnaryPlus, 22.34, 22.34)]
 		[InlineData(SqlExpressionType.Negate, 455.43, -455.43)]
 		[InlineData(SqlExpressionType.Not, true, false)]
-		public static void ReduceUnary(SqlExpressionType expressionType, object value, object expected) {
+		public static async Task ReduceUnary(SqlExpressionType expressionType, object value, object expected) {
 			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
 			var operand = SqlExpression.Constant(obj);
 			var exp = SqlExpression.Unary(expressionType, operand);
@@ -226,7 +334,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.True(exp.CanReduce);
 
-			var reduced = exp.Reduce(null);
+			var reduced = await exp.ReduceAsync(null);
 
 			Assert.NotNull(reduced);
 			Assert.IsType<SqlConstantExpression>(reduced);
@@ -249,6 +357,19 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
+		[InlineData(SqlExpressionType.UnaryPlus, 22.34)]
+		[InlineData(SqlExpressionType.Negate, 455.43)]
+		[InlineData(SqlExpressionType.Not, true)]
+		public static void GetUnaryType(SqlExpressionType expressionType, object value) {
+			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
+			var operand = SqlExpression.Constant(obj);
+			var exp = SqlExpression.Unary(expressionType, operand);
+
+			var sqlType = exp.Type;
+			Assert.Equal(obj.Type, sqlType);
+		}
+
+		[Theory]
 		[InlineData(5634.99, SqlTypeCode.Double, -1, -1)]
 		public static void NewCast(object value, SqlTypeCode destTypeCode, int p, int s) {
 			var targetType = PrimitiveTypes.Type(destTypeCode, new {precision = p, scale = s, maxSize = p, size = p});
@@ -264,7 +385,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[Theory]
 		[InlineData(5634.99, SqlTypeCode.Double, -1, -1, (double) 5634.99)]
 		[InlineData("true", SqlTypeCode.Boolean, -1, -1, true)]
-		public static void ReduceCast(object value, SqlTypeCode destTypeCode, int p, int s, object expected) {
+		public static async Task ReduceCast(object value, SqlTypeCode destTypeCode, int p, int s, object expected) {
 			var targetType = PrimitiveTypes.Type(destTypeCode, new {precision = p, scale = s, maxSize = p, size = p});
 			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
 			var exp = SqlExpression.Constant(obj);
@@ -273,7 +394,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.True(cast.CanReduce);
 
-			var reduced = cast.Reduce(null);
+			var reduced = await cast.ReduceAsync(null);
 			Assert.NotNull(reduced);
 			Assert.IsType<SqlConstantExpression>(reduced);
 
@@ -284,6 +405,19 @@ namespace Deveel.Data.Sql.Expressions {
 
 			var expectedResult = SqlObject.New(SqlValueUtil.FromObject(expected));
 			Assert.Equal(expectedResult, result);
+		}
+
+		[Theory]
+		[InlineData(5634.99, SqlTypeCode.Double, -1, -1)]
+		[InlineData("TRUE", SqlTypeCode.Boolean, -1, -1)]
+		public static void GetCastType(object value, SqlTypeCode destTypeCode, int p, int s) {
+			var targetType = PrimitiveTypes.Type(destTypeCode, new { precision = p, scale = s, maxSize = p, size = p });
+			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
+			var exp = SqlExpression.Constant(obj);
+
+			var cast = SqlExpression.Cast(exp, targetType);
+
+			Assert.Equal(targetType, cast.TargetType);
 		}
 
 		[Theory]
@@ -344,14 +478,14 @@ namespace Deveel.Data.Sql.Expressions {
 		[Theory]
 		[InlineData(true, "I am", "You are", "I am")]
 		[InlineData(false, "I am", "You are", "You are")]
-		public static void ReduceCondition(bool test, object ifTrue, object ifFalse, object expected) {
+		public static async Task  ReduceCondition(bool test, object ifTrue, object ifFalse, object expected) {
 			var testExp = SqlExpression.Constant(SqlObject.Boolean(test));
 			var ifTrueExp = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(ifTrue)));
 			var ifFalseExp = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(ifFalse)));
 
 			var condition = SqlExpression.Condition(testExp, ifTrueExp, ifFalseExp);
 
-			var result = condition.Reduce(null);
+			var result = await condition.ReduceAsync(null);
 
 			Assert.IsType<SqlConstantExpression>(result);
 

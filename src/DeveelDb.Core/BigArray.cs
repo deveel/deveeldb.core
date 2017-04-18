@@ -25,7 +25,6 @@ using System.Runtime.InteropServices;
 namespace Deveel {
 	public sealed class BigArray<T> : IEnumerable<T> {
 		private T[][] items;
-		private long blockSize;
 
 		public BigArray(long length) {
 			Allocate(length);
@@ -33,10 +32,12 @@ namespace Deveel {
 
 		public long Length { get; private set; }
 
-		public T this[long index] {
-			get => items[(int)(index / blockSize)][index % blockSize];
+		public long BlockSize { get; private set; }
 
-			set => items[(int)(index / blockSize)][index % blockSize] = value;
+		public T this[long index] {
+			get => items[(int)(index / BlockSize)][index % BlockSize];
+
+			set => items[(int)(index / BlockSize)][index % BlockSize] = value;
 		}
 
 		private void Allocate(long length) {
@@ -47,23 +48,90 @@ namespace Deveel {
 
 			if (typeof(T).GetTypeInfo().IsValueType) {
 				int itemSize = Marshal.SizeOf<T>();
-				blockSize = (int.MaxValue - 56) / itemSize;
+				BlockSize = (int.MaxValue - 56) / itemSize;
 			} else {
 				int itemSize = IntPtr.Size;
-				blockSize = ((int.MaxValue - 56) / itemSize) - 1;
+				BlockSize = ((int.MaxValue - 56) / itemSize) - 1;
 			}
 
-			int blockCount = (int)(length / blockSize);
-			if (length > (blockCount * blockSize))
+			int blockCount = (int)(length / BlockSize);
+			if (length > (blockCount * BlockSize))
 				blockCount++;
 
 			items = new T[blockCount][];
 
 			for (int i = 0; i < blockCount - 1; i++)
-				items[i] = new T[blockSize];
+				items[i] = new T[BlockSize];
 
 			if (blockCount > 0) {
-				items[blockCount - 1] = new T[length - ((blockCount - 1) * blockSize)];
+				items[blockCount - 1] = new T[length - ((blockCount - 1) * BlockSize)];
+			}
+		}
+
+		public void Resize(long newSize) {
+			if (newSize == Length)
+				return;
+
+			int blockCount = (int) (newSize / BlockSize);
+			if (newSize > (blockCount * BlockSize))
+				blockCount++;
+
+			int previousBlockCount = items.Length;
+
+			int lastBlockSize = (int) (newSize - ((blockCount - 1) * BlockSize));
+			int previousLastBlockSize = (int) (Length - ((blockCount - 1) * BlockSize));
+
+			if (previousBlockCount != blockCount) {
+				if (previousBlockCount < blockCount) //  Increasing size, make more.
+				{
+					if (previousLastBlockSize != BlockSize) {
+						Array.Resize<T>(ref items[previousBlockCount - 1], (int) BlockSize);
+					}
+
+					Array.Resize<T[]>(ref items, blockCount);
+					for (int i = previousBlockCount; i < blockCount - 1; i++) {
+						items[previousBlockCount] = new T[BlockSize];
+					}
+
+					items[blockCount - 1] = new T[lastBlockSize];
+				} else // Reducing size - cut off blocks.
+				{
+					Array.Resize<T[]>(ref items, blockCount);
+					Array.Resize<T>(ref items[blockCount - 1], lastBlockSize);
+				}
+			} else // resize the last block
+			{
+				Array.Resize<T>(ref items[blockCount - 1], lastBlockSize);
+			}
+
+			Length = newSize;
+		}
+
+		public void Clear() {
+			this.Clear(0, this.Length);
+		}
+
+		public void Clear(long startIndex, long count) {
+			if ((startIndex < 0) || (startIndex > this.Length)) {
+				throw new ArgumentOutOfRangeException(nameof(startIndex));
+			}
+
+			if ((count < 0) || (count > (this.Length - startIndex))) {
+				throw new ArgumentOutOfRangeException(nameof(count));
+			}
+
+			long blockIndex = startIndex / this.BlockSize;
+			int start = (int)(startIndex % this.BlockSize);
+			count += startIndex;
+			for (long i = startIndex; i < count && blockIndex < this.items.Length; blockIndex++) {
+				int len = this.items[blockIndex].Length;
+				if (i + len > count) {
+					len = (int)(count - i);
+				}
+
+				Array.Clear(this.items[blockIndex], start, len);
+				start = 0;
+				i += len;
 			}
 		}
 
@@ -85,8 +153,8 @@ namespace Deveel {
 				throw new ArgumentOutOfRangeException(nameof(count));
 			}
 
-			long blockIndex = startIndex / blockSize;
-			int start = (int)(startIndex % blockSize);
+			long blockIndex = startIndex / BlockSize;
+			int start = (int)(startIndex % BlockSize);
 			count += startIndex;
 			for (long i = startIndex; i < count && blockIndex < items.Length; blockIndex++) {
 				int len = items[blockIndex].Length;
@@ -98,7 +166,7 @@ namespace Deveel {
 				index = Array.IndexOf<T>(items[blockIndex], item, start, len);
 				start = 0;
 				if (index != -1) {
-					index += (blockIndex * blockSize);
+					index += (blockIndex * BlockSize);
 					break;
 				}
 
@@ -106,6 +174,25 @@ namespace Deveel {
 			}
 
 			return index;
+		}
+
+		public void CopyTo(long index, BigArray<T> destinationArray, long destinationIndex, long count) {
+			if (destinationArray == null) {
+				throw new ArgumentNullException(nameof(destinationArray));
+			}
+			if ((index < 0) || (index > this.Length)) {
+				throw new ArgumentOutOfRangeException(nameof(index));
+			}
+			if ((destinationIndex < 0) || (destinationIndex > destinationArray.Length)) {
+				throw new ArgumentOutOfRangeException(nameof(destinationIndex));
+			}
+			if ((count < 0) || (count > (this.Length - index)) || (count > (destinationArray.Length - destinationIndex))) {
+				throw new ArgumentOutOfRangeException(nameof(count));
+			}
+
+			long destIndex = destinationIndex;
+			for (long i = index; i < index + count; i++)
+				destinationArray[destIndex++] = this[i];
 		}
 
 		public void CopyTo(long index, T[] destinationArray, long count) {
@@ -139,16 +226,36 @@ namespace Deveel {
 			return GetEnumerator();
 		}
 
-		public static void Copy(BigArray<T> source, long sourceIndex, BigArray<T> target, long targetIndex, long length) {
-			if (sourceIndex >= source.Length)
-				throw new ArgumentOutOfRangeException(nameof(sourceIndex));
-			if (targetIndex + length > target.Length)
-				throw new ArgumentException();
-
-			long offset = 0;
-			for (long i = sourceIndex; i < length; i++) {
-				target[targetIndex + offset++] = source[i];
+		public static void Clear(BigArray<T> array, long startIndex, long count) {
+			if ((startIndex < 0) || (startIndex > array.Length)) {
+				throw new ArgumentOutOfRangeException(nameof(startIndex));
 			}
+
+			if ((count < 0) || (count > (array.Length - startIndex))) {
+				throw new ArgumentOutOfRangeException(nameof(count));
+			}
+
+			long blockIndex = startIndex / array.BlockSize;
+			int start = (int)(startIndex % array.BlockSize);
+			count += startIndex;
+			for (long i = startIndex; i < count && blockIndex < array.items.Length; blockIndex++) {
+				int len = array.items[blockIndex].Length;
+				if (i + len > count) {
+					len = (int)(count - i);
+				}
+
+				Array.Clear(array.items[blockIndex], start, len);
+				start = 0;
+				i += len;
+			}
+		}
+
+		public static void QuickSort(BigArray<T> array, long offset, long count) {
+			BigArraySortUtil<T>.QuickSort(array, offset, count);
+		}
+
+		public static void QuickSort(BigArray<T> array) {
+			QuickSort(array, 0, array.Length - 1);
 		}
 
 		public static void Clear(BigArray<T> array, long startIndex, long count) {

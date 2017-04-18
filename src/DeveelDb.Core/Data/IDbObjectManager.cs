@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data {
 	/// <summary>
@@ -54,7 +55,7 @@ namespace Deveel.Data {
 		/// If the object type of the specification (<see cref="IDbObjectInfo.ObjectType"/>) is
 		/// different than the <see cref="ObjectType"/> of this manager.
 		/// </exception>
-		void CreateObject(IDbObjectInfo objInfo);
+		Task CreateObjectAsync(IDbObjectInfo objInfo);
 
 		/// <summary>
 		/// Checks if an object really exists in the system.
@@ -64,7 +65,7 @@ namespace Deveel.Data {
 		/// Returns <c>true</c> if an object with the given name concretely exists in the
 		/// system, or <c>false</c> otherwise.
 		/// </returns>
-		bool RealObjectExists(ObjectName objName);
+		Task<bool> RealObjectExistsAsync(ObjectName objName);
 
 		/// <summary>
 		/// Checks if an object identified by the given name is managed by this instance. 
@@ -72,7 +73,9 @@ namespace Deveel.Data {
 		/// <param name="objName">The name that uniquely identifies the object.</param>
 		/// <returns>
 		/// </returns>
-		bool ObjectExists(ObjectName objName);
+		Task<bool> ObjectExistsAsync(ObjectName objName);
+
+		Task<IDbObjectInfo> GetObjectInfoAsync(ObjectName objectName);
 
 		/// <summary>
 		/// Gets a database object managed by this manager.
@@ -82,7 +85,7 @@ namespace Deveel.Data {
 		/// Returns a <see cref="IDbObject"/> instance that is identified by the given unique name,
 		/// or <c>null</c> if this manager was not able to map any object to the name specified.
 		/// </returns>
-		IDbObject GetObject(ObjectName objName);
+		Task<IDbObject> GetObjectAsync(ObjectName objName);
 
 		/// <summary>
 		/// Modifies an existing object managed, identified by <see cref="IDbObjectInfo.FullName"/> component
@@ -100,7 +103,7 @@ namespace Deveel.Data {
 		/// If the type of the object specified (<see cref="IDbObjectInfo.ObjectType"/>) is different than the
 		/// type of objects handled by this manager.
 		/// </exception>
-		bool AlterObject(IDbObjectInfo objInfo);
+		Task<bool> AlterObjectAsync(IDbObjectInfo objInfo);
 
 		/// <summary>
 		/// Deletes a database object handled by this manager from the system.
@@ -110,7 +113,7 @@ namespace Deveel.Data {
 		/// Returns <c>true</c> if a database object was found with the given unique name and successfully 
 		/// deleted from the system, or <c>false</c> if none object was found.
 		/// </returns>
-		bool DropObject(ObjectName objName);
+		Task<bool> DropObjectAsync(ObjectName objName);
 
 		/// <summary>
 		/// Normalizes the input object name using the case sensitivity specified.
@@ -124,6 +127,6 @@ namespace Deveel.Data {
 		/// matching the input name, or <c>null</c> if the input name was not possible to be
 		/// resolved.
 		/// </returns>
-		ObjectName ResolveName(ObjectName objName, bool ignoreCase);
+		Task<ObjectName> ResolveNameAsync(ObjectName objName, bool ignoreCase);
 	}
 }

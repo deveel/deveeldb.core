@@ -22,6 +22,14 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Fact]
+		public static void VisitStringMatch() {
+			var exp = SqlExpression.Like(SqlExpression.Constant(SqlObject.String(new SqlString("antonello"))),
+				SqlExpression.Constant(SqlObject.String(new SqlString("an%"))), null);
+
+			Visit(exp);
+		}
+
+		[Fact]
 		public static void VisitVariable() {
 			var exp = SqlExpression.Variable("a");
 			Visit(exp, true);

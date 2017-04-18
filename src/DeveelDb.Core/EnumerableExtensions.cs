@@ -22,6 +22,9 @@ using System.Linq;
 namespace Deveel {
 	public static class EnumerableExtensions {
 		public static BigArray<T> ToBigArray<T>(this IEnumerable<T> source) {
+			if (source is BigArray<T>)
+				return (BigArray<T>) source;
+
 			var size = source.LongCount();
 			var array = new BigArray<T>(size);
 			long index = 0;
@@ -32,7 +35,24 @@ namespace Deveel {
 			return array;
 		}
 
+		public static BigList<T> ToBigList<T>(this IEnumerable<T> source) {
+			if (source is BigList<T>)
+				return (BigList<T>) source;
+
+			return new BigList<T>(source);
+		}
+
 		public static T ElementAt<T>(this IEnumerable<T> source, long offset) {
+			if (source is BigArray<T>) {
+				return ((BigArray<T>) source)[offset];
+			}
+
+			if (source is BigList<T>)
+				return ((BigList<T>) source)[offset];
+
+			if (source is IList<T> && offset < Int32.MaxValue)
+				return ((IList<T>) source)[(int) offset];
+
 			long index = 0;
 			foreach (var item in source) {
 				if (index == offset)

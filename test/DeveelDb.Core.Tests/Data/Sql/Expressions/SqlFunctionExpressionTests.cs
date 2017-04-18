@@ -22,8 +22,7 @@ namespace Deveel.Data.Sql.Expressions {
 			methodInfo.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.VarChar(155)));
 			methodInfo.Parameters.Add(new SqlMethodParameterInfo("b", PrimitiveTypes.Integer(),
 				SqlExpression.Constant(SqlObject.Null)));
-			var method = new SqlFunction(methodInfo);
-			method.SetBody(ctx => {
+			var method = new SqlFunctionDelegate(methodInfo, ctx => {
 				return Task.FromResult(ctx.Value("a").Add(ctx.Value("b")));
 			});
 
@@ -56,11 +55,11 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Fact]
-		public void ReduceFromExisting() {
+		public async Task ReduceFromExisting() {
 			var function = SqlExpression.Function(ObjectName.Parse("sys.Func1"), 
 				new InvokeArgument("a", SqlObject.BigInt(33)));
 			Assert.True(function.CanReduce);
-			var result = function.Reduce(context);
+			var result = await function.ReduceAsync(context);
 
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);

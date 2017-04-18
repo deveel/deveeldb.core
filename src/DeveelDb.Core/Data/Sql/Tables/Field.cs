@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public sealed class Field {
@@ -14,6 +15,12 @@ namespace Deveel.Data.Sql.Tables {
 
 		public string ColumnName => row.Table.TableInfo.Columns[column].ColumnName;
 
-		public SqlObject Value => row.GetValue(column);
+		public SqlObject GetValue() {
+			return row.GetValue(column);
+		}
+
+		public Task<SqlObject> GetValueAsync() {
+			return row.GetValueAsync(column);
+		}
 	}
 }

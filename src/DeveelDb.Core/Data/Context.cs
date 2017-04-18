@@ -29,14 +29,12 @@ namespace Deveel.Data {
 	/// contexts, since it handles the initialization and disposal
 	/// of the <see cref="IScope"/> that it wraps.
 	/// </remarks>
-	public abstract class Context : IContext {
-		private IScope scope;
-
+	public class Context : IContext {
 		/// <summary>
 		/// Constructs a new context that has no parent.
 		/// </summary>
-		protected Context()
-			: this(null) {
+		public Context(string name)
+			: this(null, name) {
 		}
 
 		/// <summary>
@@ -47,8 +45,9 @@ namespace Deveel.Data {
 		/// The <paramref name="parent"/> context is not required to be <c>not null</c>:
 		/// if <c>null</c> then this context will have no parent.
 		/// </remarks>
-		protected Context(IContext parent) {
+		public Context(IContext parent, string name) {
 			ParentContext = parent;
+			ContextName = name;
 			InitScope();
 		}
 
@@ -60,16 +59,14 @@ namespace Deveel.Data {
 		/// When overridden by a derived class, this property returns
 		/// a unique name that identifies the context within a global scope.
 		/// </summary>
-		protected abstract string ContextName { get; }
+		protected string ContextName { get; }
 
 		/// <summary>
 		/// Gets a scope specific for this context, that is used
 		/// to resolve services registered within this context
 		/// or parent contexts.
 		/// </summary>
-		protected virtual IScope ContextScope {
-			get { return scope; }
-		}
+		protected IScope ContextScope { get; private set; }
 
 		protected IContext ParentContext { get; private set; }
 
@@ -87,16 +84,16 @@ namespace Deveel.Data {
 
 		private void InitScope() {
 			if (ParentContext != null && ParentContext.Scope != null)
-				scope = ParentContext.Scope.OpenScope(ContextName);
+				ContextScope = ParentContext.Scope.OpenScope(ContextName);
 		}
 
 		protected virtual void Dispose(bool disposing) {
 			if (disposing) {
-				if (scope != null)
-					scope.Dispose();
+				if (ContextScope != null)
+					ContextScope.Dispose();
 			}
 
-			scope = null;
+			ContextScope = null;
 			ParentContext = null;
 		}
 

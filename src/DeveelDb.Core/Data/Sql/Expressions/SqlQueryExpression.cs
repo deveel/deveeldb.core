@@ -75,8 +75,19 @@ namespace Deveel.Data.Sql.Expressions {
 			}
 
 			if (!From.IsEmpty) {
-				builder.Append(" ");
+				builder.AppendLine();
+				builder.Indent();
 				From.AppendTo(builder);
+
+				if (Where != null) {
+					builder.AppendLine();
+					builder.Append("WHERE ");
+					Where.AppendTo(builder);
+				} else if (Having != null) {
+					builder.AppendLine();
+					builder.Append("HAVING ");
+					Having.AppendTo(builder);
+				}
 			}
 
 			// TODO: continue

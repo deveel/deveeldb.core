@@ -23,7 +23,7 @@ using Deveel.Data.Query;
 using Deveel.Data.Sql.Methods;
 
 namespace Deveel.Data.Sql.Expressions {
-	public class SqlExpressionVisitor : ISqlExpressionVisitor {
+	public class SqlExpressionVisitor {
 		public virtual SqlExpression Visit(SqlExpression expression) {
 			if (expression == null)
 				return null;
@@ -46,6 +46,9 @@ namespace Deveel.Data.Sql.Expressions {
 				case SqlExpressionType.Or:
 				case SqlExpressionType.XOr:
 					return VisitBinary((SqlBinaryExpression) expression);
+				case SqlExpressionType.Like:
+				case SqlExpressionType.NotLike:
+					return VisitStringMatch((SqlStringMatchExpression) expression);
 				case SqlExpressionType.Not:
 				case SqlExpressionType.Negate:
 				case SqlExpressionType.UnaryPlus:
@@ -78,6 +81,21 @@ namespace Deveel.Data.Sql.Expressions {
 				default:
 					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
 			}
+		}
+
+		public virtual SqlExpression VisitStringMatch(SqlStringMatchExpression expression) {
+			var left = expression.Left;
+			var pattern = expression.Pattern;
+			var escape = expression.Escape;
+
+			if (left != null)
+				left = Visit(left);
+			if (pattern != null)
+				pattern = Visit(pattern);
+			if (escape != null)
+				escape = Visit(escape);
+
+			return SqlExpression.StringMatch(expression.ExpressionType, left, pattern, escape);
 		}
 
 		public virtual InvokeArgument[] VisitInvokeArguments(IList<InvokeArgument> arguments) {
@@ -215,20 +233,20 @@ namespace Deveel.Data.Sql.Expressions {
 
 			query.From = from;
 
-			var where = query.Where;
+			var where = expression.Where;
 			if (where != null)
 				where = Visit(where);
 
 			query.Where = where;
 
-			var having = query.Having;
+			var having = expression.Having;
 			if (having != null)
 				having = Visit(having);
 
 			query.Having = having;
 
-			query.GroupBy = VisitExpressionList(query.GroupBy);
-			query.GroupMax = query.GroupMax;
+			query.GroupBy = VisitExpressionList(expression.GroupBy);
+			query.GroupMax = expression.GroupMax;
 
 			return query;
 		}

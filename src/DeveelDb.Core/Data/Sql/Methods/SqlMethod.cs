@@ -19,7 +19,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
@@ -33,15 +32,21 @@ namespace Deveel.Data.Sql.Methods {
 
 		public SqlMethodInfo MethodInfo { get; }
 
-		public SqlMethodBody Body { get; set; }
+		public abstract MethodType Type { get; }
+
+		public bool IsFunction => Type == MethodType.Function;
+
+		public bool IsProcedure => Type == MethodType.Procedure;
+
+		public virtual bool IsSystem => true;
 
 		public async Task<SqlMethodResult> ExecuteAsync(IContext context, Invoke invoke) {
-			using (var methodContext = new MethodContext(context, MethodInfo, invoke)) {
+			using (var methodContext = new MethodContext(context, this, invoke)) {
 				await ExecuteContextAsync(methodContext);
 
 				var result = methodContext.CreateResult();
 
-				result.Validate(MethodInfo, context);
+				result.Validate(this, context);
 
 				return result;
 			}
@@ -68,19 +73,17 @@ namespace Deveel.Data.Sql.Methods {
 			return ExecuteAsync(context, exps);
 		}
 
-		protected virtual Task ExecuteContextAsync(MethodContext context) {
-			if (Body == null)
-				throw new InvalidOperationException();
-
-			return Body.ExecuteAsync(context);
-		}
+		protected abstract Task ExecuteContextAsync(MethodContext context);
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
-			MethodInfo.AppendTo(builder);
+			AppendTo(builder);
+		}
 
-			if (Body != null) {
-				Body.AppendTo(builder);
-			}
+		protected virtual void AppendTo(SqlStringBuilder builder) {
+			builder.Append(Type.ToString().ToUpperInvariant());
+			builder.Append(" ");
+
+			MethodInfo.AppendTo(builder);
 		}
 
 		public override string ToString() {

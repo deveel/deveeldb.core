@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Linq;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlConstantExpression : SqlExpression {
@@ -28,6 +29,19 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		public SqlObject Value { get; }
+
+		public override bool IsReference {
+			get {
+				if (Value.Type is SqlArrayType) {
+					var array = (SqlArray) Value.Value;
+					if (array.Any(item => item.IsReference)) {
+						return false;
+					}
+				}
+
+				return false;
+			}
+		}
 
 		public override SqlType GetSqlType(IContext context) {
 			return Value.Type;
