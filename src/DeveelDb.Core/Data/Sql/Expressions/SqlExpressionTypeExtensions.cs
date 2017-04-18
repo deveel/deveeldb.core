@@ -79,5 +79,25 @@ namespace Deveel.Data.Sql.Expressions {
 					return false;
 			}
 		}
+
+		public static SqlExpressionType Reverse(this SqlExpressionType type) {
+			switch (type) {
+				case SqlExpressionType.Equal:
+				case SqlExpressionType.NotEqual:
+				case SqlExpressionType.Is:
+				case SqlExpressionType.IsNot:
+					return type;
+				case SqlExpressionType.GreaterThan:
+					return SqlExpressionType.LessThan;
+				case SqlExpressionType.LessThan:
+					return SqlExpressionType.GreaterThan;
+				case SqlExpressionType.GreaterThanOrEqual:
+					return SqlExpressionType.LessThanOrEqual;
+				case SqlExpressionType.LessThanOrEqual:
+					return SqlExpressionType.GreaterThanOrEqual;
+			}
+
+			throw new InvalidOperationException("Cannot reverse a non conditional operator.");
+		}
 	}
 }

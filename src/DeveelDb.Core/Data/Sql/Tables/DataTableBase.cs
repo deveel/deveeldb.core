@@ -41,25 +41,7 @@ namespace Deveel.Data.Sql.Tables {
 			return indexes[column];
 		}
 
-		protected void SetupIndexes(string indexTypeName) {
-			Type indexType;
-			if (String.Equals(indexTypeName, "NONE", StringComparison.OrdinalIgnoreCase)) {
-				indexType = typeof(BlindSearchIndex);
-			} else if (String.Equals(indexTypeName, "BLIST", StringComparison.OrdinalIgnoreCase)) {
-				indexType = typeof(InsertSearchIndex);
-			} else {
-				indexType = Type.GetType(indexTypeName, false, true);
-			}
-
-			if (indexType == null) {
-				indexType = typeof(BlindSearchIndex);
-			} else if (!typeof(Index).GetTypeInfo().IsAssignableFrom(indexType.GetTypeInfo())) {
-				throw new InvalidOperationException(String.Format("The type '{0}' is not a valid table index.", indexType));
-			}
-
-			SetupIndexes(indexType);
-		}
-
+		
 
 		protected virtual void SetupIndexes(Type indexType) {
 			indexes = new Index[TableInfo.Columns.Count];

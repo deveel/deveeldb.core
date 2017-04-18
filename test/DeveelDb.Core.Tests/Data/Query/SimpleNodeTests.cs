@@ -217,7 +217,28 @@ namespace Deveel.Data.Query {
 			var result = await simplePattern.ReduceAsync(context);
 
 			Assert.Equal(2, result.RowCount);
+		}
 
+		[Fact]
+		public async Task SimpleJoin() {
+			var tableName1 = new ObjectName("tab1");
+			var fetchNode1 = new FetchTableNode(tableName1);
+			var tableName2 = new ObjectName("tab2");
+			var fetchNode2 = new FetchTableNode(tableName2);
+			var joinNode = new JoinNode(fetchNode1,
+				fetchNode2,
+				ObjectName.Parse("tab1.b"),
+				SqlExpressionType.Equal,
+				SqlExpression.Reference(ObjectName.Parse("tab2.b1")));
+
+			var result = await joinNode.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(2, result.RowCount);
+			Assert.Equal(6, result.TableInfo.Columns.Count);
+
+			var value1 = await result.GetValueAsync(0, 0);
+			Assert.Equal(SqlObject.Integer(23), value1);
 		}
 
 		public void Dispose() {

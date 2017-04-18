@@ -177,6 +177,28 @@ namespace Deveel.Data.Sql.Tables {
 			return table.Select(x => x.Id.Number);
 		}
 
+		public static async Task<IEnumerable<long>> SelectRowsAsync(this ITable table, IContext context, SqlBinaryExpression expression) {
+			var objRef = expression.Left as SqlReferenceExpression;
+			if (objRef == null)
+				throw new NotSupportedException();
+
+			var columnName = objRef.ReferenceName;
+
+			var column = table.TableInfo.Columns.IndexOf(columnName);
+			if (column < 0)
+				throw new InvalidOperationException();
+
+			var reduced = await expression.Right.ReduceAsync(context);
+			if (reduced.ExpressionType != SqlExpressionType.Constant)
+				throw new InvalidOperationException();
+
+			var value = ((SqlConstantExpression)reduced).Value;
+			var binOperator = expression.ExpressionType;
+
+			return table.SelectRows(column, binOperator, value);
+		}
+
+
 		public static IEnumerable<long> SelectRows(this ITable table, int[] columnOffsets, SqlExpressionType op, SqlObject[] values) {
 			if (columnOffsets.Length > 1)
 				throw new NotSupportedException("Multi-column selects not supported yet.");
@@ -496,6 +518,10 @@ namespace Deveel.Data.Sql.Tables {
 
 			// Return the new VirtualTable
 			return new VirtualTable(table, resultList);
+		}
+
+		public static Task<ITable> JoinAsync(this ITable table, IContext context, ITable other, ObjectName columnName, SqlExpressionType op, SqlExpression expression) {
+			return TableJoins.JoinAsync(context, table, other, columnName, op, expression);
 		}
 
 		#endregion
