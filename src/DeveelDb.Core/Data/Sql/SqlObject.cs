@@ -18,6 +18,7 @@
 using System;
 using System.Linq;
 
+using Deveel.Data.Query;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql {
@@ -457,6 +458,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		#endregion
+
+		public static SqlObject Query(IQueryPlanNode queryPlan) {
+			return new SqlObject(new SqlQueryType(), queryPlan);
+		}
 
 		#endregion
 	}

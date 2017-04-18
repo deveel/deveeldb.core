@@ -1,11 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Deveel.Data.Sql;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Query {
 	static class SqlExpressionExtensions {
-		public static IEnumerable<ObjectName> DiscoverReferences(this SqlExpression expression) {
+		public static ObjectName AsReference(this SqlExpression expression) {
+			return (expression as SqlReferenceExpression)?.ReferenceName;
+		}
+
+		public static IQueryPlanNode AsQueryPlanNode(this SqlExpression expression) {
+			if (expression is SqlConstantExpression &&
+			    ((SqlConstantExpression) expression).Type is SqlQueryType)
+				return (IQueryPlanNode) ((SqlConstantExpression) expression).Value.Value;
+
+			return null;
+		}
+
+		public static IList<ObjectName> DiscoverReferences(this SqlExpression expression) {
 			var visitor = new ReferenceDiscovery();
 			visitor.Visit(expression);
 			return visitor.References;

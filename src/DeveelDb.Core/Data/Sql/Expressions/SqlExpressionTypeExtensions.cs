@@ -59,6 +59,39 @@ namespace Deveel.Data.Sql.Expressions {
 			}
 		}
 
+		public static bool IsLogical(this SqlExpressionType expressionType) {
+			switch (expressionType) {
+				case SqlExpressionType.And:
+				case SqlExpressionType.Or:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public static bool IsMathematical(this SqlExpressionType expressionType) {
+			switch (expressionType) {
+				case SqlExpressionType.Add:
+				case SqlExpressionType.Subtract:
+				case SqlExpressionType.Divide:
+				case SqlExpressionType.Modulo:
+				case SqlExpressionType.Multiply:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public static bool IsPattern(this SqlExpressionType expressionType) {
+			switch (expressionType) {
+				case SqlExpressionType.Like:
+				case SqlExpressionType.NotLike:
+					return true;
+				default:
+					return false;
+			}
+		}
+
 		public static bool IsUnary(this SqlExpressionType expressionType) {
 			switch (expressionType) {
 				case SqlExpressionType.UnaryPlus:

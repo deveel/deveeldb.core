@@ -13,7 +13,7 @@ namespace Deveel.Data.Query.Plan {
 			UniqueNames = uniqueNames;
 		}
 
-		public IQueryPlanNode Plan { get; private set; }
+		public IQueryPlanNode Plan { get; set; }
 
 		public ObjectName[] ColumnNames { get; }
 
