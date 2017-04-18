@@ -8,10 +8,9 @@ namespace Deveel.Data.Sql.Tables {
 	static class TableJoins {
 		public static Task<ITable> JoinAsync(IContext context, ITable table, ITable other, ObjectName columnName, SqlExpressionType operatorType,
 			SqlExpression expression) {
-			var rightExpression = expression;
 			// If the rightExpression is a simple variable then we have the option
 			// of optimizing this join by putting the smallest table on the LHS.
-			var rhsVar = (rightExpression as SqlReferenceExpression)?.ReferenceName;
+			var rhsVar = (expression as SqlReferenceExpression)?.ReferenceName;
 			var lhsVar = columnName;
 			var op = operatorType;
 
@@ -22,7 +21,7 @@ namespace Deveel.Data.Sql.Tables {
 
 				if (table.RowCount < other.RowCount) {
 					// Reverse the join
-					rightExpression = SqlExpression.Reference(lhsVar);
+					expression = SqlExpression.Reference(lhsVar);
 					lhsVar = rhsVar;
 					op = op.Reverse();
 
@@ -33,7 +32,7 @@ namespace Deveel.Data.Sql.Tables {
 				}
 			}
 
-			var joinExp = SqlExpression.Binary(op, SqlExpression.Reference(lhsVar), rightExpression);
+			var joinExp = SqlExpression.Binary(op, SqlExpression.Reference(lhsVar), expression);
 
 			// The join operation.
 			return SimpleJoinAsync(context, table, other, joinExp);
@@ -56,12 +55,10 @@ namespace Deveel.Data.Sql.Tables {
 			var thisRowSet = new BigList<long>();
 			var tableRowSet = new BigList<long>();
 
-			var e = other.GetEnumerator();
+			foreach (var row in other) {
+				var rowIndex = row.Id.Number;
 
-			while (e.MoveNext()) {
-				var rowIndex = e.Current.Id.Number;
-
-				var rowResolver = new RowReferenceResolver(other, rowIndex);
+				var rowResolver = row.GetResolver();
 				IEnumerable<long> selectedSet;
 
 				using (var rowContext = context.Create($"row_{rowIndex}")) {

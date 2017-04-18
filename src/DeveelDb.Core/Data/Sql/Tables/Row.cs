@@ -20,6 +20,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql.Expressions;
+
 namespace Deveel.Data.Sql.Tables {
 	public sealed class Row : IEnumerable<Field> {
 		private Dictionary<int, SqlObject> values;
@@ -113,6 +115,18 @@ namespace Deveel.Data.Sql.Tables {
 
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
+		}
+
+		public IReferenceResolver GetResolver() {
+			return new RowReferenceResolver(Table, RowNumber);
+		}
+
+		public async Task<SqlExpression> ReduceExpressionAsync(IContext context, SqlExpression expression) {
+			using (var rowContext = context.Create($"row_{Id}")) {
+				rowContext.RegisterInstance<IReferenceResolver>(GetResolver());
+
+				return await expression.ReduceAsync(rowContext);
+			}
 		}
 
 		#region FieldEnumerator

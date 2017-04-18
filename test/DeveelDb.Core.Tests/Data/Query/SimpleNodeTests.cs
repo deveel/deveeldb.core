@@ -241,6 +241,25 @@ namespace Deveel.Data.Query {
 			Assert.Equal(SqlObject.Integer(23), value1);
 		}
 
+		[Fact]
+		public async Task RangeSelect() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+
+			var exp1 = SqlExpression.GreaterThanOrEqual(SqlExpression.Reference(new ObjectName(tableName, "a")),
+				SqlExpression.Constant(SqlObject.Integer(12)));
+			var exp2 = SqlExpression.LessThan(SqlExpression.Reference(new ObjectName(tableName, "a")),
+				SqlExpression.Constant(SqlObject.Integer(43)));
+			var exp = SqlExpression.And(exp1, exp2);
+
+			var rangeNode = new RangeSelectNode(fetchNode, exp);
+
+			var result = await rangeNode.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(2, result.RowCount);
+		}
+
 		public void Dispose() {
 			context.Dispose();
 		}

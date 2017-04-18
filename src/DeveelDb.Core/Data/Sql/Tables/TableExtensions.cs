@@ -361,6 +361,10 @@ namespace Deveel.Data.Sql.Tables {
 			return resultRows;
 		}
 
+		public static IEnumerable<long> SelectRowsRange(this ITable table, int column, IndexRange[] ranges) {
+			return table.GetColumnIndex(column).SelectRange(ranges);
+		}
+
 		#endregion
 
 		public static ITable EmptySelect(this ITable table) {
@@ -416,6 +420,42 @@ namespace Deveel.Data.Sql.Tables {
 
 			return table;
 		}
+
+		public static ITable SelectRange(this ITable table, ObjectName columnName, IndexRange[] ranges) {
+			// If this table is empty then there is no range to select so
+			// trivially return this object.
+			if (table.RowCount == 0)
+				return table;
+
+			// Are we selecting a black or null range?
+			if (ranges == null || ranges.Length == 0)
+				// Yes, so return an empty table
+				return table.EmptySelect();
+
+			// Are we selecting the entire range?
+			if (ranges.Length == 1 &&
+			    ranges[0].Equals(IndexRange.FullRange))
+				// Yes, so return this table.
+				return table;
+
+			// Must be a non-trivial range selection.
+
+			// Find the column index of the column selected
+			int column = table.TableInfo.Columns.IndexOf(columnName);
+
+			if (column == -1) {
+				throw new Exception(
+					"Unable to find the column given to select the range of: " +
+					columnName.Name);
+			}
+
+			// Select the range
+			var rows = table.SelectRowsRange(column, ranges);
+
+			// Make a new table with the range selected
+			return new VirtualTable(table, rows.ToArray(), column);
+		}
+
 
 		#endregion
 

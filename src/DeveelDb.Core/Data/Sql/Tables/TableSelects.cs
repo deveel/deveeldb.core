@@ -311,19 +311,16 @@ namespace Deveel.Data.Sql.Tables {
 				var selectedSet = new BigList<long>(rowCount);
 
 				foreach (var row in table) {
-					var resolver = new RowReferenceResolver(table, row.Id.Number);
-					var rowNumber = row.Id.Number;
+					var reduced = await row.ReduceExpressionAsync(context, expression);
 
-					// Resolve expression into a constant.
-					SqlObject value;
-					using (var rowContext = context.Create($"row_{rowNumber}")) {
-						rowContext.RegisterInstance<IReferenceResolver>(resolver);
-						value = await expression.ReduceToConstantAsync(rowContext);
-					}
+					if (reduced.ExpressionType != SqlExpressionType.Constant)
+						throw new InvalidOperationException();
+
+					var value = ((SqlConstantExpression) reduced).Value;
 
 					// If resolved to true then include in the selected set.
 					if (!value.IsNull && value.IsTrue) {
-						selectedSet.Add(rowNumber);
+						selectedSet.Add(row.Id.Number);
 					}
 				}
 
