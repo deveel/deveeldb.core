@@ -105,7 +105,7 @@ namespace Deveel.Data.Query.Plan {
 				return null;
 			}
 			// Return early if there is only 1 table.
-			else if (plans.Count == 1) {
+			if (plans.Count == 1) {
 				return plans[0];
 			}
 
@@ -114,32 +114,32 @@ namespace Deveel.Data.Query.Plan {
 
 			// We go through each plan in turn.
 			while (workingPlans.Count > 1) {
-				var left_plan = workingPlans[0];
-				var right_plan = workingPlans[1];
+				var leftPlan = workingPlans[0];
+				var rightPlan = workingPlans[1];
 				// First we need to determine if the left and right plan can be
 				// naturally joined.
-				int status = CanNaturallyJoin(left_plan, right_plan);
+				int status = CanNaturallyJoin(leftPlan, rightPlan);
 				if (status == 0) {
 					// Yes they can so join them
-					var new_plan = NaturallyJoinPlans(left_plan, right_plan);
+					var newPlan = NaturallyJoinPlans(leftPlan, rightPlan);
 					// Remove the left and right plan from the list and add the new plan
-					workingPlans.Remove(left_plan);
-					workingPlans.Remove(right_plan);
-					workingPlans.Insert(0, new_plan);
+					workingPlans.Remove(leftPlan);
+					workingPlans.Remove(rightPlan);
+					workingPlans.Insert(0, newPlan);
 				} else if (status == 1) {
 					// No we can't because of a right join clash, so we join the left
 					// plan right in hopes of resolving the clash.
-					var new_plan = NaturallyJoinPlans(left_plan, left_plan.RightPlan);
-					workingPlans.Remove(left_plan);
-					workingPlans.Remove(left_plan.RightPlan);
-					workingPlans.Insert(0, new_plan);
+					var newPlan = NaturallyJoinPlans(leftPlan, leftPlan.RightPlan);
+					workingPlans.Remove(leftPlan);
+					workingPlans.Remove(leftPlan.RightPlan);
+					workingPlans.Insert(0, newPlan);
 				} else if (status == 2) {
 					// No we can't because of a left join clash, so we join the left
 					// plan left in hopes of resolving the clash.
-					var new_plan = NaturallyJoinPlans(left_plan, left_plan.LeftPlan);
-					workingPlans.Remove(left_plan);
-					workingPlans.Remove(left_plan.LeftPlan);
-					workingPlans.Insert(0, new_plan);
+					var newPlan = NaturallyJoinPlans(leftPlan, leftPlan.LeftPlan);
+					workingPlans.Remove(leftPlan);
+					workingPlans.Remove(leftPlan.LeftPlan);
+					workingPlans.Insert(0, newPlan);
 				} else {
 					throw new InvalidOperationException();
 				}
@@ -406,10 +406,10 @@ namespace Deveel.Data.Query.Plan {
 				SqlExpressionType op;
 				var exp = expression;
 
-				if ((expression.ExpressionType.IsBinary() &&
-				     expression.ExpressionType.IsMathematical()) ||
-				    (!expression.ExpressionType.IsUnary() && 
-					!expression.ExpressionType.IsBinary())) {
+				if (expression.ExpressionType.IsBinary() &&
+					expression.ExpressionType.IsMathematical() &&
+					!expression.ExpressionType.IsQuantify() &&
+					!expression.ExpressionType.IsUnary()) {
 					exp = SqlExpression.And(exp, SqlExpression.Constant(SqlObject.Boolean(true)));
 					op = SqlExpressionType.And;
 				} else {
@@ -429,7 +429,7 @@ namespace Deveel.Data.Query.Plan {
 					patternExpressions.Add((SqlStringMatchExpression) exp);
 				} else {
 					// The list of variables in the expression.
-					var vars = exp.DiscoverReferences().ToList();
+					var vars = exp.DiscoverReferences();
 					if (vars.Count == 0) {
 						// These are ( 54 + 9 = 9 ), ( "z" > "a" ), ( 9.01 - 2 ), etc
 						constants.Add(exp);
@@ -448,40 +448,40 @@ namespace Deveel.Data.Query.Plan {
 
 			// The order in which expression are evaluated,
 			// (ExpressionPlan)
-			var evaluate_order = new List<ExpressionPlan>();
+			var evaluateOrder = new List<ExpressionPlan>();
 
 			// Evaluate the constants.  These should always be evaluated first
 			// because they always evaluate to either true or false or null.
-			EvaluateConstants(constants, evaluate_order);
+			EvaluateConstants(constants, evaluateOrder);
 
 			// Evaluate the singles.  If formed well these can be evaluated
 			// using fast indices.  eg. (a > 9 - 3) is more optimal than
 			// (a + 3 > 9).
-			EvaluateSingles(singleRefs, evaluate_order);
+			EvaluateSingles(singleRefs, evaluateOrder);
 
 			// Evaluate the pattern operators.  Note that some patterns can be
 			// optimized better than others, but currently we keep this near the
 			// middle of our evaluation sequence.
-			EvaluatePatterns(patternExpressions, evaluate_order);
+			EvaluatePatterns(patternExpressions, evaluateOrder);
 
 			// Evaluate the sub-queries.  These are queries of the form,
 			// (a IN ( SELECT ... )), (a = ( SELECT ... ) = ( SELECT ... )), etc.
-			EvaluateSubQueries(subQueryExpressions, evaluate_order);
+			EvaluateSubQueries(subQueryExpressions, evaluateOrder);
 
 			// Evaluate multiple variable expressions.  It's possible these are
 			// joins.
-			EvaluateMultiples(multiRefs, evaluate_order);
+			EvaluateMultiples(multiRefs, evaluateOrder);
 
 			// Lastly evaluate the sub-logic expressions.  These expressions are
 			// OR type expressions.
-			EvaluateSubLogic(subLogicExpressions, evaluate_order);
+			EvaluateSubLogic(subLogicExpressions, evaluateOrder);
 
 
 
 			// Sort the evaluation list by how optimizable the expressions are,
-			evaluate_order.Sort();
+			evaluateOrder.Sort();
 
-			foreach (var plan in evaluate_order) {
+			foreach (var plan in evaluateOrder) {
 				plan.AddToPlan(this);
 			}
 		}
@@ -605,14 +605,16 @@ namespace Deveel.Data.Query.Plan {
 		}
 
 		private void EvaluateConstants(List<SqlExpression> constants, List<ExpressionPlan> evaluateOrder) {
-			throw new NotImplementedException();
+			foreach (var constant in constants) {
+				evaluateOrder.Add(new ConstantExpressionPlan(constant));
+			}
 		}
 
 		private void EvaluateSubLogic(List<SqlBinaryExpression> subLogicExpressions, List<ExpressionPlan> evaluateOrder) {
 			each_logic_expr:
 			foreach (var expr in subLogicExpressions) {
 				// Break the expression down to a list of OR expressions,
-				var or_exprs = new[] {expr.Left, expr.Right};
+				var orExprs = new[] {expr.Left, expr.Right};
 
 				// An optimizations here;
 
@@ -626,27 +628,26 @@ namespace Deveel.Data.Query.Plan {
 
 				TablePlan common = null;
 
-				foreach (var or_expr in or_exprs) {
-					var vars = or_expr.DiscoverReferences().ToArray();
+				foreach (var orExpr in orExprs) {
+					var vars = orExpr.DiscoverReferences();
 					// If there are no variables then don't bother with this expression
-					if (vars.Length > 0) {
+					if (vars.Count > 0) {
 						// Find the common table source (if any)
-						var ts = FindCommonTablePlan(vars);
-						var or_after_joins = false;
+						var ts = FindCommonTablePlan(vars.ToArray());
+						var orAfterJoins = false;
 						if (ts == null) {
 							// No common table, so OR after the joins
-							or_after_joins = true;
+							orAfterJoins = true;
 						} else if (common == null) {
 							common = ts;
 						} else if (common != ts) {
 							// No common table with the vars in this OR list so do this OR
 							// after the joins.
-							or_after_joins = true;
+							orAfterJoins = true;
 						}
 
-						if (or_after_joins) {
-							var exp_plan = new SubLogicExpressionPlan(expr, 0.70f);
-							evaluateOrder.Add(exp_plan);
+						if (orAfterJoins) {
+							evaluateOrder.Add(new SubLogicExpressionPlan(expr, 0.70f));
 							// Continue to the next logic expression
 							goto each_logic_expr;
 						}
@@ -655,14 +656,32 @@ namespace Deveel.Data.Query.Plan {
 				{
 					// Either we found a common table or there are no variables in the OR.
 					// Either way we should evaluate this after the join.
-					var exp_plan = new SubLogicExpressionPlan(expr, 0.58f);
-					evaluateOrder.Add(exp_plan);
+					evaluateOrder.Add(new SubLogicExpressionPlan(expr, 0.58f));
 				}
 			}
 		}
 
 		private void EvaluatePatterns(List<SqlStringMatchExpression> patternExpressions, List<ExpressionPlan> evaluateOrder) {
-			throw new NotImplementedException();
+			foreach (var expression in patternExpressions) {
+				// If the LHS is a single variable and the RHS is a constant then
+				// the conditions are right for a simple pattern search.
+				var lhs_v = expression.Left.AsReference();
+				if (expression.IsConstant()) {
+					var expr_plan = new ConstantExpressionPlan(expression);
+					evaluateOrder.Add(expr_plan);
+				} else if (lhs_v != null && expression.Pattern.IsConstant()) {
+					var expr_plan = new SimplePatternExpressionPlan(lhs_v, expression, 0.25f);
+					evaluateOrder.Add(expr_plan);
+				} else {
+					// Otherwise we must assume a complex pattern search which may
+					// require a join.  For example, 'a + b LIKE 'a%'' or
+					// 'a LIKE b'.  At the very least, this will be an exhaustive
+					// search and at the worst it will be a join + exhaustive search.
+					// So we should evaluate these at the end of the evaluation order.
+					var expr_plan = new ExhaustiveSelectExpressionPlan(expression, 0.82f);
+					evaluateOrder.Add(expr_plan);
+				}
+			}
 		}
 
 		private TableSetPlan Copy() {
