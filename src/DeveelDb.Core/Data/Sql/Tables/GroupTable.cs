@@ -8,7 +8,7 @@ namespace Deveel.Data.Sql.Tables {
 	public sealed class GroupTable : FunctionTable {
 		private readonly ITable table;
 		private Dictionary<int, BigList<long>> groupLinks;
-		private BigList<int> groupLookup;
+		private BigArray<int> groupLookup;
 		private bool wholeTableAsGroup;
 		private BigList<long> wholeTableGroup;
 		private long wholeTableGroupSize;
@@ -32,7 +32,6 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		private void CreateGroup() {
-			// TODO: create a new table ...
 			wholeTableAsGroup = true;
 
 			wholeTableGroupSize = table.RowCount;
@@ -68,7 +67,7 @@ namespace Deveel.Data.Sql.Tables {
 			// contains consequtive links to each row in the group until -1 is reached
 			// indicating the end of the group;
 
-			groupLookup = new BigList<int>(rowCount);
+			groupLookup = new BigArray<int>(rowCount);
 			groupLinks = new Dictionary<int, BigList<long>>();
 			int currentGroup = 0;
 			var groupRows = new BigList<long>(rowCount);
@@ -97,7 +96,7 @@ namespace Deveel.Data.Sql.Tables {
 					}
 				}
 
-				groupLookup.Insert(rowIndex, currentGroup);
+				groupLookup[rowIndex] = currentGroup;
 
 				previousRow = rowIndex;
 			}

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Deveel.Data.Services;
 using Deveel.Data.Sql;
 using Deveel.Data.Sql.Expressions;
+using Deveel.Data.Sql.Methods;
 using Deveel.Data.Sql.Tables;
 
 using Moq;
@@ -55,6 +56,21 @@ namespace Deveel.Data.Query {
 
 			context.RegisterInstance<IDbObjectManager>(tableManager.Object);
 			context.RegisterService<ITableCache, InMemoryTableCache>();
+
+			var funcInfo = new SqlFunctionInfo(new ObjectName("count"), PrimitiveTypes.Integer());
+			funcInfo.Parameters.Add(new SqlMethodParameterInfo("x", PrimitiveTypes.Table()));
+
+			var aggResolver = new Mock<IMethodResolver>();
+			aggResolver.Setup(x => x.ResolveMethod(It.IsAny<IContext>(), It.IsAny<Invoke>()))
+				.Returns(new SqlAggregateFunctionDelegate(funcInfo, iterate => {
+					if (iterate.IsFirst) {
+						return iterate.Current;
+					} else {
+						return iterate.Accumulation.Add(iterate.Current);
+					}
+				}));
+
+			context.RegisterInstance<IMethodResolver>(aggResolver.Object);
 		}
 
 		[Fact]
@@ -311,6 +327,55 @@ namespace Deveel.Data.Query {
 
 			Assert.NotNull(result);
 			Assert.Equal(3, result.RowCount);		// all rows in the original table includes all rows in the computed one
+		}
+
+		[Fact]
+		public async Task GroupByColumn() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var groupExp = SqlExpression.Function(new ObjectName("count"), new InvokeArgument(SqlExpression.Reference(new ObjectName("*"))));
+			var groupNode = new GroupNode(fetchNode, new []{new ObjectName(tableName, "b") }, null, new []{groupExp}, new []{"bGroup"});
+
+			var result = await groupNode.ReduceAsync(context);
+			Assert.Equal(1, result.RowCount);
+		}
+
+		[Fact]
+		public async Task GroupBy() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var groupExp = SqlExpression.Function(new ObjectName("count"), new InvokeArgument(SqlExpression.Reference(new ObjectName("*"))));
+			var groupNode = new GroupNode(fetchNode, null, new[] { groupExp }, new[] { "bGroup" });
+
+			var result = await groupNode.ReduceAsync(context);
+			Assert.Equal(1, result.RowCount);
+		}
+
+		[Fact]
+		public async Task GroupMax() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var groupExp = SqlExpression.Function(new ObjectName("count"), new InvokeArgument(SqlExpression.Reference(new ObjectName("*"))));
+			var groupMaxColumn = new ObjectName(tableName, "a");
+			var groupNode = new GroupNode(fetchNode, new[] { new ObjectName(tableName, "b") }, groupMaxColumn, new[] { groupExp }, new[] { "bGroup" });
+
+			var result = await groupNode.ReduceAsync(context);
+			Assert.Equal(1, result.RowCount);
+		}
+
+
+		[Fact]
+		public async Task FunctionSelect() {
+			var tableName = new ObjectName("tab1");
+			var fetchNode = new FetchTableNode(tableName);
+			var exp = SqlExpression.Add(SqlExpression.Constant(SqlObject.BigInt(22)),
+				SqlExpression.Constant(SqlObject.BigInt(1)));
+
+			var functionNode = new FunctionNode(fetchNode, new []{exp}, new []{"func1"});
+
+			var result = await functionNode.ReduceAsync(context);
+
+			Assert.NotNull(result);
 		}
 
 		public void Dispose() {
