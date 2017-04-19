@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Expressions;
@@ -85,6 +86,55 @@ namespace Deveel.Data.Sql.Tables {
 			var rowSets = new IEnumerable<long>[] { thisRowSet, tableRowSet };
 
 			return new VirtualTable(tabs, rowSets);
+		}
+
+		public static ITable Join(ITable table, ITable otherTable, bool quick) {
+			ITable outTable;
+
+			if (quick) {
+				// This implementation doesn't materialize the join
+				outTable = new CrossTable(table, otherTable);
+			} else {
+				var tabs = new[] { table, otherTable };
+				var rowSets = new BigList<long>[2];
+
+				// Optimized trivial case, if either table has zero rows then result of
+				// join will contain zero rows also.
+				if (table.RowCount == 0 || otherTable.RowCount == 0) {
+					rowSets[0] = new BigList<long>(0);
+					rowSets[1] = new BigList<long>(0);
+				} else {
+					// The natural join algorithm.
+					var thisRowSet = new BigList<long>();
+					var tableRowSet = new BigList<long>();
+
+					// Get the set of all rows in the given table.
+					var tableSelectedSet = otherTable.Select(x => x.Id.Number).ToList();
+
+					int tableSelectedSetSize = tableSelectedSet.Count;
+
+					// Join with the set of rows in this table.
+					using (var e = table.GetEnumerator()) {
+						while (e.MoveNext()) {
+							var rowIndex = e.Current.Id.Number;
+							for (long i = 0; i < tableSelectedSetSize; ++i) {
+								thisRowSet.Add(rowIndex);
+							}
+
+							tableRowSet.AddRange(tableSelectedSet);
+						}
+					}
+
+					// The row sets we are joining from each table.
+					rowSets[0] = thisRowSet;
+					rowSets[1] = tableRowSet;
+				}
+
+				// Create the new VirtualTable with the joined tables.
+				outTable = new VirtualTable(tabs, rowSets);
+			}
+
+			return outTable;
 		}
 	}
 }

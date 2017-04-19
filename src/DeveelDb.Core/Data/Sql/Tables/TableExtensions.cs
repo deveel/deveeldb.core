@@ -602,6 +602,10 @@ namespace Deveel.Data.Sql.Tables {
 			return TableJoins.JoinAsync(context, table, other, columnName, op, expression);
 		}
 
+		public static ITable NaturalJoin(this ITable table, ITable other) {
+			return TableJoins.Join(table, other, true);
+		}
+
 		#endregion
 	}
 }
