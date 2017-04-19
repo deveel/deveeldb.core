@@ -8,12 +8,16 @@ namespace Deveel.Data.Query {
 		private static readonly object globalLock = new object();
 		private static int globalId;
 
-		public CacheNode(IQueryPlanNode child, int id) 
+		public CacheNode(IQueryPlanNode child) 
+			: this(child, NewId()) {
+		}
+
+		public CacheNode(IQueryPlanNode child, long id) 
 			: base(child) {
 			Id = id;
 		}
 
-		public int Id { get; }
+		public long Id { get; }
 
 		private static long NewId() {
 			long id;
