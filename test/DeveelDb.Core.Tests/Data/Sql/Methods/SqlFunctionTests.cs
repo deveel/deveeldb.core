@@ -55,9 +55,11 @@ namespace Deveel.Data.Sql.Methods {
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
 
+			var function = new SqlFunctionDelegate(info, context => Task.CompletedTask);
+
 			var invoke = new Invoke(name, new []{new InvokeArgument(SqlObject.BigInt(11)) });
 
-			Assert.True(info.Matches(null, invoke));
+			Assert.True(function.Matches(null, invoke));
 		}
 
 		[Fact]
@@ -133,6 +135,28 @@ namespace Deveel.Data.Sql.Methods {
 			Assert.True(result.HasReturnedValue);
 			Assert.NotNull(result.ReturnedValue);
 			Assert.IsType<SqlConstantExpression>(result.ReturnedValue);
+		}
+
+		[Fact]
+		public void ResolveDeterministricReturnType() {
+			var name = ObjectName.Parse("a.func");
+			var info = new SqlFunctionInfo(name, new SqlDeterministicType());
+			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlMethodParameterInfo("b",
+				PrimitiveTypes.String(),
+				SqlExpression.Constant(SqlObject.String(new SqlString("test")))));
+
+			var function = new SqlFunctionDelegate(info, ctx => {
+				var a = ctx.Value("a");
+				var b = ctx.Value("b");
+				Assert.NotNull(b);
+				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
+			});
+
+			var returnType = function.ReturnType(context,
+				new Invoke(name, new[] {new InvokeArgument(SqlObject.Integer(33)), new InvokeArgument(SqlObject.Integer(2))}));
+
+			Assert.Equal(PrimitiveTypes.Integer(), returnType);
 		}
 	}
 }

@@ -76,8 +76,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlType GetSqlType(IContext context) {
 			var function = ResolveFunction(context);
-			var functionInfo = function.MethodInfo;
-			return functionInfo.ReturnType;
+			return function.ReturnType(context, new Invoke(function.MethodInfo.MethodName, Arguments));
 		}
 
 		public override async Task<SqlExpression> ReduceAsync(IContext context) {

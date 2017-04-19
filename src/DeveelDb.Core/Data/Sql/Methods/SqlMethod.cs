@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -40,9 +41,26 @@ namespace Deveel.Data.Sql.Methods {
 
 		public virtual bool IsSystem => true;
 
+		protected virtual bool ValidateInvoke(InvokeInfo invokeInfo) {
+			foreach (var parameter in MethodInfo.Parameters) {
+				var argType = invokeInfo.GetArgumentType(parameter.Name);
+				if (!parameter.ParameterType.IsComparable(argType) &&
+				    !parameter.IsDeterministic)
+					return false;
+			}
+
+			return true;
+		}
+
 		public async Task<SqlMethodResult> ExecuteAsync(IContext context, Invoke invoke) {
 			using (var methodContext = new MethodContext(context, this, invoke)) {
-				await ExecuteContextAsync(methodContext);
+				try {
+					await ExecuteContextAsync(methodContext);
+				} catch (MethodException) {
+					throw;
+				} catch (Exception ex) {
+					throw new MethodException($"Error while executing {MethodInfo.MethodName}: see inner exception for more information", ex);
+				}
 
 				var result = methodContext.CreateResult();
 
@@ -91,7 +109,7 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		public bool Matches(IContext context, Invoke invoke) {
-			return MethodInfo.Matches(context, invoke);
+			return MethodInfo.Matches(context, ValidateInvoke, invoke);
 		}
 	}
 }

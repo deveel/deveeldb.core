@@ -75,36 +75,41 @@ namespace Deveel.Data.Sql.Methods {
 			return this.ToSqlString();
 		}
 
-		public bool Matches(IContext context, Invoke invoke) {
-			return Matches(this, context, invoke);
-		}
-
-		public static bool Matches(SqlMethodInfo methodInfo, IContext context, Invoke invoke) {
+		internal bool Matches(IContext context, Func<InvokeInfo, bool> validator, Invoke invoke) {
 			var ignoreCase = context.GetValue("ignoreCase", true);
 
-			if (!methodInfo.MethodName.Equals(invoke.MethodName, ignoreCase))
+			if (!MethodName.Equals(invoke.MethodName, ignoreCase))
 				return false;
-			if (methodInfo.Parameters.Count != invoke.Arguments.Count)
+			if (Parameters.Count != invoke.Arguments.Count)
 				return false;
+
+			var invokeInfo = GetInvokeInfo(context, invoke);
+			if (!validator(invokeInfo))
+				return false;
+
+			return true;
+		}
+
+		internal InvokeInfo GetInvokeInfo(IContext context, Invoke invoke) {
+			var argTypes = new Dictionary<string, SqlType>();
+			var ignoreCase = context.GetValue("ignoreCase", true);
 
 			for (int i = 0; i < invoke.Arguments.Count; i++) {
 				var arg = invoke.Arguments[i];
 
 				SqlMethodParameterInfo paramInfo;
 				if (arg.IsNamed) {
-					if (!methodInfo.TryGetParameter(arg.ParameterName, ignoreCase, out paramInfo))
-						return false;
+					if (!TryGetParameter(arg.ParameterName, ignoreCase, out paramInfo))
+						return null;
 				} else {
-					paramInfo = methodInfo.Parameters[i];
+					paramInfo = Parameters[i];
 				}
 
 				var argType = arg.Value.GetSqlType(context);
-				if (!argType.IsComparable(paramInfo.ParameterType))
-					return false;
+				argTypes[paramInfo.Name] = argType;
 			}
 
-			return true;
-
+			return new InvokeInfo(this, argTypes);
 		}
 
 		#region ParameterCollection
