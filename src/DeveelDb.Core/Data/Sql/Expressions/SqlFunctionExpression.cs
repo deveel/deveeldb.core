@@ -58,18 +58,24 @@ namespace Deveel.Data.Sql.Expressions {
 
 		private SqlFunctionBase ResolveFunction(IContext context) {
 			if (context == null)
-				throw new SqlExpressionException();
+				throw new SqlExpressionException("A context is required to reduce a function invoke");
 
 			var resolver = context.Scope.Resolve<IMethodResolver>();
 			if (resolver == null)
 				throw new SqlExpressionException();
 
-			var method = resolver.ResolveMethod(context, new Invoke(FunctionName, Arguments));
+			var name = FunctionName;
+			if (!context.IsSystemFunction(name, Arguments)) {
+				name = context.QualifyName(name);
+			}
+
+			var invoke = new Invoke(name, Arguments);
+			var method = resolver.ResolveMethod(context, invoke);
 			if (method == null)
-				throw new SqlExpressionException();
+				throw new SqlExpressionException($"Could not find any function for '{invoke}'.");
 
 			if (!method.IsFunction)
-				throw new SqlExpressionException();
+				throw new SqlExpressionException($"The method {method.MethodInfo.MethodName} is not a function.");
 
 			return ((SqlFunctionBase) method);
 		}
