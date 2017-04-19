@@ -4,15 +4,23 @@ using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Query.Plan {
 	class SimpleSubQueryExpressionPlan : ExpressionPlan {
-		public SimpleSubQueryExpressionPlan(SqlExpression expression, float optimizeFactor)
+		public SimpleSubQueryExpressionPlan(SqlQuantifyExpression expression, float optimizeFactor)
 			: base(optimizeFactor) {
 			Expression = expression;
 		}
 
-		public SqlExpression Expression { get; }
+		public SqlQuantifyExpression Expression { get; }
 
 		public override void AddToPlan(TableSetPlan plan) {
-			throw new NotImplementedException();
+			var op = Expression.ExpressionType;
+			var subOp = Expression.Expression.ExpressionType;
+			var leftRef = Expression.Expression.Left.AsReference();
+			var rightPlan = Expression.Expression.Right.AsQueryPlanNode();
+
+			var tablePlan = plan.FindTablePlan(leftRef);
+			var leftPlan = tablePlan.Plan;
+
+			tablePlan.UpdatePlan(new NonCorrelatedSelectNode(leftPlan, rightPlan, new []{leftRef}, op, subOp));
 		}
 	}
 }

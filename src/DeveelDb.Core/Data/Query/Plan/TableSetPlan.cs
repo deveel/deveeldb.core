@@ -26,25 +26,41 @@ namespace Deveel.Data.Query.Plan {
 		private static int CanNaturallyJoin(TablePlan plan1, TablePlan plan2) {
 			if (plan1.LeftPlan == plan2 || plan1.RightPlan == plan2) {
 				return SafeJoin;
-			} else if (plan1.LeftPlan != null && plan2.LeftPlan != null) {
+			}
+
+			if (plan1.LeftPlan != null && plan2.LeftPlan != null) {
 				// This is a left clash
 				return LeftJoinClash;
-			} else if (plan1.RightPlan != null && plan2.RightPlan != null) {
+			}
+
+			if (plan1.RightPlan != null && plan2.RightPlan != null) {
 				// This is a right clash
 				return 1;
-			} else if ((plan1.LeftPlan == null && plan2.RightPlan == null) ||
-			           (plan1.RightPlan == null && plan2.LeftPlan == null)) {
+			}
+
+			if ((plan1.LeftPlan == null && plan2.RightPlan == null) ||
+			    (plan1.RightPlan == null && plan2.LeftPlan == null)) {
 				// This means a merge between the plans is fine
 				return SafeJoin;
-			} else {
-				// Must be a left and right clash
-				return LeftJoinClash;
 			}
+
+			// Must be a left and right clash
+			return LeftJoinClash;
 		}
 
 		public void AddTablePlan(TablePlan plan) {
 			tables.Add(plan);
 			hasJoins = true;
+		}
+
+		public void AddFromTable(IQueryPlanNode queryPlan, IFromTable fromTable) {
+			var columns = fromTable.Columns;
+			var uniqueNames = new[] {fromTable.UniqueName};
+			AddTablePlan(new TablePlan(queryPlan, columns, uniqueNames));
+		}
+
+		public TablePlan GetTablePlan(int offset) {
+			return tables[offset];
 		}
 
 		public TablePlan FindTablePlan(ObjectName columnName) {
@@ -147,6 +163,22 @@ namespace Deveel.Data.Query.Plan {
 
 			// Return the working plan of the merged tables.
 			return workingPlans[0];
+		}
+
+		public TablePlan JoinAllPlansWithReferences(IEnumerable<ObjectName> allRefs) {
+			// Collect all the plans that encapsulate these variables.
+			var touchedPlans = new List<TablePlan>();
+			foreach (var v in allRefs) {
+				var plan = FindTablePlan(v);
+				if (!touchedPlans.Contains(plan)) {
+					touchedPlans.Add(plan);
+				}
+			}
+
+			// Now 'touched_plans' contains a list of PlanTableSource for each
+			// plan to be joined.
+
+			return JoinAllPlans(touchedPlans);
 		}
 
 		private static String CreateRandomOuterJoinName() {
@@ -276,7 +308,7 @@ namespace Deveel.Data.Query.Plan {
 			return JoinAllPlans(tables);
 		}
 
-		private void PlanForExpression(SqlExpression expression) {
+		public void PlanForExpression(SqlExpression expression) {
 			if (expression == null)
 				return;
 
@@ -377,7 +409,7 @@ namespace Deveel.Data.Query.Plan {
 					// Set the new table list
 					tables = newTableList;
 				} else if (op == SqlExpressionType.And) {
-					PlanForExpressions(binary.Left, binary.Right);
+					PlanForExpressions(binary);
 				} else {
 					throw new InvalidOperationException($"Expression {op} is not a valid logical operation");
 				}
@@ -401,17 +433,17 @@ namespace Deveel.Data.Query.Plan {
 			// The list of multi variable expressions (possible joins)
 			var multiRefs = new List<SqlExpression>();
 
-
 			foreach (var expression in expressions) {
 				SqlExpressionType op;
 				var exp = expression;
 
-				if (expression.ExpressionType.IsBinary() &&
-					expression.ExpressionType.IsMathematical() &&
-					!expression.ExpressionType.IsQuantify() &&
-					!expression.ExpressionType.IsUnary()) {
-					exp = SqlExpression.And(exp, SqlExpression.Constant(SqlObject.Boolean(true)));
-					op = SqlExpressionType.And;
+				if (expression.ExpressionType.IsQuantify() ||
+					expression.ExpressionType.IsPattern()) {
+					op = expression.ExpressionType;
+				} else if (!expression.ExpressionType.IsBinary() ||
+					expression.ExpressionType.IsMathematical()) {
+					exp = SqlExpression.Equal(exp, SqlExpression.Constant(SqlObject.Boolean(true)));
+					op = SqlExpressionType.Equal;
 				} else {
 					op = expression.ExpressionType;
 				}
@@ -486,6 +518,34 @@ namespace Deveel.Data.Query.Plan {
 			}
 		}
 
+		private void PlanAllOuterJoins() {
+			if (tables.Count <= 1) {
+				return;
+			}
+
+			// Make a working copy of the plan list.
+			var workingPlans = new List<TablePlan>(tables);
+
+			var plan1 = workingPlans[0];
+			for (int i = 1; i < tables.Count; ++i) {
+				var plan2 = workingPlans[i];
+
+				if (plan1.RightPlan == plan2) {
+					plan1 = NaturallyJoinPlans(plan1, plan2);
+				} else {
+					plan1 = plan2;
+				}
+			}
+
+		}
+
+		public IQueryPlanNode PlanSearchExpression(SqlExpression search_expression) {
+			// First perform all outer tables.
+			PlanAllOuterJoins();
+
+			return LogicalEvaluate(search_expression);
+		}
+
 		private void EvaluateMultiples(List<SqlExpression> multiRefs, List<ExpressionPlan> evaluateOrder) {
 			// FUTURE OPTIMIZATION:
 			//   This join order planner is a little primitive in design.  It orders
@@ -501,8 +561,8 @@ namespace Deveel.Data.Query.Plan {
 				var binary = (SqlBinaryExpression) expr;
 				
 				// Get the list of variables in the left hand and right hand side
-				var lhs_v = (binary.Left as SqlReferenceExpression)?.ReferenceName;
-				var rhs_v = (binary.Right as SqlReferenceExpression)?.ReferenceName;
+				var lhsRef = (binary.Left as SqlReferenceExpression)?.ReferenceName;
+				var rhsRef = (binary.Right as SqlReferenceExpression)?.ReferenceName;
 
 				// Work out how optimizable the join is.
 				// The calculation is as follows;
@@ -512,20 +572,20 @@ namespace Deveel.Data.Query.Plan {
 				//    optimizable value is set to 0.64f.
 				// c) Otherwise it is set to 0.68f (exhaustive select guarenteed).
 
-				ExpressionPlan exp_plan;
-				if (lhs_v == null && rhs_v == null) {
+				ExpressionPlan expPlan;
+				if (lhsRef == null && rhsRef == null) {
 					// Neither lhs or rhs are single vars
-					exp_plan = new ExhaustiveJoinExpressionPlan((SqlBinaryExpression) expr, 0.68f);
-				} else if (lhs_v != null && rhs_v != null) {
+					expPlan = new ExhaustiveJoinExpressionPlan((SqlBinaryExpression) expr, 0.68f);
+				} else if (lhsRef != null && rhsRef != null) {
 					// Both lhs and rhs are a single var (most optimizable type of
 					// join).
-					exp_plan = new StandardJoinExpressionPlan((SqlBinaryExpression)expr, 0.60f);
+					expPlan = new StandardJoinExpressionPlan((SqlBinaryExpression)expr, 0.60f);
 				} else {
 					// Either lhs or rhs is a single var
-					exp_plan = new StandardJoinExpressionPlan( (SqlBinaryExpression) expr, 0.64f);
+					expPlan = new StandardJoinExpressionPlan( (SqlBinaryExpression) expr, 0.64f);
 				}
 
-				evaluateOrder.Add(exp_plan);
+				evaluateOrder.Add(expPlan);
 			}
 		}
 
@@ -595,13 +655,101 @@ namespace Deveel.Data.Query.Plan {
 				} else {
 					// This is a simple sub-query expression plan with a single LHS
 					// variable and a single RHS sub-query.
-					evaluateOrder.Add(new SimpleSubQueryExpressionPlan(expression, 0.3f));
+					if (!expression.ExpressionType.IsQuantify())
+						throw new InvalidOperationException();
+
+					evaluateOrder.Add(new SimpleSubQueryExpressionPlan((SqlQuantifyExpression) expression, 0.3f));
 				}
 			}
 		}
 
 		private void EvaluateSingles(List<SqlExpression> singleRefs, List<ExpressionPlan> evaluateOrder) {
-			throw new NotImplementedException();
+			// The list of simple expression plans (lhs = single)
+			var singleRefPlans = new List<SingleRefPlan>();
+
+			// The list of complex function expression plans (lhs = expression)
+			var complexPlans = new List<SingleRefPlan>();
+
+			foreach (var expression in singleRefs) {
+				ObjectName singleRef;
+
+				if (expression.ExpressionType.IsQuantify()) {
+					var quantified = (SqlQuantifyExpression) expression;
+					singleRef = quantified.Expression.Left.AsReference();
+
+					if (singleRef != null) {
+						evaluateOrder.Add(new SimpleQuantifyExpressionPlan(singleRef,
+							quantified.ExpressionType,
+							quantified.Expression.ExpressionType,
+							quantified.Expression.Right,
+							0.2f));
+					} else {
+						singleRef = quantified.Expression.DiscoverReferences()[0];
+						evaluateOrder.Add(new ComplexSingleExpressionPlan(singleRef, expression, 0.8f));
+					}
+				} else if (expression.ExpressionType.IsBinary()) {
+					var binary = (SqlBinaryExpression) expression;
+
+					// Put the variable on the LHS, constant on the RHS
+					var allRefs = expression.DiscoverReferences();
+					if (allRefs.Count == 0) {
+						// Reverse the expressions and the operator
+						binary = SqlExpression.Binary(binary.ExpressionType.Reverse(), binary.Right, binary.Left);
+
+						singleRef = binary.Left.DiscoverReferences()[0];
+					} else {
+						singleRef = allRefs[0];
+					}
+
+					var tablePlan = FindTablePlan(singleRef);
+
+					// Simple LHS?
+					var v = binary.Left.AsReference();
+
+					if (v != null) {
+						AddSingleRefPlanTo(singleRefPlans, tablePlan, v, singleRef, binary);
+					} else {
+						// No, complex lhs
+						AddSingleRefPlanTo(complexPlans, tablePlan, null, singleRef, binary);
+					}
+				}
+			}
+
+			// We now have a list of simple and complex plans for each table,
+			foreach (var refPlan in singleRefPlans) {
+				evaluateOrder.Add(new SimpleSingleExpressionPlan(refPlan.SingleRef, refPlan.Expression, 0.2f));
+			}
+
+			foreach (var refPlan in complexPlans) {
+				evaluateOrder.Add(new ComplexSingleExpressionPlan(refPlan.SingleRef, refPlan.Expression, 0.8f));
+			}
+		}
+
+		private static void AddSingleRefPlanTo(List<SingleRefPlan> list,
+			TablePlan table,
+			ObjectName variable,
+			ObjectName singleRef,
+			SqlBinaryExpression exp) {
+
+			// Is this source in the list already?
+			foreach (var plan in list) {
+				if (plan.Table == table &&
+				    (variable == null ||
+				     plan.Column.Equals(variable))) {
+					// Append to end of current expression
+					plan.Column = variable;
+					plan.Expression = SqlExpression.And(plan.Expression, exp);
+					return;
+				}
+			}
+
+			// Didn't find so make a new entry in the list.
+			list.Add(new SingleRefPlan {
+				Table = table,
+				Column = variable,
+				SingleRef = singleRef,
+				Expression = exp
+			});
 		}
 
 		private void EvaluateConstants(List<SqlExpression> constants, List<ExpressionPlan> evaluateOrder) {
@@ -665,21 +813,18 @@ namespace Deveel.Data.Query.Plan {
 			foreach (var expression in patternExpressions) {
 				// If the LHS is a single variable and the RHS is a constant then
 				// the conditions are right for a simple pattern search.
-				var lhs_v = expression.Left.AsReference();
+				var lhsRef = expression.Left.AsReference();
 				if (expression.IsConstant()) {
-					var expr_plan = new ConstantExpressionPlan(expression);
-					evaluateOrder.Add(expr_plan);
-				} else if (lhs_v != null && expression.Pattern.IsConstant()) {
-					var expr_plan = new SimplePatternExpressionPlan(lhs_v, expression, 0.25f);
-					evaluateOrder.Add(expr_plan);
+					evaluateOrder.Add(new ConstantExpressionPlan(expression));
+				} else if (lhsRef != null && expression.Pattern.IsConstant()) {
+					evaluateOrder.Add(new SimplePatternExpressionPlan(lhsRef, expression, 0.25f));
 				} else {
 					// Otherwise we must assume a complex pattern search which may
 					// require a join.  For example, 'a + b LIKE 'a%'' or
 					// 'a LIKE b'.  At the very least, this will be an exhaustive
 					// search and at the worst it will be a join + exhaustive search.
 					// So we should evaluate these at the end of the evaluation order.
-					var expr_plan = new ExhaustiveSelectExpressionPlan(expression, 0.82f);
-					evaluateOrder.Add(expr_plan);
+					evaluateOrder.Add(new ExhaustiveSelectExpressionPlan(expression, 0.82f));
 				}
 			}
 		}

@@ -16,7 +16,8 @@ namespace Deveel.Data.Query.Plan {
 		public SqlExpression Expression { get; }
 
 		public override void AddToPlan(TableSetPlan plan) {
-			throw new NotImplementedException();
+			var tablePlan = plan.JoinAllPlansWithReferences(References);
+			tablePlan.UpdatePlan(new FullSelectNode(tablePlan.Plan, Expression));
 		}
 	}
 }

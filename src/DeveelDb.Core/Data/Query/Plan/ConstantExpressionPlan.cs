@@ -12,7 +12,8 @@ namespace Deveel.Data.Query.Plan {
 		}
 
 		public override void AddToPlan(TableSetPlan plan) {
-			throw new NotImplementedException();
+			var tablePlan = plan.GetTablePlan(0);
+			tablePlan.UpdatePlan(new ConstantSelectNode(tablePlan.Plan, Expression));
 		}
 	}
 }

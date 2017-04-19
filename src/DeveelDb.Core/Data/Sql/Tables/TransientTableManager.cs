@@ -33,19 +33,27 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		Task<bool> IDbObjectManager.RealObjectExistsAsync(ObjectName objName) {
-			return TableExistsAsync(objName);
+			return Task.FromResult(TableExists(objName));
 		}
 
 		Task<bool> IDbObjectManager.ObjectExistsAsync(ObjectName objName) {
-			return TableExistsAsync(objName);
+			return Task.FromResult(TableExists(objName));
 		}
 
 		Task<IDbObjectInfo> IDbObjectManager.GetObjectInfoAsync(ObjectName objectName) {
-			throw new NotImplementedException();
+			return Task.FromResult<IDbObjectInfo>(GetTableInfo(objectName));
 		}
 
-		public Task<bool> TableExistsAsync(ObjectName tableName) {
-			return Task.FromResult(tables.ContainsKey(tableName));
+		public TableInfo GetTableInfo(ObjectName objectName) {
+			ITable table;
+			if (!tables.TryGetValue(objectName, out table))
+				throw new InvalidOperationException();
+
+			return table.TableInfo;
+		}
+
+		public bool TableExists(ObjectName tableName) {
+			return tables.ContainsKey(tableName);
 		}
 
 		async Task<IDbObject> IDbObjectManager.GetObjectAsync(ObjectName objName) {

@@ -12,7 +12,7 @@ namespace Deveel.Data.Query.Plan {
 		public SqlBinaryExpression Expression { get; }
 
 		public override void AddToPlan(TableSetPlan plan) {
-			throw new NotImplementedException();
+			plan.PlanForExpression(Expression);
 		}
 	}
 }

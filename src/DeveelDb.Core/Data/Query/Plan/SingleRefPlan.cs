@@ -3,8 +3,8 @@
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Query.Plan {
-	class SingleColumnPlan {
-		public ObjectName SingleColumn { get; set; }
+	class SingleRefPlan {
+		public ObjectName SingleRef { get; set; }
 
 		public ObjectName Column { get; set; }
 

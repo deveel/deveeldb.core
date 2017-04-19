@@ -6,6 +6,10 @@ using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Query.Plan {
 	class CorrelatedReferenceExpression : SqlExpression {
+		public CorrelatedReferenceExpression(ObjectName reference, int queryLevel)
+			: this(reference, queryLevel, null) {
+		}
+
 		public CorrelatedReferenceExpression(ObjectName reference, int queryLevel, SqlConstantExpression value)
 			: base((SqlExpressionType) 233) {
 			Reference = reference;

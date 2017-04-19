@@ -3,8 +3,8 @@
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Query.Plan {
-	class SimplePatternExpressionPlan : ExpressionPlan {
-		public SimplePatternExpressionPlan(ObjectName reference, SqlExpression expression, float optimizeFactor)
+	class ComplexSingleExpressionPlan : ExpressionPlan {
+		public ComplexSingleExpressionPlan(ObjectName reference, SqlExpression expression, float optimizeFactor) 
 			: base(optimizeFactor) {
 			Reference = reference;
 			Expression = expression;
@@ -16,7 +16,7 @@ namespace Deveel.Data.Query.Plan {
 
 		public override void AddToPlan(TableSetPlan plan) {
 			var tablePlan = plan.FindTablePlan(Reference);
-			tablePlan.UpdatePlan(new SimplePatternSelectNode(tablePlan.Plan, Expression));
+			tablePlan.UpdatePlan(new FullSelectNode(tablePlan.Plan, Expression));
 		}
 	}
 }
