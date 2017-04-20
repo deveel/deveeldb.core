@@ -20,19 +20,19 @@ using System;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
-	public sealed class SqlMethodParameterInfo : ISqlFormattable {
-		public SqlMethodParameterInfo(string name, SqlType parameterType) 
+	public sealed class SqlParameterInfo : ISqlFormattable {
+		public SqlParameterInfo(string name, SqlType parameterType) 
 			: this(name, parameterType, null) {
 		}
 
-		public SqlMethodParameterInfo(string name, SqlType parameterType, SqlExpression defaultValue) 
+		public SqlParameterInfo(string name, SqlType parameterType, SqlExpression defaultValue) 
 			: this(name, parameterType, defaultValue, SqlParameterDirection.In) {
 		}
 
-		public SqlMethodParameterInfo(string name, SqlType parameterType, SqlParameterDirection direction) : this(name, parameterType, null, direction) {
+		public SqlParameterInfo(string name, SqlType parameterType, SqlParameterDirection direction) : this(name, parameterType, null, direction) {
 		}
 
-		public SqlMethodParameterInfo(string name, SqlType parameterType, SqlExpression defaultValue, SqlParameterDirection direction) {
+		public SqlParameterInfo(string name, SqlType parameterType, SqlExpression defaultValue, SqlParameterDirection direction) {
 			if (String.IsNullOrWhiteSpace(name))
 				throw new ArgumentNullException(nameof(name));
 			if (parameterType == null)
@@ -59,6 +59,8 @@ namespace Deveel.Data.Sql.Methods {
 		public bool IsOutput => (Direction & SqlParameterDirection.Out) != 0;
 
 		public bool IsInput => (Direction & SqlParameterDirection.In) != 0;
+
+		public bool IsRequired => IsInput && !HasDefaultValue;
 
 		public bool IsDeterministic => ParameterType is SqlDeterministicType;
 

@@ -44,7 +44,7 @@ namespace Deveel.Data.Sql.Methods {
 		protected virtual SqlType DetermineReturnType(InvokeInfo invokeInfo) {
 			SqlType resultType = null;
 			foreach (var name in invokeInfo.ArgumentNames) {
-				var argType = invokeInfo.GetArgumentType(name);
+				var argType = invokeInfo.ArgumentType(name);
 				if (resultType == null) {
 					resultType = argType;
 				} else {
@@ -53,7 +53,7 @@ namespace Deveel.Data.Sql.Methods {
 			}
 
 			if (resultType == null)
-				throw new InvalidOperationException();
+				throw new MethodException($"Unable to determine the return type of function {MethodInfo.MethodName}");
 
 			return resultType;
 		}

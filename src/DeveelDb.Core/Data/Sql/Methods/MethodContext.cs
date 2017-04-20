@@ -94,7 +94,7 @@ namespace Deveel.Data.Sql.Methods {
 				var methodParams = methodInfo.Parameters.ToDictionary(x => x.Name, y => y);
 
 				foreach (var invokeArg in invokeArgs) {
-					SqlMethodParameterInfo paramInfo;
+					SqlParameterInfo paramInfo;
 					if (!methodParams.TryGetValue(invokeArg.Key, out paramInfo))
 						throw new InvalidOperationException(
 							$"Invoke argument {invokeArg.Key} does not correspond to any parameter of the method");
@@ -126,7 +126,7 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		Variable IVariableResolver.ResolveVariable(string name, bool ignoreCase) {
-			SqlMethodParameterInfo paramInfo;
+			SqlParameterInfo paramInfo;
 			if (!Method.MethodInfo.TryGetParameter(name, ignoreCase, out paramInfo))
 				return null;
 
@@ -139,7 +139,7 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		SqlType IVariableResolver.ResolveVariableType(string name, bool ignoreCase) {
-			SqlMethodParameterInfo paramInfo;
+			SqlParameterInfo paramInfo;
 			if (!Method.MethodInfo.TryGetParameter(name, ignoreCase, out paramInfo))
 				return null;
 
@@ -157,7 +157,7 @@ namespace Deveel.Data.Sql.Methods {
 			if (!Method.IsProcedure)
 				throw new InvalidOperationException($"The method {Method.MethodInfo.MethodName} is not a Procedure");
 
-			SqlMethodParameterInfo parameter;
+			SqlParameterInfo parameter;
 			if (!Method.MethodInfo.Parameters.ToDictionary(x => x.Name, y => y).TryGetValue(parameterName, out parameter))
 				throw new ArgumentException($"The method {Method.MethodInfo.MethodName} contains no parameter {parameterName}");
 
