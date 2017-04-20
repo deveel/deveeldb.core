@@ -39,7 +39,7 @@ namespace Deveel.Data.Sql {
 		/// </summary>
 		public bool Ascending { get; private set; }
 
-		SortColumn ISqlExpressionPreparable<SortColumn>.PrepareExpressions(ISqlExpressionPreparer preparer) {
+		SortColumn ISqlExpressionPreparable<SortColumn>.Prepare(ISqlExpressionPreparer preparer) {
 			var exp = Expression;
 			if (exp != null) {
 				exp = SqlExpressionPreparerExtensions.Prepare(exp, preparer);

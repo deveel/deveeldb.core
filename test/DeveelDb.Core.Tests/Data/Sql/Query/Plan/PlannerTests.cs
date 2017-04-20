@@ -89,6 +89,8 @@ namespace Deveel.Data.Sql.Query.Plan {
 			var node = await planner.PlanAsync(context, new QueryInfo(query));
 
 			Assert.NotNull(node);
+			Assert.IsType<SubsetNode>(node);
+			Assert.IsType<GroupNode>(((SubsetNode) node).Child);
 		}
 	}
 }

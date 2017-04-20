@@ -18,7 +18,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public bool All { get; }
 
-		SqlQueryExpressionComposite ISqlExpressionPreparable<SqlQueryExpressionComposite>.PrepareExpressions(ISqlExpressionPreparer preparer) {
+		SqlQueryExpressionComposite ISqlExpressionPreparable<SqlQueryExpressionComposite>.Prepare(ISqlExpressionPreparer preparer) {
 			var expression = (SqlQueryExpression) Expression.Prepare(preparer);
 			return new SqlQueryExpressionComposite(Function, All, expression);
 		}
@@ -32,5 +32,6 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Expression.AppendTo(builder);
 		}
+
 	}
 }
