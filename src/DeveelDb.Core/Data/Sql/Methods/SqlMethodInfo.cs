@@ -80,10 +80,18 @@ namespace Deveel.Data.Sql.Methods {
 
 			if (!MethodName.Equals(invoke.MethodName, ignoreCase))
 				return false;
-			if (Parameters.Count != invoke.Arguments.Count)
+
+			var required = Parameters.Where(x => !x.HasDefaultValue).Select(x => x.Name).ToList();
+			if (invoke.Arguments.Count < required.Count)
 				return false;
 
 			var invokeInfo = GetInvokeInfo(context, invoke);
+
+			var invokedArgs = invokeInfo.ArgumentNames.ToList();
+			if (required.Any(p => !invokedArgs.Contains(p))) {
+				return false;
+			}
+
 			if (!validator(invokeInfo))
 				return false;
 

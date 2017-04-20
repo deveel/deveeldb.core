@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
-using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
 	public sealed class InvokeInfo {
@@ -23,6 +21,10 @@ namespace Deveel.Data.Sql.Methods {
 				return null;
 
 			return argType;
+		}
+
+		public bool HasArgument(string parameterName) {
+			return argumentTypes.ContainsKey(parameterName);
 		}
 	}
 }

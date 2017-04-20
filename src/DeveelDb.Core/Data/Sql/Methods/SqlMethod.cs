@@ -44,6 +44,10 @@ namespace Deveel.Data.Sql.Methods {
 		protected virtual bool ValidateInvoke(InvokeInfo invokeInfo) {
 			foreach (var parameter in MethodInfo.Parameters) {
 				var argType = invokeInfo.GetArgumentType(parameter.Name);
+
+				if (argType == null && !parameter.HasDefaultValue)
+					return false;
+
 				if (!parameter.ParameterType.IsComparable(argType) &&
 				    !parameter.IsDeterministic)
 					return false;

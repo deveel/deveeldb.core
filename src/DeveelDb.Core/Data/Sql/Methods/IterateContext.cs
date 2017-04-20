@@ -21,7 +21,7 @@ namespace Deveel.Data.Sql.Methods {
 	public sealed class IterateContext : Context {
 		internal IterateContext(MethodContext parent, SqlObject accumulation, SqlObject current)
 			: base(parent, $"Aggreate({parent.Method.MethodInfo.MethodName})") {
-			Accumulation = accumulation;
+			Result = Accumulation = accumulation;
 			Current = current;
 		}
 

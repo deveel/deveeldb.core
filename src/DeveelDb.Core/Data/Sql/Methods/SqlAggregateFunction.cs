@@ -104,7 +104,7 @@ namespace Deveel.Data.Sql.Methods {
 					await IterateAsync(accumulate);
 
 					if (accumulate.Result == null)
-						throw new InvalidOperationException();
+						throw new MethodAccessException("No result value was provided by the iteration");
 
 					result = accumulate.Result;
 				}
@@ -125,7 +125,7 @@ namespace Deveel.Data.Sql.Methods {
 					await IterateAsync(accumulate);
 
 					if (accumulate.Result == null)
-						throw new InvalidOperationException();
+						throw new MethodAccessException("No result value was provided by the iteration");
 
 					result = accumulate.Result;
 				}

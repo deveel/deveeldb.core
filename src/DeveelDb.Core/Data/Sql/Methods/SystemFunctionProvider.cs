@@ -44,16 +44,88 @@ namespace Deveel.Data.Sql.Methods {
 		#endregion
 
 		protected override void Initialize() {
-			Register("add",
-				Deterministic("a"),
-				Deterministic("b"),
-				new SqlDeterministicType(),
-				context => {
-					var a = context.Value("a");
-					var b = context.Value("b");
-					context.SetResult(a.Add(b));
+			RegisterAggregates();
+		}
+
+		#region Aggregates
+
+		private void RegisterAggregate(string name,
+			SqlMethodParameterInfo param,
+			SqlType returnType,
+			Action<IterateContext> iterate,
+			Func<InitializeContext, Task> initialize = null,
+			Func<MergeContext, Task> merge = null) {
+			var methodInfo = new SqlFunctionInfo(new ObjectName(name), returnType);
+			methodInfo.Parameters.Add(param);
+
+			var aggregate = new SqlAggregateFunctionDelegate(methodInfo, iterate);
+			aggregate.Seed(initialize);
+			aggregate.Aggregate(merge);
+
+
+			Register(aggregate);
+		}
+
+
+		private void RegisterAggregates() {
+			// COUNT(*)
+			RegisterAggregate("COUNT", Deterministic("x"), PrimitiveTypes.VarNumeric(),
+				iterate => {
+					if (iterate.IsFirst) {
+						iterate.SetResult(iterate.Current);
+					} else {
+						iterate.SetResult(iterate.Current.Add(iterate.Accumulation));
+					}
+				},
+				initialize => {
+					var groupResolver = initialize.ResolveService<IGroupResolver>();
+					var groupSize = groupResolver.Size;
+
+					var argRef = (initialize.Input as SqlReferenceExpression)?.ReferenceName;
+					if (groupSize == 0 || (argRef != null && argRef.IsGlob)) {
+						initialize.SetResult(SqlExpression.Constant(SqlObject.BigInt(groupSize)), false);
+					}
+
+					return Task.CompletedTask;
+				});
+
+			RegisterAggregate("MIN", Deterministic("x"), PrimitiveTypes.VarNumeric(),
+				iterate => {
+					if (iterate.IsFirst) {
+						iterate.SetResult(iterate.Current);
+					} else if (iterate.Current.LessThan(iterate.Accumulation).IsTrue) {
+						iterate.SetResult(iterate.Current);
+					}
+				});
+
+			RegisterAggregate("MAX", Deterministic("x"), PrimitiveTypes.VarNumeric(),
+				iterate => {
+					if (iterate.IsFirst) {
+						iterate.SetResult(iterate.Current);
+					} else if (iterate.Current.GreaterThan(iterate.Accumulation).IsTrue) {
+						iterate.SetResult(iterate.Current);
+					} else if (iterate.Accumulation.LessThan(iterate.Current).IsTrue) {
+						iterate.SetResult(iterate.Accumulation);
+					}
+				});
+
+			RegisterAggregate("AVG", Deterministic("x"), PrimitiveTypes.VarNumeric(),
+				iterate => {
+					if (iterate.IsFirst) {
+						iterate.SetResult(iterate.Current);
+					} else {
+						iterate.SetResult(iterate.Current.Add(iterate.Accumulation));
+					}
+				}, merge: merge => {
+					var groupResolver = merge.ResolveService<IGroupResolver>();
+					var groupSize = groupResolver.Size;
+
+					var final = merge.Accumulated.Divide(SqlObject.BigInt(groupSize));
+					merge.SetOutput(final);
 					return Task.CompletedTask;
 				});
 		}
+
+		#endregion
 	}
 }

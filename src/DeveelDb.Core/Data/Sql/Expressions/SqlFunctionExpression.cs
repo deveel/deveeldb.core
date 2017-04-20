@@ -77,6 +77,9 @@ namespace Deveel.Data.Sql.Expressions {
 			if (!method.IsFunction)
 				throw new SqlExpressionException($"The method {method.MethodInfo.MethodName} is not a function.");
 
+			if (!method.Matches(context, invoke))
+				throw new MethodException($"The function {method} was invoked with invalid arguments");
+
 			return ((SqlFunctionBase) method);
 		}
 
@@ -89,7 +92,7 @@ namespace Deveel.Data.Sql.Expressions {
 			var function = ResolveFunction(context);
 
 			if (!function.IsSystem && !await context.UserCanExecute(FunctionName))
-				throw new UnauthorizedAccessException();
+				throw new UnauthorizedAccessException($"Cannot execute function {FunctionName} due to missing authorization");
 
 			var result = await function.ExecuteAsync(context, Arguments);
 			if (!result.HasReturnedValue)

@@ -46,7 +46,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		[Fact]
 		public void GetSqlType() {
-			var function = SqlExpression.Function(ObjectName.Parse("sys.Func1"), new InvokeArgument("a", SqlObject.BigInt(33)));
+			var function = SqlExpression.Function(ObjectName.Parse("sys.Func1"), new InvokeArgument("a", SqlObject.String(new SqlString("foo"))));
 		
 			Assert.True(function.IsReference);
 			var type = function.GetSqlType(context);
