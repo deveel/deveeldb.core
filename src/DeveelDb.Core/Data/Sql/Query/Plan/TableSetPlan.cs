@@ -115,6 +115,13 @@ namespace Deveel.Data.Sql.Query.Plan {
 			}
 		}
 
+		public void JoinAt(int index, JoinType joinType, SqlExpression onExpression) {
+			var left = tables[index];
+			var right = tables[index + 1];
+			left.SetRightJoin(right, joinType, onExpression);
+			right.SetLeftJoin(left, joinType, onExpression);
+		}
+
 		private TablePlan JoinAllPlans(IList<TablePlan> plans) {
 			// If there are no plans then return null
 			if (plans.Count == 0) {

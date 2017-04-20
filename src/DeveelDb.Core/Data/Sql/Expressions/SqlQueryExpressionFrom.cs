@@ -40,6 +40,8 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public bool IsNaturalJoin => sources.Count > 1 && joinParts.Count == 0;
 
+		public int JoinPartCount => joinParts.Count;
+
 		private string NewSourceKey() {
 			return (++sourceKey).ToString();
 		}

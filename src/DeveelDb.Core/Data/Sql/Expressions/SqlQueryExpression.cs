@@ -54,8 +54,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public ObjectName GroupMax { get; set; }
 
+		public SqlQueryExpressionComposite NextComposite { get; set; }
+
 		public override SqlType GetSqlType(IContext context) {
-			throw new NotImplementedException();
+			return new SqlQueryType();
 		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
@@ -91,6 +93,13 @@ namespace Deveel.Data.Sql.Expressions {
 			}
 
 			// TODO: continue
+
+			if (NextComposite != null) {
+				builder.AppendLine();
+				builder.Indent();
+				NextComposite.AppendTo(builder);
+				builder.DeIndent();
+			}
 		}
 
 		#region ItemList
