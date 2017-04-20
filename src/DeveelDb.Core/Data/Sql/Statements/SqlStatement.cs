@@ -35,7 +35,7 @@ namespace Deveel.Data.Sql.Statements {
 			
 		}
 
-		SqlStatement ISqlExpressionPreparable<SqlStatement>.PrepareExpressions(ISqlExpressionPreparer preparer) {
+		SqlStatement ISqlExpressionPreparable<SqlStatement>.Prepare(ISqlExpressionPreparer preparer) {
 			return PrepareExpressions(preparer);
 		}
 

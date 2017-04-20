@@ -20,16 +20,19 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Deveel.Data.Configuration;
+using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Methods {
 	public class SqlMethodRegistry : IMethodResolver, IDisposable {
 		private bool initialized;
-		private Dictionary<MethodSignature, SqlMethod> methods;
-		private Dictionary<ObjectName, ObjectName> ignoreCaseResolver;
+		private readonly Dictionary<MethodSignature, SqlMethod> methodCache;
+		private ServiceContainer container;
 
 		public SqlMethodRegistry() {
-			methods = new Dictionary<MethodSignature, SqlMethod>();
-			ignoreCaseResolver = new Dictionary<ObjectName, ObjectName>(ObjectNameComparer.IgnoreCase);
+			container = new ServiceContainer();
+			methodCache = new Dictionary<MethodSignature, SqlMethod>(new MethodSignatureComparer());
+
+			EnsureInitialized();
 		}
 
 		~SqlMethodRegistry() {
@@ -39,8 +42,6 @@ namespace Deveel.Data.Sql.Methods {
 		private void EnsureInitialized() {
 			if (!initialized) {
 				Initialize();
-
-				PostInitialize();
 			}
 
 			initialized = true;
@@ -50,22 +51,21 @@ namespace Deveel.Data.Sql.Methods {
 			
 		}
 
-		private void PostInitialize() {
-			foreach (var method in methods) {
-				ignoreCaseResolver[method.Key.Name] = method.Key.Name;
-			}
-		}
-
 		public void Register(SqlMethod method) {
 			if (method == null)
 				throw new ArgumentNullException(nameof(method));
 
-			var methodInfo = method.MethodInfo;
-			var types = methodInfo.Parameters.Select(x => x.ParameterType).ToArray();
-			var key = new MethodSignature(methodInfo.MethodName, types);
+			container.RegisterInstance<SqlMethod>(method);
 
-			methods[key] = method;
-			ignoreCaseResolver[methodInfo.MethodName] = methodInfo.MethodName;
+			initialized = false;
+		}
+
+		public void Register<TMethod>(SqlMethodInfo methodInfo)
+			where TMethod : SqlMethod {
+			if (methodInfo == null)
+				throw new ArgumentNullException(nameof(methodInfo));
+
+			container.Register<SqlMethod, TMethod>();
 
 			initialized = false;
 		}
@@ -73,19 +73,20 @@ namespace Deveel.Data.Sql.Methods {
 		SqlMethod IMethodResolver.ResolveMethod(IContext context, Invoke invoke) {
 			EnsureInitialized();
 
-			var ignoreCase = context.GetValue("ignoreCase", true);
-
 			var types = invoke.Arguments.Select(x => x.Value.GetSqlType(context)).ToArray();
-			var normName = invoke.MethodName;
-			if (ignoreCase) {
-				if (!ignoreCaseResolver.TryGetValue(invoke.MethodName, out normName)) {
-					return null;
-				}
-			}
+			var signature = new MethodSignature(invoke.MethodName, types);
 
 			SqlMethod method;
-			if (!methods.TryGetValue(new MethodSignature(normName, types), out method))
-				return null;
+			if (!methodCache.TryGetValue(signature, out method)) {
+				var methods = container.ResolveAll<SqlMethod>();
+				foreach (var m in methods) {
+					if (m.Matches(context, invoke)) {
+						method = m;
+						methodCache[signature] = m;
+						break;
+					}
+				}
+			}
 
 			return method;
 		}
@@ -152,14 +153,13 @@ namespace Deveel.Data.Sql.Methods {
 
 		protected virtual void Dispose(bool disposing) {
 			if (disposing) {
-				if (methods != null)
-					methods.Clear();
-				if (ignoreCaseResolver != null)
-					ignoreCaseResolver.Clear();
+				if (methodCache != null)
+					methodCache.Clear();
+				if (container != null)
+					container.Dispose();
 			}
 
-			ignoreCaseResolver = null;
-			methods = null;
+			container = null;
 		}
 
 		public void Dispose() {

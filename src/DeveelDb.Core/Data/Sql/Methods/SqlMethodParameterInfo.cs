@@ -60,6 +60,8 @@ namespace Deveel.Data.Sql.Methods {
 
 		public bool IsInput => (Direction & SqlParameterDirection.In) != 0;
 
+		public bool IsDeterministic => ParameterType is SqlDeterministicType;
+
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			builder.Append(Name);
 			builder.Append(" ");

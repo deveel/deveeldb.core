@@ -53,10 +53,11 @@ namespace Deveel.Data.Sql.Methods {
 			var name = ObjectName.Parse("a.proc");
 			var info = new SqlMethodInfo(name);
 			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			var procedure = new SqlProcedureDelegate(info, methodContext => Task.CompletedTask);
 
 			var invoke = new Invoke(name, new[] { new InvokeArgument(SqlObject.BigInt(11)) });
 
-			Assert.True(info.Matches(null, invoke));
+			Assert.True(procedure.Matches(null, invoke));
 		}
 
 		[Fact]
