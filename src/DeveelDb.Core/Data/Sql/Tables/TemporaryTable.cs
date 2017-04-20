@@ -23,6 +23,14 @@ namespace Deveel.Data.Sql.Tables {
 			: this(MakeTableInfo(tableName, columns)) {
 		}
 
+		static TemporaryTable() {
+			var table = new TemporaryTable(new ObjectName("SINGLE_ROW_TABLE"), new ColumnInfo[0]);
+			table.NewRow();
+			SingleRow = table;
+		}
+
+		public static ITable SingleRow { get; }
+
 		public override TableInfo TableInfo { get; }
 
 		public override long RowCount => rows.Count;
