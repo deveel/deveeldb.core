@@ -196,10 +196,15 @@ namespace Deveel.Data.Sql.Methods {
 				}
 			}
 
+			var resultType = ((SqlFunctionBase) Method).ReturnType(this, Invoke);
+
 			var valueType = value.GetSqlType(this);
-			if (!valueType.IsComparable(functionInfo.ReturnType))
+			if (!resultType.IsComparable(valueType))
 				throw new InvalidOperationException($"The result type {valueType} of the expression is not compatible " +
 				                                    $"with the return type {functionInfo.ReturnType} of the function {Method.MethodInfo.MethodName}");
+
+
+			// TODO: eventually CAST to the return type
 
 			ResultValue = value;
 			HasResult = true;

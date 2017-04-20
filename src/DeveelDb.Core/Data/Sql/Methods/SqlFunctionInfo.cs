@@ -29,6 +29,8 @@ namespace Deveel.Data.Sql.Methods {
 
 		public SqlType ReturnType { get; }
 
+		public bool IsDeterministic => ReturnType is SqlDeterministicType;
+
 		internal override void AppendTo(SqlStringBuilder builder) {
 			MethodName.AppendTo(builder);
 

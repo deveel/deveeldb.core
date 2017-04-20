@@ -18,7 +18,7 @@
 using System;
 
 namespace Deveel.Data.Sql.Expressions {
-	public sealed class SqlQueryExpressionItem : ISqlFormattable {
+	public sealed class SqlQueryExpressionItem : ISqlFormattable, ISqlExpressionPreparable<SqlQueryExpressionItem> {
 		public SqlQueryExpressionItem(SqlExpression expression) 
 			: this(expression, null) {
 		}
@@ -59,6 +59,12 @@ namespace Deveel.Data.Sql.Expressions {
 				if (IsAliased)
 					builder.AppendFormat(" AS {0}", Alias);
 			}
+		}
+
+		SqlQueryExpressionItem ISqlExpressionPreparable<SqlQueryExpressionItem>.Prepare(ISqlExpressionPreparer preparer) {
+			var exp = Expression.Prepare(preparer);
+
+			return new SqlQueryExpressionItem(exp, Alias);
 		}
 	}
 }
