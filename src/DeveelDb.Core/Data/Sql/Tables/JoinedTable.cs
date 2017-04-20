@@ -152,6 +152,8 @@ namespace Deveel.Data.Sql.Tables {
 				var columnName = JoinedTableInfo.Columns[column].ColumnName;
 				var indexInfo = new IndexInfo(new ObjectName(TableInfo.TableName, $"column[{column}]"), TableInfo.TableName, columnName);
 				var isop = new InsertSearchIndex(indexInfo, CalculateTableRows());
+				isop.AttachTo(this);
+
 				index = isop;
 				Indexes[column] = index;
 				if (ancestor != this) {
