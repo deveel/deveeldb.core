@@ -52,7 +52,7 @@ namespace Deveel.Data {
 		/// </summary>
 		public const char Separator = '.';
 
-		private static readonly char[] InvalidNameChars = "\0.%^&({}+-/][\\".ToCharArray();
+		private static readonly char[] InvalidNameChars = "\0.%^&{}+-/][\\".ToCharArray();
 
 		/// <summary>
 		/// Constructs a name reference without a parent.

@@ -25,7 +25,7 @@ namespace Deveel.Data.Sql.Expressions {
 			public override SqlExpression VisitFunction(SqlFunctionExpression expression) {
 				var resolver = context.Scope.Resolve<IMethodResolver>();
 				if (resolver == null)
-					throw new SqlExpressionException();
+					throw new SqlExpressionException("No method resolver defined in this context");
 
 				var method = resolver.ResolveMethod(context, new Invoke(expression.FunctionName, expression.Arguments));
 				if (method != null && method.IsFunction &&

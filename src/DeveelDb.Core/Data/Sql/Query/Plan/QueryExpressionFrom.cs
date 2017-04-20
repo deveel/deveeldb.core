@@ -307,6 +307,9 @@ namespace Deveel.Data.Sql.Query.Plan {
 			public SqlExpression Prepare(SqlExpression expression) {
 				var refName = ((SqlReferenceExpression)expression).ReferenceName;
 
+				if (refName.IsGlob)	// to avoid Table.* and COUNT(*) to throw exceptions
+					return expression;
+
 				return fromSet.QualifyReference(refName);
 			}
 		}
