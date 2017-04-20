@@ -25,6 +25,8 @@ namespace Deveel.Data.Sql.Methods {
 			Current = current;
 		}
 
+		public MethodContext MethodContext => (MethodContext) ParentContext;
+
 		public SqlObject Accumulation { get; }
 
 		public SqlObject Current { get; }

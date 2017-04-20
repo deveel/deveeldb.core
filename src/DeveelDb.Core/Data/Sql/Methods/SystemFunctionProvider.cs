@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Expressions;
@@ -124,7 +125,49 @@ namespace Deveel.Data.Sql.Methods {
 					merge.SetOutput(final);
 					return Task.CompletedTask;
 				});
+
+			RegisterAggregate("STDEV", Deterministic("x"), PrimitiveTypes.VarNumeric(), iterate => {
+				var aggregator = iterate.ResolveService<AvgAggregator>();
+				aggregator.Values.Add(iterate.Current);
+
+				if (iterate.IsFirst) {
+					iterate.SetResult(iterate.Current);
+				} else {
+					iterate.SetResult(iterate.Current.Add(iterate.Accumulation));
+				}
+			}, initialize => {
+				var groupResolver = initialize.ResolveService<IGroupResolver>();
+				var aggregator = new AvgAggregator {
+					Values = new BigList<SqlObject>(groupResolver.Size)
+				};
+
+				initialize.MethodContext.RegisterInstance<AvgAggregator>(aggregator);
+				return Task.CompletedTask;
+			}, merge => {
+				var groupResolver = merge.ResolveService<IGroupResolver>();
+				var groupSize = groupResolver.Size;
+				var aggregator = merge.ResolveService<AvgAggregator>();
+
+				var avg = merge.Accumulated.Divide(SqlObject.BigInt(groupSize));
+				var sums = aggregator.Values.Select(x => SqlMath.Pow((SqlNumber) x.Subtract(avg).Value, (SqlNumber) 2));
+				var sum = SqlNumber.Zero;
+				foreach (var number in sums) {
+					sum += number;
+				}
+
+				var ret = SqlMath.Sqrt(sum / (SqlNumber)(groupSize - 1));
+				merge.SetOutput(SqlObject.Numeric(ret));
+				return Task.CompletedTask;
+			});
 		}
+
+		#region AvgAggregator
+
+		class AvgAggregator {
+			public BigList<SqlObject> Values { get; set; }
+		}
+
+		#endregion
 
 		#endregion
 	}

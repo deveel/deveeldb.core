@@ -428,6 +428,10 @@ namespace Deveel.Data.Sql {
 			return new SqlObject(PrimitiveTypes.BigInt(), (SqlNumber)value);
 		}
 
+		public static SqlObject Double(double value) {
+			return new SqlObject(PrimitiveTypes.Double(), (SqlNumber)value);
+		}
+
 		public static SqlObject Numeric(SqlNumber value) {
 			return new SqlObject(PrimitiveTypes.Numeric(value.Precision, value.Scale), value);
 		}

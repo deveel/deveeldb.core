@@ -109,6 +109,38 @@ namespace Deveel.Data.Sql.Methods {
 			Assert.Equal(SqlObject.Integer(2), value);
 		}
 
+		[Fact]
+		public async void Avg() {
+			var function = SqlExpression.Function(new ObjectName("avg"),
+				new[] { new InvokeArgument(SqlExpression.Reference(new ObjectName("a"))) });
+
+			var result = await function.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+
+			var value = ((SqlConstantExpression)result).Value;
+
+			Assert.Equal(SqlObject.Numeric((SqlNumber) 23.5), value);
+		}
+
+
+		[Fact]
+		public async void StDev() {
+			var function = SqlExpression.Function(new ObjectName("stdev"),
+				new[] { new InvokeArgument(SqlExpression.Reference(new ObjectName("a"))) });
+
+			var result = await function.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+
+			var value = ((SqlConstantExpression)result).Value;
+
+			Assert.Equal(SqlObject.Numeric((SqlNumber)30.40559159102154), value);
+		}
+
+
 		public void Dispose() {
 			context.Dispose();
 		}
