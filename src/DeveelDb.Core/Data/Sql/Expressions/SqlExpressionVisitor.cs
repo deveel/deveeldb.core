@@ -19,7 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Deveel.Data.Query;
+using Deveel.Data.Sql.Query;
 using Deveel.Data.Sql.Methods;
 
 namespace Deveel.Data.Sql.Expressions {

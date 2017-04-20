@@ -10,7 +10,7 @@ using Moq;
 
 using Xunit;
 
-namespace Deveel.Data.Query.Plan {
+namespace Deveel.Data.Sql.Query.Plan {
 	public class QueryExpressionFromTests {
 		private IContext context;
 

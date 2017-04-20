@@ -12,7 +12,7 @@ using Moq;
 
 using Xunit;
 
-namespace Deveel.Data.Query {
+namespace Deveel.Data.Sql.Query {
 	public class SimpleNodeTests : IDisposable {
 		private IContext context;
 
