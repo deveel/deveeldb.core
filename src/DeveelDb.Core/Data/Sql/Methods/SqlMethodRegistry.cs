@@ -16,21 +16,16 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
-using Deveel.Data.Configuration;
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Methods {
 	public class SqlMethodRegistry : IMethodResolver, IDisposable {
 		private bool initialized;
-		private readonly Dictionary<MethodSignature, SqlMethod> methodCache;
 		private ServiceContainer container;
 
 		public SqlMethodRegistry() {
 			container = new ServiceContainer();
-			methodCache = new Dictionary<MethodSignature, SqlMethod>(new MethodSignatureComparer());
 
 			EnsureInitialized();
 		}
@@ -55,7 +50,7 @@ namespace Deveel.Data.Sql.Methods {
 			if (method == null)
 				throw new ArgumentNullException(nameof(method));
 
-			container.RegisterInstance<SqlMethod>(method);
+			container.RegisterInstance<SqlMethod>(method, method.MethodInfo.MethodName);
 
 			initialized = false;
 		}
@@ -65,7 +60,7 @@ namespace Deveel.Data.Sql.Methods {
 			if (methodInfo == null)
 				throw new ArgumentNullException(nameof(methodInfo));
 
-			container.Register<SqlMethod, TMethod>();
+			container.Register<SqlMethod, TMethod>(methodInfo.MethodName);
 
 			initialized = false;
 		}
@@ -73,88 +68,15 @@ namespace Deveel.Data.Sql.Methods {
 		SqlMethod IMethodResolver.ResolveMethod(IContext context, Invoke invoke) {
 			EnsureInitialized();
 
-			var types = invoke.Arguments.Select(x => x.Value.GetSqlType(context)).ToArray();
-			var signature = new MethodSignature(invoke.MethodName, types);
+			var method = container.Resolve<SqlMethod>(invoke.MethodName);
+			if (method != null && method.Matches(context, invoke))
+				return method;
 
-			SqlMethod method;
-			if (!methodCache.TryGetValue(signature, out method)) {
-				var methods = container.ResolveAll<SqlMethod>();
-				foreach (var m in methods) {
-					if (m.Matches(context, invoke)) {
-						method = m;
-						methodCache[signature] = m;
-						break;
-					}
-				}
-			}
-
-			return method;
+			return null;
 		}
-
-		#region MethodSignature
-
-		class MethodSignature : IEquatable<MethodSignature> {
-			public MethodSignature(ObjectName name, SqlType[] types) {
-				Name = name;
-				Types = types;
-			}
-
-			public ObjectName Name { get;  }
-
-			public SqlType[] Types { get; }
-
-			public bool Equals(MethodSignature other) {
-				if (!Name.Equals(other.Name, true))
-					return false;
-
-				if (Types.Length != other.Types.Length)
-					return false;
-
-				for (int i = 0; i < Types.Length; i++) {
-					var thisType = Types[i];
-					var otherType = other.Types[i];
-					if (!thisType.IsComparable(otherType))
-						return false;
-				}
-
-				return true;
-			}
-
-			public override bool Equals(object obj) {
-				return Equals((MethodSignature) obj);
-			}
-
-			public override int GetHashCode() {
-				var code = Name.GetHashCode(true);
-
-				foreach (var type in Types) {
-					code += type.GetHashCode();
-				}
-
-				return code;
-			}
-		}
-
-		#endregion
-
-		#region MethodSignatureComparer
-
-		class MethodSignatureComparer : IEqualityComparer<MethodSignature> {
-			public bool Equals(MethodSignature x, MethodSignature y) {
-				return x.Equals(y);
-			}
-
-			public int GetHashCode(MethodSignature obj) {
-				return obj.GetHashCode();
-			}
-		}
-
-		#endregion
 
 		protected virtual void Dispose(bool disposing) {
 			if (disposing) {
-				if (methodCache != null)
-					methodCache.Clear();
 				if (container != null)
 					container.Dispose();
 			}
