@@ -46,7 +46,7 @@ namespace Deveel.Data.Sql.Methods {
 			}) {
 		}
 
-		public void Seed(Func<InitializeContext, Task> prepare) {
+		public void Initialize(Func<InitializeContext, Task> prepare) {
 			preparation = prepare;
 		}
 

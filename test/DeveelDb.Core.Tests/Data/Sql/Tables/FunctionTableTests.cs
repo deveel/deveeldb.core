@@ -112,7 +112,7 @@ namespace Deveel.Data.Sql.Tables {
 			var value1 = await table.GetValueAsync(0, 0);
 
 			Assert.NotNull(value1);
-			Assert.Equal(SqlObject.Integer(77), value1);
+			Assert.Equal(SqlObject.BigInt(2), value1);
 		}
 
 		[Fact]
