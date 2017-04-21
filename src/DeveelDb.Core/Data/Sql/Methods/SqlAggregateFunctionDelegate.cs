@@ -39,11 +39,11 @@ namespace Deveel.Data.Sql.Methods {
 			}) {
 		}
 
-		public void Seed(Func<InitializeContext, Task> prepare) {
+		public void Initialize(Func<InitializeContext, Task> prepare) {
 			preparation = prepare;
 		}
 
-		public void Aggregate(Func<MergeContext, Task> aggregate) {
+		public void Merge(Func<MergeContext, Task> aggregate) {
 			aggregation = aggregate;
 		}
 

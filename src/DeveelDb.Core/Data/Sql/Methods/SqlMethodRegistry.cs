@@ -46,23 +46,31 @@ namespace Deveel.Data.Sql.Methods {
 			
 		}
 
-		public void Register(SqlMethod method) {
+		public void Register(SqlMethod method, params ObjectName[] aliases) {
 			if (method == null)
 				throw new ArgumentNullException(nameof(method));
 
 			var methodName = method.MethodInfo.MethodName.ToUpper();
 			container.RegisterInstance<SqlMethod>(method, methodName);
 
+			foreach (var alias in aliases) {
+				container.RegisterInstance<SqlMethod>(method, alias.ToUpper());
+			}
+
 			initialized = false;
 		}
 
-		public void Register<TMethod>(SqlMethodInfo methodInfo)
+		public void Register<TMethod>(SqlMethodInfo methodInfo, params ObjectName[] aliases)
 			where TMethod : SqlMethod {
 			if (methodInfo == null)
 				throw new ArgumentNullException(nameof(methodInfo));
 
 			var methodName = methodInfo.MethodName.ToUpper();
 			container.Register<SqlMethod, TMethod>(methodName);
+
+			foreach (var alias in aliases) {
+				container.Register<SqlMethod, TMethod>(alias.ToUpper());
+			}
 
 			initialized = false;
 		}
