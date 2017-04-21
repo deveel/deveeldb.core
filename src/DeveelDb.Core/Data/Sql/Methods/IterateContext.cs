@@ -19,13 +19,16 @@ using System;
 
 namespace Deveel.Data.Sql.Methods {
 	public sealed class IterateContext : Context {
-		internal IterateContext(MethodContext parent, SqlObject accumulation, SqlObject current)
+		internal IterateContext(MethodContext parent, long offset, SqlObject accumulation, SqlObject current)
 			: base(parent, $"Aggreate({parent.Method.MethodInfo.MethodName})") {
 			Result = Accumulation = accumulation;
+			Offset = offset;
 			Current = current;
 		}
 
 		public MethodContext MethodContext => (MethodContext) ParentContext;
+
+		public long Offset { get; }
 
 		public SqlObject Accumulation { get; }
 
@@ -35,8 +38,11 @@ namespace Deveel.Data.Sql.Methods {
 
 		internal SqlObject Result { get; private set; }
 
-		public void SetResult(SqlObject value) {
+		internal bool Iterate { get; private set; } = true;
+
+		public void SetResult(SqlObject value, bool iterate = true) {
 			Result = value;
+			Iterate = iterate;
 		}
 	}
 }

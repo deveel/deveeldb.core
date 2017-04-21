@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
@@ -36,11 +37,13 @@ namespace Deveel.Data.Sql.Methods {
 			if (!MethodInfo.MethodName.Equals(invoke.MethodName, ignoreCase))
 				return false;
 
-			if (invoke.Arguments == null ||
-			    invoke.Arguments.Count > 1)
+			if (invoke.Arguments == null)
+				return MethodInfo.Parameters.Count == 0;
+
+			if (invoke.Arguments.Any(x => !(x.Value is SqlReferenceExpression)))
 				return false;
 
-			return invoke.Arguments[0].Value is SqlReferenceExpression;
+			return true;
 		}
 
 		protected virtual Task InitializeAsync(InitializeContext context) {
@@ -63,7 +66,9 @@ namespace Deveel.Data.Sql.Methods {
 				return;
 			}
 
-			var input = context.Argument(0);
+			SqlExpression input = null;
+			if (context.ArgumentCount > 0)
+				input = context.Argument(0);
 
 			using (var seed = new InitializeContext(context, input)) {
 				await InitializeAsync(seed);
@@ -78,13 +83,15 @@ namespace Deveel.Data.Sql.Methods {
 			}
 
 
-			SqlObject output;
+			SqlObject output = null;
 
-			if (input is SqlReferenceExpression) {
-				var reference = (SqlReferenceExpression)input;
-				output = await AccumulateReference(context, reference.ReferenceName, groupResolver);
-			} else {
-				output = await AccumulateValues(context, input, groupResolver);
+			if (input != null) {
+				if (input is SqlReferenceExpression) {
+					var reference = (SqlReferenceExpression) input;
+					output = await IterateReference(context, reference.ReferenceName, groupResolver);
+				} else {
+					output = await IterateValues(context, input, groupResolver);
+				}
 			}
 
 			using (var aggregate = new MergeContext(context, output)) {
@@ -97,7 +104,7 @@ namespace Deveel.Data.Sql.Methods {
 			context.SetResult(output);
 		}
 
-		private async Task<SqlObject> AccumulateValues(MethodContext context, SqlExpression input, IGroupResolver groupResolver) {
+		private async Task<SqlObject> IterateValues(MethodContext context, SqlExpression input, IGroupResolver groupResolver) {
 			SqlObject result = null;
 
 			for (int i = 0; i < groupResolver.Size; i++) {
@@ -114,27 +121,30 @@ namespace Deveel.Data.Sql.Methods {
 					value = ((SqlConstantExpression)reduced).Value;
 				}
 
-				using (var accumulate = new IterateContext(context, result, value)) {
+				using (var accumulate = new IterateContext(context, i, result, value)) {
 					await IterateAsync(accumulate);
 
 					if (accumulate.Result == null)
 						throw new MethodAccessException("No result value was provided by the iteration");
 
 					result = accumulate.Result;
+
+					if (!accumulate.Iterate)
+						break;
 				}
 			}
 
 			return result;
 		}
 
-		private async Task<SqlObject> AccumulateReference(MethodContext context, ObjectName refName, IGroupResolver groupResolver) {
+		private async Task<SqlObject> IterateReference(MethodContext context, ObjectName refName, IGroupResolver groupResolver) {
 			SqlObject result = null;
 
 			for (long i = 0; i < groupResolver.Size; i++) {
 				var rowValue = await groupResolver.ResolveReferenceAsync(refName, i);
 				var current = rowValue;
 
-				using (var accumulate = new IterateContext(context, result, current)) {
+				using (var accumulate = new IterateContext(context, i, result, current)) {
 
 					await IterateAsync(accumulate);
 
@@ -142,6 +152,9 @@ namespace Deveel.Data.Sql.Methods {
 						throw new MethodAccessException("No result value was provided by the iteration");
 
 					result = accumulate.Result;
+
+					if (!accumulate.Iterate)
+						break;
 				}
 			}
 

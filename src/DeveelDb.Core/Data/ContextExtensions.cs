@@ -36,11 +36,11 @@ namespace Deveel.Data {
 
 		public static void RegisterService<TImplementation>(this IContext context, object key = null)
 			where TImplementation : class {
-			context.Scope.Register<TImplementation>();
+			context.Scope.Register<TImplementation>(key);
 		}
 
 		public static void RegisterInstance<TService>(this IContext context, object instance, object key = null) {
-			context.Scope.RegisterInstance<TService>(instance);
+			context.Scope.RegisterInstance<TService>(instance, key);
 		}
 
 		public static TService ResolveService<TService>(this IContext context, object key = null) {
