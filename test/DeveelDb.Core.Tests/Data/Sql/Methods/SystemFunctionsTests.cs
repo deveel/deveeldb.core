@@ -31,6 +31,8 @@ namespace Deveel.Data.Sql.Methods {
 			};
 
 			var groupResolver = new Mock<IGroupResolver>();
+			groupResolver.SetupGet(x => x.GroupId)
+				.Returns(0);
 			groupResolver.SetupGet(x => x.Size)
 				.Returns(groups[new ObjectName("a")].Count);
 			groupResolver.Setup(x => x.ResolveReferenceAsync(It.IsAny<ObjectName>(), It.IsAny<long>()))
@@ -43,6 +45,9 @@ namespace Deveel.Data.Sql.Methods {
 			var refResolver = new Mock<IReferenceResolver>();
 			refResolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
 				.Returns(PrimitiveTypes.Integer());
+
+			groupResolver.Setup(x => x.GetResolver(It.IsAny<long>()))
+				.Returns(refResolver.Object);
 
 			context.RegisterInstance<IGroupResolver>(groupResolver.Object);
 			context.RegisterInstance<IReferenceResolver>(refResolver.Object);
@@ -61,8 +66,9 @@ namespace Deveel.Data.Sql.Methods {
 
 			var value = ((SqlConstantExpression)result).Value;
 
-			Assert.Equal(SqlObject.Integer(47), value);
+			Assert.Equal(SqlObject.BigInt(2), value);
 		}
+
 
 		[Fact]
 		public async void CountAll() {
@@ -77,6 +83,21 @@ namespace Deveel.Data.Sql.Methods {
 			var value = ((SqlConstantExpression)result).Value;
 
 			Assert.Equal(SqlObject.BigInt(2), value);
+		}
+
+		[Fact]
+		public async void Sum() {
+			var function = SqlExpression.Function(new ObjectName("sum"),
+				new[] { new InvokeArgument(SqlExpression.Reference(new ObjectName("a"))) });
+
+			var result = await function.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+
+			var value = ((SqlConstantExpression)result).Value;
+
+			Assert.Equal(SqlObject.Integer(47), value);
 		}
 
 		[Fact]
@@ -138,6 +159,49 @@ namespace Deveel.Data.Sql.Methods {
 			var value = ((SqlConstantExpression)result).Value;
 
 			Assert.Equal(SqlObject.Numeric((SqlNumber)30.40559159102154), value);
+		}
+
+		[Fact]
+		public async void First() {
+			var function = SqlExpression.Function(new ObjectName("first"),
+				new[] { new InvokeArgument(SqlExpression.Reference(new ObjectName("a"))) });
+
+			var result = await function.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+
+			var value = ((SqlConstantExpression)result).Value;
+
+			Assert.Equal(SqlObject.Integer(2), value);
+		}
+
+		[Fact]
+		public async void Last() {
+			var function = SqlExpression.Function(new ObjectName("last"),
+				new[] { new InvokeArgument(SqlExpression.Reference(new ObjectName("a"))) });
+
+			var result = await function.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+
+			var value = ((SqlConstantExpression)result).Value;
+
+			Assert.Equal(SqlObject.Integer(45), value);
+		}
+
+		[Fact]
+		public async void GroupId() {
+			var function = SqlExpression.Function(new ObjectName("group_id"));
+
+			var result = await function.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+
+			var value = ((SqlConstantExpression)result).Value;
+			Assert.Equal(SqlObject.Integer(0), value);
 		}
 
 

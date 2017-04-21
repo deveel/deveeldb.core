@@ -22,7 +22,7 @@ using Deveel.Data.Sql.Expressions;
 namespace Deveel.Data.Sql.Methods {
 	public sealed class InitializeContext : Context {
 		internal InitializeContext(MethodContext context, SqlExpression input)
-			: base(context, $"Seed({context.Method.MethodInfo.MethodName})") {
+			: base(context, $"Initialize({context.Method.MethodInfo.MethodName})") {
 			Input = input;
 		}
 

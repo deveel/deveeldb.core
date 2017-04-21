@@ -51,18 +51,37 @@ namespace Deveel.Data.Sql.Methods {
 		#region Aggregates
 
 		private void RegisterAggregate(string name,
-			SqlParameterInfo param,
+			SqlType returnType,
+			Action<IterateContext> iterate,
+			Func<InitializeContext, Task> initialize = null,
+			Func<MergeContext, Task> merge = null) {
+			RegisterAggregate(name, null, returnType, iterate, initialize, merge);
+		}
+
+		private void RegisterAggregate(string name,
+			SqlParameterInfo param1,
+			SqlType returnType,
+			Action<IterateContext> iterate,
+			Func<InitializeContext, Task> initialize = null,
+			Func<MergeContext, Task> merge = null) {
+			RegisterAggregate(name, param1, null, returnType, iterate, initialize, merge);
+		}
+
+		private void RegisterAggregate(string name,
+			SqlParameterInfo param1, SqlParameterInfo param2,
 			SqlType returnType,
 			Action<IterateContext> iterate,
 			Func<InitializeContext, Task> initialize = null,
 			Func<MergeContext, Task> merge = null) {
 			var methodInfo = new SqlFunctionInfo(new ObjectName(name), returnType);
-			methodInfo.Parameters.Add(param);
+			if (param1 != null)
+				methodInfo.Parameters.Add(param1);
+			if (param2 != null)
+				methodInfo.Parameters.Add(param2);
 
 			var aggregate = new SqlAggregateFunctionDelegate(methodInfo, iterate);
-			aggregate.Seed(initialize);
-			aggregate.Aggregate(merge);
-
+			aggregate.Initialize(initialize);
+			aggregate.Merge(merge);
 
 			Register(aggregate);
 		}
@@ -70,12 +89,12 @@ namespace Deveel.Data.Sql.Methods {
 
 		private void RegisterAggregates() {
 			// COUNT(*)
-			RegisterAggregate("COUNT", Deterministic("x"), PrimitiveTypes.VarNumeric(),
+			RegisterAggregate("COUNT", Deterministic("column"), PrimitiveTypes.VarNumeric(),
 				iterate => {
 					if (iterate.IsFirst) {
-						iterate.SetResult(iterate.Current);
+						iterate.SetResult(SqlObject.BigInt(1));
 					} else {
-						iterate.SetResult(iterate.Current.Add(iterate.Accumulation));
+						iterate.SetResult(iterate.Accumulation.Add(SqlObject.BigInt(1)));
 					}
 				},
 				initialize => {
@@ -90,7 +109,8 @@ namespace Deveel.Data.Sql.Methods {
 					return Task.CompletedTask;
 				});
 
-			RegisterAggregate("MIN", Deterministic("x"), PrimitiveTypes.VarNumeric(),
+			// MIN
+			RegisterAggregate("MIN", Deterministic("column"), PrimitiveTypes.VarNumeric(),
 				iterate => {
 					if (iterate.IsFirst) {
 						iterate.SetResult(iterate.Current);
@@ -99,7 +119,8 @@ namespace Deveel.Data.Sql.Methods {
 					}
 				});
 
-			RegisterAggregate("MAX", Deterministic("x"), PrimitiveTypes.VarNumeric(),
+			// MAX
+			RegisterAggregate("MAX", Deterministic("column"), PrimitiveTypes.VarNumeric(),
 				iterate => {
 					if (iterate.IsFirst) {
 						iterate.SetResult(iterate.Current);
@@ -110,7 +131,8 @@ namespace Deveel.Data.Sql.Methods {
 					}
 				});
 
-			RegisterAggregate("AVG", Deterministic("x"), PrimitiveTypes.VarNumeric(),
+			// AVG
+			RegisterAggregate("AVG", Deterministic("column"), PrimitiveTypes.VarNumeric(),
 				iterate => {
 					if (iterate.IsFirst) {
 						iterate.SetResult(iterate.Current);
@@ -126,7 +148,8 @@ namespace Deveel.Data.Sql.Methods {
 					return Task.CompletedTask;
 				});
 
-			RegisterAggregate("STDEV", Deterministic("x"), PrimitiveTypes.VarNumeric(), iterate => {
+			// STDEV
+			RegisterAggregate("STDEV", Deterministic("column"), PrimitiveTypes.VarNumeric(), iterate => {
 				var aggregator = iterate.ResolveService<AvgAggregator>();
 				aggregator.Values.Add(iterate.Current);
 
@@ -159,6 +182,45 @@ namespace Deveel.Data.Sql.Methods {
 				merge.SetOutput(SqlObject.Numeric(ret));
 				return Task.CompletedTask;
 			});
+
+			// SUM
+			RegisterAggregate("SUM", Deterministic("column"), PrimitiveTypes.VarNumeric(),
+				iterate => {
+					if (iterate.IsFirst) {
+						iterate.SetResult(iterate.Current);
+					} else {
+						iterate.SetResult(iterate.Current.Add(iterate.Accumulation));
+					}
+				});
+
+			// LAST
+			RegisterAggregate("LAST", Deterministic("column"), new SqlDeterministicType(),
+				iterate => {
+					var groupResolver = iterate.ResolveService<IGroupResolver>();
+					var groupSize = groupResolver.Size;
+
+					if (iterate.Offset == groupSize - 1) {
+						iterate.SetResult(iterate.Current);
+					} else {
+						iterate.SetResult(SqlObject.Null);
+					}
+				});
+
+			// FIRST
+			RegisterAggregate("FIRST", Deterministic("column"), new SqlDeterministicType(),
+				iterate => {
+					if (iterate.IsFirst)
+						iterate.SetResult(iterate.Current, false);
+				});
+
+			RegisterAggregate("GROUP_ID", PrimitiveTypes.Integer(),
+				iterate => {
+					// no-op
+				}, merge: merge => {
+					var groupResolver = merge.ResolveService<IGroupResolver>();
+					merge.SetOutput(SqlObject.Integer(groupResolver.GroupId));
+					return Task.CompletedTask;
+				});
 		}
 
 		#region AvgAggregator

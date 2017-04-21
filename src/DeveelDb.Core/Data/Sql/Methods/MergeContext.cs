@@ -20,7 +20,7 @@ using System;
 namespace Deveel.Data.Sql.Methods {
 	public sealed class MergeContext : Context {
 		internal MergeContext(MethodContext parent, SqlObject accumulated)
-			: base(parent, $"Aggregate({parent.Method.MethodInfo.MethodName})") {
+			: base(parent, $"Merge({parent.Method.MethodInfo.MethodName})") {
 			Accumulated = accumulated;
 		}
 

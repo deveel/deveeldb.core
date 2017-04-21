@@ -50,6 +50,8 @@ namespace Deveel.Data.Sql.Methods {
 
 		internal bool HasResult { get; private set; }
 
+		public int ArgumentCount => Invoke.Arguments.Count;
+
 		public SqlExpression Argument(string argName) {
 			SqlExpression value;
 			if (!namedArgs.TryGetValue(argName, out value)) {
