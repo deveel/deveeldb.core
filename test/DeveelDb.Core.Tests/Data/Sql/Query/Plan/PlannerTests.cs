@@ -37,45 +37,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 
 			context = mock.Object;
 
-			var info = new SqlFunctionInfo(new ObjectName("count"), PrimitiveTypes.BigInt());
-			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.BigInt()));
-
-			var function = new SqlAggregateFunctionDelegate(info, accumulate => {
-				SqlObject r;
-				if (accumulate.IsFirst) {
-					r = accumulate.Current;
-				} else {
-					var x = accumulate.Accumulation;
-					var y = accumulate.Current;
-
-					r = x.Add(y);
-				}
-
-				accumulate.SetResult(r);
-			});
-
-			var registry = new SqlMethodRegistry();
-			registry.Register(function);
-
-			container.RegisterInstance<IMethodResolver>(registry);
-		}
-
-		[Fact]
-		public async void PlanSimpleSelect() {
-			var query = new SqlQueryExpression();
-			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
-			query.From.Table(ObjectName.Parse("sys.tab1"));
-
-			var planner = new DefaultQueryPlanner();
-			var node = await planner.PlanAsync(context, new QueryInfo(query));
-
-			Assert.NotNull(node);
-
-			var result = await node.ReduceAsync(context);
-
-			Assert.NotNull(result);
-			Assert.Equal(1, result.TableInfo.Columns.Count);
-			Assert.Equal(0, result.RowCount);
+			container.Register<IMethodResolver, SystemFunctionProvider>();
 		}
 
 		[Fact]

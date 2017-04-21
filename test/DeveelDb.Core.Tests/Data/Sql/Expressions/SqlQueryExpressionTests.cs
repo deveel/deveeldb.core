@@ -1,11 +1,46 @@
 ﻿using System;
 
-using Deveel.Data.Sql.Query;
+using Deveel.Data.Configuration;
+using Deveel.Data.Services;
+using Deveel.Data.Sql.Methods;
+using Deveel.Data.Sql.Query.Plan;
+using Deveel.Data.Sql.Tables;
+
+using Moq;
 
 using Xunit;
 
 namespace Deveel.Data.Sql.Expressions {
-	public static class SqlQueryExpressionTests {
+	public class SqlQueryExpressionTests {
+		private IContext context;
+
+		public SqlQueryExpressionTests() {
+			var tableInfo = new TableInfo(ObjectName.Parse("sys.tab1"));
+			tableInfo.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
+
+			var tableManager = new TransientTableManager();
+			tableManager.CreateTableAsync(tableInfo).Wait();
+
+			var config = new Configuration.Configuration();
+			config.SetValue("currentSchema", "sys");
+
+			var container = new ServiceContainer();
+			container.RegisterInstance<IDbObjectManager>(tableManager);
+			container.Register<ITableCache, InMemoryTableCache>();
+
+			var mock = new Mock<IContext>();
+			mock.SetupGet(x => x.Scope)
+				.Returns(container);
+			mock.As<IConfigurationScope>()
+				.Setup(x => x.Configuration)
+				.Returns(config);
+
+			context = mock.Object;
+
+			container.Register<IMethodResolver, SystemFunctionProvider>();
+			container.Register<IQueryPlanner, DefaultQueryPlanner>();
+		}
+
 		[Theory]
 		[InlineData("a.*", null, "a.*")]
 		[InlineData("a", "b", "a AS b")]
@@ -86,6 +121,23 @@ namespace Deveel.Data.Sql.Expressions {
 			expected.Append("  FROM table1 AS a INNER JOIN table2 AS b ON a.id = b.a_id");
 
 			Assert.Equal(expected.ToString(), query.ToString());
+		}
+
+		[Fact]
+		public async void ReduceSimpleSelect() {
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(ObjectName.Parse("sys.tab1"));
+
+			var result = await query.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
+
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
+
+			Assert.NotNull(table);
 		}
 	}
 }
