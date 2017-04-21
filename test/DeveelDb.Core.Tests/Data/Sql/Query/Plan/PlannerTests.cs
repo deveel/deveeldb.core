@@ -26,6 +26,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 
 			var container = new ServiceContainer();
 			container.RegisterInstance<IDbObjectManager>(tableManager);
+			container.Register<ITableCache, InMemoryTableCache>();
 
 			var mock = new Mock<IContext>();
 			mock.SetupGet(x => x.Scope)
@@ -37,7 +38,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 			context = mock.Object;
 
 			var info = new SqlFunctionInfo(new ObjectName("count"), PrimitiveTypes.BigInt());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.BigInt()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.BigInt()));
 
 			var function = new SqlAggregateFunctionDelegate(info, accumulate => {
 				SqlObject r;
@@ -91,6 +92,68 @@ namespace Deveel.Data.Sql.Query.Plan {
 			Assert.NotNull(node);
 			Assert.IsType<SubsetNode>(node);
 			Assert.IsType<GroupNode>(((SubsetNode) node).Child);
+		}
+
+		[Fact]
+		public async void PlanForArrayQuantified() {
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(ObjectName.Parse("tab1"));
+			query.Where = SqlExpression.Quantify(SqlExpressionType.Any,
+				SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")),
+					SqlExpression.Constant(SqlObject.Array(new[] {SqlObject.Integer(3), SqlObject.Integer(56) }))));
+
+			var planner = new DefaultQueryPlanner();
+			var node = await planner.PlanAsync(context, new QueryInfo(query));
+
+			Assert.NotNull(node);
+			Assert.IsType<SubsetNode>(node);
+			Assert.IsType<QuantifiedSelectNode>(((SubsetNode)node).Child);
+
+			var result = await node.ReduceAsync(context);
+
+			Assert.NotNull(result);
+		}
+
+		[Fact]
+		public async void PlanForSubQueryQuantified() {
+			var subQuery = new SqlQueryExpression();
+			subQuery.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			subQuery.From.Table(new ObjectName("tab1"));
+
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(ObjectName.Parse("tab1"));
+			query.Where = SqlExpression.Quantify(SqlExpressionType.Any,
+				SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), subQuery));
+
+			var planner = new DefaultQueryPlanner();
+			var node = await planner.PlanAsync(context, new QueryInfo(query));
+
+			Assert.NotNull(node);
+			Assert.IsType<SubsetNode>(node);
+			Assert.IsType<NonCorrelatedSelectNode>(((SubsetNode)node).Child);
+
+			var result = await node.ReduceAsync(context);
+
+			Assert.NotNull(result);
+		}
+
+		[Fact]
+		public async void PlanForSimpleOr() {
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(new ObjectName("tab1"));
+			query.Where = SqlExpression.Or(
+				SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Integer(3))),
+				SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Integer(6))));
+
+
+			var planner = new DefaultQueryPlanner();
+			var node = await planner.PlanAsync(context, new QueryInfo(query));
+
+			Assert.NotNull(node);
+			Assert.IsType<SubsetNode>(node);
 		}
 	}
 }

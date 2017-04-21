@@ -59,7 +59,7 @@ namespace Deveel.Data.Sql.Tables {
 			int column = table.TableInfo.Columns.IndexOf(columnName);
 
 			if (column == -1)
-				throw new ArgumentException($"Unable to find the column {columnName.Name} in the condition.");
+				throw new ArgumentException($"Unable to find the column '{columnName.Name}' in the condition.");
 
 			// Construct a temporary table with a single column that we are
 			// comparing to.
