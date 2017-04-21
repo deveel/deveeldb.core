@@ -259,6 +259,16 @@ namespace Deveel.Data {
 			return this.ToSqlString();
 		}
 
+
+		public ObjectName ToUpper() {
+			var upper = Name.ToUpperInvariant();
+			ObjectName parent = null;
+			if (Parent != null)
+				parent = Parent.ToUpper();
+
+			return new ObjectName(parent, upper);
+		}
+
 		public override bool Equals(object obj) {
 			var other = obj as ObjectName;
 			if (other == null)

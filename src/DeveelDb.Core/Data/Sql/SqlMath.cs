@@ -127,6 +127,14 @@ namespace Deveel.Data.Sql {
 			return number;
 		}
 
+		public static SqlNumber Sqrt(SqlNumber number) {
+			if (SqlNumber.IsNumber(number)) {
+				return DoubleOperation(number, System.Math.Sqrt);
+			}
+
+			return number;
+		} 
+
 		public static SqlNumber Round(SqlNumber number) {
 			return Round(number, number.MathContext.Precision);
 		}

@@ -42,11 +42,16 @@ namespace Deveel.Data.Sql.Methods {
 		public virtual bool IsSystem => true;
 
 		protected virtual bool ValidateInvoke(InvokeInfo invokeInfo) {
-			foreach (var parameter in MethodInfo.Parameters) {
-				var argType = invokeInfo.GetArgumentType(parameter.Name);
-				if (!parameter.ParameterType.IsComparable(argType) &&
-				    !parameter.IsDeterministic)
+			var required = MethodInfo.Parameters.Where(x => x.IsRequired).ToDictionary(x => x.Name, y => y);
+			foreach (var param in required) {
+				if (!invokeInfo.HasArgument(param.Key))
 					return false;
+
+				if (!param.Value.IsDeterministic) {
+					var argType = invokeInfo.ArgumentType(param.Key);
+					if (!param.Value.ParameterType.IsComparable(argType))
+						return false;
+				}
 			}
 
 			return true;
@@ -108,7 +113,7 @@ namespace Deveel.Data.Sql.Methods {
 			return this.ToSqlString();
 		}
 
-		public bool Matches(IContext context, Invoke invoke) {
+		public virtual bool Matches(IContext context, Invoke invoke) {
 			return MethodInfo.Matches(context, ValidateInvoke, invoke);
 		}
 	}

@@ -19,8 +19,8 @@ namespace Deveel.Data.Sql.Expressions {
 			context = mock.Object;
 
 			var methodInfo = new SqlFunctionInfo(ObjectName.Parse("sys.func1"), PrimitiveTypes.Integer());
-			methodInfo.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.VarChar(155)));
-			methodInfo.Parameters.Add(new SqlMethodParameterInfo("b", PrimitiveTypes.Integer(),
+			methodInfo.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.VarChar(155)));
+			methodInfo.Parameters.Add(new SqlParameterInfo("b", PrimitiveTypes.Integer(),
 				SqlExpression.Constant(SqlObject.Null)));
 			var method = new SqlFunctionDelegate(methodInfo, ctx => {
 				return Task.FromResult(ctx.Value("a").Add(ctx.Value("b")));
@@ -46,7 +46,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		[Fact]
 		public void GetSqlType() {
-			var function = SqlExpression.Function(ObjectName.Parse("sys.Func1"), new InvokeArgument("a", SqlObject.BigInt(33)));
+			var function = SqlExpression.Function(ObjectName.Parse("sys.Func1"), new InvokeArgument("a", SqlObject.String(new SqlString("foo"))));
 		
 			Assert.True(function.IsReference);
 			var type = function.GetSqlType(context);
@@ -57,7 +57,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[Fact]
 		public async Task ReduceFromExisting() {
 			var function = SqlExpression.Function(ObjectName.Parse("sys.Func1"), 
-				new InvokeArgument("a", SqlObject.BigInt(33)));
+				new InvokeArgument("a", SqlObject.String(new SqlString("foo"))));
 			Assert.True(function.CanReduce);
 			var result = await function.ReduceAsync(context);
 

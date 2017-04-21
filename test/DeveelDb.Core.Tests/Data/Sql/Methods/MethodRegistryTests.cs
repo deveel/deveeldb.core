@@ -26,7 +26,7 @@ namespace Deveel.Data.Sql.Methods {
 		public void RegisterAndResolveFunction() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 			var function = new SqlFunctionDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));

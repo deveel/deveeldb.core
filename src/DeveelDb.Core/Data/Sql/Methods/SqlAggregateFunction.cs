@@ -18,6 +18,7 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Expressions;
 using Deveel.Data.Services;
 
@@ -28,6 +29,19 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		public override FunctionType FunctionType => FunctionType.Aggregate;
+
+		public override bool Matches(IContext context, Invoke invoke) {
+			var ignoreCase = context.GetValue("ignoreCase", true);
+
+			if (!MethodInfo.MethodName.Equals(invoke.MethodName, ignoreCase))
+				return false;
+
+			if (invoke.Arguments == null ||
+			    invoke.Arguments.Count > 1)
+				return false;
+
+			return invoke.Arguments[0].Value is SqlReferenceExpression;
+		}
 
 		protected virtual Task InitializeAsync(InitializeContext context) {
 			return Task.CompletedTask;
@@ -104,7 +118,7 @@ namespace Deveel.Data.Sql.Methods {
 					await IterateAsync(accumulate);
 
 					if (accumulate.Result == null)
-						throw new InvalidOperationException();
+						throw new MethodAccessException("No result value was provided by the iteration");
 
 					result = accumulate.Result;
 				}
@@ -125,7 +139,7 @@ namespace Deveel.Data.Sql.Methods {
 					await IterateAsync(accumulate);
 
 					if (accumulate.Result == null)
-						throw new InvalidOperationException("No result was returned from the accumulation");
+						throw new MethodAccessException("No result value was provided by the iteration");
 
 					result = accumulate.Result;
 				}

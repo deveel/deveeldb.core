@@ -57,20 +57,7 @@ namespace Deveel.Data.Sql.Query {
 			context.RegisterInstance<IDbObjectManager>(tableManager.Object);
 			context.RegisterService<ITableCache, InMemoryTableCache>();
 
-			var funcInfo = new SqlFunctionInfo(new ObjectName("count"), PrimitiveTypes.Integer());
-			funcInfo.Parameters.Add(new SqlMethodParameterInfo("x", PrimitiveTypes.Table()));
-
-			var aggResolver = new Mock<IMethodResolver>();
-			aggResolver.Setup(x => x.ResolveMethod(It.IsAny<IContext>(), It.IsAny<Invoke>()))
-				.Returns(new SqlAggregateFunctionDelegate(funcInfo, iterate => {
-					if (iterate.IsFirst) {
-						return iterate.Current;
-					} else {
-						return iterate.Accumulation.Add(iterate.Current);
-					}
-				}));
-
-			context.RegisterInstance<IMethodResolver>(aggResolver.Object);
+			context.RegisterService<IMethodResolver, SystemFunctionProvider>();
 		}
 
 		[Fact]

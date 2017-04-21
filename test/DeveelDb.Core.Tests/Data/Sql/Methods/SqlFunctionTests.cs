@@ -28,7 +28,7 @@ namespace Deveel.Data.Sql.Methods {
 		public static void MakeFunctionInfo() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 
 			Assert.Equal(name, info.MethodName);
 			Assert.NotNull(info.ReturnType);
@@ -39,7 +39,7 @@ namespace Deveel.Data.Sql.Methods {
 		public static void GetString() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 			var function = new SqlFunctionDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
@@ -53,7 +53,7 @@ namespace Deveel.Data.Sql.Methods {
 		public static void MatchInvoke() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 
 			var function = new SqlFunctionDelegate(info, context => Task.CompletedTask);
 
@@ -66,7 +66,7 @@ namespace Deveel.Data.Sql.Methods {
 		public async Task ExecuteWithSequentialArgs() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 			var function = new SqlFunctionDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
@@ -89,7 +89,7 @@ namespace Deveel.Data.Sql.Methods {
 		public async Task ExecuteWithNamedArgs() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 			var function = new SqlFunctionDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				return Task.FromResult(a.Multiply(SqlObject.BigInt(2)));
@@ -112,8 +112,8 @@ namespace Deveel.Data.Sql.Methods {
 		public async Task ExecuteWithNamedArgsAndDefaultValue() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, PrimitiveTypes.Integer());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			info.Parameters.Add(new SqlMethodParameterInfo("b",
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("b",
 				PrimitiveTypes.String(),
 				SqlExpression.Constant(SqlObject.String(new SqlString("test")))));
 
@@ -141,8 +141,8 @@ namespace Deveel.Data.Sql.Methods {
 		public void ResolveDeterministricReturnType() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlFunctionInfo(name, new SqlDeterministicType());
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			info.Parameters.Add(new SqlMethodParameterInfo("b",
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("b",
 				PrimitiveTypes.String(),
 				SqlExpression.Constant(SqlObject.String(new SqlString("test")))));
 
