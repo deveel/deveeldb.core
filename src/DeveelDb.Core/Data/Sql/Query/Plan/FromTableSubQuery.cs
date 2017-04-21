@@ -6,11 +6,11 @@ using System.Text;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Query.Plan {
-	class FromTableSubQuerySource : IFromTable {
+	class FromTableSubQuery : IFromTable {
 		private ObjectName[] columnNames;
 		private bool ignoreCase;
 
-		internal FromTableSubQuerySource(bool caseInsensitive, string uniqueKey, SqlQueryExpression queryExpression, QueryExpressionFrom fromSet, ObjectName alias) {
+		internal FromTableSubQuery(bool caseInsensitive, string uniqueKey, SqlQueryExpression queryExpression, QueryExpressionFrom fromSet, ObjectName alias) {
 			UniqueName = uniqueKey;
 			QueryExpression = queryExpression;
 			QueryFrom = fromSet;

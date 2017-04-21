@@ -50,9 +50,15 @@ namespace Deveel.Data.Sql.Indexes {
 		protected IndexKey GetKey(long row) {
 			ThrowIfNotAttached();
 
+			if (row > Table.RowCount)
+				return NullKey;
+
 			var values = new SqlObject[Columns.Length];
 			for (int i = 0; i < Columns.Length; i++) {
-				values[i] = Table.GetValue(row, Columns[i]);
+				var column = Table.TableInfo.Columns[i];
+				var value = Table.GetValue(row, Columns[i]);
+
+				values[i] = value == null ? SqlObject.NullOf(column.ColumnType) : value;
 			}
 
 			return new IndexKey(values);

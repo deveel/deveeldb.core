@@ -6,17 +6,26 @@ using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Sql.Query {
 	public sealed class SimplePatternSelectNode : SingleQueryPlanNode {
-		public SimplePatternSelectNode(IQueryPlanNode child, SqlExpression expression)
+		public SimplePatternSelectNode(IQueryPlanNode child, ObjectName columnName, SqlExpressionType op, SqlExpression pattern, SqlExpression escape)
 			: base(child) {
-			Expression = expression;
+			Column = columnName;
+			Operator = op;
+			Pattern = pattern;
+			Escape = escape;
 		}
 
-		public SqlExpression Expression { get; }
+		public ObjectName Column { get; }
+
+		public SqlExpressionType Operator { get; }
+
+		public SqlExpression Pattern { get; }
+
+		public SqlExpression Escape { get; }
 
 		public override async Task<ITable> ReduceAsync(IContext context) {
 			var table = await Child.ReduceAsync(context);
 
-			return await table.Select(context, Expression);
+			return await table.SearchAsync(context, Column, Operator, Pattern, Escape);
 		}
 	}
 }

@@ -416,7 +416,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 					// Set the new table list
 					tables = newTableList;
 				} else if (op == SqlExpressionType.And) {
-					PlanForExpressions(binary);
+					PlanForExpressions(binary.Left, binary.Right);
 				} else {
 					throw new InvalidOperationException($"Expression {op} is not a valid logical operation");
 				}
@@ -546,11 +546,11 @@ namespace Deveel.Data.Sql.Query.Plan {
 
 		}
 
-		public IQueryPlanNode PlanSearchExpression(SqlExpression search_expression) {
+		public IQueryPlanNode PlanSearchExpression(SqlExpression expression) {
 			// First perform all outer tables.
 			PlanAllOuterJoins();
 
-			return LogicalEvaluate(search_expression);
+			return LogicalEvaluate(expression);
 		}
 
 		private void EvaluateMultiples(List<SqlExpression> multiRefs, List<ExpressionPlan> evaluateOrder) {

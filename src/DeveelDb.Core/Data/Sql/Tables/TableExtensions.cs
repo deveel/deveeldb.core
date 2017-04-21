@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using Deveel.Data.Indexes;
 using Deveel.Data.Sql.Expressions;
 using Deveel.Data.Sql.Indexes;
+using Deveel.Data.Sql.Query;
 
 namespace Deveel.Data.Sql.Tables {
 	public static class TableExtensions {
@@ -91,8 +92,7 @@ namespace Deveel.Data.Sql.Tables {
 				var offset = table.TableInfo.Columns.IndexOf(columnName);
 
 				if (offset < 0)
-					throw new InvalidOperationException(String.Format("The column '{0}' was not found in table '{1}'.", columnName,
-						table.TableInfo.TableName));
+					throw new InvalidOperationException($"The column '{columnName}' was not found in table '{table.TableInfo.TableName}'.");
 
 				columnMap[i] = offset;
 			}
@@ -402,15 +402,22 @@ namespace Deveel.Data.Sql.Tables {
 			return await TableSelects.SimpleSelectAsync(table, context, columnName, op, expression);
 		}
 
-		public static async Task<ITable> Select(this ITable table, IContext context, SqlExpression expression) {
+		public static async Task<ITable> SelectAsync(this ITable table, IContext context, SqlExpression expression) {
 			if (expression is SqlQuantifyExpression) {
 				return await table.SelectNonCorrelatedAsync(context, (SqlQuantifyExpression) expression);
 			}
 			if (expression is SqlBinaryExpression) {
 				var binary = (SqlBinaryExpression) expression;
-				var leftRef = (binary.Left as SqlReferenceExpression)?.ReferenceName;
+				var leftRef = binary.Left.AsReference();
 				if (leftRef != null)
 					return await table.SimpleSelectAsync(context, leftRef, binary.ExpressionType, binary.Right);
+			}
+
+			if (expression is SqlStringMatchExpression) {
+				var stringMatch = (SqlStringMatchExpression) expression;
+				var leftRef = stringMatch.Left.AsReference();
+				if (leftRef != null)
+					return await table.SearchAsync(context, leftRef, expression.ExpressionType, stringMatch.Pattern, stringMatch.Escape);
 			}
 
 			var value = await expression.ReduceToConstantAsync(context);
@@ -418,6 +425,26 @@ namespace Deveel.Data.Sql.Tables {
 				table = table.EmptySelect();
 
 			return table;
+		}
+
+		public static async Task<ITable> SearchAsync(this ITable table, IContext context, ObjectName columnName, SqlExpressionType op, SqlExpression pattern, SqlExpression escape) {
+			var column = table.TableInfo.Columns.IndexOf(columnName);
+			if (column == -1)
+				throw new ArgumentException();
+
+			var patternString = await pattern.ReduceAsync(context);
+			if (patternString.ExpressionType != SqlExpressionType.Constant)
+				throw new InvalidOperationException();
+
+			SqlExpression es = null;
+			if (escape != null) {
+				es = await escape.ReduceAsync(context);
+				if (es.ExpressionType != SqlExpressionType.Constant)
+					throw new InvalidOperationException();
+			}
+
+			return await TableSelects.SearchAsync(context, table, column, op, ((SqlConstantExpression) patternString).Value,
+				es == null ? null : ((SqlConstantExpression) es).Value);
 		}
 
 		public static ITable SelectRange(this ITable table, ObjectName columnName, IndexRange[] ranges) {

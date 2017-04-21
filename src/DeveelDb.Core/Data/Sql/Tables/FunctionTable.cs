@@ -11,7 +11,7 @@ namespace Deveel.Data.Sql.Tables {
 		private readonly FunctionColumnInfo[] columns;
 
 		private static int uniqueKeySeq = 0;
-		private static readonly ObjectName FunctionTableName = new ObjectName("#FUNCTION_TABLE#");
+		public static readonly ObjectName Name = new ObjectName("FUNCTIONTABLE");
 
 		public FunctionTable(IContext context, ITable table, FunctionColumnInfo[] columns) {
 			// Make sure we are synchronized over the class.
@@ -22,7 +22,7 @@ namespace Deveel.Data.Sql.Tables {
 
 			uniqueId = (uniqueId & 0x0FFFFFFF) | 0x010000000;
 
-			var tableInfo = new TableInfo(FunctionTableName);
+			var tableInfo = new TableInfo(Name);
 
 			for (int i = 0; i < columns.Length; i++) {
 				tableInfo.Columns.Add(columns[i].ColumnInfo);

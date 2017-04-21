@@ -209,20 +209,6 @@ namespace Deveel.Data.Sql.Query {
 		}
 
 		[Fact]
-		public async Task SimplePatternSelect() {
-			var tableName = new ObjectName("tab1");
-			var fetchNode = new FetchTableNode(tableName);
-			var exp = SqlExpression.Equal(SqlExpression.Reference(new ObjectName(tableName, "a")),
-				SqlExpression.Constant(SqlObject.Integer(23)));
-
-			var simplePattern = new SimplePatternSelectNode(fetchNode, exp);
-
-			var result = await simplePattern.ReduceAsync(context);
-
-			Assert.Equal(2, result.RowCount);
-		}
-
-		[Fact]
 		public async Task SimpleJoin() {
 			var tableName1 = new ObjectName("tab1");
 			var fetchNode1 = new FetchTableNode(tableName1);

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using Deveel.Data.Services;
-
 namespace Deveel.Data.Sql.Tables {
 	public sealed class GroupTable : FunctionTable {
 		private readonly ITable table;

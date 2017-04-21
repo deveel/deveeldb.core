@@ -70,6 +70,10 @@ namespace Deveel.Data.Sql.Expressions {
 			Source(new SqlQueryExpressionSource(tableName, alias));
 		}
 
+		public void Query(SqlQueryExpression query) {
+			Query(query, null);
+		}
+
 		public void Query(SqlQueryExpression query, string alias) {
 			Source(new SqlQueryExpressionSource(query, alias));
 		}

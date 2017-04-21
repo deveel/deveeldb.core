@@ -4,11 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Expressions;
+using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Sql.Query.Plan {
 	public sealed class DefaultQueryPlanner : IQueryPlanner {
-		private static readonly ObjectName FunctionTableName = new ObjectName("FUNCTIONTABLE");
-
 		public async Task<IQueryPlanNode> PlanAsync(IContext context, QueryInfo queryInfo) {
 			if (queryInfo == null)
 				throw new ArgumentNullException(nameof(queryInfo));
@@ -259,8 +258,8 @@ namespace Deveel.Data.Sql.Query.Plan {
 				var tableSource = queryFrom.GetTableSource(i);
 				IQueryPlanNode plan;
 
-				if (tableSource is FromTableSubQuerySource) {
-					var subQuerySource = (FromTableSubQuerySource)tableSource;
+				if (tableSource is FromTableSubQuery) {
+					var subQuerySource = (FromTableSubQuery)tableSource;
 
 					var subQueryExpr = subQuerySource.QueryExpression;
 					var subQueryFrom = subQuerySource.QueryFrom;
@@ -434,7 +433,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 
 						// The new ordering functions are called 'FUNCTIONTABLE.#ORDER-n'
 						// where n is the number of the ordering expression.
-						orderList[i] = new ObjectName(FunctionTableName, $"#ORDER-{functionOrders.Count}");
+						orderList[i] = new ObjectName(FunctionTable.Name, $"#ORDER-{functionOrders.Count}");
 						functionOrders.Add(exp);
 					}
 				}
@@ -541,7 +540,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 
 				aggregates.Add(havingExpression);
 
-				var name = new ObjectName(FunctionTableName, $"HAVINGAGG_{aggregates.Count}");
+				var name = new ObjectName(FunctionTable.Name, $"HAVINGAGG_{aggregates.Count}");
 				return SqlExpression.Reference(name);
 			}
 
@@ -586,7 +585,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 						throw new InvalidOperationException($"Aggregate expression '{expression}' is not allowed in a GROUP BY clause");
 
 					expressions.Add(expression);
-					columnName = new ObjectName(FunctionTableName, $"#GROUPBY-{expressions.Count - 1}");
+					columnName = new ObjectName(FunctionTable.Name, $"#GROUPBY-{expressions.Count - 1}");
 				}
 
 				columnNames[i] = columnName;

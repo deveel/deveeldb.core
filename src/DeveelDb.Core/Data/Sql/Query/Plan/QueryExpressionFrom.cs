@@ -226,7 +226,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 						aliasTableName = new ObjectName(alias);
 
 					// Add to list of sub-query tables to add to command,
-					queryFrom.AddTable(new FromTableSubQuerySource(ignoreCase, uniqueKey, subQuery, subQueryFrom, aliasTableName));
+					queryFrom.AddTable(new FromTableSubQuery(ignoreCase, uniqueKey, subQuery, subQueryFrom, aliasTableName));
 				} else {
 					// Else must be a standard command table,
 					var name = fromTable.TableName;

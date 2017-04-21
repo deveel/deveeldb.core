@@ -75,7 +75,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 				} else if (node is RangeSelectNode) {
 					list = ((RangeSelectNode) node).Expression.DiscoverCorrelatedReferences(queryLevel, list);
 				} else if (node is SimplePatternSelectNode) {
-					list = ((SimplePatternSelectNode) node).Expression.DiscoverCorrelatedReferences(queryLevel, list);
+					list = ((SimplePatternSelectNode) node).Pattern.DiscoverCorrelatedReferences(queryLevel, list);
 				} else if (node is SimpleSelectNode) {
 					list = ((SimpleSelectNode) node).Expression.DiscoverCorrelatedReferences(queryLevel, list);
 				}

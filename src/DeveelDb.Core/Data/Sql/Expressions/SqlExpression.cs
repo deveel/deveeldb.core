@@ -31,7 +31,7 @@ namespace Deveel.Data.Sql.Expressions {
 			switch (ExpressionType) {
 				// Group
 				case SqlExpressionType.Group:
-					return 151;
+					return 155;
 
 				// References
 				case SqlExpressionType.Reference:
@@ -197,6 +197,10 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlStringMatchExpression StringMatch(SqlExpressionType expressionType, SqlExpression left,
 			SqlExpression pattern, SqlExpression escape) {
 			return new SqlStringMatchExpression(expressionType, left, pattern, escape);
+		}
+
+		public static SqlStringMatchExpression Like(SqlExpression left, SqlExpression pattern) {
+			return Like(left, pattern, null);
 		}
 
 		public static SqlStringMatchExpression Like(SqlExpression left, SqlExpression pattern, SqlExpression escape)
