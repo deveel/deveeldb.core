@@ -381,9 +381,9 @@ namespace Deveel {
 		/// <param name="newSize">size of new array</param>
 		public void TrimToSize(long newSize) {
 			if (newSize > Count || newSize < 0)
-				throw new ArgumentException("Cannot trim BigList class to value less than 0 or larger than original size",
-					"newSize");
+				throw new ArgumentException("Cannot trim BigList class to value less than 0 or larger than original size", nameof(newSize));
 			_items.Resize(newSize);
+			_size = newSize;
 		}
 
 		/// <summary>

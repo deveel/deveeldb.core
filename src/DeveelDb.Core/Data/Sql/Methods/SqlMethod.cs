@@ -113,7 +113,7 @@ namespace Deveel.Data.Sql.Methods {
 			return this.ToSqlString();
 		}
 
-		public bool Matches(IContext context, Invoke invoke) {
+		public virtual bool Matches(IContext context, Invoke invoke) {
 			return MethodInfo.Matches(context, ValidateInvoke, invoke);
 		}
 	}

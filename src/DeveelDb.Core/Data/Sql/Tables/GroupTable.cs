@@ -150,9 +150,10 @@ namespace Deveel.Data.Sql.Tables {
 				// This means there is no grouping, so merge with entire table,
 				var rowCount = table.RowCount;
 				var rowList = new BigList<long>(rowCount);
-				var en = table.GetEnumerator();
-				while (en.MoveNext()) {
-					rowList.Add(en.Current.Id.Number);
+				using (var en = table.GetEnumerator()) {
+					while (en.MoveNext()) {
+						rowList.Add(en.Current.Id.Number);
+					}
 				}
 
 				rows = rowList;
