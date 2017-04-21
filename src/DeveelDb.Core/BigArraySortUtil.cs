@@ -8,10 +8,10 @@ namespace Deveel {
 		private class ItemComparer : IComparer<T> {
 			public int Compare(T x, T y) {
 				if (x is IComparable<T>) {
-					var a = (IComparable<T>) x;
+					var a = (IComparable<T>)x;
 					return a.CompareTo(y);
 				} else if (x is IComparable) {
-					var a = (IComparable) x;
+					var a = (IComparable)x;
 					return a.CompareTo(y);
 				} else {
 					throw new NotSupportedException();

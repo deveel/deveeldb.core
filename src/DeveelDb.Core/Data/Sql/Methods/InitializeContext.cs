@@ -26,6 +26,8 @@ namespace Deveel.Data.Sql.Methods {
 			Input = input;
 		}
 
+		public MethodContext MethodContext => (MethodContext) ParentContext;
+
 		public SqlExpression Input { get; }
 
 		internal SqlExpression Result { get; private set; }

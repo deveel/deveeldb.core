@@ -50,7 +50,8 @@ namespace Deveel.Data.Sql.Methods {
 			if (method == null)
 				throw new ArgumentNullException(nameof(method));
 
-			container.RegisterInstance<SqlMethod>(method, method.MethodInfo.MethodName);
+			var methodName = method.MethodInfo.MethodName.ToUpper();
+			container.RegisterInstance<SqlMethod>(method, methodName);
 
 			initialized = false;
 		}
@@ -60,7 +61,8 @@ namespace Deveel.Data.Sql.Methods {
 			if (methodInfo == null)
 				throw new ArgumentNullException(nameof(methodInfo));
 
-			container.Register<SqlMethod, TMethod>(methodInfo.MethodName);
+			var methodName = methodInfo.MethodName.ToUpper();
+			container.Register<SqlMethod, TMethod>(methodName);
 
 			initialized = false;
 		}
@@ -68,11 +70,8 @@ namespace Deveel.Data.Sql.Methods {
 		SqlMethod IMethodResolver.ResolveMethod(IContext context, Invoke invoke) {
 			EnsureInitialized();
 
-			var method = container.Resolve<SqlMethod>(invoke.MethodName);
-			if (method != null && method.Matches(context, invoke))
-				return method;
-
-			return null;
+			var methodName = invoke.MethodName.ToUpper();
+			return container.Resolve<SqlMethod>(methodName);			
 		}
 
 		protected virtual void Dispose(bool disposing) {
