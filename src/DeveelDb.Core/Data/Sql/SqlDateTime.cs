@@ -532,11 +532,6 @@ namespace Deveel.Data.Sql {
 				offset);
 		}
 
-		public static explicit operator DateTimeOffset?(SqlDateTime a) {
-			var offset = new TimeSpan(a.Offset.Hours, a.Offset.Minutes, a.Offset.Seconds);
-			return new DateTimeOffset(a.Year, a.Month, a.Day, a.Hour, a.Minute, a.Second, a.Millisecond, offset);
-		}
-
 		public static explicit operator DateTimeOffset(SqlDateTime a) {
 			var offset = new TimeSpan(a.Offset.Hours, a.Offset.Minutes, a.Offset.Seconds);
 			return new DateTimeOffset(a.Year, a.Month, a.Day, a.Hour, a.Minute, a.Second, a.Millisecond, offset);
