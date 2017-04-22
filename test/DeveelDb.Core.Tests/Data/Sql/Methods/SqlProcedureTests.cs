@@ -26,7 +26,7 @@ namespace Deveel.Data.Sql.Methods {
 		public static void MakeProcedureInfo() {
 			var name = ObjectName.Parse("a.proc");
 			var info = new SqlMethodInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 
 			Assert.Equal(name, info.MethodName);
 			Assert.NotEmpty(info.Parameters);
@@ -36,7 +36,7 @@ namespace Deveel.Data.Sql.Methods {
 		public static void GetString() {
 			var name = ObjectName.Parse("a.proc");
 			var info = new SqlMethodInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 			var function = new SqlProcedureDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				var b = a.Multiply(SqlObject.BigInt(2));
@@ -52,18 +52,19 @@ namespace Deveel.Data.Sql.Methods {
 		public static void MatchInvoke() {
 			var name = ObjectName.Parse("a.proc");
 			var info = new SqlMethodInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			var procedure = new SqlProcedureDelegate(info, methodContext => Task.CompletedTask);
 
 			var invoke = new Invoke(name, new[] { new InvokeArgument(SqlObject.BigInt(11)) });
 
-			Assert.True(info.Matches(null, invoke));
+			Assert.True(procedure.Matches(null, invoke));
 		}
 
 		[Fact]
 		public async Task ExecuteWithSequentialArgs() {
 			var name = ObjectName.Parse("a.proc");
 			var info = new SqlMethodInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 			var procedure = new SqlProcedureDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				var b = a.Multiply(SqlObject.BigInt(2));
@@ -82,7 +83,7 @@ namespace Deveel.Data.Sql.Methods {
 		public async Task ExecuteWithNamedArgs() {
 			var name = ObjectName.Parse("a.func");
 			var info = new SqlMethodInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 			var procedure = new SqlProcedureDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				var b = a.Multiply(SqlObject.BigInt(2));
@@ -101,8 +102,8 @@ namespace Deveel.Data.Sql.Methods {
 		public async Task ExecuteWithNamedArgsAndDefaultValue() {
 			var name = ObjectName.Parse("a.proc");
 			var info = new SqlMethodInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			info.Parameters.Add(new SqlMethodParameterInfo("b",
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("b",
 				PrimitiveTypes.String(),
 				SqlExpression.Constant(SqlObject.String(new SqlString("test")))));
 

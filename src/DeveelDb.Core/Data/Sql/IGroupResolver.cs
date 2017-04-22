@@ -22,6 +22,8 @@ namespace Deveel.Data.Sql {
 	public interface IGroupResolver {
 		long Size { get; }
 
+		int GroupId { get; }
+
 		Task<SqlObject> ResolveReferenceAsync(ObjectName referecne, long index);
 
 		IReferenceResolver GetResolver(long index);

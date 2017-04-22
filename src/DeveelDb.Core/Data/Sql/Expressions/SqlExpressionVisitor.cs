@@ -19,7 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Deveel.Data.Query;
+using Deveel.Data.Sql.Query;
 using Deveel.Data.Sql.Methods;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -134,7 +134,7 @@ namespace Deveel.Data.Sql.Expressions {
 		public virtual SqlExpression VisitQuantify(SqlQuantifyExpression expression) {
 			var exp = expression.Expression;
 			if (exp != null)
-				Visit(exp);
+				exp = (SqlBinaryExpression) Visit(exp);
 
 			return SqlExpression.Quantify(expression.ExpressionType, exp);
 		}

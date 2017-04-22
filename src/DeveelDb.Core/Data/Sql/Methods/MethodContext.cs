@@ -50,6 +50,8 @@ namespace Deveel.Data.Sql.Methods {
 
 		internal bool HasResult { get; private set; }
 
+		public int ArgumentCount => Invoke.Arguments.Count;
+
 		public SqlExpression Argument(string argName) {
 			SqlExpression value;
 			if (!namedArgs.TryGetValue(argName, out value)) {
@@ -94,7 +96,7 @@ namespace Deveel.Data.Sql.Methods {
 				var methodParams = methodInfo.Parameters.ToDictionary(x => x.Name, y => y);
 
 				foreach (var invokeArg in invokeArgs) {
-					SqlMethodParameterInfo paramInfo;
+					SqlParameterInfo paramInfo;
 					if (!methodParams.TryGetValue(invokeArg.Key, out paramInfo))
 						throw new InvalidOperationException(
 							$"Invoke argument {invokeArg.Key} does not correspond to any parameter of the method");
@@ -126,7 +128,7 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		Variable IVariableResolver.ResolveVariable(string name, bool ignoreCase) {
-			SqlMethodParameterInfo paramInfo;
+			SqlParameterInfo paramInfo;
 			if (!Method.MethodInfo.TryGetParameter(name, ignoreCase, out paramInfo))
 				return null;
 
@@ -139,7 +141,7 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		SqlType IVariableResolver.ResolveVariableType(string name, bool ignoreCase) {
-			SqlMethodParameterInfo paramInfo;
+			SqlParameterInfo paramInfo;
 			if (!Method.MethodInfo.TryGetParameter(name, ignoreCase, out paramInfo))
 				return null;
 
@@ -157,7 +159,7 @@ namespace Deveel.Data.Sql.Methods {
 			if (!Method.IsProcedure)
 				throw new InvalidOperationException($"The method {Method.MethodInfo.MethodName} is not a Procedure");
 
-			SqlMethodParameterInfo parameter;
+			SqlParameterInfo parameter;
 			if (!Method.MethodInfo.Parameters.ToDictionary(x => x.Name, y => y).TryGetValue(parameterName, out parameter))
 				throw new ArgumentException($"The method {Method.MethodInfo.MethodName} contains no parameter {parameterName}");
 
@@ -196,10 +198,15 @@ namespace Deveel.Data.Sql.Methods {
 				}
 			}
 
+			var resultType = ((SqlFunctionBase) Method).ReturnType(this, Invoke);
+
 			var valueType = value.GetSqlType(this);
-			if (!valueType.IsComparable(functionInfo.ReturnType))
+			if (!resultType.IsComparable(valueType))
 				throw new InvalidOperationException($"The result type {valueType} of the expression is not compatible " +
 				                                    $"with the return type {functionInfo.ReturnType} of the function {Method.MethodInfo.MethodName}");
+
+
+			// TODO: eventually CAST to the return type
 
 			ResultValue = value;
 			HasResult = true;

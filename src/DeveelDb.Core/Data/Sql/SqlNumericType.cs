@@ -16,8 +16,6 @@
 
 
 using System;
-using System.Net.Http.Headers;
-using System.Runtime.InteropServices;
 
 using Deveel.Math;
 
@@ -56,15 +54,21 @@ namespace Deveel.Data.Sql {
 		}
 
 		private static void AssertScale(SqlTypeCode typeCode, int scale) {
-			if (typeCode == SqlTypeCode.TinyInt ||
-			    typeCode == SqlTypeCode.SmallInt ||
-			    typeCode == SqlTypeCode.Integer ||
-			    typeCode == SqlTypeCode.BigInt) {
-				if (scale > 0)
-					throw new ArgumentException($"Integer type {typeCode} must have a scale of 0");
-			} else if (typeCode == SqlTypeCode.Numeric &&
-				scale <= 0) {
-				throw new ArgumentException("The NUMERIC type requires an explicit scale");
+			switch (typeCode) {
+				case SqlTypeCode.TinyInt:
+				case SqlTypeCode.SmallInt:
+				case SqlTypeCode.Integer:
+				case SqlTypeCode.BigInt:
+					if (scale > 0)
+						throw new ArgumentException($"Integer type {typeCode} must have a scale of 0");
+
+					break;
+				case SqlTypeCode.Numeric:
+					if (scale <= 0) {
+						throw new ArgumentException("The NUMERIC type requires an explicit scale");
+					}
+
+					break;
 			}
 		}
 
@@ -85,6 +89,8 @@ namespace Deveel.Data.Sql {
 					return DoublePrecision;
 				case SqlTypeCode.Decimal:
 					return DecimalPrecision;
+				case SqlTypeCode.VarNumeric:
+					return-1;
 				default:
 					throw new ArgumentException($"Type {typeCode} requires an explicit precision");
 			}
@@ -133,7 +139,8 @@ namespace Deveel.Data.Sql {
 			       typeCode == SqlTypeCode.Float ||
 			       typeCode == SqlTypeCode.Double ||
 			       typeCode == SqlTypeCode.Decimal ||
-			       typeCode == SqlTypeCode.Numeric;
+			       typeCode == SqlTypeCode.Numeric ||
+				   typeCode == SqlTypeCode.VarNumeric;
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
@@ -148,9 +155,11 @@ namespace Deveel.Data.Sql {
 					case SqlTypeCode.Double:
 					case SqlTypeCode.Float:
 						return number.Precision <= Precision;
-					default:
+					case SqlTypeCode.Numeric:
 						return number.Precision <= Precision &&
 						       (Scale < 0 || number.Scale <= Scale);
+					case SqlTypeCode.VarNumeric:
+						return number.Precision > 0 && number.Scale >= 0;
 				}
 			}
 

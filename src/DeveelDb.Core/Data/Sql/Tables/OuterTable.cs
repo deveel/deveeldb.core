@@ -44,7 +44,7 @@ namespace Deveel.Data.Sql.Tables {
 			var rows = rawTableInfo.Rows;
 
 			// The number of rows being merged in.
-			outerRowCount = rows[0].Length;
+			outerRowCount = rows[0].Count;
 
 			for (int i = 0; i < baseTables.Length; ++i) {
 				var btable = baseTables[i];
@@ -63,10 +63,10 @@ namespace Deveel.Data.Sql.Tables {
 
 					// Merge in the rows from the input table,
 					var toMerge = rows[index];
-					if (toMerge.Length != outerRowCount)
+					if (toMerge.Count != outerRowCount)
 						throw new InvalidOperationException("Wrong size for rows being merged in.");
 
-					for (long j = 0; j < toMerge.Length; j++) {
+					for (long j = 0; j < toMerge.Count; j++) {
 						outerRows[i][j] = toMerge[j];
 					}
 				}

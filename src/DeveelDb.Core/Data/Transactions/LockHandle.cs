@@ -51,12 +51,17 @@ namespace Deveel.Data.Transactions {
 			}
 		}
 
-		internal void Wait(ILockable lockable, AccessType accessType, int timeout) {
+		public void Wait(ILockable lockable, AccessType accessType) {
+			var timeout = locker.context.GetValue<int>("transaction.lock.timeout", 1500);
+			Wait(lockable, accessType, timeout);
+		}
+
+		public void Wait(ILockable lockable, AccessType accessType, int timeout) {
 			bool found = false;
 			for (int i = locks.Count - 1; i >= 0; i--) {
 				var @lock = locks[i];
 				if (@lock.Locked.RefId.Equals(lockable.RefId) &&
-				    (@lock.AccessType & accessType) != 0) {
+					(@lock.AccessType & accessType) != 0) {
 					@lock.Wait(accessType, timeout);
 					found = true;
 				}

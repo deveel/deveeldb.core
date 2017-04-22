@@ -72,20 +72,20 @@ namespace Deveel {
 			if (newSize == Length)
 				return;
 
-			int blockCount = (int) (newSize / BlockSize);
+			int blockCount = (int)(newSize / BlockSize);
 			if (newSize > (blockCount * BlockSize))
 				blockCount++;
 
 			int previousBlockCount = items.Length;
 
-			int lastBlockSize = (int) (newSize - ((blockCount - 1) * BlockSize));
-			int previousLastBlockSize = (int) (Length - ((blockCount - 1) * BlockSize));
+			int lastBlockSize = (int)(newSize - ((blockCount - 1) * BlockSize));
+			int previousLastBlockSize = (int)(Length - ((blockCount - 1) * BlockSize));
 
 			if (previousBlockCount != blockCount) {
 				if (previousBlockCount < blockCount) //  Increasing size, make more.
 				{
 					if (previousLastBlockSize != BlockSize) {
-						Array.Resize<T>(ref items[previousBlockCount - 1], (int) BlockSize);
+						Array.Resize<T>(ref items[previousBlockCount - 1], (int)BlockSize);
 					}
 
 					Array.Resize<T[]>(ref items, blockCount);
@@ -248,6 +248,14 @@ namespace Deveel {
 				start = 0;
 				i += len;
 			}
+		}
+
+		public static void QuickSort(BigArray<T> array, long offset, long count) {
+			BigArraySortUtil<T>.QuickSort(array, offset, count);
+		}
+
+		public static void QuickSort(BigArray<T> array) {
+			QuickSort(array, 0, array.Length - 1);
 		}
 	}
 }

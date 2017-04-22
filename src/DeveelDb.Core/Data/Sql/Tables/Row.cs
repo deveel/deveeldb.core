@@ -164,6 +164,18 @@ namespace Deveel.Data.Sql.Tables {
 			return GetEnumerator();
 		}
 
+		public IReferenceResolver GetResolver() {
+			return new RowReferenceResolver(Table, RowNumber);
+		}
+
+		public async Task<SqlExpression> ReduceExpressionAsync(IContext context, SqlExpression expression) {
+			using (var rowContext = context.Create($"row_{Id}")) {
+				rowContext.RegisterInstance<IReferenceResolver>(GetResolver());
+
+				return await expression.ReduceAsync(rowContext);
+			}
+		}
+
 		#region ReferenceResolver
 
 		class ReferenceResolver : IReferenceResolver {

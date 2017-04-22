@@ -16,9 +16,10 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Expressions {
 	public interface ISqlExpressionPreparable<TResult> {
-		TResult PrepareExpressions(ISqlExpressionPreparer preparer);
+		TResult Prepare(ISqlExpressionPreparer preparer);
 	}
 }

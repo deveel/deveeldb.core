@@ -43,15 +43,7 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		public override SqlType GetSqlType(IContext context) {
-			var resolver = context.Scope.Resolve<IReferenceResolver>();
-			if (resolver == null)
-				throw new InvalidOperationException();
-
-			var obj = resolver.ResolveType(ReferenceName);
-			if (obj == null)
-				throw new InvalidOperationException();
-
-			return obj;
+			return Value.GetSqlType(context);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

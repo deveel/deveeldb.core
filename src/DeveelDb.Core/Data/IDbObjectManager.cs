@@ -75,6 +75,8 @@ namespace Deveel.Data {
 		/// </returns>
 		Task<bool> ObjectExistsAsync(ObjectName objName);
 
+		Task<IDbObjectInfo> GetObjectInfoAsync(ObjectName objectName);
+
 		/// <summary>
 		/// Gets a database object managed by this manager.
 		/// </summary>

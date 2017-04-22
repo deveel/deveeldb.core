@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 using Deveel.Data.Sql.Indexes;
 
@@ -14,49 +13,34 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		protected override IEnumerable<long> ResolveRows(int column, IEnumerable<long> rows, ITable ancestor) {
-			if (ancestor != this)
+			if (this != ancestor)
 				throw new Exception("Method routed to incorrect table ancestor.");
 
 			return rows;
 		}
 
 		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
-			var rows = this.Select(row => row.Id.Number).ToBigArray();
+			var rows = this.Select(row => row.Id.Number).ToBigList();
 			rootInfo.Add(this, rows);
 			return rootInfo;
 		}
 
 		protected override Index GetColumnIndex(int column, int originalColumn, ITable ancestor) {
 			var index = GetColumnIndex(column);
-			if (ancestor == this)
+			if (this == ancestor)
 				return index;
 
 			return index.Subset(ancestor, originalColumn);
 		}
 
 		public override Index GetColumnIndex(int column) {
+			if (indexes == null)
+				throw new InvalidOperationException("The indexes for the table were not built");
+
 			return indexes[column];
 		}
 
-		protected void SetupIndexes(string indexTypeName) {
-			Type indexType;
-			if (String.Equals(indexTypeName, "NONE", StringComparison.OrdinalIgnoreCase)) {
-				indexType = typeof(BlindSearchIndex);
-			} else if (String.Equals(indexTypeName, "BLIST", StringComparison.OrdinalIgnoreCase)) {
-				indexType = typeof(InsertSearchIndex);
-			} else {
-				indexType = Type.GetType(indexTypeName, false, true);
-			}
-
-			if (indexType == null) {
-				indexType = typeof(BlindSearchIndex);
-			} else if (!typeof(Index).GetTypeInfo().IsAssignableFrom(indexType.GetTypeInfo())) {
-				throw new InvalidOperationException(String.Format("The type '{0}' is not a valid table index.", indexType));
-			}
-
-			SetupIndexes(indexType);
-		}
-
+		
 
 		protected virtual void SetupIndexes(Type indexType) {
 			indexes = new Index[TableInfo.Columns.Count];

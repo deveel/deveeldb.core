@@ -14,12 +14,11 @@
 //    limitations under the License.
 //
 
-
 using System;
 
 using Deveel.Data.Sql.Expressions;
 
-namespace Deveel.Data.Query {
+namespace Deveel.Data.Sql {
 	public sealed class JoinPart {
 		private JoinPart(JoinType joinType, ObjectName tableName, SqlQueryExpression query, SqlExpression onExpression) {
 			JoinType = joinType;
@@ -29,13 +28,13 @@ namespace Deveel.Data.Query {
 		}
 
 		internal JoinPart(JoinType joinType, ObjectName tableName, SqlExpression onExpression)
-			: this(joinType, tableName, null, onExpression) {
+			: this(joinType, tableName, (SqlQueryExpression) null, onExpression) {
 			if (tableName == null)
 				throw new ArgumentNullException(nameof(tableName));
 		}
 
 		internal JoinPart(JoinType joinType, SqlQueryExpression query, SqlExpression onExpression)
-			: this(joinType, null, query, onExpression) {
+			: this(joinType, (ObjectName) null, query, onExpression) {
 			if (query == null)
 				throw new ArgumentNullException(nameof(query));
 		}

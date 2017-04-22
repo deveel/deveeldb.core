@@ -38,9 +38,9 @@ namespace Deveel.Data.Sql.Methods {
 
 		ObjectName IDbObjectInfo.FullName => MethodName;
 
-		public IList<SqlMethodParameterInfo> Parameters { get; }
+		public IList<SqlParameterInfo> Parameters { get; }
 
-		internal bool TryGetParameter(string name, bool ignoreCase, out SqlMethodParameterInfo paramInfo) {
+		internal bool TryGetParameter(string name, bool ignoreCase, out SqlParameterInfo paramInfo) {
 			var comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 			var dictionary = Parameters.ToDictionary(x => x.Name, y => y, comparer);
 			return dictionary.TryGetValue(name, out paramInfo);
@@ -75,41 +75,49 @@ namespace Deveel.Data.Sql.Methods {
 			return this.ToSqlString();
 		}
 
-		public bool Matches(IContext context, Invoke invoke) {
-			return Matches(this, context, invoke);
-		}
-
-		public static bool Matches(SqlMethodInfo methodInfo, IContext context, Invoke invoke) {
+		internal bool Matches(IContext context, Func<InvokeInfo, bool> validator, Invoke invoke) {
 			var ignoreCase = context.GetValue("ignoreCase", true);
 
-			if (!methodInfo.MethodName.Equals(invoke.MethodName, ignoreCase))
+			if (!MethodName.Equals(invoke.MethodName, ignoreCase))
 				return false;
-			if (methodInfo.Parameters.Count != invoke.Arguments.Count)
+
+			var required = Parameters.Where(x => x.IsRequired).ToList();
+			if (invoke.Arguments.Count < required.Count)
 				return false;
+
+			var invokeInfo = GetInvokeInfo(context, invoke);
+
+			if (!validator(invokeInfo))
+				return false;
+
+			return true;
+		}
+
+		internal InvokeInfo GetInvokeInfo(IContext context, Invoke invoke) {
+			var argTypes = new Dictionary<string, SqlType>();
+			var ignoreCase = context.GetValue("ignoreCase", true);
 
 			for (int i = 0; i < invoke.Arguments.Count; i++) {
 				var arg = invoke.Arguments[i];
 
-				SqlMethodParameterInfo paramInfo;
+				SqlParameterInfo paramInfo;
 				if (arg.IsNamed) {
-					if (!methodInfo.TryGetParameter(arg.ParameterName, ignoreCase, out paramInfo))
-						return false;
+					if (!TryGetParameter(arg.ParameterName, ignoreCase, out paramInfo))
+						return null;
 				} else {
-					paramInfo = methodInfo.Parameters[i];
+					paramInfo = Parameters[i];
 				}
 
 				var argType = arg.Value.GetSqlType(context);
-				if (!argType.IsComparable(paramInfo.ParameterType))
-					return false;
+				argTypes[paramInfo.Name] = argType;
 			}
 
-			return true;
-
+			return new InvokeInfo(this, argTypes);
 		}
 
 		#region ParameterCollection
 
-		class ParameterCollection : Collection<SqlMethodParameterInfo> {
+		class ParameterCollection : Collection<SqlParameterInfo> {
 			private readonly SqlMethodInfo methodInfo;
 
 			public ParameterCollection(SqlMethodInfo methodInfo) {
@@ -121,13 +129,13 @@ namespace Deveel.Data.Sql.Methods {
 					throw new ArgumentException($"A parameter named {name} was already specified in method '{methodInfo.MethodName}'.");
 			}
 
-			protected override void InsertItem(int index, SqlMethodParameterInfo item) {
+			protected override void InsertItem(int index, SqlParameterInfo item) {
 				AssertNotContains(item.Name);
 				item.Offset = index;
 				base.InsertItem(index, item);
 			}
 
-			protected override void SetItem(int index, SqlMethodParameterInfo item) {
+			protected override void SetItem(int index, SqlParameterInfo item) {
 				item.Offset = index;
 				base.SetItem(index, item);
 			}

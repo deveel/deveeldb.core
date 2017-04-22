@@ -1,13 +1,9 @@
 ﻿using System;
 
 namespace Deveel.Data.Sql.Tables {
-	public interface ITableCache : IDisposable {
-		bool TryGetValue(FieldId fieldId, out SqlObject value);
+	public interface ITableCache {
+		bool TryGetTable(string key, out ITable table);
 
-		void SetValue(FieldId fieldId, SqlObject value);
-
-		bool Remove(FieldId fieldId);
-
-		void Clear();
+		void SetTable(string key, ITable table);
 	}
 }

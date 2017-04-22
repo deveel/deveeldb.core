@@ -15,12 +15,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("antonello",  "an_nello", false)]
 		[InlineData("the quick\\brown fox", "the quick%", true)]
 		public static void Search(string source, string pattern, bool matches) {
-			var s = SqlValueUtil.FromObject(source);
-
-			Assert.IsType<SqlString>(s);
-
-			var stringSearch = new SqlDefaultStringSearch();
-			Assert.Equal(matches, stringSearch.Matches((SqlString)s, pattern, PatternSearch.EscapeCharacter));
+			Assert.Equal(matches, PatternSearch.PatternMatch(pattern, source, PatternSearch.EscapeCharacter));
 		}
 	}
 }

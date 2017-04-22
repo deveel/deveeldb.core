@@ -26,26 +26,36 @@ namespace Deveel.Data.Sql.Tables {
 
 			left.BuildIndex();
 
-			var funcInfo = new SqlFunctionInfo(new ObjectName("count"), PrimitiveTypes.Integer());
-			funcInfo.Parameters.Add(new SqlMethodParameterInfo("x", PrimitiveTypes.Table()));
-
-			var aggResolver = new Mock<IMethodResolver>();
-			aggResolver.Setup(x => x.ResolveMethod(It.IsAny<IContext>(), It.IsAny<Invoke>()))
-				.Returns(new SqlAggregateFunctionDelegate(funcInfo, iterate => {
-				if (iterate.IsFirst) {
-					return iterate.Current;
-				} else {
-					return iterate.Accumulation.Add(iterate.Current);
-				}
-			}));
-
 			var mock = new Mock<IContext>();
 			mock.SetupGet(x => x.Scope)
 				.Returns(new ServiceContainer());
 
 			context = mock.Object;
 
-			context.RegisterInstance<IMethodResolver>(aggResolver.Object);
+			var group = new List<SqlObject> {
+				SqlObject.Integer(33),
+				SqlObject.Integer(22),
+				SqlObject.Integer(1)
+
+			};
+
+			var refResolver = new Mock<IReferenceResolver>();
+			refResolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
+				.Returns<ObjectName>(name => PrimitiveTypes.Integer());
+			refResolver.Setup(x => x.ResolveReferenceAsync(It.IsAny<ObjectName>()))
+				.Returns<ObjectName>(name => Task.FromResult(group[0]));
+
+			var resolverMock = new Mock<IGroupResolver>();
+			resolverMock.SetupGet(x => x.Size)
+				.Returns(group.Count);
+			resolverMock.Setup(x => x.ResolveReferenceAsync(It.IsAny<ObjectName>(), It.IsAny<long>()))
+				.Returns<ObjectName, long>((name, index) => Task.FromResult(group[(int)index]));
+			resolverMock.Setup(x => x.GetResolver(It.IsAny<long>()))
+				.Returns(refResolver.Object);
+
+
+			context.RegisterService<IMethodResolver, SystemFunctionProvider>();
+			context.RegisterInstance<IGroupResolver>(resolverMock.Object);
 		}
 
 		[Fact]
@@ -102,7 +112,7 @@ namespace Deveel.Data.Sql.Tables {
 			var value1 = await table.GetValueAsync(0, 0);
 
 			Assert.NotNull(value1);
-			Assert.Equal(SqlObject.Integer(77), value1);
+			Assert.Equal(SqlObject.BigInt(2), value1);
 		}
 
 		[Fact]

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public class TransientTableManager : IDbObjectManager {
@@ -14,77 +15,86 @@ namespace Deveel.Data.Sql.Tables {
 
 		DbObjectType IDbObjectManager.ObjectType => DbObjectType.Table;
 
-		void IDbObjectManager.CreateObject(IDbObjectInfo objInfo) {
+		Task IDbObjectManager.CreateObjectAsync(IDbObjectInfo objInfo) {
 			if (!(objInfo is TableInfo))
 				throw new ArgumentException();
 
-			CreateTable((TableInfo)objInfo);
+			return CreateTableAsync((TableInfo)objInfo);
 		}
 
-		public void CreateTable(TableInfo tableInfo) {
+		public Task CreateTableAsync(TableInfo tableInfo) {
 			if (tables.ContainsKey(tableInfo.TableName))
 				throw new ArgumentException();
 
 			var tempTable = new TemporaryTable(tableInfo);
 			tables[tableInfo.TableName] = tempTable;
 			tableNames[tableInfo.TableName] = tableInfo.TableName;
+			return Task.CompletedTask;
 		}
 
-		bool IDbObjectManager.RealObjectExists(ObjectName objName) {
-			return TableExists(objName);
+		Task<bool> IDbObjectManager.RealObjectExistsAsync(ObjectName objName) {
+			return Task.FromResult(TableExists(objName));
 		}
 
-		bool IDbObjectManager.ObjectExists(ObjectName objName) {
-			return TableExists(objName);
+		Task<bool> IDbObjectManager.ObjectExistsAsync(ObjectName objName) {
+			return Task.FromResult(TableExists(objName));
+		}
+
+		Task<IDbObjectInfo> IDbObjectManager.GetObjectInfoAsync(ObjectName objectName) {
+			return Task.FromResult<IDbObjectInfo>(GetTableInfo(objectName));
+		}
+
+		public TableInfo GetTableInfo(ObjectName objectName) {
+			ITable table;
+			if (!tables.TryGetValue(objectName, out table))
+				throw new InvalidOperationException();
+
+			return table.TableInfo;
 		}
 
 		public bool TableExists(ObjectName tableName) {
 			return tables.ContainsKey(tableName);
 		}
 
-		IDbObject IDbObjectManager.GetObject(ObjectName objName) {
-			return GetTable(objName);
+		async Task<IDbObject> IDbObjectManager.GetObjectAsync(ObjectName objName) {
+			return await GetTableAsync(objName);
 		}
 
-		public ITable GetTable(ObjectName tableName) {
+		public Task<ITable> GetTableAsync(ObjectName tableName) {
 			ITable table;
 			if (!tables.TryGetValue(tableName, out table))
-				return null;
+				return Task.FromResult<ITable>(null);
 
-			return table;
+			return Task.FromResult(table);
 		}
 
-		bool IDbObjectManager.AlterObject(IDbObjectInfo objInfo) {
+		Task<bool> IDbObjectManager.AlterObjectAsync(IDbObjectInfo objInfo) {
 			throw new NotImplementedException();
 		}
 
-		bool IDbObjectManager.DropObject(ObjectName objName) {
-			return DropTable(objName);
+		Task<bool> IDbObjectManager.DropObjectAsync(ObjectName objName) {
+			return DropTableAsync(objName);
 		}
 
-		public bool DropTable(ObjectName tableName) {
+		public Task<bool> DropTableAsync(ObjectName tableName) {
 			ITable table;
 			if (!tables.TryGetValue(tableName, out table))
-				return false;
+				return Task.FromResult(false);
 
 			tableNames.Remove(table.TableInfo.TableName);
-			return tables.Remove(tableName);
+			return Task.FromResult(tables.Remove(tableName));
 		}
 
-		ObjectName IDbObjectManager.ResolveName(ObjectName objName, bool ignoreCase) {
-			return ResolveTableName(objName, ignoreCase);
-		}
-
-		public ObjectName ResolveTableName(ObjectName tableName, bool ignoreCase) {
+		public Task<ObjectName> ResolveNameAsync(ObjectName tableName, bool ignoreCase) {
 			if (ignoreCase) {
 				if (!tableNames.TryGetValue(tableName, out tableName))
-					return null;
+					return Task.FromResult<ObjectName>(null);
 			}
 
 			if (!tables.ContainsKey(tableName))
-				return null;
+				return Task.FromResult<ObjectName>(null);
 
-			return tableName;
+			return Task.FromResult(tableName);
 		}
 
 		protected virtual void Dispose(bool disposing) {

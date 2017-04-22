@@ -14,10 +14,7 @@
 //    limitations under the License.
 //
 
-
-using System;
-
-namespace Deveel.Data.Query {
+namespace Deveel.Data.Sql {
 	/// <summary>
 	/// Enumerates the kind of group join in a selection query.
 	/// </summary>

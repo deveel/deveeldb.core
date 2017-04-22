@@ -23,6 +23,14 @@ namespace Deveel.Data.Sql.Tables {
 			: this(MakeTableInfo(tableName, columns)) {
 		}
 
+		static TemporaryTable() {
+			var table = new TemporaryTable(new ObjectName("SINGLE_ROW_TABLE"), new ColumnInfo[0]);
+			table.NewRow();
+			SingleRow = table;
+		}
+
+		public static ITable SingleRow { get; }
+
 		public override TableInfo TableInfo { get; }
 
 		public override long RowCount => rows.Count;
@@ -40,7 +48,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
-			var tableRows = rows.Select((item, index) => (long) index).ToBigArray();
+			var tableRows = rows.Select((item, index) => (long) index).ToBigList();
 			rootInfo.Add(this, tableRows);
 			return rootInfo;
 		}

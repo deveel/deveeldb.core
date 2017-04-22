@@ -35,6 +35,13 @@ namespace Deveel {
 			return array;
 		}
 
+		public static BigList<T> ToBigList<T>(this IEnumerable<T> source) {
+			if (source is BigList<T>)
+				return (BigList<T>) source;
+
+			return new BigList<T>(source);
+		}
+
 		public static T ElementAt<T>(this IEnumerable<T> source, long offset) {
 			if (source is BigArray<T>) {
 				return ((BigArray<T>) source)[offset];

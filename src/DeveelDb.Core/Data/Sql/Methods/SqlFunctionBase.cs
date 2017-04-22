@@ -27,6 +27,35 @@ namespace Deveel.Data.Sql.Methods {
 
 		public abstract FunctionType FunctionType { get; }
 
+		public bool IsAggregate => FunctionType == FunctionType.Aggregate;
+
 		public override MethodType Type => MethodType.Function;
+
+		public SqlType ReturnType(IContext context, Invoke invoke) {
+			var returnType = MethodInfo.ReturnType;
+			if (MethodInfo.IsDeterministic) {
+				var invokeInfo = MethodInfo.GetInvokeInfo(context, invoke);
+				returnType = DetermineReturnType(invokeInfo);
+			}
+
+			return returnType;
+		}
+
+		protected virtual SqlType DetermineReturnType(InvokeInfo invokeInfo) {
+			SqlType resultType = null;
+			foreach (var name in invokeInfo.ArgumentNames) {
+				var argType = invokeInfo.ArgumentType(name);
+				if (resultType == null) {
+					resultType = argType;
+				} else {
+					resultType = argType.Wider(resultType);
+				}
+			}
+
+			if (resultType == null)
+				throw new MethodException($"Unable to determine the return type of function {MethodInfo.MethodName}");
+
+			return resultType;
+		}
 	}
 }

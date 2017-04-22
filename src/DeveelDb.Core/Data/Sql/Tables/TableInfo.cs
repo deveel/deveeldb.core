@@ -20,6 +20,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 using Deveel.Data.Sql.Expressions;
+using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
 	public class TableInfo : IDbObjectInfo, ISqlFormattable {
@@ -80,6 +81,11 @@ namespace Deveel.Data.Sql.Tables {
 
 			builder.DeIndent();
 			builder.Append(")");
+		}
+
+		public IndexInfo CreateColumnIndexInfo(int column) {
+			var columnName = Columns[column].ColumnName;
+			return new IndexInfo(new ObjectName(TableName, $"idx_column[{column}]"), TableName, columnName);
 		}
 
 		public override string ToString() {

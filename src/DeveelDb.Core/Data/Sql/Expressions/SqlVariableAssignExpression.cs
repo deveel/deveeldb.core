@@ -56,18 +56,7 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		public override SqlType GetSqlType(IContext context) {
-			if (context == null)
-				throw new SqlExpressionException("A context is required to reduce a variable expression");
-
-			var manager = context.ResolveService<VariableManager>();
-			if (manager == null)
-				throw new SqlExpressionException("No variable manager was found in the context hierarchy");
-
-			var variable = manager.GetVariable(VariableName);
-			if (variable == null)
-				throw new SqlExpressionException();
-
-			return variable.Type;
+			return Value.GetSqlType(context);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

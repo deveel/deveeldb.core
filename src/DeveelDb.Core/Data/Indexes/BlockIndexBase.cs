@@ -510,24 +510,6 @@ namespace Deveel.Data.Indexes {
 			}
 		}
 
-		/// <summary>
-		/// Copies the data from each block into the given int[] array.
-		/// </summary>
-		/// <param name="array"></param>
-		/// <param name="offset"></param>
-		/// <param name="length"></param>
-		/// <remarks>
-		/// The int[] array must be big enough to fit all the data in this list.
-		/// </remarks>
-		internal void CopyToArray(BigArray<TValue> array, long offset, long length) {
-			if (array.Length < length || (offset + length) > Count)
-				throw new InvalidOperationException("Size mismatch.");
-
-			foreach (var block in Blocks) {
-				offset += block.CopyTo(array, offset);
-			}
-		}
-
 		public void Insert(long index, TValue value) {
 			CheckImmutable();
 
@@ -582,7 +564,7 @@ namespace Deveel.Data.Indexes {
 			var block = Blocks[blockIndex];
 
 			// Find, if not there then return false.
-			return block.SearchLast(value) >= 0;
+			return block.SearchFirst(value) >= 0;
 		}
 
 		public bool InsertSort(TValue value) {

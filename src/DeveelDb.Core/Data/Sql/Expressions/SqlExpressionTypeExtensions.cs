@@ -59,6 +59,39 @@ namespace Deveel.Data.Sql.Expressions {
 			}
 		}
 
+		public static bool IsLogical(this SqlExpressionType expressionType) {
+			switch (expressionType) {
+				case SqlExpressionType.And:
+				case SqlExpressionType.Or:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public static bool IsMathematical(this SqlExpressionType expressionType) {
+			switch (expressionType) {
+				case SqlExpressionType.Add:
+				case SqlExpressionType.Subtract:
+				case SqlExpressionType.Divide:
+				case SqlExpressionType.Modulo:
+				case SqlExpressionType.Multiply:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public static bool IsPattern(this SqlExpressionType expressionType) {
+			switch (expressionType) {
+				case SqlExpressionType.Like:
+				case SqlExpressionType.NotLike:
+					return true;
+				default:
+					return false;
+			}
+		}
+
 		public static bool IsUnary(this SqlExpressionType expressionType) {
 			switch (expressionType) {
 				case SqlExpressionType.UnaryPlus:
@@ -78,6 +111,26 @@ namespace Deveel.Data.Sql.Expressions {
 				default:
 					return false;
 			}
+		}
+
+		public static SqlExpressionType Reverse(this SqlExpressionType type) {
+			switch (type) {
+				case SqlExpressionType.Equal:
+				case SqlExpressionType.NotEqual:
+				case SqlExpressionType.Is:
+				case SqlExpressionType.IsNot:
+					return type;
+				case SqlExpressionType.GreaterThan:
+					return SqlExpressionType.LessThan;
+				case SqlExpressionType.LessThan:
+					return SqlExpressionType.GreaterThan;
+				case SqlExpressionType.GreaterThanOrEqual:
+					return SqlExpressionType.LessThanOrEqual;
+				case SqlExpressionType.LessThanOrEqual:
+					return SqlExpressionType.GreaterThanOrEqual;
+			}
+
+			throw new InvalidOperationException("Cannot reverse a non conditional operator.");
 		}
 	}
 }
