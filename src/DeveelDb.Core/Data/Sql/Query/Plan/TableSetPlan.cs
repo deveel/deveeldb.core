@@ -651,7 +651,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 						evaluateOrder.Add(new ConstantExpressionPlan(expression));
 					} else {
 						foreach (var cv in allCorrelated) {
-							allRefs.Add(cv.Reference);
+							allRefs.Add(cv.ReferenceName);
 						}
 
 						// An exhaustive expression plan which might require a join or a

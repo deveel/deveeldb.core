@@ -211,6 +211,30 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Fact]
+		public async void ReduceQuantifyInRef() {
+			var subQuery = new SqlQueryExpression();
+			subQuery.Items.Add(SqlExpression.Reference(new ObjectName("b")));
+			subQuery.From.Table(new ObjectName("tab2"));
+
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(ObjectName.Parse("tab1"));
+			query.Where = SqlExpression.Quantify(SqlExpressionType.Any,
+				SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), subQuery));
+
+			var result = await query.ReduceAsync(context);
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+
+			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+
+			Assert.NotNull(table);
+			Assert.Equal(1, table.RowCount);
+		}
+
+
+		[Fact]
 		public async void ReduceQuantifySubQuery() {
 			var subQuery = new SqlQueryExpression();
 			subQuery.Items.Add(SqlExpression.Reference(new ObjectName("a")));
@@ -254,6 +278,27 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.NotNull(table);
 			Assert.Equal(1, table.RowCount);
+		}
+
+		[Fact]
+		public async void ReduceSublogic() {
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(new ObjectName("tab1"));
+			query.Where = SqlExpression.And(
+				SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Integer(3))),
+				SqlExpression.And(
+					SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Integer(45))),
+					SqlExpression.IsNot(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Null))));
+
+			var result = await query.ReduceAsync(context);
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+
+			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+
+			Assert.NotNull(table);
 		}
 
 		[Fact]
@@ -376,6 +421,34 @@ namespace Deveel.Data.Sql.Expressions {
 			var table = (ITable)((SqlConstantExpression)result).Value.Value;
 
 			Assert.NotNull(table);
+		}
+
+		[Fact]
+		public async void ReduceComposite() {
+			var query2 = new SqlQueryExpression();
+			query2.Items.Add(SqlExpression.Reference(new ObjectName("b")));
+			query2.From.Table(ObjectName.Parse("sys.tab2"));
+
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(ObjectName.Parse("sys.tab1"));
+			query.NextComposite = new SqlQueryExpressionComposite(CompositeFunction.Union, true, query2);
+
+			var result = await query.ReduceAsync(context);
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+
+			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+
+			Assert.NotNull(table);
+			Assert.Equal(2, table.RowCount);
+
+			var value1 = await table.GetValueAsync(0, 0);
+			Assert.Equal(SqlObject.Integer(22), value1);
+
+			var rows = table.SelectAllRows().ToBigArray();
+			Assert.Equal(2, rows.Length);
 		}
 	}
 }

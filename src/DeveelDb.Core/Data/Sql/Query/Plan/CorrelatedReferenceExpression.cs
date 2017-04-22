@@ -12,12 +12,12 @@ namespace Deveel.Data.Sql.Query.Plan {
 
 		public CorrelatedReferenceExpression(ObjectName reference, int queryLevel, SqlConstantExpression value)
 			: base((SqlExpressionType) 233) {
-			Reference = reference;
+			ReferenceName = reference;
 			QueryLevel = queryLevel;
 			Value = value;
 		}
 
-		public ObjectName Reference { get; }
+		public ObjectName ReferenceName { get; }
 
 		public int QueryLevel { get; }
 
@@ -28,9 +28,9 @@ namespace Deveel.Data.Sql.Query.Plan {
 		}
 
 		public override async Task<SqlExpression> ReduceAsync(IContext context) {
-			var refExp = Reference(Reference);
+			var refExp = Reference(ReferenceName);
 			var value = await refExp.ReduceToConstantAsync(context);
-			return new CorrelatedReferenceExpression(Reference, QueryLevel, Constant(value));
+			return new CorrelatedReferenceExpression(ReferenceName, QueryLevel, Constant(value));
 		}
 	}
 }

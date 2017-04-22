@@ -40,7 +40,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 				if (expression is CorrelatedReferenceExpression) {
 					var correlated = (CorrelatedReferenceExpression) expression;
 					if (correlated.QueryLevel == level &&
-					    !expressions.Any(x => x.Reference.Equals(correlated.Reference))) {
+					    !expressions.Any(x => x.ReferenceName.Equals(correlated.ReferenceName))) {
 						expressions.Add(correlated);
 					}
 				}

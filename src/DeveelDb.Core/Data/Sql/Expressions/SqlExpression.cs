@@ -184,6 +184,9 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlBinaryExpression Is(SqlExpression left, SqlExpression rigth)
 			=> Binary(SqlExpressionType.Is, left, rigth);
 
+		public static SqlBinaryExpression IsNot(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.IsNot, left, right);
+
 		public static SqlBinaryExpression And(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.And, left, right);
 
