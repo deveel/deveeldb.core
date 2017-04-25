@@ -17,6 +17,8 @@
 
 using System;
 
+using Deveel.Data.Diagnostics;
+using Deveel.Data.Sql;
 using Deveel.Data.Sql.Statements;
 
 namespace Deveel.Data {
@@ -40,7 +42,12 @@ namespace Deveel.Data {
 	/// </para>
 	/// </remarks>
 	/// <seealso cref="ISession"/>
-	public interface IQuery : IContext {
+	public interface IQuery : IContext, IEventSource {
+		/// <summary>
+		/// Gets the SQL query that originated the context
+		/// </summary>
+		SqlQuery SourceQuery { get; }
+
 		/// <summary>
 		/// The parent <see cref="ISession"/> object that
 		/// originated this query.

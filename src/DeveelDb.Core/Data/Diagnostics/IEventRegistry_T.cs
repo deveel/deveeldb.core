@@ -19,14 +19,22 @@ using System;
 
 namespace Deveel.Data.Diagnostics {
 	/// <summary>
-	/// A version of <see cref="IEventRegistry"/> that is contained
-	/// in a context that also exposes a <see cref="IEventSource"/>.
+	/// Implementations of this interface handle the registration
+	/// of events fired within the system.
 	/// </summary>
-	public interface IContextEventRegistry : IEventRegistry {
+	/// <remarks>
+	/// <para>
+	/// It is delegated to the implementation of the registry to
+	/// handle the first instance of the event passed: this can be
+	/// the storage of given types of event data, or routing other
+	/// events.
+	/// </para>
+	/// </remarks>
+	public interface IEventRegistry<TEvent> : IEventRegistry where TEvent : class, IEvent {
 		/// <summary>
-		/// Gets a reference to the <see cref="IEventSource"/> that
-		/// is encapsulated in the parent context
+		/// Adds the specified event object to the registry.
 		/// </summary>
-		IEventSource EventSource { get; }
+		/// <param name="event">The event object to be registered.</param>
+		void Register(TEvent @event);
 	}
 }
