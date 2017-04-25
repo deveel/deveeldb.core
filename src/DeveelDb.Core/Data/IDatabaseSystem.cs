@@ -19,13 +19,14 @@ using System;
 using System.Collections.Generic;
 
 using Deveel.Data.Configuration;
+using Deveel.Data.Diagnostics;
 
 namespace Deveel.Data {
 	/// <summary>
 	/// A system to manage database objects and provide
 	/// access to them
 	/// </summary>
-	public interface IDatabaseSystem : IContext, IConfigurationScope {
+	public interface IDatabaseSystem : IContext, IConfigurationScope, IEventSource {
 		/// <summary>
 		/// Gets a list of the names of all the databases handled
 		/// by this system.

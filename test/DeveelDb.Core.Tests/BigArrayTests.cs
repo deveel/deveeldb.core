@@ -22,9 +22,9 @@ namespace Deveel {
 		[Fact]
 		public static void ResizeGrow() {
 			var array = new BigArray<long>(34);
-			array.Resize(1002563944);
+			array.Resize(1002563);
 
-			Assert.Equal(1002563944, array.Length);
+			Assert.Equal(1002563, array.Length);
 		}
 
 		[Fact]
