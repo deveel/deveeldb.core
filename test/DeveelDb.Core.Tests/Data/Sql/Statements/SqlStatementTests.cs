@@ -39,7 +39,8 @@ namespace Deveel.Data.Sql.Statements {
 			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Alter);
 
 			var statement = new TestStatement {
-				Requirements = requirements
+				Requirements = requirements,
+				Location = new LocationInfo(0, 0)
 			};
 
 			await Assert.ThrowsAnyAsync<UnauthorizedAccessException>(() => statement.ExecuteAsync(context));
@@ -51,7 +52,8 @@ namespace Deveel.Data.Sql.Statements {
 			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Insert);
 
 			var statement = new TestStatement {
-				Requirements = requirements
+				Requirements = requirements,
+				Location = new LocationInfo(0, 0)
 			};
 
 			await statement.ExecuteAsync(context);
