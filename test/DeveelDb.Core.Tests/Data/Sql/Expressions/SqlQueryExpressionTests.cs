@@ -261,6 +261,31 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Fact]
+		public async void ReduceCorrelatedSubQuery() {
+			var subQuery = new SqlQueryExpression();
+			subQuery.Items.Add(SqlExpression.Function(new ObjectName("AVG"),
+				new InvokeArgument(SqlExpression.Reference(new ObjectName("b")))));
+			subQuery.From.Table(new ObjectName("tab2"));
+			subQuery.Where = SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Integer(23)));
+
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(new ObjectName("tab1"));
+			query.Where = SqlExpression.GreaterThan(SqlExpression.Reference(new ObjectName("a")), subQuery);
+
+			var result = await query.ReduceAsync(context);
+			Assert.NotNull(result);
+			Assert.IsType<SqlConstantExpression>(result);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+
+			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+
+			Assert.NotNull(table);
+			Assert.Equal(0, table.RowCount);
+		}
+
+
+		[Fact]
 		public async void ReduceSimpleOr() {
 			var query = new SqlQueryExpression();
 			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));

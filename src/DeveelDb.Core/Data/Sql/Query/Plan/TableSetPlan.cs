@@ -606,13 +606,12 @@ namespace Deveel.Data.Sql.Query.Plan {
 				// Is this an easy sub-query?
 				if (expression.ExpressionType.IsQuantify()) {
 					var quantify = (SqlQuantifyExpression) expression;
-					var exps = new[]{quantify.Expression.Left, quantify.Expression.Right};
 					// Check that the left is a simple enough variable reference
-					leftRef = exps[0].AsReference();
+					leftRef = quantify.Expression.Left.AsReference();
 
 					if (leftRef != null) {
 						// Check that the right is a sub-query plan.
-						rightPlan = exps[1].AsQueryPlanNode();
+						rightPlan = quantify.Expression.Right.AsQueryPlanNode();
 						if (rightPlan != null) {
 							// Finally, check if the plan is correlated or not
 							var cv = rightPlan.DiscoverCorrelatedReferences(1);

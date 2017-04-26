@@ -47,8 +47,8 @@ namespace Deveel.Data.Sql.Query.Plan {
 		#region CorrelatedExpressionDiscovery
 
 		class CorrelatedExpressionDiscovery : QueryPlanVisitor {
-			private readonly int queryLevel;
 			private IList<CorrelatedReferenceExpression> list;
+			private readonly int queryLevel;
 
 			public CorrelatedExpressionDiscovery(int queryLevel, IList<CorrelatedReferenceExpression> list) {
 				this.queryLevel = queryLevel;
@@ -64,7 +64,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 						list = expression.DiscoverCorrelatedReferences(queryLevel, list);
 					}
 				} else if (node is FullSelectNode) {
-					list = ((FullSelectNode) node).DiscoverCorrelatedReferences(queryLevel, list);
+					list = ((FullSelectNode) node).Expression.DiscoverCorrelatedReferences(queryLevel, list);
 				} else if (node is GroupNode) {
 					var group = (GroupNode) node;
 					foreach (var function in group.Functions) {

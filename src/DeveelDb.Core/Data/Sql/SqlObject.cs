@@ -168,8 +168,7 @@ namespace Deveel.Data.Sql {
 				return Unknown;
 
 			if (!Type.IsComparable(other.Type))
-				throw new ArgumentException($"Type {Type} is not comparable to type {other.Type} of the argument");
-			// TODO: should instead return null?
+				return Null;
 
 			var op = selector(Type);
 			var result = op(Value, other.Value);

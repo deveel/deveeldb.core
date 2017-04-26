@@ -168,8 +168,16 @@ namespace Deveel.Data.Sql.Tables {
 
 		#region Rows
 
-		public static IEnumerable<long> SelectAllRows(this ITable table, int columnOffset) {
-			return table.GetColumnIndex(columnOffset).SelectAll();
+		public static bool AnyMatches(this ITable table, int column, SqlExpressionType opType, SqlObject value) {
+			return TableSelects.AnyMatchesValue(table, column, opType, value);
+		}
+
+		public static bool AllMatch(this ITable table, int column, SqlExpressionType opType, SqlObject value) {
+			return TableSelects.AllMatchesValue(table, column, opType, value);
+		}
+
+		public static IEnumerable<long> SelectAllRows(this ITable table, int column) {
+			return table.GetColumnIndex(column).SelectAll();
 		}
 
 		public static IEnumerable<long> SelectAllRows(this ITable table) {

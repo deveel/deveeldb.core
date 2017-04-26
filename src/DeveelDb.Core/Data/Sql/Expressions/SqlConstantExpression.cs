@@ -17,6 +17,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlConstantExpression : SqlExpression {

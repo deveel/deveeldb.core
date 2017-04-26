@@ -18,5 +18,9 @@ namespace Deveel.Data.Sql.Tables {
 			// TODO: notify to the listeners that we are setting to cache?
 			tables[key] = table;
 		}
+
+		public void Clear() {
+			tables.Clear();
+		}
 	}
 }

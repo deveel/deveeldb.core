@@ -18,6 +18,10 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql.Query;
+using Deveel.Data.Sql.Query.Plan;
+using Deveel.Data.Sql.Tables;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlQuantifyExpression : SqlExpression {
 		internal SqlQuantifyExpression(SqlExpressionType expressionType, SqlBinaryExpression expression)
@@ -67,12 +71,81 @@ namespace Deveel.Data.Sql.Expressions {
 			if (resultType is SqlArrayType) {
 				return ReduceArray(context);
 			}
+			if (resultType is SqlQueryType) {
+				return ReduceQuery(context);
+			}
 
 			throw new NotSupportedException();
 		}
 
-		private Task<SqlExpression> ReduceQuery(IContext context) {
-			throw new NotImplementedException();
+		private async Task<SqlExpression> ReduceQuery(IContext context) {
+			var rightResult = await Expression.Right.ReduceAsync(context);
+			if (!(rightResult is SqlConstantExpression))
+				throw new InvalidOperationException();
+
+			var rightValue = ((SqlConstantExpression)rightResult).Value;
+			if (rightValue.IsNull)
+				return Constant(SqlObject.Unknown);
+
+			var leftResult = await Expression.Left.ReduceAsync(context);
+			if (!(leftResult is SqlConstantExpression))
+				throw new NotSupportedException();
+
+			var leftValue = ((SqlConstantExpression)leftResult).Value;
+
+			if (!(rightValue.Type is SqlQueryType))
+				throw new SqlExpressionException("Invalid value for a quantification");
+
+			var queryPlan = (IQueryPlanNode) rightValue.Value;
+
+			switch (ExpressionType) {
+				case SqlExpressionType.Any:
+					return await IsQueryAny(Expression.ExpressionType, leftValue, queryPlan, context);
+				case SqlExpressionType.All:
+					return await IsQueryAll(Expression.ExpressionType, leftValue, queryPlan, context);
+				default:
+					throw new NotSupportedException();
+			}
+		}
+
+		private async Task<SqlExpression> IsQueryAll(SqlExpressionType opType, SqlObject value, IQueryPlanNode query, IContext context) {
+			var resolver = context.ResolveService<IReferenceResolver>();
+
+			var correlated = query.DiscoverCorrelatedReferences(1);
+			foreach (var expression in correlated) {
+				var refValue = await resolver.ResolveReferenceAsync(expression.ReferenceName);
+				expression.Value = Constant(refValue);
+			}
+
+			var cache = context.ResolveService<ITableCache>();
+			if (cache != null)
+				cache.Clear();
+
+			var table = await query.ReduceAsync(context);
+			if (table.AllMatch(0, opType, value))
+				return Constant(SqlObject.Boolean(true));
+
+			return Constant(SqlObject.Boolean(false));
+		}
+
+		private async Task<SqlExpression> IsQueryAny(SqlExpressionType opType, SqlObject value, IQueryPlanNode query, IContext context) {
+			var resolver = context.ResolveService<IReferenceResolver>();
+
+			var correlated = query.DiscoverCorrelatedReferences(1);
+			foreach (var expression in correlated) {
+				var refValue = await resolver.ResolveReferenceAsync(expression.ReferenceName);
+				expression.Value = Constant(refValue);
+			}
+
+			var cache = context.ResolveService<ITableCache>();
+			if (cache != null)
+				cache.Clear();
+
+			var table = await query.ReduceAsync(context);
+			if (table.AnyMatches(0, opType, value))
+				return Constant(SqlObject.Boolean(true));
+
+			return Constant(SqlObject.Boolean(false));
 		}
 
 		private async Task<SqlExpression> ReduceArray(IContext context) {
@@ -84,14 +157,15 @@ namespace Deveel.Data.Sql.Expressions {
 			if (rightValue.IsNull)
 				return Constant(SqlObject.Unknown);
 
-			if (!(rightValue.Type is SqlArrayType))
-				throw new InvalidOperationException("Invalid value for a quantification");
-
 			var leftResult = await Expression.Left.ReduceAsync(context);
 			if (!(leftResult is SqlConstantExpression))
 				throw new NotSupportedException();
 
 			var leftValue = ((SqlConstantExpression) leftResult).Value;
+
+			if (!(rightValue.Type is SqlArrayType))
+				throw new SqlExpressionException("Invalid value for a quantification");
+
 			var array = ((SqlArray) rightValue.Value);
 
 			switch (ExpressionType) {

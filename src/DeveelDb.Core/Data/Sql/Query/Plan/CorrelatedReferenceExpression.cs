@@ -21,16 +21,25 @@ namespace Deveel.Data.Sql.Query.Plan {
 
 		public int QueryLevel { get; }
 
-		public SqlConstantExpression Value { get; }
+		public SqlConstantExpression Value { get; set; }
 
-		public override SqlType GetSqlType(IContext context) {
-			return Value.Type;
+		public override bool IsReference => true;
+
+		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
+			return this;
 		}
 
-		public override async Task<SqlExpression> ReduceAsync(IContext context) {
-			var refExp = Reference(ReferenceName);
-			var value = await refExp.ReduceToConstantAsync(context);
-			return new CorrelatedReferenceExpression(ReferenceName, QueryLevel, Constant(value));
+		public override SqlType GetSqlType(IContext context) {
+			return Value.GetSqlType(context);
+		}
+
+		public override Task<SqlExpression> ReduceAsync(IContext context) {
+			return Task.FromResult<SqlExpression>(Value);
+		}
+
+		protected override void AppendTo(SqlStringBuilder builder) {
+			ReferenceName.AppendTo(builder);
+			builder.AppendFormat("({0})", QueryLevel);
 		}
 	}
 }

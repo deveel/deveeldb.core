@@ -116,7 +116,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 					Expression = exp,
 					Alias = alias,
 					InternalName = new ObjectName(FunctionTable.Name, funcAlias),
-					ResolvedName = new ObjectName(alias)
+					ResolvedName = ObjectName.Parse(alias)
 				};
 
 				functionColumns.Add(newColumn);

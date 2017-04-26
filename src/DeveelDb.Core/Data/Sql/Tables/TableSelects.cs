@@ -114,6 +114,15 @@ namespace Deveel.Data.Sql.Tables {
 			return new VirtualTable(table, rows.ToArray(), column);
 		}
 
+		public static bool AnyMatchesValue(ITable table, int column, SqlExpressionType op, SqlObject value) {
+			return SelectRows(table, column, op, value).Any();
+		}
+
+		public static bool AllMatchesValue(ITable table, int column, SqlExpressionType op, SqlObject value) {
+			var rows = SelectRows(table, column, op, value).ToBigArray();
+			return rows.Length == table.RowCount;
+		}
+
 		private static IEnumerable<long> SelectRows(ITable table, int column, SqlExpressionType op, SqlObject value) {
 			// If the cell is of an incompatible type, return no results,
 			var colType = table.TableInfo.Columns[column].ColumnType;
