@@ -195,7 +195,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 				if (Parent == null)
 					throw new InvalidOperationException($"Reference '{name}' was not found in context.");
 
-				var queryRef = GlobalResolveReference(1, name);
+				var queryRef = GlobalResolveReference(0, name);
 				if (queryRef == null)
 					throw new InvalidOperationException($"Reference '{name}' was not found in context.");
 
