@@ -27,7 +27,11 @@ namespace Deveel.Data.Sql.Methods {
 		internal SqlMethodResult(SqlExpression returned, bool hasReturn, IDictionary<string, SqlExpression> output) {
 			ReturnedValue = returned;
 			HasReturnedValue = hasReturn;
-			Output = new ReadOnlyDictionary<string, SqlExpression>(output);
+			var copyOutput = new Dictionary<string, SqlExpression>();
+			foreach (var pair in output) {
+				copyOutput[pair.Key] = pair.Value;
+			}
+			Output = new ReadOnlyDictionary<string, SqlExpression>(copyOutput);
 		}
 
 		public SqlExpression ReturnedValue { get; }
