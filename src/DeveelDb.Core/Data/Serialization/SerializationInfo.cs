@@ -98,5 +98,8 @@ namespace Deveel.Data.Serialization {
 
 		public double GetDouble(string memberName)
 			=> GetValue<double>(memberName);
+
+		public string GetString(string memberName)
+			=> GetValue<string>(memberName);
 	}
 }
