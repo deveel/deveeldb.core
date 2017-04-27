@@ -19,6 +19,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql.Query;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlConstantExpression : SqlExpression {
 		internal SqlConstantExpression(SqlObject value) 
@@ -30,6 +32,8 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		public SqlObject Value { get; }
+
+		public override bool CanReduce => Value.Type is SqlQueryType;
 
 		public override bool IsReference {
 			get {
@@ -50,6 +54,17 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitConstant(this);
+		}
+
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
+			if (Value.Type is SqlQueryType) {
+				var queryPlan = (IQueryPlanNode) Value.Value;
+				var table = await queryPlan.ReduceAsync(context);
+
+				return Constant(new SqlObject(new SqlTableType(table.TableInfo), table));
+			}
+
+			return await base.ReduceAsync(context);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

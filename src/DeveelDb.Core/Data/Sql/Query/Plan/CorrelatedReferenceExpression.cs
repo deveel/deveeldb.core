@@ -30,11 +30,26 @@ namespace Deveel.Data.Sql.Query.Plan {
 		}
 
 		public override SqlType GetSqlType(IContext context) {
-			return Value.GetSqlType(context);
+			if (Value != null)
+				return Value.GetSqlType(context);
+
+			var resolver = context.ResolveService<IReferenceResolver>();
+			if (resolver == null)
+				throw new SqlExpressionException();
+
+			return resolver.ResolveType(ReferenceName);
 		}
 
-		public override Task<SqlExpression> ReduceAsync(IContext context) {
-			return Task.FromResult<SqlExpression>(Value);
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
+			if (Value != null)
+				return Value;
+
+			var resolver = context.ResolveService<IReferenceResolver>();
+			if (resolver == null)
+				throw new SqlExpressionException();
+
+			var value = await resolver.ResolveReferenceAsync(ReferenceName);
+			return Constant(value);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

@@ -266,7 +266,7 @@ namespace Deveel.Data.Sql.Expressions {
 			subQuery.Items.Add(SqlExpression.Function(new ObjectName("AVG"),
 				new InvokeArgument(SqlExpression.Reference(new ObjectName("b")))));
 			subQuery.From.Table(new ObjectName("tab2"));
-			subQuery.Where = SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Integer(23)));
+			subQuery.Where = SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Integer(45)));
 
 			var query = new SqlQueryExpression();
 			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
@@ -281,7 +281,7 @@ namespace Deveel.Data.Sql.Expressions {
 			var table = (ITable)((SqlConstantExpression)result).Value.Value;
 
 			Assert.NotNull(table);
-			Assert.Equal(0, table.RowCount);
+			Assert.Equal(1, table.RowCount);
 		}
 
 
