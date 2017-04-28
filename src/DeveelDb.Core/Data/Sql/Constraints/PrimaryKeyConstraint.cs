@@ -11,6 +11,9 @@ namespace Deveel.Data.Sql.Constraints {
 		public new PrimaryKeyConstraintInfo ConstraintInfo => (PrimaryKeyConstraintInfo) base.ConstraintInfo;
 
 		protected override void CheckConstraintViolation(IContext context, ITable table, long row, RowAction action) {
+			if (action == RowAction.Remove)
+				return;
+
 			if (!IsUnique(table, row, new []{ConstraintInfo.ColumnName}, false))
 				throw new PrimaryKeyViolationException(ConstraintName, TableName, ConstraintInfo.ColumnName, Deferrability);
 		}

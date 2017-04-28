@@ -11,6 +11,9 @@ namespace Deveel.Data.Sql.Constraints {
 		public new UniqueConstraintInfo ConstraintInfo => (UniqueConstraintInfo) base.ConstraintInfo;
 
 		protected override void CheckConstraintViolation(IContext context, ITable table, long row, RowAction action) {
+			if (action == RowAction.Remove)
+				return;
+
 			if (!IsUnique(table, row, ConstraintInfo.ColumnNames, true))
 				throw new UniqueViolationException(ConstraintName, TableName, ConstraintInfo.ColumnNames, Deferrability);
 		}
