@@ -76,7 +76,6 @@ namespace Deveel.Data.Sql.Variables {
 			var objManager = (manager as IDbObjectManager);
 
 			Assert.Equal(expected, await objManager.ObjectExistsAsync(new ObjectName(name)));
-			Assert.Equal(expected, await objManager.RealObjectExistsAsync(new ObjectName(name)));
 		}
 
 		[Theory]

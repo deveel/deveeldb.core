@@ -47,11 +47,6 @@ namespace Deveel.Data.Sql.Variables {
 			variables.Add(new ObjectName(variableInfo.Name), new Variable(variableInfo));
 		}
 
-		Task<bool> IDbObjectManager.RealObjectExistsAsync(ObjectName objName) {
-			var value = VariableExists(objName.FullName);
-			return Task.FromResult(value);
-		}
-
 		Task<bool> IDbObjectManager.ObjectExistsAsync(ObjectName objName) {
 			var value = VariableExists(objName.FullName);
 			return Task.FromResult(value);

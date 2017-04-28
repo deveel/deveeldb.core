@@ -58,16 +58,6 @@ namespace Deveel.Data {
 		Task CreateObjectAsync(IDbObjectInfo objInfo);
 
 		/// <summary>
-		/// Checks if an object really exists in the system.
-		/// </summary>
-		/// <param name="objName">The unique name of the object to check.</param>
-		/// <returns>
-		/// Returns <c>true</c> if an object with the given name concretely exists in the
-		/// system, or <c>false</c> otherwise.
-		/// </returns>
-		Task<bool> RealObjectExistsAsync(ObjectName objName);
-
-		/// <summary>
 		/// Checks if an object identified by the given name is managed by this instance. 
 		/// </summary>
 		/// <param name="objName">The name that uniquely identifies the object.</param>

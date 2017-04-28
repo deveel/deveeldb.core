@@ -32,10 +32,6 @@ namespace Deveel.Data.Sql.Tables {
 			return Task.CompletedTask;
 		}
 
-		Task<bool> IDbObjectManager.RealObjectExistsAsync(ObjectName objName) {
-			return Task.FromResult(TableExists(objName));
-		}
-
 		Task<bool> IDbObjectManager.ObjectExistsAsync(ObjectName objName) {
 			return Task.FromResult(TableExists(objName));
 		}
