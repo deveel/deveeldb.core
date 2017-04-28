@@ -5,6 +5,8 @@ using Deveel.Data.Configuration;
 
 namespace Deveel.Data.Storage {
 	public interface IStoreSystem : IDisposable {
+		string SystemId { get; }
+
 		Task<bool> StoreExistsAsync(IConfiguration configuration);
 
 		Task<IStore> CreateStoreAsync(IConfiguration configuration);

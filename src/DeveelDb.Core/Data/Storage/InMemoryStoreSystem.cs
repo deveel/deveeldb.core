@@ -13,6 +13,8 @@ namespace Deveel.Data.Storage {
 			nameStoreMap = new Dictionary<string, InMemoryStore>();
 		}
 
+		string IStoreSystem.SystemId => KnownStorageSystemIds.InMemory;
+
 		private static string GetStoreName(IConfiguration configuration) {
 			return configuration.GetString("name");
 		}
