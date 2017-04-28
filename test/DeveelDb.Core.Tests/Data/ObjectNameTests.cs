@@ -141,5 +141,19 @@ namespace Deveel.Data {
 			Assert.NotNull(child);
 			Assert.Equal(expected, child.FullName);
 		}
+
+		[Theory]
+		[InlineData("a", "b", false, -1)]
+		[InlineData("ab.cd", "aB.CD", true, 0)]
+		[InlineData("aa.BB", "aa.Bb", false, -32)]
+		public void CompareOrdinal(string s1, string s2, bool ignoreCase, int expected) {
+			var comparer = new ObjectNameComparer(ignoreCase);
+			var name1 = ObjectName.Parse(s1);
+			var name2 = ObjectName.Parse(s2);
+
+			var result = comparer.Compare(name1, name2);
+
+			Assert.Equal(expected, result);
+		}
 	}
 }
