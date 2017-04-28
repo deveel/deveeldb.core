@@ -18,6 +18,7 @@
 using System;
 using System.Linq;
 
+using Deveel.Data.Sql.Query;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql {
@@ -146,8 +147,7 @@ namespace Deveel.Data.Sql {
 				return Unknown;
 
 			if (!Type.IsComparable(other.Type))
-				throw new ArgumentException($"Type {Type} is not comparable to type {other.Type} of the argument");
-			// TODO: should instead return null?
+				return Null;
 
 			var resultType = Type.Wider(other.Type);
 			var op = selector(resultType);
@@ -166,9 +166,12 @@ namespace Deveel.Data.Sql {
 			if (IsUnknown || other.IsUnknown)
 				return Unknown;
 
-			if (!Type.IsComparable(other.Type))
-				throw new ArgumentException($"Type {Type} is not comparable to type {other.Type} of the argument");
-			// TODO: should instead return null?
+			if (!Type.IsComparable(other.Type)) {
+				if (!other.CanCastTo(Type))
+					return Null;
+
+				other = other.CastTo(Type);
+			}
 
 			var op = selector(Type);
 			var result = op(Value, other.Value);
@@ -457,6 +460,10 @@ namespace Deveel.Data.Sql {
 		}
 
 		#endregion
+
+		public static SqlObject Query(IQueryPlanNode queryPlan) {
+			return new SqlObject(new SqlQueryType(), queryPlan);
+		}
 
 		#endregion
 	}

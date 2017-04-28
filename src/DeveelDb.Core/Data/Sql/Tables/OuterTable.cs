@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public class OuterTable : VirtualTable, IRootTable {
@@ -43,7 +44,7 @@ namespace Deveel.Data.Sql.Tables {
 			var rows = rawTableInfo.Rows;
 
 			// The number of rows being merged in.
-			outerRowCount = rows[0].Length;
+			outerRowCount = rows[0].Count;
 
 			for (int i = 0; i < baseTables.Length; ++i) {
 				var btable = baseTables[i];
@@ -62,31 +63,31 @@ namespace Deveel.Data.Sql.Tables {
 
 					// Merge in the rows from the input table,
 					var toMerge = rows[index];
-					if (toMerge.Length != outerRowCount)
+					if (toMerge.Count != outerRowCount)
 						throw new InvalidOperationException("Wrong size for rows being merged in.");
 
-					for (long j = 0; j < toMerge.Length; j++) {
+					for (long j = 0; j < toMerge.Count; j++) {
 						outerRows[i][j] = toMerge[j];
 					}
 				}
 			}
 		}
 
-		public override SqlObject GetValue(long row, int column) {
-			int tableNum = TableInfo.GetTableOffset(column);
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
+			int tableNum = JoinedTableInfo.GetTableOffset(column);
 			var parentTable = Tables[tableNum];
 
 			if (row >= outerRowCount) {
 				row = Rows[tableNum][row - outerRowCount];
-				return parentTable.GetValue(row, TableInfo.GetColumnOffset(column));
+				return parentTable.GetValueAsync(row, JoinedTableInfo.GetColumnOffset(column));
 			}
 
 			if (outerRows[tableNum] == null)
 				// Special case, handling outer entries (NULL)
-				return new SqlObject(TableInfo.Columns[column].ColumnType, null);
+				return Task.FromResult(new SqlObject(TableInfo.Columns[column].ColumnType, null));
 
 			row = outerRows[tableNum][row];
-			return parentTable.GetValue(row, TableInfo.GetColumnOffset(column));
+			return parentTable.GetValueAsync(row, JoinedTableInfo.GetColumnOffset(column));
 		}
 
 		bool IEquatable<ITable>.Equals(ITable other) {

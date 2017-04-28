@@ -17,9 +17,13 @@
 
 using System;
 
+using Deveel.Data.Diagnostics;
+using Deveel.Data.Sql;
+using Deveel.Data.Sql.Statements;
+
 namespace Deveel.Data {
 	/// <summary>
-	/// This is the top-level <see cref="IRequest">request</see> that
+	/// This is the <see cref="IContext">context</see> that
 	/// is the direct child of a <see cref="ISession"/>, as an isolated
 	/// context for the execution of <see cref="SqlStatement">statements</see>
 	/// </summary>
@@ -37,9 +41,13 @@ namespace Deveel.Data {
 	/// Data-definition commands can be executed only at the query-level.
 	/// </para>
 	/// </remarks>
-	/// <seealso cref="IRequest"/>
 	/// <seealso cref="ISession"/>
-	public interface IQuery : IRequest {
+	public interface IQuery : IContext, IEventSource {
+		/// <summary>
+		/// Gets the SQL query that originated the context
+		/// </summary>
+		SqlQuery SourceQuery { get; }
+
 		/// <summary>
 		/// The parent <see cref="ISession"/> object that
 		/// originated this query.

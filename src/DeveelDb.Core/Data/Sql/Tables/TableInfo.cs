@@ -19,17 +19,28 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+using Deveel.Data.Sql.Indexes;
+
 namespace Deveel.Data.Sql.Tables {
 	public class TableInfo : IDbObjectInfo, ISqlFormattable {
 		private bool readOnly;
 
-		public TableInfo(ObjectName tableName) {
+		public TableInfo(ObjectName tableName) 
+			: this(TableTypes.Table, tableName) {
+		}
+
+		public TableInfo(string type, ObjectName tableName) {
 			if (tableName == null)
 				throw new ArgumentNullException(nameof(tableName));
+			if (String.IsNullOrEmpty(type))
+				throw new ArgumentNullException(nameof(type));
 
+			Type = type;
 			TableName = tableName;
 			TableId = -1;
 			Columns = new ColumnList(this);
+
+			Metadata = new Dictionary<string, object>();
 		}
 
 		DbObjectType IDbObjectInfo.ObjectType => DbObjectType.Table;
@@ -38,7 +49,11 @@ namespace Deveel.Data.Sql.Tables {
 
 		public ObjectName TableName { get; }
 
+		public IDictionary<string, object> Metadata { get; }
+
 		public int TableId { get; set; }
+
+		public string Type { get; }
 
 		public virtual IColumnList Columns { get; }
 
@@ -78,6 +93,11 @@ namespace Deveel.Data.Sql.Tables {
 
 			builder.DeIndent();
 			builder.Append(")");
+		}
+
+		public IndexInfo CreateColumnIndexInfo(int column) {
+			var columnName = Columns[column].ColumnName;
+			return new IndexInfo(new ObjectName(TableName, $"idx_column[{column}]"), TableName, columnName);
 		}
 
 		public override string ToString() {

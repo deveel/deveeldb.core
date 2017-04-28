@@ -10,6 +10,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.Numeric, 20, 15)]
 		[InlineData(SqlTypeCode.BigInt, 19, 0)]
 		[InlineData(SqlTypeCode.Numeric, 21, 10)]
+		[InlineData(SqlTypeCode.VarNumeric, -1, -1)]
 		public static void CreateNumericType(SqlTypeCode typeCode, int precision, int scale) {
 			var type = new SqlNumericType(typeCode, precision, scale);
 
@@ -108,6 +109,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.Real, -1, -1, "FLOAT")]
 		[InlineData(SqlTypeCode.Decimal, -1, -1, "DECIMAL")]
 		[InlineData(SqlTypeCode.Numeric, 23, 5, "NUMERIC(23,5)")]
+		[InlineData(SqlTypeCode.VarNumeric, -1, -1, "VARNUMERIC")]
 		public static void GetString(SqlTypeCode typeCode, int p, int s, string expected) {
 			var type = PrimitiveTypes.Type(typeCode, new {precision = p, scale = s});
 			Assert.NotNull(type);

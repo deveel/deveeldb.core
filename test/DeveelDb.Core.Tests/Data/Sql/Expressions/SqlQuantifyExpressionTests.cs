@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
@@ -83,14 +84,14 @@ namespace Deveel.Data.Sql.Expressions {
 		[InlineData(32, SqlExpressionType.GreaterThanOrEqual, SqlExpressionType.All, false)]
 		[InlineData(0.02, SqlExpressionType.GreaterThanOrEqual, SqlExpressionType.All, false)]
 		[InlineData(32, SqlExpressionType.LessThanOrEqual, SqlExpressionType.All, false)]
-		public void Quantify(object value, SqlExpressionType opType, SqlExpressionType expressionType, bool expected) {
+		public async Task Quantify(object value, SqlExpressionType opType, SqlExpressionType expressionType, bool expected) {
 			var left = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(SqlValueUtil.FromObject(value))));
 			var right = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(array)));
 
 			var binary = SqlExpression.Binary(opType, left, right);
 			var exp = SqlExpression.Quantify(expressionType, binary);
 
-			var result = exp.Reduce(context);
+			var result = await exp.ReduceAsync(context);
 
 			Assert.NotNull(result);
 			Assert.Equal(SqlExpressionType.Constant, result.ExpressionType);

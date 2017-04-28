@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
@@ -18,8 +19,8 @@ namespace Deveel.Data.Sql.Variables {
 				.Returns(new ServiceContainer());
 
 			context = mock.Object;
-			context.RegisterVariableManager();
-			manager = context.ResolveVariableManager();
+			context.RegisterService<VariableManager>();
+			manager = context.ResolveService<VariableManager>();
 
 			var obj1 = new SqlObject(PrimitiveTypes.Integer(), (SqlNumber)1);
 			manager.AssignVariable("a", SqlExpression.Constant(obj1), context);
@@ -58,9 +59,9 @@ namespace Deveel.Data.Sql.Variables {
 		[InlineData("a_B", true, true)]
 		[InlineData("ab", false, false)]
 		[InlineData("aB", true, false)]
-		public void ObjectManager_ResolveName(string name, bool ignoreCase, bool expected) {
+		public async Task ObjectManager_ResolveName(string name, bool ignoreCase, bool expected) {
 			var objManager = (manager as IDbObjectManager);
-			var result = objManager.ResolveName(new ObjectName(name), ignoreCase);
+			var result = await objManager.ResolveNameAsync(new ObjectName(name), ignoreCase);
 
 			Assert.Equal(expected, result != null);
 		}
@@ -71,11 +72,10 @@ namespace Deveel.Data.Sql.Variables {
 		[InlineData("a_b", true)]
 		[InlineData("a_B", false)]
 		[InlineData("A", false)]
-		public void ObjectManager_VariableExists(string name, bool expected) {
+		public async Task ObjectManager_VariableExists(string name, bool expected) {
 			var objManager = (manager as IDbObjectManager);
 
-			Assert.Equal(expected, objManager.ObjectExists(new ObjectName(name)));
-			Assert.Equal(expected, objManager.RealObjectExists(new ObjectName(name)));
+			Assert.Equal(expected, await objManager.ObjectExistsAsync(new ObjectName(name)));
 		}
 
 		[Theory]
@@ -83,28 +83,28 @@ namespace Deveel.Data.Sql.Variables {
 		[InlineData("b", false)]
 		[InlineData("a_b", true)]
 		[InlineData("a_B", false)]
-		public void ObjectManager_GetVariable(string name, bool expected) {
+		public async Task ObjectManager_GetVariable(string name, bool expected) {
 			var objManager = (manager as IDbObjectManager);
 
-			var result = objManager.GetObject(new ObjectName(name));
+			var result = await objManager.GetObjectAsync(new ObjectName(name));
 			Assert.Equal(expected, result != null);
 		}
 
 		[Theory]
 		[InlineData("a", true)]
 		[InlineData("b", false)]
-		public void ObjectManager_DropVariable(string name, bool expected) {
+		public async Task ObjectManager_DropVariable(string name, bool expected) {
 			var objManager = (manager as IDbObjectManager);
 
-			Assert.Equal(expected, objManager.DropObject(new ObjectName(name)));
+			Assert.Equal(expected, await objManager.DropObjectAsync(new ObjectName(name)));
 		}
 
 		[Fact]
-		public void ObjectManager_AlterVariable() {
+		public async Task ObjectManager_AlterVariable() {
 			var variable = manager.GetVariable("a");
 
 			var objManager = (manager as IDbObjectManager);
-			Assert.Throws<NotSupportedException>(() => objManager.AlterObject(variable.VariableInfo));
+			await Assert.ThrowsAsync<NotSupportedException>(() => objManager.AlterObjectAsync(variable.VariableInfo));
 		}
 
 		public void Dispose() {

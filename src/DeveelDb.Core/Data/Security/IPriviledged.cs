@@ -27,10 +27,5 @@ namespace Deveel.Data.Security {
 		/// Gets the name of the object
 		/// </summary>
 		string Name { get; }
-
-		/// <summary>
-		/// Gets the session where this object belongs
-		/// </summary>
-		ISession Session { get; }
 	}
 }

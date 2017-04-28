@@ -27,7 +27,11 @@ namespace Deveel.Data.Sql.Methods {
 		internal SqlMethodResult(SqlExpression returned, bool hasReturn, IDictionary<string, SqlExpression> output) {
 			ReturnedValue = returned;
 			HasReturnedValue = hasReturn;
-			Output = new ReadOnlyDictionary<string, SqlExpression>(output);
+			var copyOutput = new Dictionary<string, SqlExpression>();
+			foreach (var pair in output) {
+				copyOutput[pair.Key] = pair.Value;
+			}
+			Output = new ReadOnlyDictionary<string, SqlExpression>(copyOutput);
 		}
 
 		public SqlExpression ReturnedValue { get; }
@@ -36,26 +40,21 @@ namespace Deveel.Data.Sql.Methods {
 
 		public IDictionary<string, SqlExpression> Output { get; }
 
-		internal void Validate(SqlMethodInfo methodInfo, IContext context) {
-			if (methodInfo.IsFunction) {
-				var functionInfo = (SqlFunctionInfo) methodInfo;
-				if (!HasReturnedValue)
-					throw new InvalidOperationException();
+		internal void Validate(SqlMethod method, IContext context) {
+			var methodInfo = method.MethodInfo;
 
-				var returnedType = ReturnedValue.GetSqlType(context);
-				if (!returnedType.IsComparable(functionInfo.ReturnType))
-					throw new InvalidOperationException();
-			}
+			if (method.IsFunction && !HasReturnedValue)
+				throw new MethodException($"The execution of function {methodInfo.MethodName} has no returned value");
 
 			var output = methodInfo.Parameters.Where(x => x.IsOutput);
 			foreach (var requestedParam in output) {
 				SqlExpression outputValue;
 				if (!Output.TryGetValue(requestedParam.Name, out outputValue))
-					throw new InvalidOperationException();
+					throw new MethodException($"The requested output parameter {requestedParam.Name} was not set by the method {methodInfo.MethodName}");
 
 				var outputType = outputValue.GetSqlType(context);
 				if (!outputType.IsComparable(requestedParam.ParameterType))
-					throw new InvalidOperationException();
+					throw new MethodException($"The value set for output parameter {requestedParam.Name} is invalid");
 			}
 		}
 	}

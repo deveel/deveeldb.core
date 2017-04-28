@@ -18,6 +18,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public class LimitedTable : FilterTable {
@@ -48,8 +49,8 @@ namespace Deveel.Data.Sql.Tables {
 			return System.Math.Min(rowCount, count);
 		}
 
-		public override SqlObject GetValue(long row, int column) {
-			return base.GetValue(NormalizeRow(row), column);
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
+			return base.GetValueAsync(NormalizeRow(row), column);
 		}
 
 		public override IEnumerator<Row> GetEnumerator() {

@@ -84,73 +84,79 @@ namespace Deveel.Data.Sql {
 		///</summary>
 		Decimal = 19,
 
+		/// <summary>
+		/// A numeric type has a variable precision and scale
+		/// dependent from the value
+		/// </summary>
+		VarNumeric = 20,
+
 		///<summary>
 		/// Defines a character type with  fixed size given
 		///</summary>
-		Char = 20,
+		Char = 30,
 
 		///<summary>
 		/// The character type with a variable size, within a maximum
 		/// size given.
 		///</summary>
-		VarChar = 21,
+		VarChar = 31,
 
 		///<summary>
 		///</summary>
-		LongVarChar = 22,
+		LongVarChar = 32,
 
 		///<summary>
 		/// A type that can store either large amount of ASCII or 
 		/// UNICODE character data.
 		///</summary>
-		Clob = 23,
+		Clob = 33,
 
 		/// <summary>
 		/// A long string in the system.
 		/// </summary>
-		String = 24,
+		String = 34,
 
 		///<summary>
 		/// A date without time
 		///</summary>
-		Date = 30,
+		Date = 40,
 
 		///<summary>
 		/// A type that expresses only the time part of a date
 		///</summary>
-		Time = 31,
+		Time = 41,
 
 		///<summary>
 		/// A type that holds a precise date and time value
 		///</summary>
-		TimeStamp = 32,
+		TimeStamp = 42,
 
 		/// <summary>
 		/// A type that holds date and time values 
 		/// (equivalent to <see cref="TimeStamp"/>)
 		/// </summary>
-		DateTime = 35,
+		DateTime = 43,
 
-		YearToMonth = 40,
+		YearToMonth = 50,
 
-		DayToSecond = 41,
-
-		///<summary>
-		///</summary>
-		Binary = 50,
+		DayToSecond = 51,
 
 		///<summary>
 		///</summary>
-		VarBinary = 51,
+		Binary = 60,
 
 		///<summary>
 		///</summary>
-		LongVarBinary = 52,
+		VarBinary = 61,
+
+		///<summary>
+		///</summary>
+		LongVarBinary = 62,
 
 		///<summary>
 		/// A type that can store large amount of binary data.
 		///</summary>
-		Blob = 53,
+		Blob = 63,
 
 		///<summary>
 		/// A user-defined generic object type.

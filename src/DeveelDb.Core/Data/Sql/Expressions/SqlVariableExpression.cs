@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Variables;
@@ -46,7 +47,7 @@ namespace Deveel.Data.Sql.Expressions {
 			return visitor.VisitVariable(this);
 		}
 
-		public override SqlExpression Reduce(IContext context) {
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
@@ -56,7 +57,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (variable == null)
 				return Constant(SqlObject.Unknown);
 
-			return variable.Evaluate(context);
+			return await variable.Evaluate(context);
 		}
 
 		public override SqlType GetSqlType(IContext context) {
@@ -64,12 +65,12 @@ namespace Deveel.Data.Sql.Expressions {
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
 			var ignoreCase = context.GetValue("ignoreCase", false);
-			var variable = context.ResolveVariable(VariableName, ignoreCase);
+			var type = context.ResolveVariableType(VariableName, ignoreCase);
 
-			if (variable == null)
-				throw new SqlExpressionException();
+			if (type == null)
+				throw new InvalidOperationException();
 
-			return variable.Type;
+			return type;
 		}
 	}
 }

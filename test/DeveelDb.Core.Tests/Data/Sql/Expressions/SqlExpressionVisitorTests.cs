@@ -1,6 +1,6 @@
 ﻿using System;
 
-using Deveel.Data.Query;
+using Deveel.Data.Sql.Query;
 using Deveel.Data.Sql.Methods;
 
 using Xunit;
@@ -18,6 +18,14 @@ namespace Deveel.Data.Sql.Expressions {
 			var exp = SqlExpression.Binary(SqlExpressionType.Add,
 				SqlExpression.Constant(SqlObject.Integer(22)),
 				SqlExpression.Constant(SqlObject.Integer(344)));
+			Visit(exp);
+		}
+
+		[Fact]
+		public static void VisitStringMatch() {
+			var exp = SqlExpression.Like(SqlExpression.Constant(SqlObject.String(new SqlString("antonello"))),
+				SqlExpression.Constant(SqlObject.String(new SqlString("an%"))), null);
+
 			Visit(exp);
 		}
 

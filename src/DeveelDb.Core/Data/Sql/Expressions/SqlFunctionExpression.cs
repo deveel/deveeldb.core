@@ -16,7 +16,9 @@
 
 
 using System;
+using System.Threading.Tasks;
 
+using Deveel.Data.Security;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Methods;
 
@@ -54,34 +56,45 @@ namespace Deveel.Data.Sql.Expressions {
 			builder.Append(")");
 		}
 
-		private SqlFunction ResolveFunction(IContext context) {
+		private SqlFunctionBase ResolveFunction(IContext context) {
 			if (context == null)
-				throw new SqlExpressionException();
+				throw new SqlExpressionException("A context is required to reduce a function invoke");
 
 			var resolver = context.Scope.Resolve<IMethodResolver>();
 			if (resolver == null)
 				throw new SqlExpressionException();
 
-			var method = resolver.ResolveMethod(context, new Invoke(FunctionName, Arguments));
+			var name = FunctionName;
+			if (!context.IsSystemFunction(name, Arguments)) {
+				name = context.QualifyName(name);
+			}
+
+			var invoke = new Invoke(name, Arguments);
+			var method = resolver.ResolveMethod(context, invoke);
 			if (method == null)
-				throw new SqlExpressionException();
+				throw new SqlExpressionException($"Could not find any function for '{invoke}'.");
 
-			if (!method.MethodInfo.IsFunction)
-				throw new SqlExpressionException();
+			if (!method.IsFunction)
+				throw new SqlExpressionException($"The method {method.MethodInfo.MethodName} is not a function.");
 
-			return ((SqlFunction) method);
+			if (!method.Matches(context, invoke))
+				throw new MethodException($"The function {method} was invoked with invalid arguments");
+
+			return ((SqlFunctionBase) method);
 		}
 
 		public override SqlType GetSqlType(IContext context) {
 			var function = ResolveFunction(context);
-			var functionInfo = (SqlFunctionInfo) function.MethodInfo;
-			return functionInfo.ReturnType;
+			return function.ReturnType(context, new Invoke(function.MethodInfo.MethodName, Arguments));
 		}
 
-		public override SqlExpression Reduce(IContext context) {
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
 			var function = ResolveFunction(context);
-			// TODO: provide an asyn Reduce?
-			var result = function.ExecuteAsync(context, Arguments).Result;
+
+			if (!function.IsSystem && !await context.UserCanExecute(FunctionName))
+				throw new UnauthorizedAccessException($"Cannot execute function {FunctionName} due to missing authorization");
+
+			var result = await function.ExecuteAsync(context, Arguments);
 			if (!result.HasReturnedValue)
 				throw new SqlExpressionException();
 

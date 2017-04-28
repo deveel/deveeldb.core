@@ -19,7 +19,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
@@ -33,27 +32,55 @@ namespace Deveel.Data.Sql.Methods {
 
 		public SqlMethodInfo MethodInfo { get; }
 
-		public SqlMethodBody Body { get; set; }
+		public abstract MethodType Type { get; }
+
+		public bool IsFunction => Type == MethodType.Function;
+
+		public bool IsProcedure => Type == MethodType.Procedure;
+
+		public virtual bool IsSystem => true;
+
+		protected virtual bool ValidateInvoke(InvokeInfo invokeInfo) {
+			var required = MethodInfo.Parameters.Where(x => x.IsRequired).ToDictionary(x => x.Name, y => y);
+			foreach (var param in required) {
+				if (!invokeInfo.HasArgument(param.Key))
+					return false;
+
+				if (!param.Value.IsDeterministic) {
+					var argType = invokeInfo.ArgumentType(param.Key);
+					if (!param.Value.ParameterType.IsComparable(argType))
+						return false;
+				}
+			}
+
+			return true;
+		}
 
 		public async Task<SqlMethodResult> ExecuteAsync(IContext context, Invoke invoke) {
-			using (var methodContext = new MethodContext(context, MethodInfo, invoke)) {
-				await ExecuteContextAsync(methodContext);
+			using (var methodContext = new MethodContext(context, this, invoke)) {
+				try {
+					await ExecuteContextAsync(methodContext);
+				} catch (MethodException) {
+					throw;
+				} catch (Exception ex) {
+					throw new MethodException($"Error while executing {MethodInfo.MethodName}: see inner exception for more information", ex);
+				}
 
 				var result = methodContext.CreateResult();
 
-				result.Validate(MethodInfo, context);
+				result.Validate(this, context);
 
 				return result;
 			}
 		}
 
-		public Task<SqlMethodResult> ExecuteAsync(IContext context, params InvokeArgument[] args) {
+		public async Task<SqlMethodResult> ExecuteAsync(IContext context, params InvokeArgument[] args) {
 			var invoke = new Invoke(MethodInfo.MethodName);
 			foreach (var arg in args) {
 				invoke.Arguments.Add(arg);
 			}
 
-			return ExecuteAsync(context, invoke);
+			return await ExecuteAsync(context, invoke);
 		}
 
 		public Task<SqlMethodResult> ExecuteAsync(IContext context, params SqlExpression[] args) {
@@ -68,27 +95,25 @@ namespace Deveel.Data.Sql.Methods {
 			return ExecuteAsync(context, exps);
 		}
 
-		protected virtual Task ExecuteContextAsync(MethodContext context) {
-			if (Body == null)
-				throw new InvalidOperationException();
-
-			return Body.ExecuteAsync(context);
-		}
+		protected abstract Task ExecuteContextAsync(MethodContext context);
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
-			MethodInfo.AppendTo(builder);
+			AppendTo(builder);
+		}
 
-			if (Body != null) {
-				Body.AppendTo(builder);
-			}
+		protected virtual void AppendTo(SqlStringBuilder builder) {
+			builder.Append(Type.ToString().ToUpperInvariant());
+			builder.Append(" ");
+
+			MethodInfo.AppendTo(builder);
 		}
 
 		public override string ToString() {
 			return this.ToSqlString();
 		}
 
-		public bool Matches(IContext context, Invoke invoke) {
-			return MethodInfo.Matches(context, invoke);
+		public virtual bool Matches(IContext context, Invoke invoke) {
+			return MethodInfo.Matches(context, ValidateInvoke, invoke);
 		}
 	}
 }

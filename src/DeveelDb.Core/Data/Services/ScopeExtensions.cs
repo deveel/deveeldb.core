@@ -79,12 +79,16 @@ namespace Deveel.Data.Services {
 			scope.Register(registration);
 		}
 
-		public static void RegisterInstance<TService>(this IScope scope, TService instance) where TService : class {
-			RegisterInstance<TService>(scope, instance, null);
+		public static void RegisterInstance<TService>(this IScope scope, object instance) {
+			scope.RegisterInstance<TService>(instance, null);
 		}
 
-		public static void RegisterInstance<TService>(this IScope scope, TService instance, object serviceKey)
+		public static void RegisterInstance<TService>(this IScope scope, TService instance)
 			where TService : class {
+			scope.RegisterInstance<TService>((object) instance);
+		}
+
+		public static void RegisterInstance<TService>(this IScope scope, object instance, object serviceKey) {
 			scope.RegisterInstance(typeof(TService), instance, serviceKey);
 		}
 
@@ -155,3 +159,4 @@ namespace Deveel.Data.Services {
 		}
 	}
 }
+

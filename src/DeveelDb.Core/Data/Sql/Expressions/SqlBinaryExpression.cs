@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlBinaryExpression : SqlExpression {
@@ -51,14 +52,14 @@ namespace Deveel.Data.Sql.Expressions {
 			return visitor.VisitBinary(this);
 		}
 
-		private SqlExpression[] ReduceSides(IContext context) {
+		private async Task<SqlExpression[]> ReduceSides(IContext context) {
 			var info = new List<BinaryEvaluateInfo> {
 				new BinaryEvaluateInfo {Expression = Left, Offset = 0},
 				new BinaryEvaluateInfo {Expression = Right, Offset = 1}
 			}.OrderByDescending(x => x.Precedence);
 
 			foreach (var evaluateInfo in info) {
-				evaluateInfo.Expression = evaluateInfo.Expression.Reduce(context);
+				evaluateInfo.Expression = await evaluateInfo.Expression.ReduceAsync(context);
 			}
 
 			return info.OrderBy(x => x.Offset)
@@ -66,8 +67,8 @@ namespace Deveel.Data.Sql.Expressions {
 				.ToArray();
 		}
 
-		public override SqlExpression Reduce(IContext context) {
-			var sides = ReduceSides(context);
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
+			var sides = await ReduceSides(context);
 
 			var left = sides[0];
 			var right = sides[1];
@@ -77,8 +78,8 @@ namespace Deveel.Data.Sql.Expressions {
 			if (right.ExpressionType != SqlExpressionType.Constant)
 				throw new SqlExpressionException("The reduced right side of a binary expression is not constant.");
 
-			var value1 = ((SqlConstantExpression)Left).Value;
-			var value2 = ((SqlConstantExpression)Right).Value;
+			var value1 = ((SqlConstantExpression)left).Value;
+			var value2 = ((SqlConstantExpression)right).Value;
 
 			var result = ReduceBinary(value1, value2);
 

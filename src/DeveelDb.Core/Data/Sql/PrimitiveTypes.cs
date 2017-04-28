@@ -85,6 +85,10 @@ namespace Deveel.Data.Sql {
 			return new SqlNumericType(sqlType, precision, scale);
 		}
 
+		public static SqlNumericType VarNumeric() {
+			return Numeric(SqlTypeCode.VarNumeric, -1, -1);
+		}
+
 		public static SqlNumericType TinyInt() {
 			return Numeric(SqlTypeCode.TinyInt, SqlNumericType.TinyIntPrecision, 0);
 		}
@@ -203,14 +207,6 @@ namespace Deveel.Data.Sql {
 
 		#endregion
 
-		#region Table
-
-		public static SqlTableType Table() {
-			return new SqlTableType();
-		}
-
-		#endregion
-
 		/// <summary>
 		/// Checks if the given code represents a primitive type.
 		/// </summary>
@@ -262,6 +258,8 @@ namespace Deveel.Data.Sql {
 				case "FLOAT":
 				case "DOUBLE":
 				case "DECIMAL":
+				case "VARNUMERIC":
+				case "NUMERIC VARYING":
 					return true;
 
 				case "STRING":
@@ -291,9 +289,6 @@ namespace Deveel.Data.Sql {
 
 				case "YEAR TO MONTH":
 				case "DAY TO SECOND":
-					return true;
-
-				case "TABLE":
 					return true;
 			}
 
@@ -362,6 +357,9 @@ namespace Deveel.Data.Sql {
 
 					return Numeric(precision.Value, scale.Value);
 				}
+				case "NUMERIC VARYING":
+				case "VARNUMERIC":
+					return VarNumeric();
 
 				// Strings
 				case "CHAR": {
@@ -417,9 +415,6 @@ namespace Deveel.Data.Sql {
 				case "BLOB": {
 					return Blob();
 				}
-
-				case "TABLE":
-					return Table();
 
 				default:
 					return null;

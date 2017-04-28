@@ -17,6 +17,9 @@
 
 using System;
 
+using Deveel.Data.Configuration;
+using Deveel.Data.Diagnostics;
+
 namespace Deveel.Data {
 	/// <summary>
 	/// The representation of a single database in the system.
@@ -33,7 +36,7 @@ namespace Deveel.Data {
 	/// </list>
 	/// </para>
 	/// </remarks>
-	public interface IDatabase : IContext {
+	public interface IDatabase : IContext, IEventSource, IConfigurationScope {
 		/// <summary>
 		/// Gets the name of the database.
 		/// </summary>

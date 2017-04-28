@@ -18,64 +18,73 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
-	public class FilterTable : IVirtualTable {
+	public class FilterTable : TableBase {
+		private Index[] columnIndices;
+
 		public FilterTable(ITable parent) {
 			Parent = parent;
 		}
 
 		protected ITable Parent { get; }
 
-		public virtual TableInfo TableInfo => Parent.TableInfo;
+		public override TableInfo TableInfo => Parent.TableInfo;
+		
+		public override long RowCount => Parent.RowCount;
 
-		public virtual long RowCount => Parent.RowCount;
-
-		public virtual SqlObject GetValue(long row, int column) {
-			return Parent.GetValue(row, column);
+		public override Task<SqlObject> GetValueAsync(long row, int column) {
+			return Parent.GetValueAsync(row, column);
 		}
 
-		IDbObjectInfo IDbObject.ObjectInfo => TableInfo;
-
-		public virtual IEnumerator<Row> GetEnumerator()
+		public override IEnumerator<Row> GetEnumerator()
 			=> Parent.GetEnumerator();
 
-		int IComparable.CompareTo(object obj) {
-			throw new NotSupportedException();
-		}
-
-		int IComparable<ISqlValue>.CompareTo(ISqlValue other) {
-			throw new NotSupportedException();
-		}
-
-		bool ISqlValue.IsComparableTo(ISqlValue other) {
-			throw new NotSupportedException();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator() {
-			return GetEnumerator();
-		}
-
-		IEnumerable<long> IVirtualTable.ResolveRows(int column, IEnumerable<long> rowSet, ITable ancestor) {
-			return ResolveRows(column, rowSet, ancestor);
-		}
-
-		protected virtual IEnumerable<long> ResolveRows(int column, IEnumerable<long> rows, ITable ancestor) {
+		protected override IEnumerable<long> ResolveRows(int column, IEnumerable<long> rows, ITable ancestor) {
 			if (ancestor == this || ancestor == Parent)
 				return rows;
 
-			if (!(Parent is IVirtualTable))
-				throw new InvalidOperationException();
-
-			return ((IVirtualTable) Parent).ResolveRows(column, rows, ancestor);
+			return  Parent.ResolveRows(column, rows, ancestor);
 		}
 
-		RawTableInfo IVirtualTable.GetRawTableInfo(RawTableInfo rootInfo) {
-			return GetRawTableInfo(rootInfo);
-		}
-
-		protected virtual RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
+		protected override RawTableInfo GetRawTableInfo(RawTableInfo rootInfo) {
 			return Parent.GetRawTableInfo(rootInfo);
+		}
+
+		protected override Index GetColumnIndex(int column, int originalColumn, ITable ancestor) {
+			if (columnIndices == null) {
+				columnIndices = new Index[Parent.TableInfo.Columns.Count];
+			}
+
+			// Is there a local index available?
+			var index = columnIndices[column];
+			if (index == null) {
+				// If we are asking for the index of this table we must
+				// tell the parent we are looking for its index.
+				var t = ancestor;
+				if (ancestor == this)
+					t = Parent;
+
+				// Index is not cached in this table so ask the parent.
+				index = Parent.GetColumnIndex(column, originalColumn, t);
+
+				if (ancestor == this)
+					columnIndices[column] = index;
+
+			} else {
+				// If this has a cached scheme and we are in the correct domain then
+				// return it.
+				if (ancestor == this)
+					return index;
+
+				// Otherwise we must calculate the subset of the scheme
+				return index.Subset(ancestor, originalColumn);
+			}
+
+			return index;
 		}
 	}
 }

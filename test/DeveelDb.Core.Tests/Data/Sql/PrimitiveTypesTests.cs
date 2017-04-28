@@ -23,6 +23,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.Boolean, true)]
 		[InlineData(SqlTypeCode.Blob, true)]
 		[InlineData(SqlTypeCode.BigInt, true)]
+		[InlineData(SqlTypeCode.VarNumeric, true)]
 		public static void IsPrimitive(SqlTypeCode typeCode, bool expected) {
 			Assert.Equal(expected, PrimitiveTypes.IsPrimitive(typeCode));
 		}
@@ -39,6 +40,7 @@ namespace Deveel.Data.Sql {
 		[InlineData(SqlTypeCode.Decimal, "Precision", 22, "Scale", 2)]
 		[InlineData(SqlTypeCode.Decimal, "Precision", 10, "Scale", 2)]
 		[InlineData(SqlTypeCode.Numeric, "precision", 10, "scale", 4)]
+		[InlineData(SqlTypeCode.VarNumeric, null, null, null, null)]
 		[InlineData(SqlTypeCode.Char, null, null, null, null)]
 		[InlineData(SqlTypeCode.Char, "Size", 200, null, null)]
 		[InlineData(SqlTypeCode.VarChar, "maxSize", 255, null, null)]

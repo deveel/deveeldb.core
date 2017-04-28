@@ -16,9 +16,10 @@
 
 
 using System;
+using System.Threading.Tasks;
 
+using Deveel.Data.Diagnostics;
 using Deveel.Data.Security;
-using Deveel.Data.Storage;
 using Deveel.Data.Transactions;
 
 namespace Deveel.Data {
@@ -26,7 +27,7 @@ namespace Deveel.Data {
 	/// An authenticate session to a given database for a given user,
 	/// that wraps a transaction for operations.
 	/// </summary>
-	public interface ISession : IContext {
+	public interface ISession : IContext, IEventSource {
 		/// <summary>
 		/// Gets the name of the current schema of this session.
 		/// </summary>
@@ -35,7 +36,7 @@ namespace Deveel.Data {
 		/// <summary>
 		/// Gets the reference to the user owning the session
 		/// </summary>
-		IUser User { get; }
+		User User { get; }
 
 		/// <summary>
 		/// Gets the instance of <see cref="ITransaction"/> that handles the
@@ -43,38 +44,6 @@ namespace Deveel.Data {
 		/// </summary>
 		ITransaction Transaction { get; }
 
-
-		/// <summary>
-		/// Creates a new large object from the underlying
-		/// database of the session.
-		/// </summary>
-		/// <param name="maxSize">The max size of the object.</param>
-		/// <param name="compressed">A flag indicating if the content of the
-		/// object will be compressed.</param>
-		/// <remarks>
-		/// <para>
-		/// Large objects are immutable once finalized and the content size
-		/// cannot exceed the specified <paramref name="maxSize"/>.
-		/// </para>
-		/// </remarks>
-		/// <returns>
-		/// Returns an instance of <see cref="ILargeObject"/> that is allocated
-		/// in the large-object storage of the underlying database of this session.
-		/// </returns>
-		/// <seealso cref="GetLargeObject"/>
-		/// <seealso cref="ILargeObject"/>
-		ILargeObject CreateLargeObject(long maxSize, bool compressed);
-
-		/// <summary>
-		/// Gets a large object identified by the given unique identifier.
-		/// </summary>
-		/// <param name="objectId">The unique identifier of the object to obtain.</param>
-		/// <returns>
-		/// Returns an instance of <see cref="ILargeObject"/> identified by the given
-		/// <paramref name="objectId"/> within the underlying database of this session.
-		/// </returns>
-		/// <seealso cref="ObjectId"/>
-		ILargeObject GetLargeObject(ObjectId objectId);
 
 		/// <summary>
 		/// Creates a new query object that can be used to execute commands
@@ -90,12 +59,12 @@ namespace Deveel.Data {
 		/// Commits the latest changes made by the user in the session.
 		/// </summary>
 		/// <seealso cref="ITransaction"/>
-		void Commit();
+		Task CommitAsync();
 
 		/// <summary>
 		/// Rolls-back all the modifications made by the user in this session
 		/// </summary>
 		/// <seealse cref="ITransaction"/>
-		void Rollback();
+		Task RollbackAsync();
 	}
 }

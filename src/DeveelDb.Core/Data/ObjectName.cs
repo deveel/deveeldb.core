@@ -52,7 +52,7 @@ namespace Deveel.Data {
 		/// </summary>
 		public const char Separator = '.';
 
-		private static readonly char[] InvalidNameChars = "\0.%^&({}+-/][\\".ToCharArray();
+		private static readonly char[] InvalidNameChars = "\0.%^&{}+-/][\\".ToCharArray();
 
 		/// <summary>
 		/// Constructs a name reference without a parent.
@@ -257,6 +257,16 @@ namespace Deveel.Data {
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+
+		public ObjectName ToUpper() {
+			var upper = Name.ToUpperInvariant();
+			ObjectName parent = null;
+			if (Parent != null)
+				parent = Parent.ToUpper();
+
+			return new ObjectName(parent, upper);
 		}
 
 		public override bool Equals(object obj) {

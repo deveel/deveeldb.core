@@ -4,6 +4,10 @@ sudo: required
 mono: none
 dotnet: 1.0.1
 
+branches:
+  only:
+  - master
+
 addons:
   apt:
     sources:

@@ -25,8 +25,8 @@ namespace Deveel.Data.Sql.Methods {
 		[Fact]
 		public static void MakeProcedureInfo() {
 			var name = ObjectName.Parse("a.proc");
-			var info = new SqlProcedureInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			var info = new SqlMethodInfo(name);
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
 
 			Assert.Equal(name, info.MethodName);
 			Assert.NotEmpty(info.Parameters);
@@ -35,10 +35,9 @@ namespace Deveel.Data.Sql.Methods {
 		[Fact]
 		public static void GetString() {
 			var name = ObjectName.Parse("a.proc");
-			var info = new SqlProcedureInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			var function = new SqlProcedure(info);
-			function.SetBody(ctx => {
+			var info = new SqlMethodInfo(name);
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			var function = new SqlProcedureDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				var b = a.Multiply(SqlObject.BigInt(2));
 
@@ -52,30 +51,27 @@ namespace Deveel.Data.Sql.Methods {
 		[Fact]
 		public static void MatchInvoke() {
 			var name = ObjectName.Parse("a.proc");
-			var info = new SqlProcedureInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
+			var info = new SqlMethodInfo(name);
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			var procedure = new SqlProcedureDelegate(info, methodContext => Task.CompletedTask);
 
 			var invoke = new Invoke(name, new[] { new InvokeArgument(SqlObject.BigInt(11)) });
 
-			Assert.True(info.Matches(null, invoke));
+			Assert.True(procedure.Matches(null, invoke));
 		}
 
 		[Fact]
 		public async Task ExecuteWithSequentialArgs() {
 			var name = ObjectName.Parse("a.proc");
-			var info = new SqlProcedureInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			var procedure = new SqlProcedure(info);
-
-			procedure.SetBody(ctx => {
+			var info = new SqlMethodInfo(name);
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			var procedure = new SqlProcedureDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				var b = a.Multiply(SqlObject.BigInt(2));
 				Console.Out.WriteLine("a * 2 = {0}", b);
 			});
 
 			Assert.Equal(name, info.MethodName);
-			Assert.NotNull(procedure.Body);
-			Assert.IsType<SqlMethodDelegate>(procedure.Body);
 
 			var result = await procedure.ExecuteAsync(context, SqlObject.Integer(22));
 
@@ -86,18 +82,15 @@ namespace Deveel.Data.Sql.Methods {
 		[Fact]
 		public async Task ExecuteWithNamedArgs() {
 			var name = ObjectName.Parse("a.func");
-			var info = new SqlProcedureInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			var procedure = new SqlProcedure(info);
-			procedure.SetBody(ctx => {
+			var info = new SqlMethodInfo(name);
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			var procedure = new SqlProcedureDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				var b = a.Multiply(SqlObject.BigInt(2));
 				Console.Out.WriteLine("a * 2 = {0}", b);
 			});
 
 			Assert.Equal(name, info.MethodName);
-			Assert.NotNull(procedure.Body);
-			Assert.IsType<SqlMethodDelegate>(procedure.Body);
 
 			var result = await procedure.ExecuteAsync(context, new InvokeArgument("a", SqlObject.Integer(22)));
 
@@ -108,14 +101,13 @@ namespace Deveel.Data.Sql.Methods {
 		[Fact]
 		public async Task ExecuteWithNamedArgsAndDefaultValue() {
 			var name = ObjectName.Parse("a.proc");
-			var info = new SqlProcedureInfo(name);
-			info.Parameters.Add(new SqlMethodParameterInfo("a", PrimitiveTypes.Integer()));
-			info.Parameters.Add(new SqlMethodParameterInfo("b",
+			var info = new SqlMethodInfo(name);
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("b",
 				PrimitiveTypes.String(),
 				SqlExpression.Constant(SqlObject.String(new SqlString("test")))));
 
-			var procedure = new SqlProcedure(info);
-			procedure.SetBody(ctx => {
+			var procedure = new SqlProcedureDelegate(info, ctx => {
 				var a = ctx.Value("a");
 				var b = ctx.Value("b");
 				Assert.NotNull(b);
@@ -123,13 +115,34 @@ namespace Deveel.Data.Sql.Methods {
 			});
 
 			Assert.Equal(name, info.MethodName);
-			Assert.NotNull(procedure.Body);
-			Assert.IsType<SqlMethodDelegate>(procedure.Body);
 
 			var result = await procedure.ExecuteAsync(context, new InvokeArgument("a", SqlObject.Integer(22)));
 
 			Assert.NotNull(result);
 			Assert.False(result.HasReturnedValue);
+		}
+
+		[Fact]
+		public async void ExecuteWithOutputArgs() {
+			var name = ObjectName.Parse("a.proc");
+			var info = new SqlMethodInfo(name);
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("b", PrimitiveTypes.Integer(), SqlParameterDirection.Out));
+
+			var procedure = new SqlProcedureDelegate(info, ctx => {
+				var a = ctx.Value("a");
+				var b = a.Multiply(SqlObject.Integer(2));
+
+				ctx.SetOutput("b", SqlExpression.Constant(b));
+			});
+
+			Assert.Equal(name, info.MethodName);
+
+			var result = await procedure.ExecuteAsync(context, new InvokeArgument("a", SqlObject.Integer(22)));
+
+			Assert.NotNull(result);
+			Assert.False(result.HasReturnedValue);
+			Assert.NotEmpty(result.Output);
 		}
 
 

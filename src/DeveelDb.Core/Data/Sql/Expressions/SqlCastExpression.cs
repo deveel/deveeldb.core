@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlCastExpression : SqlExpression {
@@ -44,8 +45,8 @@ namespace Deveel.Data.Sql.Expressions {
 			return visitor.VisitCast(this);
 		}
 
-		public override SqlExpression Reduce(IContext context) {
-			var value = Value.Reduce(context);
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
+			var value = await Value.ReduceAsync(context);
 
 			if (!(value is SqlConstantExpression))
 				throw new SqlExpressionException("The value of the cast could not be reduced to constant");

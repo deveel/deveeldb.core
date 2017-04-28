@@ -1,308 +1,459 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace Deveel {
-	public class BigList<T> : IList<T> {
-		private BigArray<T> items;
-		private long size;
-		private int version;
+	/// <summary>
+	///     Represents a strongly typed list of objects.
+	///     Uses BigArray to store objects.
+	/// </summary>
+	/// <typeparam name="T">Type of elements to store.</typeparam>
+	public class BigList<T> : IEnumerable<T> {
+		#region Member variables
 
-		public BigList() 
-			: this(0) {
+		/// <summary>
+		///     Default capacity, used while adding first element
+		///     when capacity is not specified.
+		/// </summary>
+		private const int DefaultCapacity = 4;
+
+		/// <summary>
+		///     Empty array.
+		/// </summary>
+		private static readonly BigArray<T> _emptyArray = new BigArray<T>(0);
+
+		/// <summary>
+		///     BigArray instance to store elements.
+		/// </summary>
+		private BigArray<T> _items;
+
+		/// <summary>
+		///     Holds number of elements present in the BigList.
+		/// </summary>
+		private long _size;
+
+		#endregion
+
+		#region Constructor
+
+		/// <summary>
+		///     Initializes a new instance of the BigList.
+		/// </summary>
+		public BigList() {
+			_items = _emptyArray;
 		}
 
+		/// <summary>
+		///     Initializes a new instance of the BigList with specified capacity.
+		/// </summary>
+		/// <param name="capacity">Initial capacity.</param>
 		public BigList(long capacity) {
-			items = new BigArray<T>(capacity);
-			size = 0;
+			if (capacity < 0)
+				throw new ArgumentOutOfRangeException("capacity");
+
+			_items = new BigArray<T>(capacity);
 		}
 
+		/// <summary>
+		///     Initializes a new instance of the BigList with elements from the specified collection.
+		/// </summary>
+		/// <param name="collection">The collection whose elements are copied to the new BigList.</param>
 		public BigList(IEnumerable<T> collection) {
-			ICollection<T> c = collection as ICollection<T>;
-			if (c != null) {
-				int count = c.Count;
-				if (count == 0) {
-					items = new BigArray<T>(0);
-				} else {
-					items = new BigArray<T>(count);
-					var array = new T[count];
-					c.CopyTo(array, 0);
+			if (collection == null)
+				throw new ArgumentNullException("collection");
 
-					for (int i = 0; i < array.Length; i++) {
-						items[i] = array[i];
-					}
-
-					size = count;
-				}
+			var collectionObj = collection as ICollection<T>;
+			if (collectionObj != null) {
+				var count = collectionObj.Count;
+				_items = new BigArray<T>(count);
+				var index = 0;
+				foreach (var item in collectionObj)
+					_items[index++] = item;
+				_size = count;
 			} else {
-				size = 0;
-				items = new BigArray<T>(0);
-				AddEnumerable(collection);
+				_size = 0;
+				_items = new BigArray<T>(DefaultCapacity);
+				using (var enumerator = collection.GetEnumerator()) {
+					while (enumerator.MoveNext())
+						Add(enumerator.Current);
+				}
 			}
 		}
 
+		/// <summary>
+		///     Initialize a new big list with a collection and known size.
+		/// </summary>
+		/// <param name="collection">Items to add</param>
+		/// <param name="collectionCount">Size of list</param>
+		public BigList(IEnumerable<T> collection, long collectionCount) {
+			if (collection == null)
+				throw new ArgumentNullException("collection");
+			if (collectionCount < 0)
+				throw new ArgumentException("Cannot make new big list with < 0 items", "collectionCount");
+			_items = new BigArray<T>(collectionCount);
+			var index = 0;
+			foreach (var item in collection)
+				_items[index++] = item;
+			_size = collectionCount;
+		}
+
+		#endregion
+
+		#region Properties
+
+		/// <summary>
+		///     Gets or sets the capacity.
+		/// </summary>
 		public long Capacity {
-			get { return items.Length; }
+			get => _items.Length;
 			set {
-				if (value != items.Length) {
-					if (value > 0) {
-						var newItems = new BigArray<T>(value);
-						if (size > 0) {
-							BigArray<T>.Copy(items, 0, newItems, 0, size);
-						}
-						items = newItems;
-					} else {
-						items = new BigArray<T>(0);
-					}
+				if (value < _size)
+					throw new ArgumentOutOfRangeException("value");
+				if (value != _items.Length)
+					if (value > 0)
+						if (_size == 0)
+							_items = new BigArray<T>(value);
+						else
+							_items.Resize(value);
+					else
+						_items = _emptyArray;
+			}
+		}
+
+		/// <summary>
+		///     Gets or sets the number of elements present in the BigList.
+		/// </summary>
+		public long Count => _size;
+
+		#endregion
+
+		#region Methods
+
+		/// <summary>
+		///     Searches for the specified object and returns the zero-based index of the
+		///     first occurrence within the entire BigList.
+		/// </summary>
+		/// <param name="item">
+		///     The object to locate in the BigList. The value
+		///     can be null for reference types.
+		/// </param>
+		/// <returns>
+		///     The zero-based index of the first occurrence of item within the entire BigList,
+		///     if found; otherwise, –1.
+		/// </returns>
+		public long IndexOf(T item) {
+			return _items.IndexOf(item, 0, _size);
+		}
+
+		/// <summary>
+		///     Searches for the specified object and returns the zero-based index of the
+		///     first occurrence within the range of elements in the BigList
+		///     that extends from the specified index to the last element.
+		/// </summary>
+		/// <param name="item">
+		///     The object to locate in the BigList. The value
+		///     can be null for reference types.
+		/// </param>
+		/// <param name="startIndex">
+		///     The zero-based starting index of the search. 0 (zero)
+		///     is valid in an empty BigList.
+		/// </param>
+		/// <returns>
+		///     The zero-based index of the first occurrence of item within the range of
+		///     elements in the BigList that extends from index to the last element,
+		///     if found; otherwise, –1.
+		/// </returns>
+		public long IndexOf(T item, long startIndex) {
+			return _items.IndexOf(item, startIndex, _size - startIndex);
+		}
+
+		/// <summary>
+		///     Searches for the specified object and returns the zero-based index of the
+		///     first occurrence within the range of elements in the BigList
+		///     that starts at the specified index and contains the specified number of elements.
+		/// </summary>
+		/// <param name="item">
+		///     The object to locate in the BigList. The value
+		///     can be null for reference types.
+		/// </param>
+		/// <param name="startIndex">
+		///     The zero-based starting index of the search. 0 (zero) is valid in an empty
+		///     BigList.
+		/// </param>
+		/// <param name="count">The number of elements in the section to search.</param>
+		/// <returns>
+		///     The zero-based index of the first occurrence of item within the range of
+		///     elements in the BigList that starts at index and
+		///     contains count number of elements, if found; otherwise, –1.
+		/// </returns>
+		public long IndexOf(T item, long startIndex, long count) {
+			if (count > _size - startIndex)
+				throw new ArgumentOutOfRangeException("count");
+
+			return _items.IndexOf(item, startIndex, count);
+		}
+
+		/// <summary>
+		///     Inserts an element into the BigList at the specified index.
+		/// </summary>
+		/// <param name="index">The zero-based index at which item should be inserted.</param>
+		/// <param name="item">The object to insert. The value can be null for reference types.</param>
+		public void Insert(long index, T item) {
+			if (index > _size)
+				throw new ArgumentOutOfRangeException("index");
+
+			if (_size == _items.Length)
+				EnsureCapacity(_size + 1);
+
+			if (index < _size)
+				for (var i = _size; i > index; i--)
+					_items[i] = _items[i - 1];
+
+			_items[index] = item;
+			_size++;
+		}
+
+		/// <summary>
+		///     Removes the element at the specified index of the BigList.
+		/// </summary>
+		/// <param name="index">The zero-based index of the element to remove.</param>
+		public void RemoveAt(long index) {
+			if (index >= _size)
+				throw new ArgumentOutOfRangeException("index");
+			_size--;
+			if (index < _size)
+				for (var i = index; i < _size; i++)
+					_items[i] = _items[i + 1];
+
+			_items[_size] = default(T);
+		}
+
+		/// <summary>
+		///     Gets or sets the element at the specified index.
+		/// </summary>
+		/// <param name="index">The zero-based index of the element to get or set.</param>
+		/// <returns>The element at the specified index.</returns>
+		public T this[long index] {
+			get {
+				if (index >= _size)
+					throw new ArgumentOutOfRangeException("index");
+				return _items[index];
+			}
+			set {
+				if (index >= _size)
+					throw new ArgumentOutOfRangeException("index");
+
+				_items[index] = value;
+			}
+		}
+
+		/// <summary>
+		///     Adds an object to the end of the BigList.
+		/// </summary>
+		/// <param name="item">The object to be added to the end of the BigList.</param>
+		public void Add(T item) {
+			if (_size == _items.Length)
+				EnsureCapacity(_size + 1);
+			_items[_size++] = item;
+		}
+
+		public void AddRange(IEnumerable<T> collection) {
+			var collectionObj = collection as ICollection<T>;
+			if (collectionObj != null) {
+				var count = collectionObj.Count;
+				EnsureCapacity(_size + count);
+
+				var index = _size;
+				foreach (var item in collectionObj)
+					_items[index++] = item;
+				_size += count;
+			} else if (collection is BigList<T>) {
+				var bigList = (BigList<T>) collection;
+				var count = bigList.Count;
+
+				EnsureCapacity(_size + count);
+				var index = _size;
+				foreach (var item in bigList)
+					_items[index++] = item;
+				_size += count;
+			} else if (collection is BigArray<T>) {
+				var array = (BigArray<T>) collection;
+				var count = array.Length;
+				EnsureCapacity(_size + count);
+				var index = _size;
+				foreach (var item in array)
+					_items[index++] = item;
+
+				_size += count;
+			} else {
+				using (var enumerator = collection.GetEnumerator()) {
+					while (enumerator.MoveNext())
+						Add(enumerator.Current);
 				}
 			}
 		}
 
-		private void Allocate(int itemCount) {
-			if (size + itemCount > items.Length) {
-				var capacity = itemCount + Capacity;
-				Capacity = capacity;
+		/// <summary>
+		///     Removes all elements from the BigList.
+		/// </summary>
+		public void Clear() {
+			if (_size > 0) {
+				_items.Clear();
+				_size = 0;
 			}
 		}
 
-		private void AddEnumerable(IEnumerable<T> enumerable) {
-			using (IEnumerator<T> en = enumerable.GetEnumerator()) {
-				version++;
-
-				while (en.MoveNext()) {
-					// Capture Current before doing anything else. If this throws
-					// an exception, we want to make a clean break.
-					T current = en.Current;
-
-					Allocate(1);
-
-					items[size++] = current;
-				}
-			}
+		/// <summary>
+		///     Determines whether an element is in the BigList.
+		/// </summary>
+		/// <param name="item">The object to locate in the BigList.</param>
+		/// <returns>true if item is found in the BigList, else false.</returns>
+		public bool Contains(T item) {
+			return _items.IndexOf(item, 0, _size) >= 0;
 		}
 
+		/// <summary>
+		///     Copies a range of elements from the BigList to a compatible one-dimensional array.
+		/// </summary>
+		/// <param name="index">
+		///     The zero-based index in the source BigList at
+		///     which copying begins.
+		/// </param>
+		/// <param name="destinationArray">
+		///     The one-dimensional array that is the destination of the elements
+		///     copied from BigList.
+		/// </param>
+		/// <param name="count">The number of elements to copy.</param>
+		public void CopyTo(long index, T[] destinationArray, long count) {
+			CopyTo(index, destinationArray, 0, count);
+		}
+
+		/// <summary>
+		///     Copies a range of elements from the BigList to a compatible one-dimensional array,
+		///     starting at the specified index of the destination array.
+		/// </summary>
+		/// <param name="index">
+		///     The zero-based index in the source BigList at
+		///     which copying begins.
+		/// </param>
+		/// <param name="destinationArray">
+		///     The one-dimensional array that is the destination of the elements
+		///     copied from BigList.
+		/// </param>
+		/// <param name="destinationIndex">The zero-based index in destinationArray at which copying begins.</param>
+		/// <param name="count">The number of elements to copy.</param>
+		public void CopyTo(long index, T[] destinationArray, int destinationIndex, long count) {
+			if (count > Count - index)
+				throw new ArgumentOutOfRangeException("count");
+
+			_items.CopyTo(index, destinationArray, destinationIndex, count);
+		}
+
+		/// <summary>
+		///     Removes the first occurrence of a specific object from the BigList.
+		/// </summary>
+		/// <param name="item">The object to remove from the BigList.</param>
+		/// <returns>
+		///     true if item is successfully removed; otherwise, false. This method also
+		///     returns false if item was not found in the BigList.
+		/// </returns>
+		public bool Remove(T item) {
+			var index = IndexOf(item);
+			if (index != -1)
+				RemoveAt(index);
+
+			return index != -1;
+		}
+
+		/// <summary>
+		///     Sets the capacity to the actual number of elements in the BigList,
+		///     if that number is less than a threshold value.
+		/// </summary>
+		public void TrimExcess() {
+			var num = (long) (_items.Length * 0.9);
+			if (_size < num)
+				Capacity = _size;
+		}
+
+		/// <summary>
+		///     Trims the list and removes all elements above newSize
+		/// </summary>
+		/// <param name="newSize">size of new array</param>
+		public void TrimToSize(long newSize) {
+			if (newSize > Count || newSize < 0)
+				throw new ArgumentException("Cannot trim BigList class to value less than 0 or larger than original size", nameof(newSize));
+			_items.Resize(newSize);
+			_size = newSize;
+		}
+
+		/// <summary>
+		///     Performs the specified action on each element of the BigList.
+		/// </summary>
+		/// <param name="action">The delegate to perform on each element of the BigList.</param>
+		public void ForEach(Action<T> action) {
+			if (action == null)
+				throw new ArgumentNullException("action");
+
+			for (var i = 0; i < _size; i++)
+				action(_items[i]);
+		}
+
+		/// <summary>
+		///     Returns an enumerator that iterates through the BigList.
+		/// </summary>
 		public IEnumerator<T> GetEnumerator() {
-			return new Enumerator(this);
+			for (long i = 0; i < _size; i++)
+				yield return this[i];
 		}
 
+		/// <summary>
+		///     Returns an enumerator that iterates through the BigList.
+		/// </summary>
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(T item) {
-			var array = items;
-			var size = this.size;
-			version++;
-			if ((ulong)size < (ulong)array.Length) {
-				this.size = size + 1;
-				array[size] = item;
-			} else {
-				AddWithResize(item);
-			}
+		public void Sort() {
+			BigArraySortUtil<T>.QuickSort(_items, 0, Count - 1);
 		}
 
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		private void AddWithResize(T item) {
-			var size = this.size;
-			Allocate(1);
-			this.size = size + 1;
-			items[size] = item;
-		}
-
-		public void AddRange(IEnumerable<T> collection) {
-			InsertRange(size, collection);
-		}
-
-		public void InsertRange(long index, IEnumerable<T> collection) {
-			if (collection == null) {
-				throw new ArgumentNullException(nameof(collection));
-			}
-
-			if ((ulong)index > (ulong)size) {
-				throw new ArgumentOutOfRangeException(nameof(index));
-			}
-
-			ICollection<T> c = collection as ICollection<T>;
-			if (c != null) {    // if collection is ICollection<T>
-				int count = c.Count;
-				if (count > 0) {
-					Allocate(count);
-
-					if (index < size) {
-						BigArray<T>.Copy(items, index, items, index + count, size - index);
-					}
-
-					// If we're inserting a List into itself, we want to be able to deal with that.
-					if (this == c) {
-						// Copy first part of _items to insert location
-						BigArray<T>.Copy(items, 0, items, index, index);
-						// Copy last part of _items back to inserted location
-						BigArray<T>.Copy(items, index + count, items, index * 2, size - index);
-					} else {
-						var array = new T[c.Count];
-						c.CopyTo(array, (int) index);
-						for (int i = 0; i < array.Length; i++) {
-							items[i] = array[i];
-						}
-					}
-					size += count;
+		// Ensures the capacity.
+		private void EnsureCapacity(long minCapacityRequired) {
+			if (_items.Length < minCapacityRequired) {
+				long newCapacity = 0;
+				if (_items.Length == 0) {
+					newCapacity = DefaultCapacity;
+				} else if (_items.Length * 2 < _items.BlockSize) {
+					newCapacity = _items.Length * 2;
+				} else {
+					var rem = _items.Length % _items.BlockSize;
+					if (rem > 0)
+						newCapacity = _items.Length + rem;
+					else
+						newCapacity = _items.Length + _items.BlockSize;
 				}
-			} else if (index < size) {
-				// We're inserting a lazy enumerable. Call Insert on each of the constituent items.
-				using (IEnumerator<T> en = collection.GetEnumerator()) {
-					while (en.MoveNext()) {
-						Insert(index++, en.Current);
-					}
-				}
-			} else {
-				// We're adding a lazy enumerable because the index is at the end of this list.
-				AddEnumerable(collection);
-			}
-			version++;
-		}
 
-		public void Clear() {
-			var size = this.size;
-			this.size = 0;
-			version++;
-			if (size > 0) {
-				BigArray<T>.Clear(items, 0, size); // Clear the elements so that the gc can reclaim the references.
-			}
-		}
+				if (newCapacity < minCapacityRequired)
+					newCapacity = minCapacityRequired;
 
-		public bool Contains(T item) {
-			return size != 0 && IndexOf(item) != -1;
-		}
-
-		public void CopyTo(T[] array, int arrayIndex) {
-			if ((array != null) && (array.Rank != 1))
-				throw new ArgumentException();
-
-			try {
-				items.CopyTo(0, array, arrayIndex, size);
-			} catch (ArrayTypeMismatchException) {
-				throw new ArgumentException();
-			}
-		}
-
-		public bool Remove(T item) {
-			var index = IndexOf(item);
-			if (index >= 0) {
-				RemoveAt(index);
-				return true;
-			}
-
-			return false;
-		}
-
-		int ICollection<T>.Count => (int) Count;
-
-		public long Count => size;
-
-		bool ICollection<T>.IsReadOnly => false;
-
-		int IList<T>.IndexOf(T item) {
-			return (int) IndexOf(item);
-		}
-
-		public long IndexOf(T item) {
-			return items.IndexOf(item, 0, size);
-		}
-
-		void IList<T>.Insert(int index, T item) {
-			Insert(index, item);
-		}
-
-		public void Insert(long index, T item) {
-			Allocate(1);
-
-			if (index < size)
-				BigArray<T>.Copy(items, index, items, index + 1, size - index);
-
-			items[index] = item;
-			size++;
-			version++;
-		}
-
-		void IList<T>.RemoveAt(int index) {
-			RemoveAt(index);
-		}
-
-		public void RemoveAt(long index) {
-			if ((ulong)index >= (ulong)size)
-				throw new ArgumentOutOfRangeException(nameof(index));
-
-			size--;
-			if (index < size) {
-				BigArray<T>.Copy(items, index + 1, items, index, size - index);
-			}
-			version++;
-		}
-
-		T IList<T>.this[int index] {
-			get { return this[index]; }
-			set { this[index] = value; }
-		}
-
-		public T this[long index] {
-			get {
-				if (index < 0 || index > size)
-					throw new ArgumentOutOfRangeException(nameof(index));
-
-				return items[index];
-			}
-			set {
-				if (index < 0 || index > size)
-					throw new ArgumentOutOfRangeException(nameof(index));
-
-				items[index] = value;
-				version++;
-			}
-		}
-
-		#region Enumerator
-
-		class Enumerator : IEnumerator<T> {
-			private readonly BigList<T> list;
-			private long offset;
-			private long count;
-			private int version;
-
-			public Enumerator(BigList<T> list) {
-				this.list = list;
-				Reset();
-			}
-
-			private void AssertVersion() {
-				if (version != list.version)
-					throw new InvalidOperationException();
-			}
-
-			public bool MoveNext() {
-				AssertVersion();
-				return ++offset < count;
-			}
-
-			public void Reset() {
-				count = list.size;
-				offset = -1;
-				version = list.version;
-			}
-
-			public T Current {
-				get {
-					AssertVersion();
-					return list.items[offset];
-				}
-			}
-
-			object IEnumerator.Current {
-				get { return Current; }
-			}
-
-			public void Dispose() {
+				Capacity = newCapacity;
 			}
 		}
 

@@ -18,7 +18,7 @@
 using System;
 
 namespace Deveel.Data.Sql.Expressions {
-	public sealed class SqlQueryExpressionItem : ISqlFormattable {
+	public sealed class SqlQueryExpressionItem : ISqlFormattable, ISqlExpressionPreparable<SqlQueryExpressionItem> {
 		public SqlQueryExpressionItem(SqlExpression expression) 
 			: this(expression, null) {
 		}
@@ -43,6 +43,13 @@ namespace Deveel.Data.Sql.Expressions {
 		public bool IsAll => Expression is SqlReferenceExpression &&
 		                     ((SqlReferenceExpression) Expression).ReferenceName.FullName == ObjectName.Glob.ToString();
 
+		public bool IsGlob => Expression is SqlReferenceExpression &&
+			                      ((SqlReferenceExpression) Expression).ReferenceName.Name == ObjectName.Glob.ToString();
+
+		public ObjectName TableNamePart => IsGlob && !IsAll
+			? ((SqlReferenceExpression) Expression).ReferenceName.Parent
+			: null;
+
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			if (IsAll) {
 				builder.Append("*");
@@ -52,6 +59,12 @@ namespace Deveel.Data.Sql.Expressions {
 				if (IsAliased)
 					builder.AppendFormat(" AS {0}", Alias);
 			}
+		}
+
+		SqlQueryExpressionItem ISqlExpressionPreparable<SqlQueryExpressionItem>.Prepare(ISqlExpressionPreparer preparer) {
+			var exp = Expression.Prepare(preparer);
+
+			return new SqlQueryExpressionItem(exp, Alias);
 		}
 	}
 }
