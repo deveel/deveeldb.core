@@ -93,7 +93,7 @@ namespace Deveel.Data {
 			return false;
 		}
 
-		public static async Task<IDbObjectInfo> GetObjectInfo(this IContext context, DbObjectType objectType, ObjectName objectName) {
+		public static async Task<IDbObjectInfo> GetObjectInfoAsync(this IContext context, DbObjectType objectType, ObjectName objectName) {
 			var managers = context.GetObjectManagers(objectType);
 			foreach (var manager in managers) {
 				var objInfo = await manager.GetObjectInfoAsync(objectName);
@@ -119,10 +119,9 @@ namespace Deveel.Data {
 		public static Task<ObjectName> ResolveNameAsync(this IContext context, ObjectName objectName) {
 			var ignoreCase = context.GetValue("ignoreCase", true);
 
-			var name = context.QualifyName(objectName);
 			var managers = context.GetObjectManagers();
 			foreach (var manager in managers) {
-				var resolved = manager.ResolveNameAsync(name, ignoreCase);
+				var resolved = manager.ResolveNameAsync(objectName, ignoreCase);
 				if (resolved != null)
 					return resolved;
 			}
