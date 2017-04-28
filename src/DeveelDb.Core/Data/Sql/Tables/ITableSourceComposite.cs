@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Tables {
 	public interface ITableSourceComposite {
-		ITableSource CreateTableSource(TableInfo tableInfo, bool temporary);
+		Task<ITableSource> CreateTableSourceAsync(TableInfo tableInfo);
 
-		ITableSource GetTableSource(int tableId);
+		Task<ITableSource> GetTableSourceAsync(int tableId);
 	}
 }

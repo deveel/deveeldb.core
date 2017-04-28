@@ -1,31 +1,31 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Indexes;
 using Deveel.Data.Transactions;
 
 namespace Deveel.Data.Sql.Tables {
 	public interface ITableSource : IDisposable {
-		long CurrentUniqueId { get; }
-
-
-		void SetUniqueId(long value);
-
-		long GetNextUniqueId();
-
 		int TableId { get; }
 
 		TableInfo TableInfo { get; }
 
-		IIndexSet<SqlObject,long> CreateIndexSet();
+
+		Task<long> GetCurrentUniqueIdAsync();
+
+		Task SetUniqueIdAsync(long value);
+
+		Task<long> GetNextUniqueIdAsync();
+
+		Task<IIndexSet<SqlObject,long>> CreateIndexSetAsync();
 
 
-		IMutableTable CreateTransactionTable(ITransaction transaction);
+		Task<IMutableTable> CreateTableAsync(IContext context);
 
-		long AddRow(Row row);
+		Task<long> AddRowAsync(Row row);
 
-		RecordState WriteRecordState(long rowNumber, RecordState recordState);
+		Task<RecordState> WriteRecordStateAsync(long rowNumber, RecordState recordState);
 
-		void BuildIndexes();
-
+		Task BuildIndexesAsync();
 	}
 }
