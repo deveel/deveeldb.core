@@ -2,11 +2,14 @@
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Services;
+using Deveel.Data.Sql.Expressions;
 using Deveel.Data.Sql.Methods;
 using Deveel.Data.Sql.Query.Plan;
 using Deveel.Data.Sql.Tables;
 
 using Moq;
+
+using Xunit;
 
 namespace Deveel.Data.Sql.Query {
 	public class QueryPlannerTests : IDisposable {
@@ -47,6 +50,40 @@ namespace Deveel.Data.Sql.Query {
 
 			container.Register<IMethodResolver, SystemFunctionProvider>();
 			container.Register<IQueryPlanner, DefaultQueryPlanner>();
+		}
+
+		[Fact]
+		public async void SortResult() {
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(ObjectName.Parse("sys.tab1"));
+
+			var planner = context.ResolveService<IQueryPlanner>();
+			var node = await planner.PlanAsync(context,
+				new QueryInfo(query, new[] {new SortColumn(SqlExpression.Reference(new ObjectName("a")), false)}));
+
+			var result = await node.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(2, result.RowCount);
+
+			var value1 = await result.GetValueAsync(0, 0);
+			Assert.Equal(SqlObject.Integer(98), value1);
+		}
+
+		[Fact]
+		public async void LimitResult() {
+			var query = new SqlQueryExpression();
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
+			query.From.Table(ObjectName.Parse("sys.tab1"));
+
+			var planner = context.ResolveService<IQueryPlanner>();
+			var node = await planner.PlanAsync(context, new QueryInfo(query, new QueryLimit(1)));
+
+			var result = await node.ReduceAsync(context);
+
+			Assert.NotNull(result);
+			Assert.Equal(1, result.RowCount);
 		}
 
 		public void Dispose() {
