@@ -107,9 +107,9 @@ namespace Deveel.Data.Sql.Methods {
 				foreach (var methodParam in methodParams) {
 					if (!result.ContainsKey(methodParam.Key)) {
 						var paramInfo = methodParam.Value;
-						if (!paramInfo.HasDefaultValue)
+						if (paramInfo.IsRequired)
 							throw new InvalidOperationException(
-								$"The invoke to {methodInfo.MethodName} has no value for parameter {paramInfo.Name} and the parameter has no default value");
+								$"The invoke to {methodInfo.MethodName} has no value for required parameter {paramInfo.Name} and no default value was set");
 
 						result[methodParam.Key] = paramInfo.DefaultValue;
 					}

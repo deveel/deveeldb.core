@@ -74,13 +74,13 @@ namespace Deveel.Data.Sql.Methods {
 			}
 		}
 
-		public Task<SqlMethodResult> ExecuteAsync(IContext context, params InvokeArgument[] args) {
+		public async Task<SqlMethodResult> ExecuteAsync(IContext context, params InvokeArgument[] args) {
 			var invoke = new Invoke(MethodInfo.MethodName);
 			foreach (var arg in args) {
 				invoke.Arguments.Add(arg);
 			}
 
-			return ExecuteAsync(context, invoke);
+			return await ExecuteAsync(context, invoke);
 		}
 
 		public Task<SqlMethodResult> ExecuteAsync(IContext context, params SqlExpression[] args) {
