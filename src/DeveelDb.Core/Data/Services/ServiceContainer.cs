@@ -34,9 +34,7 @@ namespace Deveel.Data.Services {
 
 				ScopeName = scopeName;
 			} else {
-				container = new Container(Rules.Default
-					.WithTrackingDisposableTransients()
-					.WithDefaultReuseInsteadOfTransient(Reuse.Singleton));
+				container = new Container(Rules.Default);
 			}
 
 			IsReadOnly = readOnly;
@@ -129,6 +127,8 @@ namespace Deveel.Data.Services {
 					var implementationType = registration.ImplementationType;
 
 					var reuse = Reuse.Singleton;
+					if (!String.IsNullOrEmpty(ScopeName))
+						reuse = Reuse.InCurrentNamedScope(ScopeName);
 					if (!String.IsNullOrEmpty(registration.Scope))
 						reuse = Reuse.InCurrentNamedScope(registration.Scope);
 

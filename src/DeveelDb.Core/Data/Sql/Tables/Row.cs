@@ -20,6 +20,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Tables {
@@ -122,7 +123,9 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public async Task<SqlExpression> ReduceExpressionAsync(IContext context, SqlExpression expression) {
-			using (var rowContext = context.Create($"row_{Id}", scope => scope.AddReferenceResolver(GetResolver()))) {
+			using (var rowContext = context.Create($"row_{Id}", scope => {
+				scope.AddReferenceResolver(GetResolver());
+			})) {
 				return await expression.ReduceAsync(rowContext);
 			}
 		}
