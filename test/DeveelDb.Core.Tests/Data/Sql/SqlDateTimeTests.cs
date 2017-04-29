@@ -2,6 +2,8 @@
 using System.Globalization;
 using System.Linq;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -28,6 +30,24 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(second, date.Second);
 			Assert.Equal(millis, date.Millisecond);
 			Assert.Equal(offset, date.Offset);
+		}
+
+		[Theory]
+		[InlineData(2012, 12, 01, 07, 16, 22, 556, 2, 0)]
+		public static void Serialize(int year,
+			int month,
+			int day,
+			int hour,
+			int minute,
+			int second,
+			int millis,
+			int offsetHour,
+			int offsetMinute) {
+			var offset = new SqlDayToSecond(offsetHour, offsetMinute, 0);
+			var date = new SqlDateTime(year, month, day, hour, minute, second, millis, offset);
+
+			var result = BinarySerializeUtil.Serialize(date);
+			Assert.Equal(date, result);
 		}
 
 		[Theory]

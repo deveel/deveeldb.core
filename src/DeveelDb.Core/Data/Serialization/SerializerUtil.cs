@@ -27,6 +27,10 @@ namespace Deveel.Data.Serialization {
 		}
 
 		public static PrimitiveTypeCode GetPrimitiveCode(Type type) {
+			var nullableType = Nullable.GetUnderlyingType(type);
+			if (nullableType != null)
+				return GetPrimitiveCode(nullableType);
+
 			if (type == typeof(bool))
 				return PrimitiveTypeCode.Boolean;
 			if (type == typeof(byte))
@@ -57,28 +61,57 @@ namespace Deveel.Data.Serialization {
 			throw new NotSupportedException($"The type {type} is not primitive");
 		}
 
-		public static ObjectTypeCode GetObjectTypeCode(Type objecType) {
-			if (objecType.IsArray)
+		public static ObjectTypeCode GetObjectTypeCode(Type objectType, object obj) {
+			if (objectType.IsArray)
 				return ObjectTypeCode.Array;
-			if (IsPrimitive(objecType))
+			if (IsPrimitive(objectType))
 				return ObjectTypeCode.Primitive;
-			if (IsList(objecType))
+			if (IsNullable(objectType)) {
+				var underlyingType = Nullable.GetUnderlyingType(objectType);
+				return GetObjectTypeCode(underlyingType, obj);
+			}
+			if (objectType.GetTypeInfo().IsEnum)
+				return ObjectTypeCode.Enum;
+			if (IsList(objectType))
 				return ObjectTypeCode.List;
-			if (IsDictionary(objecType))
+			if (IsDictionary(objectType))
 				return ObjectTypeCode.Dictionary;
 
-			if (typeof(ISerializable).GetTypeInfo().IsAssignableFrom(objecType.GetTypeInfo()))
+			if (IsSerializable(objectType, obj))
 				return ObjectTypeCode.Serializable;
 
-			if (objecType == typeof(object))
+			if (objectType == typeof(object))
 				return ObjectTypeCode.Object;
 
-			throw new NotSupportedException($"The type {objecType} is not serializable");
+			throw new NotSupportedException($"The type {objectType} is not serializable");
+		}
+
+		public static bool IsSerializable(Type objectType, object obj) {
+			if (typeof(ISerializable).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo()))
+				return true;
+
+			if (!IsInstantiable(objectType)) {
+				if (obj == null)
+					return false;
+
+				return IsSerializable(obj.GetType(), null);
+			}
+
+			return false;
+		}
+
+		public static bool IsInstantiable(Type objectType) {
+			return !objectType.GetTypeInfo().IsAbstract &&
+			       !objectType.GetTypeInfo().IsInterface;
 		}
 
 		public static bool IsPrimitive(Type type) {
 			return type.GetTypeInfo().IsPrimitive ||
 			       type == typeof(string);
+		}
+
+		public static bool IsNullable(Type type) {
+			return Nullable.GetUnderlyingType(type) != null;
 		}
 
 		public static Type GetObjectType(PrimitiveTypeCode typeCode) {

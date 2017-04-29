@@ -18,6 +18,8 @@
 using System;
 using System.Diagnostics;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	/// <summary>
 	/// An SQL object handling a single-byte value that represents
@@ -74,6 +76,10 @@ namespace Deveel.Data.Sql {
 			: this((byte) (value ? 1 : 0)) {
 		}
 
+		private SqlBoolean(SerializationInfo info) {
+			value = info.GetByte("value");
+		}
+
 		int IComparable.CompareTo(object obj) {
 			if (!(obj is ISqlValue))
 				throw new ArgumentException();
@@ -128,6 +134,10 @@ namespace Deveel.Data.Sql {
 		/// <inheritdoc/>
 		public bool Equals(SqlBoolean other) {
 			return value.Equals(other.value);
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("value", value);
 		}
 
 		private SqlBoolean Negate() {

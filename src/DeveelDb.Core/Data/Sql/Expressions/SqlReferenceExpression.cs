@@ -18,6 +18,7 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -30,12 +31,21 @@ namespace Deveel.Data.Sql.Expressions {
 			ReferenceName = reference;
 		}
 
+		private SqlReferenceExpression(SerializationInfo info)
+			: base(info) {
+			ReferenceName = info.GetValue<ObjectName>("ref");
+		}
+
 		public ObjectName ReferenceName { get; }
 
 		public override bool IsReference => true;
 
 		protected override void AppendTo(SqlStringBuilder builder) {
 			ReferenceName.AppendTo(builder);
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("ref", ReferenceName);
 		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {

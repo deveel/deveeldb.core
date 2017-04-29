@@ -17,6 +17,7 @@
 
 using System;
 
+using Deveel.Data.Serialization;
 using Deveel.Math;
 
 namespace Deveel.Data.Sql {
@@ -42,6 +43,12 @@ namespace Deveel.Data.Sql {
 
 			Precision = precision;
 			Scale = scale;
+		}
+
+		private SqlNumericType(SerializationInfo info)
+			: base(info) {
+			Precision = info.GetInt32("precision");
+			Scale = info.GetInt32("scale");
 		}
 
 		public int Precision { get; }
@@ -483,6 +490,11 @@ namespace Deveel.Data.Sql {
 			var y = (SqlNumber)b;
 
 			return x ^ y;
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("precision", Precision);
+			info.SetValue("scale", Scale);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

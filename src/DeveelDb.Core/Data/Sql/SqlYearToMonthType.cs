@@ -17,10 +17,16 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlYearToMonthType : SqlType {
 		public SqlYearToMonthType()
 			: base(SqlTypeCode.YearToMonth) {
+		}
+
+		private SqlYearToMonthType(SerializationInfo info)
+			: base(info) {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {

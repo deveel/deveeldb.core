@@ -17,6 +17,8 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	/// <summary>
 	/// A month span representation of time.
@@ -31,6 +33,10 @@ namespace Deveel.Data.Sql {
 
 		public SqlYearToMonth(int years, int months)
 			: this((years * 12) + months) {
+		}
+
+		private SqlYearToMonth(SerializationInfo info) {
+			months = info.GetInt32("months");
 		}
 
 		int IComparable.CompareTo(object obj) {
@@ -70,6 +76,10 @@ namespace Deveel.Data.Sql {
 			get {
 				return ((double) months / 12);
 			}
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("months", months);
 		}
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {

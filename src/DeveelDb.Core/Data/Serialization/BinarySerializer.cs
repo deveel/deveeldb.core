@@ -2,12 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-
-using DryIoc;
 
 namespace Deveel.Data.Serialization {
 	public sealed class BinarySerializer {
@@ -19,6 +15,10 @@ namespace Deveel.Data.Serialization {
 			if (obj == null)
 				return;
 
+			if (!SerializerUtil.IsInstantiable(objectType)) {
+				writer.Write(obj.GetType().AssemblyQualifiedName);
+			}
+
 			var info = new SerializationInfo(objectType);
 			((ISerializable) obj).GetObjectData(info);
 
@@ -29,8 +29,17 @@ namespace Deveel.Data.Serialization {
 			}
 		}
 
+		private static void WriteEnum(BinaryWriter writer, Type enumType, object obj) {
+			writer.Write(enumType.AssemblyQualifiedName);
+
+			var underlyingType = Enum.GetUnderlyingType(enumType);
+			var primitiveValue = Convert.ChangeType(obj, underlyingType);
+
+			WritePrimitive(writer, underlyingType, primitiveValue);
+		}
+
 		private static void WriteObject(BinaryWriter writer, Type objectType, object obj) {
-			var objTypeCode = SerializerUtil.GetObjectTypeCode(objectType);
+			var objTypeCode = SerializerUtil.GetObjectTypeCode(objectType, obj);
 			writer.Write((byte)objTypeCode);
 
 			writer.Write(obj == null ? (byte)0 : (byte)1);
@@ -44,6 +53,9 @@ namespace Deveel.Data.Serialization {
 					break;
 				case ObjectTypeCode.Primitive:
 					WritePrimitive(writer, objectType, obj);
+					break;
+				case ObjectTypeCode.Enum:
+					WriteEnum(writer, objectType, obj);
 					break;
 				case ObjectTypeCode.Array:
 					WriteArray(writer, objectType, obj);
@@ -64,7 +76,7 @@ namespace Deveel.Data.Serialization {
 				return;
 
 			var objType = obj.GetType();
-			var typeCode = SerializerUtil.GetObjectTypeCode(objType);
+			var typeCode = SerializerUtil.GetObjectTypeCode(objType, obj);
 			writer.Write((byte)typeCode);
 
 			switch (typeCode) {
@@ -73,6 +85,9 @@ namespace Deveel.Data.Serialization {
 					break;
 				case ObjectTypeCode.Primitive:
 					WritePrimitive(writer, objType, obj);
+					break;
+				case ObjectTypeCode.Enum:
+					WriteEnum(writer, objType, obj);
 					break;
 				case ObjectTypeCode.Array:
 					WriteArray(writer, objType, obj);
@@ -89,7 +104,7 @@ namespace Deveel.Data.Serialization {
 		}
 
 		private static void WriteGenericTypeArgument(BinaryWriter writer, Type type) {
-			var objTypeCode = SerializerUtil.GetObjectTypeCode(type);
+			var objTypeCode = SerializerUtil.GetObjectTypeCode(type, null);
 			writer.Write((byte)objTypeCode);
 
 			switch (objTypeCode) {
@@ -98,6 +113,7 @@ namespace Deveel.Data.Serialization {
 					break;
 				case ObjectTypeCode.Primitive: {
 					var primitiveCode = SerializerUtil.GetPrimitiveCode(type);
+					writer.Write(SerializerUtil.IsNullable(type));
 					writer.Write((byte)primitiveCode);
 					break;
 				}
@@ -192,7 +208,7 @@ namespace Deveel.Data.Serialization {
 
 		private static void WriteArray(BinaryWriter writer, Type objectType, object obj) {
 			var elementType = objectType.GetElementType();
-			var elemTypeCode = SerializerUtil.GetObjectTypeCode(elementType);
+			var elemTypeCode = SerializerUtil.GetObjectTypeCode(elementType, obj);
 
 			writer.Write((byte)elemTypeCode);
 
@@ -230,6 +246,8 @@ namespace Deveel.Data.Serialization {
 
 		private static void WritePrimitive(BinaryWriter writer, Type objectType, object value) {
 			var code = SerializerUtil.GetPrimitiveCode(objectType);
+			var nullable = SerializerUtil.IsNullable(objectType);
+			writer.Write(nullable);
 			writer.Write((byte) code);
 
 			if (value == null)
@@ -331,6 +349,8 @@ namespace Deveel.Data.Serialization {
 			switch (objTypeCode) {
 				case ObjectTypeCode.Primitive:
 					return ReadPrimitive(reader, nullState, out objectType);
+				case ObjectTypeCode.Enum:
+					return ReadEnum(reader, nullState, out objectType);
 				case ObjectTypeCode.Serializable:
 					return ReadSerialized(reader, nullState, out objectType);
 				case ObjectTypeCode.Array:
@@ -356,6 +376,8 @@ namespace Deveel.Data.Serialization {
 			var typeCode = (ObjectTypeCode) reader.ReadByte();
 
 			switch (typeCode) {
+				case ObjectTypeCode.Enum:
+					return ReadEnum(reader, false, out objectType);
 				case ObjectTypeCode.Array:
 					return ReadArray(reader, false, out objectType);
 				case ObjectTypeCode.Serializable:
@@ -375,8 +397,10 @@ namespace Deveel.Data.Serialization {
 			var objTypeCode = (ObjectTypeCode) reader.ReadByte();
 			switch (objTypeCode) {
 				case ObjectTypeCode.Primitive: {
+					var nullable = reader.ReadBoolean();
 					var primitiveTypeCode = (PrimitiveTypeCode) reader.ReadByte();
-					return SerializerUtil.GetObjectType(primitiveTypeCode);
+					var primitiveType = SerializerUtil.GetObjectType(primitiveTypeCode);
+					return nullable ? typeof(Nullable<>).MakeGenericType(primitiveType) : primitiveType;
 				}
 				case ObjectTypeCode.Serializable:
 					return Type.GetType(reader.ReadString(), true, true);
@@ -502,6 +526,12 @@ namespace Deveel.Data.Serialization {
 			if (isNull)
 				return null;
 
+			var type = objectType;
+			if (!SerializerUtil.IsInstantiable(objectType)) {
+				var realTypeName = reader.ReadString();
+				type = Type.GetType(realTypeName, true, true);
+			}
+
 			var memberCount = reader.ReadInt32();
 			var info = new SerializationInfo(objectType);
 
@@ -509,7 +539,7 @@ namespace Deveel.Data.Serialization {
 				ReadMember(reader, info);
 			}
 
-			return SerializerUtil.CreateObject(objectType, info);
+			return SerializerUtil.CreateObject(type, info);
 		}
 
 		private static void ReadMember(BinaryReader reader, SerializationInfo info) {
@@ -520,9 +550,23 @@ namespace Deveel.Data.Serialization {
 			info.SetValue(memberName, memberType, value);
 		}
 
+		private static object ReadEnum(BinaryReader reader, bool isNull, out Type objectType) {
+			var typeName = reader.ReadString();
+			objectType = Type.GetType(typeName, true, true);
+
+			Type primitiveType;
+			var primitive = ReadPrimitive(reader, isNull, out primitiveType);
+
+			return Enum.ToObject(objectType, primitive);
+		}
+
 		private static object ReadPrimitive(BinaryReader reader, bool isNull, out Type objectType) {
+			var nullable = reader.ReadBoolean();
 			var typeCode = (PrimitiveTypeCode) reader.ReadByte();
 			objectType = SerializerUtil.GetObjectType(typeCode);
+
+			if (nullable)
+				objectType = typeof(Nullable<>).MakeGenericType(objectType);
 
 			if (isNull)
 				return null;

@@ -2,10 +2,22 @@
 using System.Globalization;
 using System.Linq;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
 	public static class SqlStringTests {
+		[Theory]
+		[InlineData("the quick brown fox")]
+		[InlineData(null)]
+		public static void Serialize(string value) {
+			var s = new SqlString(value);
+			var result = BinarySerializeUtil.Serialize(s);
+
+			Assert.Equal(s, result);
+		}
+
 		[Theory]
 		[InlineData("the quick ", "brown fox", "the quick brown fox")]
 		public static void ConcatSimplestrings(string s1, string s2, string expected) {

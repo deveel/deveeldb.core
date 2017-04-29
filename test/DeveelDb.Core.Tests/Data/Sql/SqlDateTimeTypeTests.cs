@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -28,6 +30,18 @@ namespace Deveel.Data.Sql {
 
 			var s = type.ToString();
 			Assert.Equal(expected, s);
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.Time)]
+		[InlineData(SqlTypeCode.TimeStamp)]
+		[InlineData(SqlTypeCode.DateTime)]
+		[InlineData(SqlTypeCode.Date)]
+		public static void Serialize(SqlTypeCode typeCode) {
+			var type = new SqlDateTimeType(typeCode);
+			var result = BinarySerializeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
 		}
 
 		[Theory]
