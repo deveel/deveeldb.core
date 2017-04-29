@@ -18,8 +18,6 @@
 using System;
 using System.Collections;
 
-using Deveel.Data.Serialization;
-
 using DryIoc;
 
 namespace Deveel.Data.Services {
@@ -31,12 +29,13 @@ namespace Deveel.Data.Services {
 
 		private ServiceContainer(ServiceContainer parent, string scopeName, bool readOnly) {
 			if (parent != null) {
-				container = parent.container.OpenScope(scopeName)
-					.With(rules => rules.WithDefaultReuseInsteadOfTransient(Reuse.InCurrentNamedScope(scopeName)));
+				container = parent.container.OpenScope(scopeName);
 
 				ScopeName = scopeName;
 			} else {
-				container = new Container(Rules.Default);
+				container = new Container(Rules.Default
+					.WithTrackingDisposableTransients()
+					.WithDefaultReuseInsteadOfTransient(Reuse.Singleton));
 			}
 
 			IsReadOnly = readOnly;
@@ -129,16 +128,13 @@ namespace Deveel.Data.Services {
 					var implementationType = registration.ImplementationType;
 
 					var reuse = Reuse.Singleton;
-					if (!String.IsNullOrEmpty(ScopeName))
-						reuse = Reuse.InCurrentNamedScope(ScopeName);
-
 					if (!String.IsNullOrEmpty(registration.Scope))
 						reuse = Reuse.InCurrentNamedScope(registration.Scope);
 
 					if (service == null) {
-						container.Register(serviceType, implementationType, serviceKey: serviceName, reuse: reuse);
+						container.Register(serviceType, implementationType, serviceKey: serviceName, reuse:reuse);
 					} else {
-						container.RegisterInstance(serviceType, service, serviceKey: serviceName, reuse: reuse);
+						container.RegisterInstance(serviceType, service, serviceKey: serviceName, reuse:reuse);
 					}
 				}
 			} catch(ServiceException) {

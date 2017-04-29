@@ -17,9 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-
-using Deveel.Data.Configuration;
 
 namespace Deveel.Data.Transactions {
 	public sealed class LockHandle : IDisposable {

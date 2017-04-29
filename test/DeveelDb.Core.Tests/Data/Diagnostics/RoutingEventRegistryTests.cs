@@ -30,6 +30,8 @@ namespace Deveel.Data.Diagnostics {
 			mock.SetupGet(x => x.Scope)
 				.Returns(scope);
 			mock.As<IEventSource>();
+			mock.Setup(x => x.Dispose())
+				.Callback(() => scope.Dispose());
 
 			context = mock.Object;
 
