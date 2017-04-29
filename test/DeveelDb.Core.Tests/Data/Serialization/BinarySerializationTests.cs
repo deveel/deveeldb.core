@@ -140,6 +140,7 @@ namespace Deveel.Data.Serialization {
 			private readonly int field1;
 			private readonly string field2;
 			private readonly SerializableClass subClass;
+			private readonly int? field3;
 
 			public SerializableClass(int field1, string field2, SerializableClass subClass) {
 				this.field1 = field1;
@@ -151,12 +152,14 @@ namespace Deveel.Data.Serialization {
 				field1 = info.GetInt32("field1");
 				field2 = info.GetString("field2");
 				subClass = info.GetValue<SerializableClass>("subClass");
+				field3 = info.GetValue<int?>("field3");
 			}
 
 			public void GetObjectData(SerializationInfo info) {
 				info.SetValue("field1", field1);
 				info.SetValue("field2", field2);
 				info.SetValue("subClass", subClass);
+				info.SetValue("field3", field3 ?? 0);
 			}
 		}
 

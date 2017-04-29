@@ -42,6 +42,42 @@ namespace Deveel.Data.Serialization {
 			members[memberName] = new SerializationMemberInfo(memberName, memberType, value);
 		}
 
+		public void SetValue(string memberName, bool value)
+			=> SetValue(memberName, typeof(bool), value);
+
+		public void SetValue(string memberName, byte value)
+			=> SetValue(memberName, typeof(byte), value);
+
+		public void SetValue(string memberName, short value)
+			=> SetValue(memberName, typeof(short), value);
+
+		public void SetValue(string memberName, ushort value)
+			=> SetValue(memberName, typeof(ushort), value);
+
+		public void SetValue(string memberName, int value)
+			=> SetValue(memberName, typeof(int), value);
+
+		public void SetValue(string memberName, uint value)
+			=> SetValue(memberName, typeof(uint), value);
+
+		public void SetValue(string memberName, long value)
+			=> SetValue(memberName, typeof(long), value);
+
+		public void SetValue(string memberName, ulong value)
+			=> SetValue(memberName, typeof(ulong), value);
+
+		public void SetValue(string memberName, float value)
+			=> SetValue(memberName, typeof(float), value);
+
+		public void SetValue(string memberName, double value)
+			=> SetValue(memberName, typeof(double), value);
+
+		public void SetValue(string memberName, char value)
+			=> SetValue(memberName, typeof(char), value);
+
+		public void SetValue(string memberName, string value)
+			=> SetValue(memberName, typeof(string), value);
+
 		public void SetValue<T>(string memberName, T value)
 			=> SetValue(memberName, typeof(T), value);
 
@@ -50,14 +86,22 @@ namespace Deveel.Data.Serialization {
 		}
 
 		public object GetValue(string memberName, Type type) {
+			if (type == null)
+				throw new ArgumentNullException(nameof(type));
+
 			SerializationMemberInfo memberInfo;
 			if (!members.TryGetValue(memberName, out memberInfo))
 				return null;
 
 			object value = memberInfo.Value;
 
-			if (type != null && memberInfo.MemberType != type) {
-				value = Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+			if (memberInfo.MemberType != type) {
+				var nullableType = Nullable.GetUnderlyingType(type);
+				if (nullableType != null) {
+					value = Convert.ChangeType(value, nullableType, CultureInfo.InvariantCulture);
+				} else {
+					value = Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+				}
 			}
 
 			return value;

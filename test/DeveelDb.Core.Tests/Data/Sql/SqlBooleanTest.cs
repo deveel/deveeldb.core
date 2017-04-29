@@ -2,6 +2,8 @@
 using System.ComponentModel;
 using System.Globalization;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -16,12 +18,30 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData(1)]
+		[InlineData(0)]
+		public void SerializeFromByte(byte value) {
+			var b = new SqlBoolean(value);
+			var result = BinarySerializeUtil.Serialize(b);
+			Assert.Equal(b, result);
+		}
+
+		[Theory]
 		[InlineData(true)]
 		[InlineData(false)]
 		public void CreateFromBoolean(bool value) {
 			var b = (SqlBoolean) value;
 			Assert.NotNull(b);
 			Assert.Equal(value, (bool)b);
+		}
+
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void SerializeFromBoolean(bool value) {
+			var b = (SqlBoolean)value;
+			var result = BinarySerializeUtil.Serialize(b);
+			Assert.Equal(b, result);
 		}
 
 		[Theory]

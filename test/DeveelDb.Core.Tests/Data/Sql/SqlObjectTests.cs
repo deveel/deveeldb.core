@@ -1,9 +1,25 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
 	public static class SqlObjectTests {
+		[Theory]
+		[InlineData(SqlTypeCode.Integer, -1, -1, 78484)]
+		public static void Serialize(SqlTypeCode typeCode, int precision, int scale, object value) {
+			var type = PrimitiveTypes.Type(typeCode, new {precision, size = precision, maxSize = precision, scale});
+			var sqlValue = SqlValueUtil.FromObject(value);
+
+			var obj = new SqlObject(type, sqlValue);
+			var result = BinarySerializeUtil.Serialize(obj);
+
+			Assert.Equal(obj, result);
+			Assert.Equal(type, result.Type);
+			Assert.Equal(sqlValue, result.Value);
+		}
+
 		[Fact]
 		public static void NullCheck() {
 			var obj = SqlObject.Null;

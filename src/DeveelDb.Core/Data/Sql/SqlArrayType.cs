@@ -17,6 +17,8 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlArrayType : SqlType {
 		public SqlArrayType(int length)
@@ -27,10 +29,19 @@ namespace Deveel.Data.Sql {
 			Length = length;
 		}
 
+		private SqlArrayType(SerializationInfo info)
+			: base(info) {
+			Length = info.GetInt32("length");
+		}
+
 		public int Length { get; }
 
 		public override bool IsInstanceOf(ISqlValue value) {
 			return value is SqlArray && ((SqlArray) value).Length == Length;
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("length", Length);
 		}
 
 		public override bool Equals(SqlType other) {

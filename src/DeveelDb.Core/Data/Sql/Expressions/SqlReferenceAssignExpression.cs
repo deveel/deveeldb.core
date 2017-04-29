@@ -17,7 +17,7 @@
 
 using System;
 
-using Deveel.Data.Services;
+using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlReferenceAssignExpression : SqlExpression {
@@ -32,11 +32,22 @@ namespace Deveel.Data.Sql.Expressions {
 			Value = value;
 		}
 
+		private SqlReferenceAssignExpression(SerializationInfo info)
+			: base(info) {
+			ReferenceName = info.GetValue<ObjectName>("ref");
+			Value = info.GetValue<SqlExpression>("value");
+		}
+
 		public ObjectName ReferenceName { get; }
 
 		public SqlExpression Value { get; }
 
 		public override bool IsReference => true;
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("ref", ReferenceName);
+			info.SetValue("value", Value);
+		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitReferenceAssign(this);

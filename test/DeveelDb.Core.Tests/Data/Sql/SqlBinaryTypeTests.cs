@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+
+using Deveel.Data.Serialization;
 
 using Xunit;
 
@@ -90,6 +90,16 @@ namespace Deveel.Data.Sql {
 
 			var s = type.ToString();
 			Assert.Equal(expected, s);
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.VarBinary, -1)]
+		[InlineData(SqlTypeCode.Binary, 4556)]
+		public static void Serialize(SqlTypeCode typeCode, int size) {
+			var type = new SqlBinaryType(typeCode, size);
+			var result = BinarySerializeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
 		}
 
 		[Theory]

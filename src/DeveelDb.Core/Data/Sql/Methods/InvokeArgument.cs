@@ -17,10 +17,11 @@
 
 using System;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
-	public sealed class InvokeArgument : ISqlFormattable {
+	public sealed class InvokeArgument : ISqlFormattable, ISerializable {
 		public InvokeArgument(SqlExpression value) 
 			: this(null, value) {
 		}
@@ -41,6 +42,11 @@ namespace Deveel.Data.Sql.Methods {
 			: this(parameterName, SqlExpression.Constant(value)) {
 		}
 
+		private InvokeArgument(SerializationInfo info) {
+			ParameterName = info.GetString("name");
+			Value = info.GetValue<SqlExpression>("value");
+		}
+
 		public string ParameterName { get; }
 
 		public bool IsNamed => !String.IsNullOrEmpty(ParameterName);
@@ -49,6 +55,11 @@ namespace Deveel.Data.Sql.Methods {
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("name", ParameterName);
+			info.SetValue("value", Value);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
