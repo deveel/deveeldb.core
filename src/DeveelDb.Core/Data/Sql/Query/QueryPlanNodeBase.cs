@@ -2,12 +2,20 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql;
 using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Sql.Query {
 	public abstract class QueryPlanNodeBase : IQueryPlanNode {
 		private Dictionary<string, object> metadata;
+
+		protected QueryPlanNodeBase(SerializationInfo info) {
+			metadata = info.GetValue<Dictionary<string, object>>("meta");
+		}
+
+		protected QueryPlanNodeBase() {
+		}
 
 		int IComparable.CompareTo(object obj) {
 			throw new NotSupportedException();
@@ -36,6 +44,14 @@ namespace Deveel.Data.Sql.Query {
 
 		protected virtual void GetData(IDictionary<string, object> data) {
 			
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("meta", metadata);
+			GetObjectData(info);
+		}
+
+		protected virtual void GetObjectData(SerializationInfo info) {
 		}
 
 		IDictionary<string, object> IQueryPlanNode.Data {

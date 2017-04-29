@@ -21,6 +21,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Query.Plan;
 using Deveel.Data.Sql.Tables;
 
@@ -61,7 +62,7 @@ namespace Deveel.Data.Sql.Expressions {
 		public SqlQueryExpressionComposite NextComposite { get; set; }
 
 		public override async Task<SqlExpression> ReduceAsync(IContext context) {
-			var planner = context.ResolveService<IQueryPlanner>();
+			var planner = context.Scope.Resolve<IQueryPlanner>();
 			if (planner == null)
 				throw new SqlExpressionException("Cannot reduce a SQL Query without a planner");
 

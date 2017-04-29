@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
@@ -53,6 +54,10 @@ namespace Deveel.Data.Sql.Tables {
 
 		public Index GetColumnIndex(int column) {
 			throw new NotImplementedException();
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			throw new NotSupportedException();
 		}
 	}
 }

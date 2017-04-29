@@ -29,7 +29,8 @@ namespace Deveel.Data.Services {
 
 		private ServiceContainer(ServiceContainer parent, string scopeName, bool readOnly) {
 			if (parent != null) {
-				container = parent.container.OpenScope(scopeName);
+				container = parent.container.OpenScope(scopeName,
+					rules => rules.WithDefaultReuseInsteadOfTransient(Reuse.InCurrentNamedScope(scopeName)));
 
 				ScopeName = scopeName;
 			} else {

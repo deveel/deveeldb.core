@@ -122,9 +122,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public async Task<SqlExpression> ReduceExpressionAsync(IContext context, SqlExpression expression) {
-			using (var rowContext = context.Create($"row_{Id}")) {
-				rowContext.RegisterInstance<IReferenceResolver>(GetResolver());
-
+			using (var rowContext = context.Create($"row_{Id}", scope => scope.AddReferenceResolver(GetResolver()))) {
 				return await expression.ReduceAsync(rowContext);
 			}
 		}

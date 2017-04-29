@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Indexes;
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Sequences;
 using Deveel.Data.Sql.Tables.Infrastructure;
 using Deveel.Data.Transactions;
@@ -60,7 +61,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		private void AddVisibleTable(ITableSource source, IIndexSet<SqlObject, long> indexSet) {
-			var registry = context.ResolveService<ITableIndexSetRegistry>();
+			var registry = context.Scope.Resolve<ITableIndexSetRegistry>();
 			if (registry != null)
 				registry.SetTableIndexSet(source.TableInfo.TableName, indexSet);
 

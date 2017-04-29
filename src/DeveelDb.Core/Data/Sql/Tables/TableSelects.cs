@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Deveel.Data.Indexes;
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 using Deveel.Data.Sql.Indexes;
 using Deveel.Data.Text;
@@ -159,7 +160,7 @@ namespace Deveel.Data.Sql.Tables {
 				return Task.FromResult(table.EmptySelect());
 
 			var s = ((ISqlString) pattern.Value).ToString();
-			var stringSearch = context.ResolveService<ISqlStringSearch>() ?? new SqlDefaultStringSearch();
+			var stringSearch = context.Scope.Resolve<ISqlStringSearch>() ?? new SqlDefaultStringSearch();
 
 			var escapeChar = escape == null ? '\\' : ((ISqlString) escape.Value)[0];
 

@@ -62,9 +62,7 @@ namespace Deveel.Data.Sql.Tables {
 				var rowResolver = row.GetResolver();
 				IEnumerable<long> selectedSet;
 
-				using (var rowContext = context.Create($"row_{rowIndex}")) {
-					rowContext.RegisterInstance<IReferenceResolver>(rowResolver);
-
+				using (var rowContext = context.Create($"row_{rowIndex}", scope => scope.AddReferenceResolver(rowResolver))) {
 					// Select all the rows in this table that match the joining condition.
 					selectedSet = await thisTable.SelectRowsAsync(rowContext, binary);
 				}

@@ -19,6 +19,7 @@ using System;
 using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Query;
 using Deveel.Data.Sql.Query.Plan;
 using Deveel.Data.Sql.Tables;
@@ -119,7 +120,7 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		private async Task<SqlExpression> IsQueryAll(SqlExpressionType opType, SqlObject value, IQueryPlanNode query, IContext context) {
-			var resolver = context.ResolveService<IReferenceResolver>();
+			var resolver = context.GetReferenceResolver();
 
 			var correlated = query.DiscoverCorrelatedReferences(1);
 			foreach (var expression in correlated) {
@@ -127,7 +128,7 @@ namespace Deveel.Data.Sql.Expressions {
 				expression.Value = Constant(refValue);
 			}
 
-			var cache = context.ResolveService<ITableCache>();
+			var cache = context.Scope.Resolve<ITableCache>();
 			if (cache != null)
 				cache.Clear();
 
@@ -139,7 +140,7 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		private async Task<SqlExpression> IsQueryAny(SqlExpressionType opType, SqlObject value, IQueryPlanNode query, IContext context) {
-			var resolver = context.ResolveService<IReferenceResolver>();
+			var resolver = context.GetReferenceResolver();
 
 			var correlated = query.DiscoverCorrelatedReferences(1);
 			foreach (var expression in correlated) {
@@ -147,7 +148,7 @@ namespace Deveel.Data.Sql.Expressions {
 				expression.Value = Constant(refValue);
 			}
 
-			var cache = context.ResolveService<ITableCache>();
+			var cache = context.Scope.Resolve<ITableCache>();
 			if (cache != null)
 				cache.Clear();
 

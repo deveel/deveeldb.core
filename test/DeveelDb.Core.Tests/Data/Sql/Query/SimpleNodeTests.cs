@@ -17,9 +17,13 @@ namespace Deveel.Data.Sql.Query {
 		private IContext context;
 
 		public SimpleNodeTests() {
+			var scope = new ServiceContainer();
+
 			var mock = new Mock<IContext>();
 			mock.SetupGet(x => x.Scope)
-				.Returns(new ServiceContainer());
+				.Returns(scope);
+			mock.Setup(x => x.Dispose())
+				.Callback(scope.Dispose);
 
 			context = mock.Object;
 
@@ -54,10 +58,10 @@ namespace Deveel.Data.Sql.Query {
 			tableManager.Setup(x => x.GetObjectAsync(It.Is<ObjectName>(name => name.Name == "tab2")))
 				.Returns<ObjectName>(name => Task.FromResult<IDbObject>(table2));
 
-			context.RegisterInstance<IDbObjectManager>(tableManager.Object);
-			context.RegisterService<ITableCache, InMemoryTableCache>();
+			scope.AddObjectManager(tableManager.Object);
+			scope.Register<ITableCache, InMemoryTableCache>();
 
-			context.RegisterService<IMethodResolver, SystemFunctionProvider>();
+			scope.AddMethodRegistry<SystemFunctionProvider>();
 		}
 
 		[Fact]
@@ -265,7 +269,7 @@ namespace Deveel.Data.Sql.Query {
 
 			var result = await markNode.ReduceAsync(context);
 
-			var cache = context.ResolveService<ITableCache>();
+			var cache = context.Scope.Resolve<ITableCache>();
 			ITable cachedTable;
 			Assert.True(cache.TryGetTable("JOIN", out cachedTable));
 
@@ -291,7 +295,7 @@ namespace Deveel.Data.Sql.Query {
 			var distinctNode = new DistinctNode(fetchNode, new[] { new ObjectName(tableName, "a") });
 
 			var table = await fetchNode.ReduceAsync(context);
-			var cache = context.ResolveService<ITableCache>();
+			var cache = context.Scope.Resolve<ITableCache>();
 			cache.SetTable("JOIN", table);
 
 			var leftOuterNode = new LeftOuterJoinNode(distinctNode, "JOIN");

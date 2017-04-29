@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Tables {
@@ -43,10 +44,10 @@ namespace Deveel.Data.Sql.Tables {
 
 		protected IContext Context { get; }
 
-		private ITableFieldCache Cache => Context.ResolveService<ITableFieldCache>();
+		private ITableFieldCache Cache => Context.Scope.Resolve<ITableFieldCache>();
 
-		protected virtual void PrepareRowContext(IContext context, long row) {
-			context.RegisterInstance<IReferenceResolver>(new RowReferenceResolver(table, row));
+		protected virtual void PrepareRowContext(IScope scope, long row) {
+			scope.RegisterInstance<IReferenceResolver>(new RowReferenceResolver(table, row));
 		}
 
 		public override async Task<SqlObject> GetValueAsync(long row, int column) {
@@ -70,9 +71,7 @@ namespace Deveel.Data.Sql.Tables {
 		private async Task<SqlObject> GetValueDirect(SqlExpression expression, long row) {
 			SqlExpression result;
 
-			using (var context = Context.Create($"#FUNCTION#({row})")) {
-				PrepareRowContext(context, row);
-
+			using (var context = Context.Create($"#FUNCTION#({row})", scope => PrepareRowContext(scope, row))) {
 				result = await expression.ReduceAsync(context);
 			}
 

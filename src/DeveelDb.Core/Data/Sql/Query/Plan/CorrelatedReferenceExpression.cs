@@ -33,7 +33,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 			if (Value != null)
 				return Value.GetSqlType(context);
 
-			var resolver = context.ResolveService<IReferenceResolver>();
+			var resolver = context.GetReferenceResolver();
 			if (resolver == null)
 				throw new SqlExpressionException();
 
@@ -44,7 +44,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 			if (Value != null)
 				return Value;
 
-			var resolver = context.ResolveService<IReferenceResolver>();
+			var resolver = context.GetReferenceResolver();
 			if (resolver == null)
 				throw new SqlExpressionException();
 

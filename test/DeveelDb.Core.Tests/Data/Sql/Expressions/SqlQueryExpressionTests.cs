@@ -48,7 +48,7 @@ namespace Deveel.Data.Sql.Expressions {
 			config.SetValue("currentSchema", "sys");
 
 			var container = new ServiceContainer();
-			container.RegisterInstance<IDbObjectManager>(tableManager);
+			container.AddObjectManager(tableManager);
 			container.Register<ITableCache, InMemoryTableCache>();
 
 			var mock = new Mock<IContext>();

@@ -36,7 +36,7 @@ namespace Deveel.Data.Sql.Query {
 			config.SetValue("currentSchema", "sys");
 
 			var container = new ServiceContainer();
-			container.RegisterInstance<IDbObjectManager>(tableManager);
+			container.AddObjectManager(tableManager);
 			container.Register<ITableCache, InMemoryTableCache>();
 
 			var mock = new Mock<IContext>();
@@ -58,7 +58,7 @@ namespace Deveel.Data.Sql.Query {
 			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
 			query.From.Table(ObjectName.Parse("sys.tab1"));
 
-			var planner = context.ResolveService<IQueryPlanner>();
+			var planner = context.Scope.Resolve<IQueryPlanner>();
 			var node = await planner.PlanAsync(context,
 				new QueryInfo(query, new[] {new SortColumn(SqlExpression.Reference(new ObjectName("a")), false)}));
 
@@ -77,7 +77,7 @@ namespace Deveel.Data.Sql.Query {
 			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
 			query.From.Table(ObjectName.Parse("sys.tab1"));
 
-			var planner = context.ResolveService<IQueryPlanner>();
+			var planner = context.Scope.Resolve<IQueryPlanner>();
 			var node = await planner.PlanAsync(context, new QueryInfo(query, new QueryLimit(1)));
 
 			var result = await node.ReduceAsync(context);

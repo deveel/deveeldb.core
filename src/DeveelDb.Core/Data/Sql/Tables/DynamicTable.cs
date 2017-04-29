@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
@@ -27,6 +28,10 @@ namespace Deveel.Data.Sql.Tables {
 
 		IEnumerator IEnumerable.GetEnumerator() {
 			return GetEnumerator();
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			throw new NotSupportedException();
 		}
 
 		public abstract TableInfo TableInfo { get; }

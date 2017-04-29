@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Services;
+
 namespace Deveel.Data.Sql.Tables {
 	public sealed class GroupTable : FunctionTable {
 		private readonly ITable table;
@@ -102,11 +104,11 @@ namespace Deveel.Data.Sql.Tables {
 			groupRows.Add(previousRow);
 		}
 
-		protected override void PrepareRowContext(IContext context, long row) {
+		protected override void PrepareRowContext(IScope scope, long row) {
 			var rowResolver = groupResolver.GetRowResolver(row);
-			context.RegisterInstance<IGroupResolver>(rowResolver);
+			scope.RegisterInstance<IGroupResolver>(rowResolver);
 
-			base.PrepareRowContext(context, row);
+			base.PrepareRowContext(scope, row);
 		}
 
 		public override VirtualTable GroupMax(ObjectName maxColumn) {
