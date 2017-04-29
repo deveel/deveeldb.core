@@ -14,19 +14,24 @@ namespace Deveel.Data.Sql.Variables {
 		private IContext context;
 
 		public VariableManagerTests() {
+			var scope = new ServiceContainer();
+
+			scope.AddVariableManager();
+
 			var mock = new Mock<IContext>();
 			mock.SetupGet(x => x.Scope)
-				.Returns(new ServiceContainer());
+				.Returns(scope);
 
 			context = mock.Object;
-			context.RegisterService<VariableManager>();
-			manager = context.ResolveService<VariableManager>();
+
+			manager = scope.GetVariableManager<VariableManager>();
 
 			var obj1 = new SqlObject(PrimitiveTypes.Integer(), (SqlNumber)1);
 			manager.AssignVariable("a", SqlExpression.Constant(obj1), context);
 
 			var obj2 = new SqlObject(PrimitiveTypes.Boolean(), (SqlBoolean)false);
 			manager.AssignVariable("a_b", SqlExpression.Constant(obj2), context);
+
 		}
 
 		[Theory]

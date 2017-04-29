@@ -18,11 +18,13 @@
 using System;
 using System.Linq;
 
+using Deveel.Data.Services;
+
 namespace Deveel.Data.Sql.Methods {
 	public static class ContextExtensions {
 		public static bool IsSystemFunction(this IContext context, ObjectName name, params InvokeArgument[] arguments) {
 			var invoke = new Invoke(name, arguments);
-			var resolvers = context.ResolveAllServices<IMethodResolver>();
+			var resolvers = context.Scope.ResolveAll<IMethodResolver>();
 			foreach (var resolver in resolvers) {
 				var method = resolver.ResolveMethod(context, invoke);
 				if (method != null && method.IsFunction && method.IsSystem)

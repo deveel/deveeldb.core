@@ -17,12 +17,11 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Variables {
-	public static class VariableContextExtensions {
+	public static class ContextExtensions {
 		public static Variable ResolveVariable(this IContext context, string name, bool ignoreCase) {
 			var current = context;
 			while (current != null) {
@@ -37,7 +36,7 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		private static Variable ResolveVariable(IScope scope, string name, bool ignoreCase) {
-			var resolvers = scope.ResolveAll<IVariableResolver>();
+			var resolvers = scope.GetVariableResolvers();
 			if (resolvers == null)
 				return null;
 
@@ -51,7 +50,7 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		public static SqlType ResolveVariableType(this IContext context, string name, bool ignoreCase) {
-			var resolvers = context.ResolveAllServices<IVariableResolver>();
+			var resolvers = context.Scope.GetVariableResolvers();
 			if (resolvers == null)
 				return null;
 

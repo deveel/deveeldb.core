@@ -19,8 +19,8 @@ using System;
 
 namespace Deveel.Data.Sql.Methods {
 	public sealed class MergeContext : Context {
-		internal MergeContext(MethodContext parent, SqlObject accumulated)
-			: base(parent, $"Merge({parent.Method.MethodInfo.MethodName})") {
+		internal MergeContext(IContext parent, SqlObject accumulated)
+			: base(parent, "Merge") {
 			Accumulated = accumulated;
 		}
 

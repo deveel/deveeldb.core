@@ -75,7 +75,8 @@ namespace Deveel.Data.Services {
 			var implementationType = instance.GetType();
 			var registration = new ServiceRegistration(serviceType, implementationType);
 			registration.Instance = instance;
-			registration.ServiceKey = serviceKey;
+			if (serviceKey != null)
+				registration.ServiceKey = serviceKey;
 			scope.Register(registration);
 		}
 
@@ -156,6 +157,10 @@ namespace Deveel.Data.Services {
 				return new TService[0];
 
 			return scope.ResolveAll(typeof (TService)).Cast<TService>();
+		}
+
+		public static IScope AsReadOnly(this IScope scope) {
+			return new ReadOnlyScope(scope);
 		}
 	}
 }

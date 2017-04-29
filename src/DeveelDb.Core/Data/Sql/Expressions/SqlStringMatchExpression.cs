@@ -95,7 +95,7 @@ namespace Deveel.Data.Sql.Expressions {
 			ISqlStringSearch search = null;
 
 			if (context != null)
-				search = context.ResolveService<ISqlStringSearch>();
+				search = context.Scope.GetStringSearch();
 
 			if (search == null)
 				search = new SqlDefaultStringSearch();

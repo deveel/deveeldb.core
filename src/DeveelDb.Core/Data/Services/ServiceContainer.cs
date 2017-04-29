@@ -17,18 +17,17 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 
 using DryIoc;
 
 namespace Deveel.Data.Services {
-	public class ServiceContainer : IScope, IServiceProvider {
+	public class ServiceContainer : IScope {
 		private IContainer container;
 		public ServiceContainer() 
-			: this(null, null) {
+			: this(null, null, false) {
 		}
 
-		private ServiceContainer(ServiceContainer parent, string scopeName) {
+		private ServiceContainer(ServiceContainer parent, string scopeName, bool readOnly) {
 			if (parent != null) {
 				container = parent.container.OpenScope(scopeName)
 					.With(rules => rules.WithDefaultReuseInsteadOfTransient(Reuse.InCurrentNamedScope(scopeName)));
@@ -37,6 +36,8 @@ namespace Deveel.Data.Services {
 			} else {
 				container = new Container(Rules.Default);
 			}
+
+			IsReadOnly = readOnly;
 		}
 
 		~ServiceContainer() {
@@ -63,13 +64,15 @@ namespace Deveel.Data.Services {
 
 		private string ScopeName { get; set; }
 
+		public bool IsReadOnly { get; }
+
 		public void Dispose() {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
 		public IScope OpenScope(string name) {
-			return new ServiceContainer(this, name);
+			return new ServiceContainer(this, name, false);
 		}
 
 		public object Resolve(Type serviceType, object name) {

@@ -18,7 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
@@ -38,8 +37,6 @@ namespace Deveel.Data.Sql.Methods {
 
 			ResultValue = SqlExpression.Constant(SqlObject.Null);
 			output = new Dictionary<string, SqlExpression>();
-
-			ContextScope.RegisterInstance<IVariableResolver>(this);
 		}
 
 		public SqlMethod Method { get; }
@@ -51,6 +48,10 @@ namespace Deveel.Data.Sql.Methods {
 		internal bool HasResult { get; private set; }
 
 		public int ArgumentCount => Invoke.Arguments.Count;
+
+		protected override void Configure(IScope scope) {
+			scope.AddVariableResolver(this);
+		}
 
 		public SqlExpression Argument(string argName) {
 			SqlExpression value;

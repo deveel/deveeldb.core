@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Variables {
-	public sealed class VariableManager : IDbObjectManager, IVariableResolver {
+	public sealed class VariableManager : IVariableResolver, IVariableManager {
 		private bool disposed;
 		private DbObjectCache<Variable> variables;
 
