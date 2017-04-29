@@ -32,7 +32,7 @@ namespace Deveel.Data.Sql.Methods {
 		public override FunctionType FunctionType => FunctionType.Aggregate;
 
 		public override bool Matches(IContext context, Invoke invoke) {
-			var ignoreCase = context.GetValue("ignoreCase", true);
+			var ignoreCase = context.IgnoreCase();
 
 			if (!MethodInfo.MethodName.Equals(invoke.MethodName, ignoreCase))
 				return false;

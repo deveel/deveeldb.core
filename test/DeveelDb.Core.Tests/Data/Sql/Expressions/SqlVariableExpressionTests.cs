@@ -30,7 +30,7 @@ namespace Deveel.Data.Sql.Expressions {
 			resolver.Setup(x => x.ResolveVariableType(It.Is<string>(s => s == "a"), It.IsAny<bool>()))
 				.Returns<string, bool>((name, ignoreCase) => PrimitiveTypes.Boolean());
 
-			var manager = context.Scope.GetVariableManager<VariableManager>();
+			var manager = context.GetVariableManager<VariableManager>();
 			manager.CreateVariable(new VariableInfo("b", PrimitiveTypes.VarChar(150), false, null));
 
 			scope.AddVariableResolver(resolver.Object);

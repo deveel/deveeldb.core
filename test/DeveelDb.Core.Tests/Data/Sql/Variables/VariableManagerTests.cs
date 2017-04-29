@@ -24,7 +24,7 @@ namespace Deveel.Data.Sql.Variables {
 
 			context = mock.Object;
 
-			manager = scope.GetVariableManager<VariableManager>();
+			manager = context.GetVariableManager<VariableManager>();
 
 			var obj1 = new SqlObject(PrimitiveTypes.Integer(), (SqlNumber)1);
 			manager.AssignVariable("a", SqlExpression.Constant(obj1), context);

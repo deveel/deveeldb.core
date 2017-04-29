@@ -71,7 +71,7 @@ namespace Deveel.Data {
 		/// to resolve services registered within this context
 		/// or parent contexts.
 		/// </summary>
-		protected IScope ContextScope { get; private set; }
+		protected virtual IScope ContextScope { get; private set; }
 
 		protected IContext ParentContext { get; private set; }
 
@@ -90,6 +90,8 @@ namespace Deveel.Data {
 					configure = (Action<IScope>) Delegate.Combine(configure, scopeInit);
 
 				configure(ContextScope);
+				ContextScope.Unregister<IContext>();
+				ContextScope.RegisterInstance<IContext>(this);
 				ContextScope = ContextScope.AsReadOnly();
 			}
 		}

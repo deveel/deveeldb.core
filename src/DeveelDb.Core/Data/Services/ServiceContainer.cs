@@ -18,6 +18,8 @@
 using System;
 using System.Collections;
 
+using Deveel.Data.Serialization;
+
 using DryIoc;
 
 namespace Deveel.Data.Services {
@@ -104,6 +106,10 @@ namespace Deveel.Data.Services {
 				} catch (NullReferenceException) {
 					// this means that the container is out of sync in the dispose
 					return new object[0];
+				} catch (ServiceResolutionException) {
+					throw;
+				} catch (Exception ex) {
+					throw new ServiceResolutionException(serviceType, "Error resolving all services", ex);
 				}
 			}
 		}

@@ -77,6 +77,7 @@ namespace Deveel.Data.Services {
 			registration.Instance = instance;
 			if (serviceKey != null)
 				registration.ServiceKey = serviceKey;
+
 			scope.Register(registration);
 		}
 

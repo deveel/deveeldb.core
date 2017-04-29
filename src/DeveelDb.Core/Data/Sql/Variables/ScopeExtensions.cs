@@ -8,8 +8,7 @@ namespace Deveel.Data.Sql.Variables {
 		public static void AddVariableManager<TManager>(this IScope scope)
 			where TManager : class, IVariableManager {
 			scope.Register<IVariableManager, TManager>();
-			scope.Register<IDbObjectManager, TManager>(DbObjectType.Variable);
-			scope.Register<IDbObjectManager, TManager>();
+			scope.AddObjectManager<TManager>(DbObjectType.Variable);
 			scope.Register<TManager>();
 		}
 
@@ -27,15 +26,6 @@ namespace Deveel.Data.Sql.Variables {
 			where TResolver : class, IVariableResolver {
 			scope.RegisterInstance(resolver);
 			scope.RegisterInstance<IVariableResolver>(resolver);
-		}
-
-		public static TManager GetVariableManager<TManager>(this IScope scope)
-			where TManager : class, IVariableManager {
-			return scope.Resolve<TManager>();
-		}
-
-		public static IEnumerable<IVariableResolver> GetVariableResolvers(this IScope scope) {
-			return scope.ResolveAll<IVariableResolver>();
 		}
 	}
 }
