@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data {
@@ -154,6 +156,17 @@ namespace Deveel.Data {
 			var result = comparer.Compare(name1, name2);
 
 			Assert.Equal(expected, result);
+		}
+
+		[Theory]
+		[InlineData("a.b")]
+		[InlineData("a")]
+		[InlineData("a.b.c")]
+		public void Serialize(string name) {
+			var objName = ObjectName.Parse(name);
+			var result = BinarySerializeUtil.Serialize(objName);
+
+			Assert.Equal(objName, result);
 		}
 	}
 }

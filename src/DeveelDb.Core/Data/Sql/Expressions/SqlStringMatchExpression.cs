@@ -18,6 +18,7 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Text;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -39,11 +40,24 @@ namespace Deveel.Data.Sql.Expressions {
 			Escape = escape;
 		}
 
+		private SqlStringMatchExpression(SerializationInfo info)
+			: base(info) { 
+			Left = info.GetValue<SqlExpression>("left");
+			Pattern = info.GetValue<SqlExpression>("pattern");
+			Escape = info.GetValue<SqlExpression>("escape");
+		}
+
 		public SqlExpression Left { get; }
 
 		public SqlExpression Pattern { get; }
 
 		public SqlExpression Escape { get; }
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("left", Left);
+			info.SetValue("pattern", Pattern);
+			info.SetValue("escape", Escape);
+		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitStringMatch(this);

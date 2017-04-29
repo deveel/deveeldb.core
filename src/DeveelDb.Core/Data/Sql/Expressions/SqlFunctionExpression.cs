@@ -19,6 +19,7 @@ using System;
 using System.Threading.Tasks;
 
 using Deveel.Data.Security;
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Methods;
 
@@ -30,8 +31,20 @@ namespace Deveel.Data.Sql.Expressions {
 
 		internal SqlFunctionExpression(ObjectName functionName, InvokeArgument[] arguments)
 			: base(SqlExpressionType.Function) {
+			if (functionName == null)
+				throw new ArgumentNullException(nameof(functionName));
+
+			if (arguments == null)
+				arguments = new InvokeArgument[0];
+
 			FunctionName = functionName;
 			Arguments = arguments;
+		}
+
+		private SqlFunctionExpression(SerializationInfo info)
+			: base(info) {
+			FunctionName = info.GetValue<ObjectName>("function");
+			Arguments = info.GetValue<InvokeArgument[]>("args");
 		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
@@ -41,6 +54,11 @@ namespace Deveel.Data.Sql.Expressions {
 		public override bool IsReference => true;
 
 		public override bool CanReduce => true;
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("function", FunctionName);
+			info.SetValue("args", Arguments);
+		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {
 			FunctionName.AppendTo(builder);

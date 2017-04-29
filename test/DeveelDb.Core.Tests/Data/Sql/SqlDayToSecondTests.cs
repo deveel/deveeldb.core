@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -15,6 +17,15 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(seconds, dts.Seconds);
 			Assert.Equal(millis, dts.Milliseconds);
 			Assert.True(dts.TotalMilliseconds > 0);
+		}
+
+		[Theory]
+		[InlineData(01, 22, 43, 33, 544)]
+		public static void Serialize(int days, int hours, int minutes, int seconds, int millis) {
+			var dts = new SqlDayToSecond(days, hours, minutes, seconds, millis);
+			var result = BinarySerializeUtil.Serialize(dts);
+
+			Assert.Equal(dts, result);
 		}
 
 		[Theory]

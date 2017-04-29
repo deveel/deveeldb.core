@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 
 using Deveel.Data.Sql.Query;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlConstantExpression : SqlExpression {
 		internal SqlConstantExpression(SqlObject value) 
@@ -29,6 +31,11 @@ namespace Deveel.Data.Sql.Expressions {
 				throw new ArgumentNullException(nameof(value));
 
 			Value = value;
+		}
+
+		private SqlConstantExpression(SerializationInfo info)
+			: base(info) {
+			Value = info.GetValue<SqlObject>("value");
 		}
 
 		public SqlObject Value { get; }
@@ -77,6 +84,10 @@ namespace Deveel.Data.Sql.Expressions {
 			if (Value.Type is SqlCharacterType) {
 				builder.Append("'");
 			}
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("value", Value);
 		}
 	}
 }

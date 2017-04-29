@@ -17,10 +17,16 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlDeterministicType : SqlType {
 		public SqlDeterministicType()
 			: base(SqlTypeCode.Unknown) {
+		}
+
+		private SqlDeterministicType(SerializationInfo info)
+			: base(info) {
 		}
 
 		public override bool IsComparable(SqlType type) {

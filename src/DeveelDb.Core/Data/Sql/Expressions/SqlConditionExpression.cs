@@ -18,6 +18,8 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlConditionExpression : SqlExpression {
 		internal SqlConditionExpression(SqlExpression test, SqlExpression ifTrue, SqlExpression ifFalse)
@@ -34,6 +36,13 @@ namespace Deveel.Data.Sql.Expressions {
 			IfFalse = ifFalse;
 		}
 
+		private SqlConditionExpression(SerializationInfo info)
+			: base(info) {
+			Test = info.GetValue<SqlExpression>("test");
+			IfTrue = info.GetValue<SqlExpression>("ifTrue");
+			IfFalse = info.GetValue<SqlExpression>("ifFalse");
+		}
+
 		public SqlExpression Test { get; }
 
 		public SqlExpression IfTrue { get; }
@@ -44,6 +53,12 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitCondition(this);
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("test", Test);
+			info.SetValue("ifTrue", IfTrue);
+			info.SetValue("ifFalse", IfFalse);
 		}
 
 		public override SqlType GetSqlType(IContext context) {

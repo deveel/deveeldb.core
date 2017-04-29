@@ -18,12 +18,18 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Methods;
 
 namespace Deveel.Data.Sql.Expressions {
-	public abstract class SqlExpression : ISqlFormattable {
+	public abstract class SqlExpression : ISqlFormattable, ISerializable {
 		protected SqlExpression(SqlExpressionType expressionType) {
 			ExpressionType = expressionType;
+			Precedence = GetPrecedence();
+		}
+
+		protected SqlExpression(SerializationInfo info) {
+			ExpressionType = info.GetValue<SqlExpressionType>("expressionType");
 			Precedence = GetPrecedence();
 		}
 
@@ -118,6 +124,16 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		protected virtual void AppendTo(SqlStringBuilder builder) {
+			
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("expressionType", ExpressionType);
+
+			GetObjectData(info);
+		}
+
+		protected virtual void GetObjectData(SerializationInfo info) {
 			
 		}
 

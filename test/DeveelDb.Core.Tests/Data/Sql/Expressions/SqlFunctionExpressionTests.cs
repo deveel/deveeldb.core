@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Methods;
 
@@ -42,6 +43,17 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.NotNull(exp.Arguments);
 			Assert.NotEmpty(exp.Arguments);
 			Assert.Equal(1, exp.Arguments.Length);
+		}
+
+		[Fact]
+		public void Serialize() {
+			var exp = SqlExpression.Function(ObjectName.Parse("sys.func2"),
+				new[] { new InvokeArgument(SqlExpression.Constant(SqlObject.Bit(false))) });
+
+			var result = BinarySerializeUtil.Serialize(exp);
+
+			Assert.Equal(exp.FunctionName, result.FunctionName);
+			Assert.Equal(exp.Arguments.Length, result.Arguments.Length);
 		}
 
 		[Fact]

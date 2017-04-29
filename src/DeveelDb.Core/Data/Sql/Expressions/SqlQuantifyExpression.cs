@@ -18,6 +18,7 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Query;
 using Deveel.Data.Sql.Query.Plan;
 using Deveel.Data.Sql.Tables;
@@ -35,9 +36,18 @@ namespace Deveel.Data.Sql.Expressions {
 			Expression = expression;
 		}
 
+		private SqlQuantifyExpression(SerializationInfo info)
+			: base(info) {
+			Expression = info.GetValue<SqlBinaryExpression>("exp");
+		}
+
 		public SqlBinaryExpression Expression { get; }
 
 		public override bool CanReduce => true;
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("exp", Expression);
+		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitQuantify(this);

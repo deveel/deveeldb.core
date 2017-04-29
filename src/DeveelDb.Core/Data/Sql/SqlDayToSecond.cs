@@ -16,6 +16,9 @@
 
 
 using System;
+using System.Globalization;
+
+using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql {
 	public struct SqlDayToSecond : ISqlValue, IComparable<SqlDayToSecond>, IEquatable<SqlDayToSecond>, ISqlFormattable {
@@ -52,6 +55,11 @@ namespace Deveel.Data.Sql {
 			value = new TimeSpan(days, hours, minutes, seconds, millis);
 		}
 
+		private SqlDayToSecond(SerializationInfo info) {
+			var ticks = info.GetInt64("ticks");
+			value = new TimeSpan(ticks);
+		}
+
 		int IComparable.CompareTo(object obj) {
 			return CompareTo((SqlDayToSecond) obj);
 		}
@@ -60,41 +68,17 @@ namespace Deveel.Data.Sql {
 			return CompareTo((SqlDayToSecond) other);
 		}
 
-		public double TotalMilliseconds {
-			get {
-				return value.TotalMilliseconds;
-			}
-		}
+		public double TotalMilliseconds => value.TotalMilliseconds;
 
-		public int Days {
-			get {
-				return value.Days;
-			}
-		}
+		public int Days => value.Days;
 
-		public int Hours {
-			get {
-				return value.Hours;
-			}
-		}
+		public int Hours => value.Hours;
 
-		public int Minutes {
-			get {
-				return value.Minutes;
-			}
-		}
+		public int Minutes => value.Minutes;
 
-		public int Seconds {
-			get {
-				return value.Seconds;
-			}
-		}
+		public int Seconds => value.Seconds;
 
-		public int Milliseconds {
-			get {
-				return value.Milliseconds;
-			}
-		}
+		public int Milliseconds => value.Milliseconds;
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
 			return other is SqlDayToSecond;
@@ -136,7 +120,7 @@ namespace Deveel.Data.Sql {
 			return value.Equals(other.value);
 		}
 
-		public SqlDayToSecond Negate() {
+		private SqlDayToSecond Negate() {
 			var ts = value.Negate();
 			return new SqlDayToSecond(ts.Days, ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
 		}
@@ -171,6 +155,10 @@ namespace Deveel.Data.Sql {
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("ticks", value.Ticks);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {

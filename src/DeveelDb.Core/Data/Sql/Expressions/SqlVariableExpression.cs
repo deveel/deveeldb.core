@@ -19,6 +19,7 @@ using System;
 using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -33,6 +34,11 @@ namespace Deveel.Data.Sql.Expressions {
 			VariableName = variableName;
 		}
 
+		private SqlVariableExpression(SerializationInfo info)
+			: base(info) {
+			VariableName = info.GetString("var");
+		}
+
 		public string VariableName { get; }
 
 		public override bool CanReduce => true;
@@ -41,6 +47,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		protected override void AppendTo(SqlStringBuilder builder) {
 			builder.AppendFormat(":{0}", VariableName);
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("var", VariableName);
 		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {

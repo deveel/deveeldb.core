@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	public struct SqlDateTime : ISqlValue, IEquatable<SqlDateTime>, IComparable<SqlDateTime>, IFormattable, IConvertible {
 		private readonly DateTimeOffset value;
@@ -138,6 +140,14 @@ namespace Deveel.Data.Sql {
 			}
 
 			value = new DateTimeOffset(year, month, day, hour, minute, second, millis, new TimeSpan(0, tzh, tzm, 0, 0));
+		}
+
+		private SqlDateTime(SerializationInfo info) {
+			var ticks = info.GetInt64("ticks");
+			var hourOffset = info.GetInt32("ho");
+			var minuteOffset = info.GetInt32("mo");
+
+			value = new DateTimeOffset(ticks, new TimeSpan(0, hourOffset, minuteOffset, 0));
 		}
 
 		static SqlDateTime() {
@@ -296,6 +306,12 @@ namespace Deveel.Data.Sql {
 		}
 
 		#endregion
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("ticks", value.Ticks);
+			info.SetValue("ho", value.Offset.Hours);
+			info.SetValue("mo", value.Offset.Minutes);
+		}
 
 		public bool Equals(SqlDateTime other) {
 			return value.Equals(other.value);

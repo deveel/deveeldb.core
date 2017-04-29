@@ -20,6 +20,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	/// <summary>
 	/// Implements a <c>BINARY</c> object that handles a limited number
@@ -36,7 +38,7 @@ namespace Deveel.Data.Sql {
 		public const int MaxLength = Int32.MaxValue - 1;
 
 		public SqlBinary(byte[] source)
-			: this(source, source == null ? 0 : source.Length) {
+			: this(source, source?.Length ?? 0) {
 		}
 
 		public SqlBinary(byte[] source, int length)
@@ -45,13 +47,17 @@ namespace Deveel.Data.Sql {
 
 		public SqlBinary(byte[] source, int offset, int length) {
 			if (source == null)
-				throw new ArgumentNullException("source");
+				throw new ArgumentNullException(nameof(source));
 
 			if (length > MaxLength)
-				throw new ArgumentOutOfRangeException("length");
+				throw new ArgumentOutOfRangeException(nameof(length));
 
 			bytes = new byte[length];
 			Array.Copy(source, offset, bytes, 0, length);
+		}
+
+		private SqlBinary(SerializationInfo info) {
+			bytes = info.GetValue<byte[]>("bytes");
 		}
 
 		int IComparable.CompareTo(object obj) {
@@ -97,6 +103,10 @@ namespace Deveel.Data.Sql {
 			var destArray = new byte[bytes.Length];
 			Array.Copy(bytes, 0, destArray, 0, bytes.Length);
 			return destArray;
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("bytes", bytes);
 		}
 
 		#region ByteEnumerator

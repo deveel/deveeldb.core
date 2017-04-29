@@ -18,6 +18,7 @@
 using System;
 using System.Globalization;
 
+using Deveel.Data.Serialization;
 using Deveel.Math;
 
 namespace Deveel.Data.Sql {
@@ -71,6 +72,32 @@ namespace Deveel.Data.Sql {
 
 		internal SqlNumber(BigInteger unscaled, int scale, int precision)
 			: this(new BigDecimal(unscaled, scale, new MathContext(precision))) {
+		}
+
+		private SqlNumber(SerializationInfo info) {
+			state = info.GetValue<NumericState>("state");
+
+			if (info.HasMember("byteCount")) {
+				byteCount = info.GetInt32("byteCount");
+			} else {
+				byteCount = 120;
+			}
+
+			if (info.HasMember("valueAsLong")) {
+				valueAsLong = info.GetInt64("valueAsLong");
+				innerValue = new BigDecimal(valueAsLong);
+			} else if (state == NumericState.None) {
+				valueAsLong = 0;
+
+				var unscaledBytes = info.GetValue<byte[]>("unscaled");
+				var scale = info.GetInt32("scale");
+				var precision = info.GetInt32("precision");
+
+				innerValue = new BigDecimal(new BigInteger(unscaledBytes), scale, new MathContext(precision));
+			} else {
+				innerValue = null;
+				valueAsLong = 0;
+			}
 		}
 
 		public bool CanBeInt64 => byteCount <= 8;
@@ -230,6 +257,21 @@ namespace Deveel.Data.Sql {
 				return -1;
 
 			return 1;
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("state", state);
+			if (state == NumericState.None) {
+				info.SetValue("byteCount", byteCount);
+
+				if (byteCount < 60) {
+					info.SetValue("valueAsLong", valueAsLong);
+				} else {
+					info.SetValue("unscaled", innerValue.UnscaledValue.ToByteArray());
+					info.SetValue("scale", innerValue.Scale);
+					info.SetValue("precision", innerValue.Precision);
+				}
+			}
 		}
 
 		TypeCode IConvertible.GetTypeCode() {

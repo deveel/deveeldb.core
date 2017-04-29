@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -12,6 +14,17 @@ namespace Deveel.Data.Sql {
 			var type = PrimitiveTypes.Array(value);
 
 			Assert.Equal(value, type.Length);
+		}
+
+		[Theory]
+		[InlineData(67)]
+		[InlineData(1024)]
+		[InlineData(65740000)]
+		public static void Serialize(int value) {
+			var type = PrimitiveTypes.Array(value);
+			var result = BinarySerializeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
 		}
 
 		[Theory]
