@@ -9,6 +9,8 @@ namespace Deveel.Data.Sql.Tables.Infrastructure {
 
 		TableInfo TableInfo { get; }
 
+		TableEventHistory EventHistory { get; }
+
 
 		Task<long> GetCurrentUniqueIdAsync();
 
@@ -17,7 +19,6 @@ namespace Deveel.Data.Sql.Tables.Infrastructure {
 		Task<long> GetNextUniqueIdAsync();
 
 		Task<IIndexSet<SqlObject,long>> CreateIndexSetAsync();
-
 
 		Task<IMutableTable> CreateTableAsync(IContext context);
 

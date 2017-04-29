@@ -5,8 +5,8 @@ using Deveel.Data.Transactions;
 
 namespace Deveel.Data.Sql.Tables.Infrastructure {
 	public class TableEvent : TransactionEvent {
-		public TableEvent(IEventSource source, int eventId, long commitId, int tableId, ObjectName tableName)
-			: base(source, eventId, commitId) {
+		public TableEvent(IEventSource source, long commitId, int tableId, ObjectName tableName)
+			: base(source, -1, commitId) {
 			TableId = tableId;
 			TableName = tableName;
 		}

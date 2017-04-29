@@ -57,6 +57,8 @@ namespace Deveel.Data.Sql.Expressions {
 			mock.As<IConfigurationScope>()
 				.Setup(x => x.Configuration)
 				.Returns(config);
+			mock.Setup(x => x.Dispose())
+				.Callback(container.Dispose);
 
 			context = mock.Object;
 

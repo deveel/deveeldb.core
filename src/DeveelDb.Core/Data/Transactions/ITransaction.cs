@@ -19,9 +19,10 @@ using System;
 using System.Collections.Generic;
 
 using Deveel.Data.Configuration;
+using Deveel.Data.Diagnostics;
 
 namespace Deveel.Data.Transactions {
-	public interface ITransaction : IContext, IConfigurationScope {
+	public interface ITransaction : IContext, IEventSource, IConfigurationScope {
 		/// <summary>
 		/// Gets a unique identifier of the transaction
 		/// </summary>
