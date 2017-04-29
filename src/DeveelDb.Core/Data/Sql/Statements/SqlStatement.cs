@@ -98,10 +98,9 @@ namespace Deveel.Data.Sql.Statements {
 			var registry = new RequirementCollection();
 			Require(registry);
 
-			using (var securityContext = context.Create($"Statement{GetType().Name}.Security")) {
+			using (var securityContext = context.Create($"Statement{GetType().Name}.Security",
+				scope => scope.RegisterInstance<IRequirementCollection>(registry))) {
 				context.Debug(-1, "Check security requirements");
-
-				securityContext.RegisterInstance<IRequirementCollection>(registry);
 
 				await securityContext.CheckRequirementsAsync();
 			}

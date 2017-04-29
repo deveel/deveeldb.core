@@ -19,30 +19,14 @@ using System;
 
 using Deveel.Data.Services;
 
-namespace Deveel.Data.Sql.Methods {
-	public sealed class IterateContext : Context {
-		internal IterateContext(IContext parent, long offset, SqlObject accumulation, SqlObject current)
-			: base(parent, $"Iterate({offset})") {
-			Result = Accumulation = accumulation;
-			Offset = offset;
-			Current = current;
+namespace Deveel.Data.Sql {
+	public static class ContextExtensions {
+		public static IGroupResolver GetGroupResolver(this IContext context) {
+			return context.Scope.Resolve<IGroupResolver>();
 		}
 
-		public long Offset { get; }
-
-		public SqlObject Accumulation { get; }
-
-		public SqlObject Current { get; }
-
-		public bool IsFirst => Accumulation == null;
-
-		internal SqlObject Result { get; private set; }
-
-		internal bool Iterate { get; private set; } = true;
-
-		public void SetResult(SqlObject value, bool iterate = true) {
-			Result = value;
-			Iterate = iterate;
+		public static IReferenceResolver GetReferenceResolver(this IContext context) {
+			return context.Scope.Resolve<IReferenceResolver>();
 		}
 	}
 }

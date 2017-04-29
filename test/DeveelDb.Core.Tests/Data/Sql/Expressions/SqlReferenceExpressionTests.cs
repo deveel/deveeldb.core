@@ -18,12 +18,14 @@ namespace Deveel.Data.Sql.Expressions {
 			resolver.Setup(x => x.ResolveType(It.IsAny<ObjectName>()))
 				.Returns(PrimitiveTypes.String());
 
+			var scope = new ServiceContainer();
+			scope.AddReferenceResolver(resolver.Object);
+
 			var mock = new Mock<IContext>();
 			mock.SetupGet(x => x.Scope)
-				.Returns(new ServiceContainer());
-			context = mock.Object;
+				.Returns(scope);
 
-			context.Scope.RegisterInstance<IReferenceResolver>(resolver.Object);
+			context = mock.Object;
 		}
 
 		[Theory]

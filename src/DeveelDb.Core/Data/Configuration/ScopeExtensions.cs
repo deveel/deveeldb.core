@@ -19,30 +19,16 @@ using System;
 
 using Deveel.Data.Services;
 
-namespace Deveel.Data.Sql.Methods {
-	public sealed class IterateContext : Context {
-		internal IterateContext(IContext parent, long offset, SqlObject accumulation, SqlObject current)
-			: base(parent, $"Iterate({offset})") {
-			Result = Accumulation = accumulation;
-			Offset = offset;
-			Current = current;
-		}
+namespace Deveel.Data.Configuration {
+	public static class ScopeExtensions {
+		public static void SetConfiguration(this IScope scope, IConfiguration configuration) {
+			var config = scope.Resolve<IConfiguration>();
+			var final = configuration;
+			if (config != null)
+				final = final.MergeWith(configuration);
 
-		public long Offset { get; }
-
-		public SqlObject Accumulation { get; }
-
-		public SqlObject Current { get; }
-
-		public bool IsFirst => Accumulation == null;
-
-		internal SqlObject Result { get; private set; }
-
-		internal bool Iterate { get; private set; } = true;
-
-		public void SetResult(SqlObject value, bool iterate = true) {
-			Result = value;
-			Iterate = iterate;
+			scope.Unregister<IConfiguration>();
+			scope.RegisterInstance<IConfiguration>(final);
 		}
 	}
 }

@@ -20,10 +20,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+using Deveel.Data.Configuration;
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Diagnostics {
 	public static class ContextExtensions {
+		public static int EventRegistryThreadCount(this IContext context) {
+			return context.GetValue("events.registry.threadCount", 3);
+		}
+
 		internal static IEventSource GetEventSource(this IContext context) {
 			var current = context;
 			while (current != null) {
@@ -34,6 +39,10 @@ namespace Deveel.Data.Diagnostics {
 			}
 
 			return null;
+		}
+
+		public static IEnumerable<IEventRouter> GetEventRouters(this IContext context) {
+			return context.Scope.ResolveAll<IEventRouter>();
 		}
 
 		private static IEnumerable<IEventRegistry> FindRegistries(this IContext context, Type eventType) {

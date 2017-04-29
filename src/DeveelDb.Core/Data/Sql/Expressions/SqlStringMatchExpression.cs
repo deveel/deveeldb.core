@@ -93,6 +93,15 @@ namespace Deveel.Data.Sql.Expressions {
 
 			var result = PatternSearch.PatternMatch(patternString, leftString.ToString(), escapeChar);
 
+			ISqlStringSearch search = null;
+
+			if (context != null)
+				search = context.Scope.GetStringSearch();
+
+			if (search == null)
+				search = new SqlDefaultStringSearch();
+
+			var result = search.Matches(leftString, patternString, escapeChar);
 			if (ExpressionType == SqlExpressionType.NotLike)
 				result = !result;
 

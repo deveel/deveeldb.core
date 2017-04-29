@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Text;
 
+using Deveel.Data.Services;
+
 using Xunit;
 
 namespace Deveel.Data.Configuration {
@@ -221,6 +223,26 @@ namespace Deveel.Data.Configuration {
 
 			Assert.NotEmpty(config.Sections);
 			Assert.Equal(1, config.Sections.Count());
+		}
+
+		[Fact]
+		public static void RegisterAndMergeInScope() {
+			var config1 = new Configuration();
+			config1.SetValue("a1", 6748);
+			config1.SetValue("b", "test1");
+
+			var scope = new ServiceContainer();
+			scope.RegisterInstance<IConfiguration>(config1);
+
+			var config2 = new Configuration();
+			config2.SetValue("b", 5444);
+
+			scope.SetConfiguration(config2);
+
+			var config = scope.Resolve<IConfiguration>();
+
+			Assert.NotNull(config);
+			Assert.Equal(5444, config.GetInt32("b"));
 		}
 	}
 }

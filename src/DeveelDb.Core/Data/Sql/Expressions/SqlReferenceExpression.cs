@@ -58,7 +58,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A reference cannot be reduced outside a context.");
 
-			var resolver = context.Scope.Resolve<IReferenceResolver>();
+			var resolver = context.GetReferenceResolver();
 			if (resolver == null)
 				throw new SqlExpressionException("No reference resolver was declared in this scope");
 
@@ -73,7 +73,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A reference cannot be reduced outside a context.");
 
-			var resolver = context.Scope.Resolve<IReferenceResolver>();
+			var resolver = context.GetReferenceResolver();
 			if (resolver == null)
 				throw new SqlExpressionException("No reference resolver was declared in this scope");
 

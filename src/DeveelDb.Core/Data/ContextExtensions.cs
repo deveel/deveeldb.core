@@ -25,52 +25,50 @@ using Deveel.Data.Services;
 
 namespace Deveel.Data {
 	public static class ContextExtensions {
-		public static IContext Create(this IContext context, string name) {
-			return new Context(context, name);
+		#region Configuration
+
+		public static bool IgnoreCase(this IContext context) {
+			return context.GetValue("ignoreCase", true);
 		}
 
-		public static void RegisterService<TService, TImplementation>(this IContext context, object key = null)
-			where TImplementation : class, TService {
-			context.Scope.Register<TService, TImplementation>(key);
+		public static string CurrentSchema(this IContext context) {
+			return context.GetValue<string>("currentSchema");
 		}
 
-		public static void RegisterService<TImplementation>(this IContext context, object key = null)
-			where TImplementation : class {
-			context.Scope.Register<TImplementation>(key);
+		public static int LockTimeout(this IContext context) {
+			return context.GetValue("lock.timeout", 1500);
 		}
 
-		public static void RegisterInstance<TService>(this IContext context, object instance, object key = null) {
-			context.Scope.RegisterInstance<TService>(instance, key);
+		public static string StoraeSystem(this IContext context) {
+			return context.GetValue<string>("store.system");
 		}
 
-		public static TService ResolveService<TService>(this IContext context, object key = null) {
-			return context.Scope.Resolve<TService>(key);
+		#endregion
+
+		public static IContext Create(this IContext context, string name, Action<IScope> scope = null) {
+			return  new Context(context, name, scope);
 		}
 
-		public static IEnumerable<TService> ResolveAllServices<TService>(this IContext context) {
-			return context.Scope.ResolveAll<TService>();
+		public static IDbObjectManager GetObjectManager(this IContext context, DbObjectType objectType) {
+			return context.Scope.Resolve<IDbObjectManager>(objectType);
 		}
 
-		public static IEnumerable<IDbObjectManager> GetObjectManagers(this IContext context, DbObjectType objectType) {
-			return context.ResolveAllServices<IDbObjectManager>()
-				.Where(x => x.ObjectType == objectType);
+		public static TManager GetObjectManager<TManager>(this IContext context, DbObjectType objectType)
+			where TManager : class, IDbObjectManager {
+			return (TManager) context.GetObjectManager(objectType);
 		}
 
 		public static IEnumerable<IDbObjectManager> GetObjectManagers(this IContext context) {
-			return context.ResolveAllServices<IDbObjectManager>();
+			return context.Scope.ResolveAll<IDbObjectManager>();
 
 		}
 
-		public static async Task<IDbObject> GetObjectAsync(this IContext context, DbObjectType objectType,
-			ObjectName objectName) {
-			var managers = context.GetObjectManagers(objectType);
-			foreach (var manager in managers) {
-				var obj = await manager.GetObjectAsync(objectName);
-				if (obj != null)
-					return obj;
-			}
+		public static async Task<IDbObject> GetObjectAsync(this IContext context, DbObjectType objectType, ObjectName objectName) {
+			var manager = context.GetObjectManager(objectType);
+			if (manager == null)
+				return null;
 
-			return null;
+			return await manager.GetObjectAsync(objectName);
 		}
 
 		public static async Task<DbObjectType> GetObjectType(this IContext context, ObjectName objectName) {
@@ -84,29 +82,24 @@ namespace Deveel.Data {
 		}
 
 		public static async Task<bool> ObjectExistsAsync(this IContext context, DbObjectType objectType, ObjectName objectName) {
-			var managers = context.GetObjectManagers(objectType);
-			foreach (var manager in managers) {
-				if (await manager.ObjectExistsAsync(objectName))
-					return true;
-			}
+			var manager = context.GetObjectManager(objectType);
+			if (manager == null)
+				return false;
 
-			return false;
+			return await manager.ObjectExistsAsync(objectName);
 		}
 
 		public static async Task<IDbObjectInfo> GetObjectInfoAsync(this IContext context, DbObjectType objectType, ObjectName objectName) {
-			var managers = context.GetObjectManagers(objectType);
-			foreach (var manager in managers) {
-				var objInfo = await manager.GetObjectInfoAsync(objectName);
-				if (objInfo != null)
-					return objInfo;
-			}
+			var manager = context.GetObjectManager(objectType);
+			if (manager == null)
+				return null;
 
-			return null;
+			return await manager.GetObjectInfoAsync(objectName);
 		}
 
 		public static ObjectName QualifyName(this IContext context, ObjectName objectName) {
 			if (objectName.Parent == null) {
-				var currentSchema = context.GetValue<string>("currentSchema", null);
+				var currentSchema = context.CurrentSchema();
 				if (String.IsNullOrWhiteSpace(currentSchema))
 					throw new InvalidOperationException("None schema was set in context");
 
@@ -117,7 +110,7 @@ namespace Deveel.Data {
 		}
 
 		public static Task<ObjectName> ResolveNameAsync(this IContext context, ObjectName objectName) {
-			var ignoreCase = context.GetValue("ignoreCase", true);
+			var ignoreCase = context.IgnoreCase();
 
 			var managers = context.GetObjectManagers();
 			foreach (var manager in managers) {

@@ -41,14 +41,19 @@ namespace Deveel.Data {
 		/// Constructs a context that is the child of the given other context.
 		/// </summary>
 		/// <param name="parent">The optional parent context.</param>
+		/// <param name="name">A name that identifies the context</param>
 		/// <remarks>
 		/// The <paramref name="parent"/> context is not required to be <c>not null</c>:
 		/// if <c>null</c> then this context will have no parent.
 		/// </remarks>
-		public Context(IContext parent, string name) {
+		public Context(IContext parent, string name)
+			: this(parent, name, null) {
+		}
+
+		internal Context(IContext parent, string name, Action<IScope> scopeInit) {
 			ParentContext = parent;
 			ContextName = name;
-			InitScope();
+			InitScope(scopeInit);
 		}
 
 		~Context() {
@@ -66,25 +71,32 @@ namespace Deveel.Data {
 		/// to resolve services registered within this context
 		/// or parent contexts.
 		/// </summary>
-		protected IScope ContextScope { get; private set; }
+		protected virtual IScope ContextScope { get; private set; }
 
 		protected IContext ParentContext { get; private set; }
 
-		IContext IContext.ParentContext {
-			get { return ParentContext; }
-		}
+		IContext IContext.ParentContext => ParentContext;
 
-		IScope IContext.Scope {
-			get { return ContextScope; }
-		}
+		IScope IContext.Scope => ContextScope;
 
-		string IContext.ContextName {
-			get { return ContextName; }
-		}
+		string IContext.ContextName => ContextName;
 
-		private void InitScope() {
-			if (ParentContext != null && ParentContext.Scope != null)
+		private void InitScope(Action<IScope> scopeInit) {
+			if (ParentContext != null && ParentContext.Scope != null) {
 				ContextScope = ParentContext.Scope.OpenScope(ContextName);
+
+				Action<IScope> configure = Configure;
+				if (scopeInit != null)
+					configure = (Action<IScope>) Delegate.Combine(configure, scopeInit);
+
+				configure(ContextScope);
+				ContextScope.Unregister<IContext>();
+				ContextScope.RegisterInstance<IContext>(this);
+				ContextScope = ContextScope.AsReadOnly();
+			}
+		}
+
+		protected virtual void Configure(IScope scope) {
 		}
 
 		protected virtual void Dispose(bool disposing) {

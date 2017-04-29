@@ -15,8 +15,6 @@
 //
 
 
-using System;
-
 namespace Deveel.Data.Configuration {
 	public static class ContextExtensions {
 		public static T GetValue<T>(this IContext context, string key, T defaultValue) {

@@ -17,6 +17,7 @@
 
 using System;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
@@ -33,6 +34,12 @@ namespace Deveel.Data.Sql.Methods {
 		internal SqlExpression Result { get; private set; }
 
 		internal bool Iterate { get; private set; } = true;
+
+		internal Action<IScope> IterateScopeInit { get; private set; }
+
+		public void OnIterateScope(Action<IScope> scope) {
+			IterateScopeInit = scope;
+		}
 
 		public void SetResult(SqlExpression value, bool iterate = true) {
 			Result = value;

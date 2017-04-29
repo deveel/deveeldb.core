@@ -16,19 +16,22 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Variables {
-	public static class VariableContextExtensions {
+	public static class ContextExtensions {
 		public static Variable ResolveVariable(this IContext context, string name, bool ignoreCase) {
 			var current = context;
 			while (current != null) {
-				var variable = ResolveVariable(current.Scope, name, ignoreCase);
-				if (variable != null)
-					return variable;
+				var resolvers = current.GetVariableResolvers();
+				foreach (var resolver in resolvers) {
+					var variable = resolver.ResolveVariable(name, ignoreCase);
+					if (variable != null)
+						return variable;
+				}
 
 				current = current.ParentContext;
 			}
@@ -36,22 +39,17 @@ namespace Deveel.Data.Sql.Variables {
 			return null;
 		}
 
-		private static Variable ResolveVariable(IScope scope, string name, bool ignoreCase) {
-			var resolvers = scope.ResolveAll<IVariableResolver>();
-			if (resolvers == null)
-				return null;
+		public static TManager GetVariableManager<TManager>(this IContext context)
+			where TManager : class, IVariableManager {
+			return context.GetObjectManager<TManager>(DbObjectType.Variable);
+		}
 
-			foreach (var resolver in resolvers) {
-				var variable = resolver.ResolveVariable(name, ignoreCase);
-				if (variable != null)
-					return variable;
-			}
-
-			return null;
+		public static IEnumerable<IVariableResolver> GetVariableResolvers(this IContext context) {
+			return context.Scope.ResolveAll<IVariableResolver>();
 		}
 
 		public static SqlType ResolveVariableType(this IContext context, string name, bool ignoreCase) {
-			var resolvers = context.ResolveAllServices<IVariableResolver>();
+			var resolvers = context.GetVariableResolvers();
 			if (resolvers == null)
 				return null;
 

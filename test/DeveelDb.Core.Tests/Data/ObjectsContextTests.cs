@@ -32,7 +32,7 @@ namespace Deveel.Data {
 				.Returns<ObjectName, bool>((name, ignoreCase) => Task.FromResult(name));
 
 			var container = new ServiceContainer();
-			container.RegisterInstance<IDbObjectManager>(objManager.Object);
+			container.AddObjectManager(objManager.Object);
 
 			var mock = new Mock<IContext>();
 			mock.As<IConfigurationScope>()

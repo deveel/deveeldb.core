@@ -14,15 +14,8 @@ namespace Deveel.Data.Sql.Methods {
 		private IContext context;
 
 		public SystemFunctionsTests() {
-			var mock = new Mock<IContext>();
-			mock.SetupGet(x => x.Scope)
-				.Returns(new ServiceContainer());
-			mock.SetupGet(x => x.ContextName)
-				.Returns("test");
-
-			context = mock.Object;
-
-			context.RegisterService<IMethodResolver, SystemFunctionProvider>();
+			var scope = new ServiceContainer();
+			scope.AddMethodRegistry<SystemFunctionProvider>();
 
 			var groups = new Dictionary<ObjectName, IList<SqlObject>>();
 			groups[new ObjectName("a")] = new List<SqlObject> {
@@ -49,8 +42,16 @@ namespace Deveel.Data.Sql.Methods {
 			groupResolver.Setup(x => x.GetResolver(It.IsAny<long>()))
 				.Returns(refResolver.Object);
 
-			context.RegisterInstance<IGroupResolver>(groupResolver.Object);
-			context.RegisterInstance<IReferenceResolver>(refResolver.Object);
+			scope.RegisterInstance<IGroupResolver>(groupResolver.Object);
+			scope.RegisterInstance<IReferenceResolver>(refResolver.Object);
+
+			var mock = new Mock<IContext>();
+			mock.SetupGet(x => x.Scope)
+				.Returns(scope);
+			mock.SetupGet(x => x.ContextName)
+				.Returns("test");
+
+			context = mock.Object;
 		}
 
 
