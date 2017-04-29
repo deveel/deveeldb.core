@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Transactions;
 
-namespace Deveel.Data.Sql.Tables {
+namespace Deveel.Data.Sql.Tables.Infrastructure {
 	public class TableEvent : TransactionEvent {
 		public TableEvent(IEventSource source, int eventId, long commitId, int tableId, ObjectName tableName)
 			: base(source, eventId, commitId) {

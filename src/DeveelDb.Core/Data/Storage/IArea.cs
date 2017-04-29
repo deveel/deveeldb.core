@@ -57,7 +57,7 @@ namespace Deveel.Data.Storage {
 		/// </summary>
 		/// <param name="destArea">The <see cref="IArea"/> where to write.</param>
 		/// <param name="size">The number of bytes to Write.</param>
-		void CopyToAsync(IArea destArea, int size);
+		void CopyTo(IArea destArea, int size);
 
 		/// <summary>
 		/// Reads an array of bytes from the underlying <see cref="IArea"/>

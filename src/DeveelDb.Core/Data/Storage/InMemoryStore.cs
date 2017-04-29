@@ -267,13 +267,13 @@ namespace Deveel.Data.Storage {
 				GC.SuppressFinalize(this);
 			}
 
-			public async Task CopyToAsync(IArea destArea, int size) {
+			public void CopyTo(IArea destArea, int size) {
 				const int bufferSize = 2048;
 				byte[] buf = new byte[bufferSize];
 				int toCopy = System.Math.Min(size, bufferSize);
 
 				while (toCopy > 0) {
-					var read = await ReadAsync(buf, 0, toCopy);
+					var read = Read(buf, 0, toCopy);
 					if (read == 0)
 						break;
 
@@ -283,18 +283,16 @@ namespace Deveel.Data.Storage {
 				}
 			}
 
-			public Task<int> ReadAsync(byte[] buffer, int offset, int length) {
+			public int Read(byte[] buffer, int offset, int length) {
 				Array.Copy(data, CheckPositionBounds(length), buffer, offset, length);
-				return Task.FromResult(length);
+				return length;
 			}
 
-			public Task WriteAsync(byte[] buffer, int offset, int length) {
+			public void Write(byte[] buffer, int offset, int length) {
 				Array.Copy(buffer, offset, data, CheckPositionBounds(length), length);
-				return Task.CompletedTask;
 			}
 
-			public Task FlushAsync() {
-				return Task.CompletedTask;
+			public void Flush() {
 			}
 		}
 

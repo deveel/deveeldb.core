@@ -1,7 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace Deveel.Data.Sql.Tables {
+namespace Deveel.Data.Sql.Tables.Infrastructure {
 	public interface ITableSourceComposite {
 		Task<ITableSource> CreateTableSourceAsync(TableInfo tableInfo);
 

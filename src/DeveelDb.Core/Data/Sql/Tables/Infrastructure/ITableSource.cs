@@ -2,9 +2,8 @@
 using System.Threading.Tasks;
 
 using Deveel.Data.Indexes;
-using Deveel.Data.Transactions;
 
-namespace Deveel.Data.Sql.Tables {
+namespace Deveel.Data.Sql.Tables.Infrastructure {
 	public interface ITableSource : IDisposable {
 		int TableId { get; }
 

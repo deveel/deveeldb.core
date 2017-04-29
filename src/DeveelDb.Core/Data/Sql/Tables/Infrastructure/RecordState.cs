@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Deveel.Data.Sql.Tables
+﻿namespace Deveel.Data.Sql.Tables.Infrastructure
 {
 	/// <summary>
 	/// An enumeration that represents the various states of a record.
