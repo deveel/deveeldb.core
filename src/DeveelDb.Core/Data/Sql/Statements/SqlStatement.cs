@@ -21,11 +21,19 @@ using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Security;
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
-	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement> {
+	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement>, ISerializable {
+		protected SqlStatement() {
+		}
+
+		protected SqlStatement(SerializationInfo info) {
+			Location = info.GetValue<LocationInfo>("location");
+		}
+
 		public virtual bool CanPrepare => true;
 
 		protected virtual string Name {
@@ -102,23 +110,34 @@ namespace Deveel.Data.Sql.Statements {
 				scope => scope.RegisterInstance<IRequirementCollection>(registry))) {
 				context.Debug(-1, "Check security requirements");
 
-				await securityContext.CheckRequirementsAsync();
+				try {
+					await securityContext.CheckRequirementsAsync();
+				} catch (UnauthorizedAccessException ex) {
+					context.Error(-93884, $"User {context.User().Name} has not enough rights to execute", ex);
+					throw;
+				} catch (Exception ex) {
+					context.Error(-83993, "Unknown error while checking requirements", ex);
+					throw;
+				}
 			}
 		}
 
 		public async Task ExecuteAsync(IContext context) {
 			using (var statementContext = CreateContext(context)) {
+				statementContext.Information(201, "Executing statement");
 
 				await CheckRequirements(statementContext);
 
 				try {
 					await ExecuteStatementAsync(statementContext);
-				} catch (SqlStatementException) {
-
+				} catch (SqlStatementException ex) {
+					statementContext.Error(-670393, "The statement thrown an error", ex);
 					throw;
 				} catch (Exception ex) {
 					statementContext.Error(-1, "Could not execute the statement", ex);
 					throw new SqlStatementException("Could not execute the statement because of an error", ex);
+				} finally {
+					statementContext.Information(202, "The statement was executed");
 				}
 			}
 		}
@@ -127,6 +146,15 @@ namespace Deveel.Data.Sql.Statements {
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+		protected virtual void GetObjectData(SerializationInfo info) {
+			
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("location", Location);
+			GetObjectData(info);
 		}
 	}
 }

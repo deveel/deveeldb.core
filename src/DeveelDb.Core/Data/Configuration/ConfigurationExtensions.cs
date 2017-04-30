@@ -87,6 +87,7 @@ namespace Deveel.Data.Configuration {
 			return GetValue<T>(config, keyName, default(T));
 		}
 
+
 		private static T ToType<T>(object value) {
 			if (value == null)
 				return default(T);

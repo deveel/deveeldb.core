@@ -28,6 +28,11 @@ namespace Deveel.Data {
 	/// </summary>
 	public interface IDatabaseSystem : IContext, IConfigurationScope, IEventSource {
 		/// <summary>
+		/// Starts the system making it possible to interact with it
+		/// </summary>
+		void Start();
+
+		/// <summary>
 		/// Gets a list of the names of all the databases handled
 		/// by this system.
 		/// </summary>

@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Collections;
 using System.IO;
 
 namespace Deveel.Data.Configuration {
@@ -39,5 +40,17 @@ namespace Deveel.Data.Configuration {
 
 		public static IConfigurationBuilder AddPropertiesStream(this IConfigurationBuilder builder, Stream stream)
 			=> builder.AddProperties(new StreamConfigurationSource(stream));
+
+		public static IConfigurationBuilder AddEnvironmentVariables(this IConfigurationBuilder builder, string prefix) {
+			foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables()) {
+				var key = entry.Key.ToString();
+				if (key.StartsWith(prefix)) {
+					key = key.Substring(prefix.Length, key.Length - prefix.Length);
+					builder = builder.WithSetting(key, entry.Value);
+				}
+			}
+
+			return builder;
+		}
 	}
 }
