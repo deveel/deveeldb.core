@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
@@ -100,25 +101,42 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
+		private static Task HandleRequirement(IContext context, Type handlerType, object handler, Type reqType, IRequirement requirement) {
+			var method = handlerType.GetRuntimeMethod("HandleRequirementAsync", new[] { typeof(IContext), reqType });
+			if (method == null)
+				throw new InvalidOperationException();
+
+			try {
+				return (Task)method.Invoke(handler, new object[] { context, requirement });
+			} catch (TargetInvocationException e) {
+				throw e.InnerException;
+			}
+		}
+
 		private async Task CheckRequirements(IContext context) {
 			context.Debug(-1, "Collecting security requirements");
 
 			var registry = new RequirementCollection();
 			Require(registry);
 
-			using (var securityContext = context.Create($"Statement{GetType().Name}.Security",
-				scope => scope.RegisterInstance<IRequirementCollection>(registry))) {
-				context.Debug(-1, "Check security requirements");
+			context.Debug(-1, "Check security requirements");
 
-				try {
-					await securityContext.CheckRequirementsAsync();
-				} catch (UnauthorizedAccessException ex) {
-					context.Error(-93884, $"User {context.User().Name} has not enough rights to execute", ex);
-					throw;
-				} catch (Exception ex) {
-					context.Error(-83993, "Unknown error while checking requirements", ex);
-					throw;
+			try {
+				foreach (var requirement in registry) {
+					var reqType = requirement.GetType();
+					var handlerType = typeof(IRequirementHandler<>).MakeGenericType(reqType);
+
+					var handlers = context.Scope.ResolveAll(handlerType);
+					foreach (var handler in handlers) {
+						await HandleRequirement(context, handlerType, handler, reqType, requirement);
+					}
 				}
+			} catch (UnauthorizedAccessException ex) {
+				context.Error(-93884, $"User {context.User().Name} has not enough rights to execute", ex);
+				throw;
+			} catch (Exception ex) {
+				context.Error(-83993, "Unknown error while checking requirements", ex);
+				throw;
 			}
 		}
 
