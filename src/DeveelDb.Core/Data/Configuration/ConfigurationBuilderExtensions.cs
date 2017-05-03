@@ -41,6 +41,11 @@ namespace Deveel.Data.Configuration {
 		public static IConfigurationBuilder AddPropertiesStream(this IConfigurationBuilder builder, Stream stream)
 			=> builder.AddProperties(new StreamConfigurationSource(stream));
 
+		public static IConfigurationBuilder AddFile(this IConfigurationBuilder builder,
+			string fileName,
+			IConfigurationFormatter formatter)
+			=> builder.Add(new FileConfigurationSource(fileName), formatter);
+
 		public static IConfigurationBuilder AddEnvironmentVariables(this IConfigurationBuilder builder, string prefix) {
 			foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables()) {
 				var key = entry.Key.ToString();
@@ -48,6 +53,23 @@ namespace Deveel.Data.Configuration {
 					key = key.Substring(prefix.Length, key.Length - prefix.Length);
 					builder = builder.WithSetting(key, entry.Value);
 				}
+			}
+
+			return builder;
+		}
+
+		public static IConfigurationBuilder Add(this IConfigurationBuilder builder, IConfiguration configuration) {
+			foreach (var config in configuration) {
+				builder = builder.WithSetting(config.Key, config.Value);
+			}
+
+			foreach (var section in configuration.Sections) {
+				builder = builder.WithSection(section.Key,
+					sectionBuilder => {
+						foreach (var subConfig in section.Value) {
+							sectionBuilder = sectionBuilder.WithSetting(subConfig.Key, subConfig.Value);
+						}
+					});
 			}
 
 			return builder;

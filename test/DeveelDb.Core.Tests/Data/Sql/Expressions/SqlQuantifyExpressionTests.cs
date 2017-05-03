@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 
 using Moq;
@@ -102,6 +103,23 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.IsType<SqlBoolean>(resultValue.Value);
 
 			Assert.Equal(expected, (bool) ((SqlBoolean)resultValue.Value));
+		}
+
+		[Theory]
+		[InlineData(SqlExpressionType.Any, SqlExpressionType.GreaterThan)]
+		[InlineData(SqlExpressionType.All, SqlExpressionType.LessThan)]
+		public void SerializeQuantify(SqlExpressionType expressionType, SqlExpressionType opType) {
+			var left = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(212)));
+			var right = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(array)));
+
+			var binary = SqlExpression.Binary(opType, left, right);
+			var exp = SqlExpression.Quantify(expressionType, binary);
+
+			var result = BinarySerializeUtil.Serialize(exp);
+
+			Assert.IsType<SqlBinaryExpression>(result.Expression);
+			Assert.Equal(expressionType, result.ExpressionType);
+			Assert.Equal(opType, result.Expression.ExpressionType);
 		}
 
 		public void Dispose() {

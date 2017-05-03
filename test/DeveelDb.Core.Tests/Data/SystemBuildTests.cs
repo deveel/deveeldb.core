@@ -26,9 +26,12 @@ namespace Deveel.Data {
 			Assert.Equal(Directory.GetCurrentDirectory(), basePath);
 
 			var env = system.Scope.Resolve<ISystemEnvironment>();
+			Assert.NotNull(env);
 			Assert.Equal("Production", env.EnvironmentName);
 
-			Assert.NotNull(env);
+			system.Start();
+
+			Assert.Empty(system.GetDatabases());
 		}
 	}
 }

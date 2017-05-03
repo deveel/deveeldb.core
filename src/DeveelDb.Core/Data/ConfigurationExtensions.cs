@@ -15,5 +15,9 @@ namespace Deveel.Data {
 		public static string EnvironmentName(this IConfiguration configuration) {
 			return configuration.GetValue<string>("environment");
 		}
+
+		public static string DatabaseName(this IConfiguration configuration) {
+			return configuration.GetString("database");
+		}
 	}
 }
