@@ -8,7 +8,7 @@ using Xunit;
 namespace Deveel.Data {
 	public class SystemBuildTests {
 		[Fact]
-		public void BuildDefault() {
+		public async void BuildDefault() {
 			Environment.SetEnvironmentVariable("DEVEELDB_ENVIRONMENT", "Production");
 
 			var system = new SystemBuilder()
@@ -30,7 +30,7 @@ namespace Deveel.Data {
 			Assert.NotNull(env);
 			Assert.Equal("Production", env.EnvironmentName);
 
-			system.Start();
+			await system.StartAsync();
 
 			Assert.Empty(system.GetDatabases());
 		}

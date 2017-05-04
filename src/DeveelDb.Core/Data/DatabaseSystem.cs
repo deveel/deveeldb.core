@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Diagnostics;
@@ -84,7 +85,7 @@ namespace Deveel.Data {
 			}
 		}
 
-		public void Start() {
+		public Task StartAsync() {
 			EnsureSystemServices();
 
 			var configs = FindDatabaseConfigs();
@@ -98,6 +99,8 @@ namespace Deveel.Data {
 
 				databases[databaseName] = database;
 			}
+
+			return Task.CompletedTask;
 		}
 
 		public IEnumerable<string> GetDatabases() {
