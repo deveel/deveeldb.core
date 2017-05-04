@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+
+using Deveel.Data.Services;
 
 namespace Deveel.Data {
 	public interface ISystemStartup {
-		void Configure(ISystemBuilder builder);
+		void ConfigureServices(IScope scope);
 	}
 }

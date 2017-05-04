@@ -13,6 +13,7 @@ namespace Deveel.Data {
 
 			var system = new SystemBuilder()
 				.UseRootPath(Directory.GetCurrentDirectory())
+				.UseSystemServices()
 				.Build();
 
 			Assert.NotNull(system);
