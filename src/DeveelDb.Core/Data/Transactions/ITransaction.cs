@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 
@@ -76,12 +77,12 @@ namespace Deveel.Data.Transactions {
 		/// </summary>
 		/// <param name="savePointName">An optional name to identify the save point
 		/// of this commit within the database log</param>
-		/// <seealso cref="Rollback"/>
+		/// <seealso cref="RollbackAsync"/>
 		/// <remarks>
 		/// When a transaction is disposed without explicitly calling
-		/// <see cref="Commit"/>, all the operations are implicitly rolled-back.
+		/// <see cref="CommitAsync"/>, all the operations are implicitly rolled-back.
 		/// </remarks>
-		void Commit(string savePointName);
+		Task CommitAsync(string savePointName);
 
 		/// <summary>
 		/// Rollback any write operations done during the lifetime
@@ -91,10 +92,10 @@ namespace Deveel.Data.Transactions {
 		/// save point to rollback the transaction to</param>
 		/// <remarks>
 		/// When a transaction is disposed without explicitly calling
-		/// <see cref="Commit"/>, all the operations are implicitly rolled-back.
+		/// <see cref="CommitAsync"/>, all the operations are implicitly rolled-back.
 		/// </remarks>
 		/// <seealso cref="IDisposable.Dispose"/>
-		/// <seealso cref="Commit"/>
-		void Rollback(string savePointName);
+		/// <seealso cref="CommitAsync"/>
+		Task RollbackAsync(string savePointName);
 	}
 }

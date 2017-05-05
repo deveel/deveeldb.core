@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Security;
+using Deveel.Data.Sql;
 using Deveel.Data.Transactions;
 
 namespace Deveel.Data {
@@ -44,22 +45,25 @@ namespace Deveel.Data {
 		/// Creates a new query object that can be used to execute commands
 		/// towards the underlying database of this session.
 		/// </summary>
+		/// <param name="query">The SQL query issued by the user</param>
 		/// <returns>
 		/// Returns an instance of <see cref="IQuery"/> that is used
 		/// to execute commands towards the underlying database.
 		/// </returns>
-		IQuery CreateQuery();
+		IQuery CreateQuery(SqlQuery query);
 
 		/// <summary>
 		/// Commits the latest changes made by the user in the session.
 		/// </summary>
+		/// <param name="savePointName"></param>
 		/// <seealso cref="ITransaction"/>
-		Task CommitAsync();
+		Task CommitAsync(string savePointName);
 
 		/// <summary>
 		/// Rolls-back all the modifications made by the user in this session
 		/// </summary>
+		/// <param name="savePointName"></param>
 		/// <seealse cref="ITransaction"/>
-		Task RollbackAsync();
+		Task RollbackAsync(string savePointName);
 	}
 }

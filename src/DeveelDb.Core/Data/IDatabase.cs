@@ -16,9 +16,11 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Diagnostics;
+using Deveel.Data.Transactions;
 
 namespace Deveel.Data {
 	/// <summary>
@@ -57,17 +59,17 @@ namespace Deveel.Data {
 		Version Version { get; }
 
 		/// <summary>
-		/// Gets a boolean value indicating if the database exists within the
-		/// context given.
-		/// </summary>
-		bool Exists { get; }
-
-		/// <summary>
 		/// Gets a boolean value that indicates if the database was open.
 		/// </summary>
-		/// <seealso cref="Open"/>
-		/// <seealso cref="Close"/>
+		/// <seealso cref="OpenAsync"/>
+		/// <seealso cref="CloseAsync"/>
 		bool IsOpen { get; }
+
+		/// <summary>
+		/// Gets a collection of all the open transactions towards this
+		/// database
+		/// </summary>
+		ITransactionCollection Transactions { get; }
 
 
 		/// <summary>
@@ -83,7 +85,7 @@ namespace Deveel.Data {
 		/// is changed to <c>true</c>.
 		/// </para>
 		/// </remarks>
-		void Open();
+		Task OpenAsync();
 
 		/// <summary>
 		/// Closes the database making it not accessible to connections.
@@ -94,6 +96,23 @@ namespace Deveel.Data {
 		/// invoke the closure of the database on disposal (<see cref="IDisposable.Dispose"/>.
 		/// </para>
 		/// </remarks>
-		void Close();
+		Task CloseAsync();
+
+		/// <summary>
+		/// Verifies if the database exists in the underlying system
+		/// </summary>
+		/// <returns>
+		/// Returns <c>true</c> if the database exists in the underlying
+		/// system, otherwise it returns <c>false</c>.
+		/// </returns>
+		Task<bool> ExistsAsync();
+
+		/// <summary>
+		/// Creates a new transaction to the database with a given
+		/// isolation level
+		/// </summary>
+		/// <param name="isolationLevel"></param>
+		/// <returns></returns>
+		Task<ITransaction> CreateTransactionAsync(IsolationLevel isolationLevel);
 	}
 }
