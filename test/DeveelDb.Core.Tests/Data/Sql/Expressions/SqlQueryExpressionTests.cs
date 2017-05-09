@@ -23,7 +23,7 @@ namespace Deveel.Data.Sql.Expressions {
 		public static void CreateNewQuerySource() {
 			var fromTable = ObjectName.Parse("table1");
 			var query = new SqlQueryExpression();
-			query.All = true;
+			query.AllItems = true;
 			query.From.Table(fromTable);
 			var source = new SqlQueryExpressionSource(query, "a");
 			
@@ -31,7 +31,7 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.False(source.IsTable);
 			Assert.True(source.IsAliased);
 			Assert.Equal("a", source.Alias);
-			Assert.True(source.Query.All);
+			Assert.True(source.Query.AllItems);
 
 			var expected = new SqlStringBuilder();
 			expected.AppendLine("(SELECT *");

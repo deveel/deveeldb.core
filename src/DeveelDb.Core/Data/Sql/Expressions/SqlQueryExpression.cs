@@ -31,7 +31,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public IList<SqlQueryExpressionItem> Items { get; }
 
-		public bool All {
+		public bool AllItems {
 			get { return Items.Count == 1 && Items[0].IsAll; }
 			set {
 				if (value) {

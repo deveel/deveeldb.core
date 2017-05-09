@@ -165,7 +165,6 @@ namespace Deveel.Data.Configuration {
 			return config.GetValue(propertyKey, defaultValue);
 		}
 
-		[CLSCompliant(false)]
 		public static sbyte GetSByte(this IConfiguration config, string propertyKey, sbyte defaultValue) {
 			return config.GetValue(propertyKey, defaultValue);
 		}
@@ -178,12 +177,10 @@ namespace Deveel.Data.Configuration {
 			return config.GetValue<short>(propertyKey, defaultValue);
 		}
 
-		[CLSCompliant(false)]
 		public static ushort GetUInt16(this IConfiguration config, string propertyKey) {
 			return GetUInt16(config, propertyKey, 0);
 		}
 
-		[CLSCompliant(false)]
 		public static ushort GetUInt16(this IConfiguration config, string propertyKey, ushort defaultValue) {
 			return config.GetValue(propertyKey, defaultValue);
 		}
@@ -196,12 +193,10 @@ namespace Deveel.Data.Configuration {
 			return config.GetValue(propertyKey, defaultValue);
 		}
 
-		[CLSCompliant(false)]
 		public static uint GetUInt32(this IConfiguration config, string propertyKey) {
 			return GetUInt32(config, propertyKey, 0);
 		}
 
-		[CLSCompliant(false)]
 		public static uint GetUInt32(this IConfiguration config, string propertyKey, uint defaultValue) {
 			return config.GetValue(propertyKey, defaultValue);
 		}
@@ -214,12 +209,10 @@ namespace Deveel.Data.Configuration {
 			return config.GetValue(propertyKey, defaultValue);
 		}
 
-		[CLSCompliant(false)]
 		public static ulong GetUInt64(this IConfiguration config, string propertyKey) {
 			return GetUInt64(config, propertyKey, 0);
 		}
 
-		[CLSCompliant(false)]
 		public static ulong GetUInt64(this IConfiguration config, string propertyKey, ulong defaultValue) {
 			return config.GetValue(propertyKey, defaultValue);
 		}

@@ -27,12 +27,12 @@ namespace Deveel.Data.Security {
 			Dispose(false);
 		}
 
-		async Task<bool> ISecurityResolver.HasPrivilegesAsync(string grantee, DbObjectType objectType, ObjectName objectName, Privileges privileges) {
+		Task<bool> ISecurityResolver.HasPrivilegesAsync(string grantee, DbObjectType objectType, ObjectName objectName, Privileges privileges) {
 			Privileges userPrivileges;
 			if (!TryGetPrivileges(objectType, objectName, grantee, out userPrivileges))
-				return false;
+				return Task.FromResult(false);
 
-			return (privileges & userPrivileges) != 0;
+			return Task.FromResult((privileges & userPrivileges) != 0);
 		}
 
 		public bool TryGetPrivileges(DbObjectType objectType, ObjectName objectName, string grantee,
