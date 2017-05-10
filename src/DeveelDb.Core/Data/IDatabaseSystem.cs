@@ -47,23 +47,23 @@ namespace Deveel.Data {
 		/// Creates a new database with the given configuration
 		/// within this database system.
 		/// </summary>
-		/// <param name="configuration">A configuration specific for the
-		/// database to be created.</param>
+		/// <param name="buildInfo">Defines the configuration and information
+		/// to be provided to the database to be created.</param>
 		/// <returns>
 		/// Returns an instance of <see cref="IDatabase"/> that is inheriting
 		/// the state of this system and is administered by the given user.
 		/// </returns>
 		/// <exception cref="ArgumentNullException">
-		/// If the provided <paramref name="configuration"/> object if <c>null</c>.
+		/// If the provided <paramref name="buildInfo"/> object if <c>null</c>.
 		/// </exception>
 		/// <exception cref="ArgumentException">
-		/// If the given <paramref name="configuration"/> does not specify any
-		/// database name.
+		/// If the configuration in the given <paramref name="buildInfo"/> does not 
+		/// specify any database name.
 		/// </exception>
 		/// <exception cref="DatabaseSystemException">
 		/// If any error occurred that prohibited the creation of the database.
 		/// </exception>
-		IDatabase CreateDatabase(IConfiguration configuration);
+		Task<IDatabase> CreateDatabaseAsync(DatabaseBuildInfo buildInfo);
 
 		/// <summary>
 		/// Checks if any database with the given name exists 
@@ -80,7 +80,7 @@ namespace Deveel.Data {
 		/// Returns <c>true</c> if a database with the given name is handled by
 		/// this system and exists in the underlying storage.
 		/// </returns>
-		bool DatabaseExists(string databaseName);
+		Task<bool> DatabaseExistsAsync(string databaseName);
 
 		/// <summary>
 		/// Opens an existing database handled by this system.
@@ -101,7 +101,7 @@ namespace Deveel.Data {
 		/// <exception cref="DatabaseSystemException">
 		/// If the database does not exist or if it was not possible to open it.
 		/// </exception>
-		IDatabase OpenDatabase(IConfiguration configuration);
+		Task<IDatabase> OpenDatabaseAsync(IConfiguration configuration);
 
 		/// <summary>
 		/// Removes a database from the system and deletes it from the underlying
@@ -116,6 +116,6 @@ namespace Deveel.Data {
 		/// the database with the given name</exception>
 		/// <exception cref="ArgumentNullException">If the specified <paramref name="databaseName"/>
 		/// is <c>null</c> or empty</exception>
-		bool DeleteDatabase(string databaseName);
+		Task<bool> DeleteDatabaseAsync(string databaseName);
 	}
 }

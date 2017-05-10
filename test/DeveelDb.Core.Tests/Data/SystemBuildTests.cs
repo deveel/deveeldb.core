@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 
+using Deveel.Data.Configuration;
 using Deveel.Data.Services;
 
 using Xunit;
@@ -33,6 +34,28 @@ namespace Deveel.Data {
 			await system.StartAsync();
 
 			Assert.Empty(system.GetDatabases());
+		}
+
+		[Fact]
+		public async void BuildDefaultAndCreateDatabase() {
+			var system = new SystemBuilder()
+				.UseRootPath(Directory.GetCurrentDirectory())
+				.UseSystemServices()
+				.Build();
+
+			Assert.NotNull(system);
+			Assert.NotNull(system.Configuration);
+			Assert.NotNull(system.Scope);
+			Assert.Null(system.ParentContext);
+
+			var config = new ConfigurationBuilder()
+				.WithSetting("database.name", "test")
+				.Build();
+
+			var database = await system.CreateDatabaseAsync(config);
+
+			Assert.NotNull(database);
+			Assert.Equal("test", database.Name);
 		}
 	}
 }

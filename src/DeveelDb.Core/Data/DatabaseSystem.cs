@@ -27,7 +27,7 @@ using Deveel.Data.Services;
 namespace Deveel.Data {
 	public sealed class DatabaseSystem : EventSource, IDatabaseSystem {
 		private IScope scope;
-		private Dictionary<string, IDatabase> databases;
+		private Dictionary<string, Database> databases;
 
 		public DatabaseSystem(IConfiguration configuration) 
 			: this(new ServiceContainer(), configuration) {
@@ -37,7 +37,7 @@ namespace Deveel.Data {
 			this.scope = scope;
 			Configuration = configuration;
 
-			databases = new Dictionary<string, IDatabase>();
+			databases = new Dictionary<string, Database>();
 		}
 
 		~DatabaseSystem() {
@@ -85,13 +85,13 @@ namespace Deveel.Data {
 			}
 		}
 
-		public Task StartAsync() {
+		public async Task StartAsync() {
 			EnsureSystemServices();
 
 			var configs = FindDatabaseConfigs();
 
 			foreach (var config in configs) {
-				var database = OpenDatabase(config);
+				var database = await OpenDatabaseAsync(config);
 
 				var databaseName = config.DatabaseName();
 				if (String.IsNullOrWhiteSpace(databaseName))
@@ -99,28 +99,69 @@ namespace Deveel.Data {
 
 				databases[databaseName] = database;
 			}
-
-			return Task.CompletedTask;
 		}
 
 		public IEnumerable<string> GetDatabases() {
 			return databases.Keys;
 		}
 
-		public IDatabase CreateDatabase(IConfiguration configuration) {
-			throw new NotImplementedException();
+		public async Task<IDatabase> CreateDatabaseAsync(DatabaseBuildInfo buildInfo) {
+			if (buildInfo == null)
+				throw new ArgumentNullException(nameof(buildInfo));
+
+			var configuration = buildInfo.Configuration;
+
+			var name = configuration.DatabaseName();
+			if (String.IsNullOrWhiteSpace(name))
+				throw new ArgumentException("Database name is missing in the configuration", nameof(configuration));
+
+			if (databases.ContainsKey(name))
+				throw new InvalidOperationException($"A database named '{name}' already exists in the system context");
+
+			var dbConfig = Configuration.MergeWith(configuration);
+			var database = new Database(this, name, dbConfig);
+
+			if (await database.ExistsAsync())
+				throw new InvalidOperationException($"The database {name} already exists");
+
+			await database.CreateAsync(buildInfo.AdminInfo);
+
+			return database;
 		}
 
-		public bool DatabaseExists(string databaseName) {
-			throw new NotImplementedException();
+		public Task<bool> DatabaseExistsAsync(string databaseName) {
+			Database database;
+			if (!databases.TryGetValue(databaseName, out database))
+				return Task.FromResult(false);
+
+			return database.ExistsAsync();
 		}
 
-		public IDatabase OpenDatabase(IConfiguration configuration) {
-			throw new NotImplementedException();
+		public async Task<Database> OpenDatabaseAsync(IConfiguration configuration) {
+			var name = configuration.DatabaseName();
+			if (String.IsNullOrWhiteSpace(name))
+				throw new ArgumentException("Database name is missing in the configuration", nameof(configuration));
+
+			var dbConfig = Configuration.MergeWith(configuration);
+			var database = new Database(this, name, dbConfig);
+
+			await database.OpenAsync();
+
+			databases[name] = database;
+
+			return database;
 		}
 
-		public bool DeleteDatabase(string databaseName) {
-			throw new NotImplementedException();
+		async Task<IDatabase> IDatabaseSystem.OpenDatabaseAsync(IConfiguration configuration) {
+			return await OpenDatabaseAsync(configuration);
+		}
+
+		public Task<bool> DeleteDatabaseAsync(string databaseName) {
+			Database database;
+			if (!databases.TryGetValue(databaseName, out database))
+				return Task.FromResult(false);
+
+			return database.DeleteAsync();
 		}
 
 		IContext IContext.ParentContext => null;

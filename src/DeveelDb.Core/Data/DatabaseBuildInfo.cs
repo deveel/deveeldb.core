@@ -18,23 +18,24 @@
 using System;
 
 using Deveel.Data.Configuration;
+using Deveel.Data.Security;
 
 namespace Deveel.Data {
-	public static class ConfigurationExtensions {
-		public static string RootPath(this IConfiguration configuration) {
-			return configuration.GetString("rootPath");
+	public sealed class DatabaseBuildInfo {
+		public DatabaseBuildInfo(IConfiguration configuration) 
+			: this(configuration, null) {
 		}
 
-		public static string ApplicationName(this IConfiguration configuration) {
-			return configuration.GetValue<string>("applicationName");
+		public DatabaseBuildInfo(IConfiguration configuration, UserInfo adminInfo) {
+			if (configuration == null)
+				throw new ArgumentNullException(nameof(configuration));
+
+			Configuration = configuration;
+			AdminInfo = adminInfo;
 		}
 
-		public static string EnvironmentName(this IConfiguration configuration) {
-			return configuration.GetValue<string>("environment");
-		}
+		public IConfiguration Configuration { get; }
 
-		public static string DatabaseName(this IConfiguration configuration) {
-			return configuration.GetString("database.name");
-		}
+		public UserInfo AdminInfo { get; set; }
 	}
 }

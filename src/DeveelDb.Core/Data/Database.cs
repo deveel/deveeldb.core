@@ -16,27 +16,34 @@
 
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Diagnostics;
+using Deveel.Data.Security;
 using Deveel.Data.Services;
 using Deveel.Data.Transactions;
 
 namespace Deveel.Data {
 	public sealed class Database : EventSource, IDatabase {
 		private IScope scope;
+		private TransactionCollection transactions;
 
-		internal Database(IDatabaseSystem system, string name, IConfiguration configuration) {
+		internal Database(DatabaseSystem system, string name, IConfiguration configuration) {
 			System = system;
 			Name = name;
 			Configuration = configuration;
 
-			scope = system.Scope.OpenScope("database");
+			scope = (system as IContext).Scope.OpenScope("database");
 			scope.RegisterInstance<IDatabase>(this);
 			scope.SetConfiguration(configuration);
 			scope = scope.AsReadOnly();
+
+			transactions = new TransactionCollection(this);
 		}
 
 		~Database() {
@@ -51,30 +58,45 @@ namespace Deveel.Data {
 
 		public string Name { get; }
 
-		public IDatabaseSystem System { get; }
+		IDatabaseSystem IDatabase.System => System;
+
+		public DatabaseSystem System { get; }
 
 		public Version Version => typeof(Database).GetTypeInfo().Assembly.GetName().Version;
 
 		public bool IsOpen { get; private set; }
 
-		ITransactionCollection IDatabase.Transactions {
-			get { throw new NotImplementedException(); }
-		}
+		public ITransactionCollection Transactions => transactions;
 
-		public Task OpenAsync() {
+		internal Task OpenAsync() {
 			throw new NotImplementedException();
 		}
 
-		public Task CloseAsync() {
+		internal Task CloseAsync() {
 			throw new NotImplementedException();
 		}
 
-		public Task<bool> ExistsAsync() {
+		internal Task<bool> DeleteAsync() {
+			throw new NotImplementedException();
+		}
+
+		internal Task CreateAsync(UserInfo adminInfo) {
+			throw new NotImplementedException();
+		}
+
+		internal Task<bool> ExistsAsync() {
+			if (IsOpen)
+				return Task.FromResult(true);
+
 			throw new NotImplementedException();
 		}
 
 		Task<ITransaction> IDatabase.CreateTransactionAsync(IsolationLevel isolationLevel) {
 			throw new NotImplementedException();
+		}
+
+		internal void RemoveTransaction(ITransaction transaction) {
+			transactions.RemoveTransaction(transaction);
 		}
 
 		public void Dispose() {
@@ -87,5 +109,101 @@ namespace Deveel.Data {
 		}
 
 		public IConfiguration Configuration { get; }
+
+		#region TransactionCollection
+
+		class TransactionCollection : ITransactionCollection {
+			private readonly Database database;
+			private readonly List<ITransaction> transactions;
+			private long minCommitId;
+			private long maxCommitId;
+
+			public TransactionCollection(Database database) {
+				this.database = database;
+				transactions = new List<ITransaction>();
+				minCommitId = Int64.MaxValue;
+				maxCommitId = 0;
+			}
+
+			public IEnumerator<ITransaction> GetEnumerator() {
+				return transactions.GetEnumerator();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator() {
+				return GetEnumerator();
+			}
+
+			public int Count {
+				get {
+					lock (database) {
+						return transactions.Count;
+					}
+				}
+			}
+
+			public void AddTransaction(ITransaction transaction) {
+				lock (database) {
+					long currentCommitId = transaction.CommitId;
+					if (currentCommitId < maxCommitId)
+						throw new InvalidOperationException("Added a transaction with a lower than maximum commit id");
+
+					transactions.Add(transaction);
+					//TODO: database.NewTransaction(transaction);
+					maxCommitId = currentCommitId;
+				}
+			}
+
+			public void RemoveTransaction(ITransaction transaction) {
+				lock (database) {
+					int size = transactions.Count;
+					int i = transactions.IndexOf(transaction);
+					if (i == 0) {
+						// First in list.
+						if (i == size - 1) {
+							// And last.
+							minCommitId = Int32.MaxValue;
+							maxCommitId = 0;
+						} else {
+							minCommitId = transactions[i + 1].CommitId;
+						}
+					} else if (i == transactions.Count - 1) {
+						// Last in list.
+						maxCommitId = transactions[i - 1].CommitId;
+					} else if (i == -1) {
+						throw new InvalidOperationException("Unable to find transaction in the list.");
+					}
+
+					transactions.RemoveAt(i);
+					//TODO: database.EndTransaction(transaction);
+				}
+			}
+
+			public long MinimumCommitId(ITransaction transaction) {
+				lock (database) {
+					long commitId = Int64.MaxValue;
+					if (transactions.Count > 0) {
+						// If the bottom transaction is this transaction, then go to the
+						// next up from the bottom (we don't count this transaction as the
+						// minimum commit_id).
+						var testTransaction = transactions[0];
+						if (testTransaction != transaction) {
+							commitId = testTransaction.CommitId;
+						} else if (transactions.Count > 1) {
+							commitId = transactions[1].CommitId;
+						}
+					}
+
+					return commitId;
+				}
+			}
+
+			public ITransaction FindById(long commitId) {
+				lock (database) {
+					return transactions.FirstOrDefault(x => x.CommitId == commitId);
+				}
+			}
+		}
+
+		#endregion
 	}
 }

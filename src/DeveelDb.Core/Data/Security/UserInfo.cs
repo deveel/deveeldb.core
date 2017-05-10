@@ -19,22 +19,20 @@ using System;
 
 using Deveel.Data.Configuration;
 
-namespace Deveel.Data {
-	public static class ConfigurationExtensions {
-		public static string RootPath(this IConfiguration configuration) {
-			return configuration.GetString("rootPath");
+namespace Deveel.Data.Security {
+	public sealed class UserInfo {
+		public UserInfo(string name, IConfiguration authConfiguration) {
+			if (String.IsNullOrWhiteSpace(name))
+				throw new ArgumentNullException(nameof(name));
+			if (authConfiguration == null)
+				throw new ArgumentNullException(nameof(authConfiguration));
+
+			Name = name;
+			AuthConfiguration = authConfiguration;
 		}
 
-		public static string ApplicationName(this IConfiguration configuration) {
-			return configuration.GetValue<string>("applicationName");
-		}
+		public string Name { get; }
 
-		public static string EnvironmentName(this IConfiguration configuration) {
-			return configuration.GetValue<string>("environment");
-		}
-
-		public static string DatabaseName(this IConfiguration configuration) {
-			return configuration.GetString("database.name");
-		}
+		public IConfiguration AuthConfiguration { get; }
 	}
 }

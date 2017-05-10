@@ -61,8 +61,6 @@ namespace Deveel.Data {
 		/// <summary>
 		/// Gets a boolean value that indicates if the database was open.
 		/// </summary>
-		/// <seealso cref="OpenAsync"/>
-		/// <seealso cref="CloseAsync"/>
 		bool IsOpen { get; }
 
 		/// <summary>
@@ -70,42 +68,6 @@ namespace Deveel.Data {
 		/// database
 		/// </summary>
 		ITransactionCollection Transactions { get; }
-
-
-		/// <summary>
-		/// Opens the database making it ready to be accessed.
-		/// </summary>
-		/// <remarks>
-		/// <para>
-		/// This method ensures the system components and the data are
-		/// ready to allow any connection to be established.
-		/// </para>
-		/// <para>
-		/// After this method successfully exists, the state of <see cref="IsOpen"/>
-		/// is changed to <c>true</c>.
-		/// </para>
-		/// </remarks>
-		Task OpenAsync();
-
-		/// <summary>
-		/// Closes the database making it not accessible to connections.
-		/// </summary>
-		/// <remarks>
-		/// <para>
-		/// Typical implementations of this interface will automatically
-		/// invoke the closure of the database on disposal (<see cref="IDisposable.Dispose"/>.
-		/// </para>
-		/// </remarks>
-		Task CloseAsync();
-
-		/// <summary>
-		/// Verifies if the database exists in the underlying system
-		/// </summary>
-		/// <returns>
-		/// Returns <c>true</c> if the database exists in the underlying
-		/// system, otherwise it returns <c>false</c>.
-		/// </returns>
-		Task<bool> ExistsAsync();
 
 		/// <summary>
 		/// Creates a new transaction to the database with a given

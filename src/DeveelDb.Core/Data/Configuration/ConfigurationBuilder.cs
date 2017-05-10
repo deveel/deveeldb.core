@@ -19,7 +19,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Deveel.Data.Configuration {
-	class ConfigurationBuilder : IConfigurationBuilder {
+	public sealed class ConfigurationBuilder : IConfigurationBuilder {
 		private Configuration configuration;
 		private Dictionary<string, Action<IConfigurationBuilder>> children;
 
