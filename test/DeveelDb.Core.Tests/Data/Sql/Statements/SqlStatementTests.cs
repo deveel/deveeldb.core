@@ -68,15 +68,15 @@ namespace Deveel.Data.Sql.Statements {
 		class TestStatement : SqlStatement {
 			public IEnumerable<IRequirement> Requirements { get; set; }
 
-			public Func<IContext, Task> Body { get; set; }
+			public Func<IContext, Task<SqlStatementResult>> Body { get; set; }
 
 			protected override void Require(IRequirementCollection requirements) {
 				requirements.Append(Requirements);
 			}
 
-			protected override Task ExecuteStatementAsync(IContext context) {
+			protected override Task<SqlStatementResult> ExecuteStatementAsync(IContext context) {
 				if (Body == null)
-					return Task.CompletedTask;
+					return Task.FromResult<SqlStatementResult>(null);
 
 				return Body(context);
 			}

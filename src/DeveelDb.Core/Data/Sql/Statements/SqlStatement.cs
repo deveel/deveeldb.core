@@ -106,13 +106,13 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
-		public async Task ExecuteAsync(IContext context) {
+		public async Task<SqlStatementResult> ExecuteAsync(IContext context) {
 			using (var statementContext = CreateContext(context)) {
 
 				await CheckRequirements(statementContext);
 
 				try {
-					await ExecuteStatementAsync(statementContext);
+					return await ExecuteStatementAsync(statementContext);
 				} catch (SqlStatementException) {
 
 					throw;
@@ -123,7 +123,7 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
-		protected abstract Task ExecuteStatementAsync(IContext context);
+		protected abstract Task<SqlStatementResult> ExecuteStatementAsync(IContext context);
 
 		public override string ToString() {
 			return this.ToSqlString();

@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Methods;
+using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Expressions {
 	public abstract class SqlExpression : ISqlFormattable, ISerializable {
@@ -283,6 +284,18 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public static SqlFunctionExpression Function(ObjectName functionName, params InvokeArgument[] args) {
 			return new SqlFunctionExpression(functionName, args);
+		}
+
+		#endregion
+
+		#region Parse
+
+		public static Task<SqlExpression[]> ParseAsync(IContext context, string expression) {
+			var parser = context.Scope.Resolve<ISqlExpressionParser>();
+			if (parser == null)
+				throw new NotSupportedException();
+
+			return parser.ParseAsync(expression);
 		}
 
 		#endregion
