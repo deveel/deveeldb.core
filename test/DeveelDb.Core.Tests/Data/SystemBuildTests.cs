@@ -52,6 +52,8 @@ namespace Deveel.Data {
 				.WithSetting("database.name", "test")
 				.Build();
 
+			await system.StartAsync();
+
 			var database = await system.CreateDatabaseAsync(config);
 
 			Assert.NotNull(database);

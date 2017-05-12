@@ -63,5 +63,8 @@ namespace Deveel.Data.Configuration {
 		/// </returns>
 		/// <seealso cref="Configuration.SectionSeparator"/>
 		object GetValue(string key);
+
+
+		void SetValue(string key, object value);
 	}
 }

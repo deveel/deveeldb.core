@@ -18,6 +18,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -26,12 +27,16 @@ using Deveel.Data.Configuration;
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Security;
 using Deveel.Data.Services;
+using Deveel.Data.Storage;
 using Deveel.Data.Transactions;
 
 namespace Deveel.Data {
 	public sealed class Database : EventSource, IDatabase {
 		private IScope scope;
 		private TransactionCollection transactions;
+
+		private IStore dbStateStore;
+		private const string StateStorePostfix = "_sf";
 
 		internal Database(DatabaseSystem system, string name, IConfiguration configuration) {
 			System = system;
@@ -43,7 +48,12 @@ namespace Deveel.Data {
 			scope.SetConfiguration(configuration);
 			scope = scope.AsReadOnly();
 
+			StateStoreName = $"{name}{StateStorePostfix}";
+
+			StoreSystem = ResolveStoreSystem();
 			transactions = new TransactionCollection(this);
+
+			Setup();
 		}
 
 		~Database() {
@@ -68,6 +78,31 @@ namespace Deveel.Data {
 
 		public ITransactionCollection Transactions => transactions;
 
+		private IStoreSystem StoreSystem { get; }
+
+		private TableStateStore StateStore { get; set; }
+
+		private string StateStoreName { get; }
+
+		private long CurrentCommitId { get; set; }
+
+		private IStoreSystem ResolveStoreSystem() {
+			var storeSystemName = Configuration.GetString("database.storeSystem");
+
+			IStoreSystem storeSystem;
+
+			if (!String.IsNullOrWhiteSpace(storeSystemName)) {
+				storeSystem = scope.Resolve<IStoreSystem>(storeSystemName);
+			} else {
+				storeSystem = scope.ResolveAll<IStoreSystem>().FirstOrDefault();
+			}
+
+			if (storeSystem == null)
+				throw new InvalidOperationException("It was not possible to resolve a database storage system");
+
+			return storeSystem;
+		}
+
 		internal Task OpenAsync() {
 			throw new NotImplementedException();
 		}
@@ -80,15 +115,105 @@ namespace Deveel.Data {
 			throw new NotImplementedException();
 		}
 
-		internal Task CreateAsync(UserInfo adminInfo) {
-			throw new NotImplementedException();
+		private async Task InitStateStoreAsync() {
+			// Create/Open the state store
+			dbStateStore = await StoreSystem.CreateStoreAsync(StateStoreName, null);
+
+			try {
+				dbStateStore.Lock();
+
+				StateStore = new TableStateStore(dbStateStore);
+
+				long headP = StateStore.Create();
+
+				// Get the fixed area
+				var fixedArea = dbStateStore.GetArea(-1);
+				await fixedArea.WriteAsync(headP);
+				await fixedArea.FlushAsync();
+			} finally {
+				dbStateStore.Unlock();
+			}
+		}
+
+		private async Task MinimalCreateAsync() {
+			if (await ExistsAsync())
+				throw new IOException($"The database {Name} already exists");
+
+			// Lock the store system (generates an IOException if exclusive Lock
+			// can not be made).
+			// TODO: check if the system is not read-only
+
+			await StoreSystem.LockAsync(StateStoreName);
+
+			await InitStateStoreAsync();
+
+			await InitAsync();
+
+			// Commit the state
+			await StateStore.FlushAsync();
+		}
+
+		private async Task InitAsync() {
+			using (var systemSession = await this.CreateSystemSessionAsync()) {
+				systemSession.CurrentSchema(SystemSchema.Name);
+
+				var setup = scope.ResolveAll<IDatabaseSetup>();
+
+				try {
+					foreach (var obj in setup) {
+						await obj.SetupAsync(systemSession);
+					}
+
+					await systemSession.CommitAsync("");
+				} catch (Exception ex) {
+					this.Fatal(-1, "Fatal error while setting up", ex);
+
+					await systemSession.RollbackAsync("");
+					throw new DatabaseSystemException("Could not setup the database", ex);
+				}
+			}
+		}
+
+		private void Setup() {
+			lock (this) {
+				CurrentCommitId = 0;
+				// TODO:
+				// tableSources = new Dictionary<int, TableSource>();
+			}
+		}
+
+		private async Task CreateConglomerateAsync() {
+			await MinimalCreateAsync();
+		}
+
+		private async Task CreateAdminAsync(UserInfo adminInfo) {
+			// TODO: create the user
+			throw new NotSupportedException();
+		}
+
+		internal async Task CreateAsync(UserInfo adminInfo) {
+			//TODO: throw an exception if the system is read-only
+
+			await CreateConglomerateAsync();
+
+			if (adminInfo != null) {
+				await CreateAdminAsync(adminInfo);
+			}
+		}
+
+		private Task<bool> StateExistsAsync() {
+			return StoreSystem.StoreExistsAsync(StateStoreName);
 		}
 
 		internal Task<bool> ExistsAsync() {
 			if (IsOpen)
 				return Task.FromResult(true);
 
-			throw new NotImplementedException();
+			try {
+				return StateExistsAsync();
+			} catch (Exception ex) {
+				throw new InvalidOperationException("An error occurred while checking the database existance", ex);
+			}
 		}
 
 		Task<ITransaction> IDatabase.CreateTransactionAsync(IsolationLevel isolationLevel) {

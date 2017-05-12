@@ -13,44 +13,38 @@ namespace Deveel.Data.Storage {
 			nameStoreMap = new Dictionary<string, InMemoryStore>();
 		}
 
-		private static string GetStoreName(IConfiguration configuration) {
-			return configuration.GetString("name");
-		}
-
-		public Task<bool> StoreExistsAsync(IConfiguration configuration) {
+		public Task<bool> StoreExistsAsync(string storeName) {
 			lock (this) {
-				return Task.FromResult(nameStoreMap.ContainsKey(GetStoreName(configuration)));
+				return Task.FromResult(nameStoreMap.ContainsKey(storeName));
 			}
 		}
 
-		async Task<IStore> IStoreSystem.CreateStoreAsync(IConfiguration configuration) {
-			return await CreateStoreAsync(configuration);
+		async Task<IStore> IStoreSystem.CreateStoreAsync(string storeName, IConfiguration configuration) {
+			return await CreateStoreAsync(storeName, configuration);
 		}
 
-		public Task<InMemoryStore> CreateStoreAsync(IConfiguration configuration) {
-			var name = GetStoreName(configuration);
+		public Task<InMemoryStore> CreateStoreAsync(string storeName, IConfiguration configuration) {
 			var hashSize = configuration.GetInt32("hashSize", 1024);
 
 			lock (this) {
-				if (nameStoreMap.ContainsKey(name))
-					throw new IOException($"A store named '{name}' already in the systme");
+				if (nameStoreMap.ContainsKey(storeName))
+					throw new IOException($"A store named '{storeName}' already in the systme");
 
-				var store = new InMemoryStore(name, hashSize);
-				nameStoreMap[name] = store;
+				var store = new InMemoryStore(storeName, hashSize);
+				nameStoreMap[storeName] = store;
 				return Task.FromResult(store);
 			}
 		}
 
-		async Task<IStore> IStoreSystem.OpenStoreAsync(IConfiguration configuration) {
-			return await OpenStoreAsync(configuration);
+		async Task<IStore> IStoreSystem.OpenStoreAsync(string storeName) {
+			return await OpenStoreAsync(storeName);
 		}
 
-		public Task<InMemoryStore> OpenStoreAsync(IConfiguration configuration) {
+		public Task<InMemoryStore> OpenStoreAsync(string storeName) {
 			lock (this) {
-				var name = GetStoreName(configuration);
 				InMemoryStore store;
-				if (!nameStoreMap.TryGetValue(name, out store))
-					throw new IOException($"No store with name '{name}' was found in the system");
+				if (!nameStoreMap.TryGetValue(storeName, out store))
+					throw new IOException($"No store with name '{storeName}' was found in the system");
 
 				return Task.FromResult(store);
 			}

@@ -35,6 +35,10 @@ namespace Deveel.Data {
 			return context.GetValue<string>("currentSchema");
 		}
 
+		public static void CurrentSchema(this IContext context, string value) {
+			context.SetValue("currentSchema", value);
+		}
+
 		public static int LockTimeout(this IContext context) {
 			return context.GetValue("lock.timeout", 1500);
 		}

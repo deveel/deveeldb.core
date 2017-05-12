@@ -28,6 +28,7 @@ namespace Deveel.Data {
 	public sealed class DatabaseSystem : EventSource, IDatabaseSystem {
 		private IScope scope;
 		private Dictionary<string, Database> databases;
+		private bool started;
 
 		public DatabaseSystem(IConfiguration configuration) 
 			: this(new ServiceContainer(), configuration) {
@@ -51,6 +52,11 @@ namespace Deveel.Data {
 		}
 
 		public IConfiguration Configuration { get; }
+
+		private void ThrowIfNotStarted() {
+			if (!started)
+				throw new InvalidOperationException("The system was not started");
+		}
 
 		private IEnumerable<IConfiguration> FindDatabaseConfigs() {
 			var basePath = Configuration.RootPath();
@@ -99,13 +105,18 @@ namespace Deveel.Data {
 
 				databases[databaseName] = database;
 			}
+
+			started = true;
 		}
 
 		public IEnumerable<string> GetDatabases() {
+			ThrowIfNotStarted();
 			return databases.Keys;
 		}
 
 		public async Task<IDatabase> CreateDatabaseAsync(DatabaseBuildInfo buildInfo) {
+			ThrowIfNotStarted();
+
 			if (buildInfo == null)
 				throw new ArgumentNullException(nameof(buildInfo));
 
@@ -130,6 +141,8 @@ namespace Deveel.Data {
 		}
 
 		public Task<bool> DatabaseExistsAsync(string databaseName) {
+			ThrowIfNotStarted();
+
 			Database database;
 			if (!databases.TryGetValue(databaseName, out database))
 				return Task.FromResult(false);
@@ -138,6 +151,8 @@ namespace Deveel.Data {
 		}
 
 		public async Task<Database> OpenDatabaseAsync(IConfiguration configuration) {
+			ThrowIfNotStarted();
+
 			var name = configuration.DatabaseName();
 			if (String.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Database name is missing in the configuration", nameof(configuration));
@@ -157,6 +172,8 @@ namespace Deveel.Data {
 		}
 
 		public Task<bool> DeleteDatabaseAsync(string databaseName) {
+			ThrowIfNotStarted();
+
 			Database database;
 			if (!databases.TryGetValue(databaseName, out database))
 				return Task.FromResult(false);
@@ -181,6 +198,7 @@ namespace Deveel.Data {
 					scope.Dispose();
 			}
 
+			started = false;
 			scope = null;
 		}
 	}
