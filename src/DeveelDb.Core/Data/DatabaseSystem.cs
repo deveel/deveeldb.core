@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using Deveel.Data.Configuration;
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Services;
+using Deveel.Data.Sql;
 
 namespace Deveel.Data {
 	public sealed class DatabaseSystem : EventSource, IDatabaseSystem {
@@ -62,7 +63,8 @@ namespace Deveel.Data {
 
 			var formatter = scope.Resolve<IConfigurationFormatter>(configFormat);
 			if (formatter == null)
-				throw new DatabaseSystemException($"The default configuration format {configFormat} has no service associated");
+				throw new ServiceException(ErrorCodes.Services.NotResolved, 
+					$"The default configuration format {configFormat} has no service associated");
 
 			if (!String.IsNullOrWhiteSpace(configFileExt))
 				configFileName = $"{configFileName}.{configFileExt}";
@@ -95,7 +97,8 @@ namespace Deveel.Data {
 
 				var databaseName = config.DatabaseName();
 				if (String.IsNullOrWhiteSpace(databaseName))
-					throw new DatabaseSystemException();
+					throw new ConfigurationException(ErrorCodes.Configuration.RequiredKeyMissing, 
+						"The database name is missing");
 
 				databases[databaseName] = database;
 			}

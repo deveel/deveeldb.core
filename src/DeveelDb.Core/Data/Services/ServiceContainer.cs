@@ -18,6 +18,8 @@
 using System;
 using System.Collections;
 
+using Deveel.Data.Sql;
+
 using DryIoc;
 
 namespace Deveel.Data.Services {
@@ -140,7 +142,7 @@ namespace Deveel.Data.Services {
 			} catch(ServiceException) {
 				throw;
 			} catch (Exception ex) {
-				throw new ServiceException("Error when registering service.", ex);
+				throw new ServiceException(ErrorCodes.Services.Unknown, "Error when registering service.", ex);
 			}
 		}
 
@@ -156,7 +158,7 @@ namespace Deveel.Data.Services {
 					container.Unregister(serviceType, serviceName);
 					return true;
 				} catch (Exception ex) {
-					throw new ServiceException("Error when unregistering service", ex);
+					throw new ServiceException(ErrorCodes.Services.Unknown, "Error when unregistering service", ex);
 				}
 			}
 		}

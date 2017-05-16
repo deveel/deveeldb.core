@@ -18,16 +18,17 @@
 using System;
 
 namespace Deveel.Data.Configuration {
-	public class ConfigurationException : Exception {
-		public ConfigurationException(string message, Exception innerException)
-			: base(message, innerException) {
+	public class ConfigurationException : SystemException {
+		public ConfigurationException(int code, string message, Exception innerException) 
+			: base(ErrorClasses.Configuration, code, message, innerException) {
 		}
 
-		public ConfigurationException(string message)
-			: base(message) {
+		public ConfigurationException(int code, string message) 
+			: base(ErrorClasses.Configuration, code, message) {
 		}
 
-		public ConfigurationException() {
+		public ConfigurationException(int code) 
+			: base(ErrorClasses.Configuration, code) {
 		}
 	}
 }

@@ -18,16 +18,29 @@
 using System;
 
 namespace Deveel.Data.Sql {
-	public class SqlException : Exception {
+	public class SqlException : SystemException {
 		public SqlException(string message, Exception innerException)
-			: base(message, innerException) {
+			: this(ErrorCodes.SqlModel.Unknown, message, innerException) {
+		}
+
+		public SqlException(int code, string message, Exception innerException)
+			: base(ErrorClasses.SqlModel, code, message, innerException) {
 		}
 
 		public SqlException(string message)
-			: base(message) {
+			: this(ErrorCodes.SqlModel.Unknown, message) {
 		}
 
-		public SqlException() {
+		public SqlException(int code, string message)
+			: base(ErrorClasses.SqlModel, code, message) {
+		}
+
+		public SqlException()
+			: this(ErrorCodes.SqlModel.Unknown) {
+		}
+
+		public SqlException(int code)
+			: base(ErrorClasses.SqlModel, code) {
 		}
 	}
 }

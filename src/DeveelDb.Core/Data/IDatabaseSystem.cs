@@ -60,7 +60,7 @@ namespace Deveel.Data {
 		/// If the given <paramref name="configuration"/> does not specify any
 		/// database name.
 		/// </exception>
-		/// <exception cref="DatabaseSystemException">
+		/// <exception cref="SystemException">
 		/// If any error occurred that prohibited the creation of the database.
 		/// </exception>
 		IDatabase CreateDatabase(IConfiguration configuration);
@@ -98,7 +98,7 @@ namespace Deveel.Data {
 		/// If the given <paramref name="configuration"/> does not provide any
 		/// database name.
 		/// </exception>
-		/// <exception cref="DatabaseSystemException">
+		/// <exception cref="SystemException">
 		/// If the database does not exist or if it was not possible to open it.
 		/// </exception>
 		IDatabase OpenDatabase(IConfiguration configuration);
@@ -112,7 +112,7 @@ namespace Deveel.Data {
 		/// Returns <c>true</c> if a database with the given name was found
 		/// and deleted, otherwise returns <c>false</c>.
 		/// </returns>
-		/// <exception cref="DatabaseSystemException">If it was not possible to delete
+		/// <exception cref="SystemException">If it was not possible to delete
 		/// the database with the given name</exception>
 		/// <exception cref="ArgumentNullException">If the specified <paramref name="databaseName"/>
 		/// is <c>null</c> or empty</exception>

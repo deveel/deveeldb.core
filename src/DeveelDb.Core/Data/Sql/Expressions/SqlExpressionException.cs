@@ -20,14 +20,27 @@ using System;
 namespace Deveel.Data.Sql.Expressions {
 	public class SqlExpressionException : SqlException {
 		public SqlExpressionException(string message, Exception innerException)
-			: base(message, innerException) {
+			: this(ErrorCodes.SqlModel.Expression.Unknown, message, innerException) {
+		}
+
+		public SqlExpressionException(int code, string message, Exception innerException)
+			: base(code, message, innerException) {
 		}
 
 		public SqlExpressionException(string message)
-			: base(message) {
+			: this(ErrorCodes.SqlModel.Expression.Unknown, message) {
 		}
 
-		public SqlExpressionException() {
+		public SqlExpressionException(int code, string message)
+			: base(code, message) {
+		}
+
+		public SqlExpressionException()
+			: this(ErrorCodes.SqlModel.Expression.Unknown) {
+		}
+
+		public SqlExpressionException(int code)
+			: base(code) {
 		}
 	}
 }

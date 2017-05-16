@@ -21,16 +21,17 @@ namespace Deveel.Data.Services {
 	/// <summary>
 	/// An exception thrown within the services domain
 	/// </summary>
-	public class ServiceException : Exception {
-		public ServiceException(string message, Exception innerException)
-			: base(message, innerException) {
+	public class ServiceException : SystemException {
+		public ServiceException(int code, string message, Exception innerException) 
+			: base(ErrorClasses.Services, code, message, innerException) {
 		}
 
-		public ServiceException(string message)
-			: base(message) {
+		public ServiceException(int code, string message) 
+			: base(ErrorClasses.Services, code, message) {
 		}
 
-		public ServiceException() {
+		public ServiceException(int code) 
+			: base(ErrorClasses.Services, code) {
 		}
 	}
 }

@@ -17,6 +17,8 @@
 
 using System;
 
+using Deveel.Data.Sql;
+
 namespace Deveel.Data.Services {
 	/// <summary>
 	/// The exception thrown during the resolution of a service
@@ -24,7 +26,8 @@ namespace Deveel.Data.Services {
 	/// </summary>
 	public class ServiceResolutionException : ServiceException {
 		public ServiceResolutionException(Type serviceType, string message, Exception innerException)
-			: base(message, innerException) {
+			: base(ErrorCodes.Services.NotResolved, ResolveMessage(ErrorClasses.Services, 
+				ErrorCodes.Services.NotResolved, message, serviceType), innerException) {
 			ServiceType = serviceType;
 		}
 
@@ -33,7 +36,7 @@ namespace Deveel.Data.Services {
 		}
 
 		public ServiceResolutionException(Type serviceType)
-			: this(serviceType, $"An error occurred while trying to resolve a service of typ '{serviceType}") {
+			: this(serviceType, null) {
 		}
 
 		/// <summary>
