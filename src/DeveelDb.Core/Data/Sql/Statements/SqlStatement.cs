@@ -21,12 +21,20 @@ using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Security;
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
-	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement> {
+	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement>, ISerializable {
 		public virtual bool CanPrepare => true;
+
+		protected SqlStatement(SerializationInfo info) {
+			Location = info.GetValue<LocationInfo>("location");
+		}
+
+		protected SqlStatement() {
+		}
 
 		protected virtual string Name {
 			get {
@@ -127,6 +135,15 @@ namespace Deveel.Data.Sql.Statements {
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+		protected virtual void GetObjectData(SerializationInfo info) {
+			
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("location", Location);
+			GetObjectData(info);
 		}
 	}
 }
