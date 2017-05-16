@@ -46,7 +46,11 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
+		internal string StatementName => Name;
+
 		public LocationInfo Location { get; set; }
+
+		internal SqlStatement Parent { get; set; }
 
 		protected virtual StatementContext CreateContext(IContext parent) {
 			return new StatementContext(parent, Name, this);
@@ -131,7 +135,7 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
-		protected abstract Task ExecuteStatementAsync(IContext context);
+		protected abstract Task ExecuteStatementAsync(StatementContext context);
 
 		public override string ToString() {
 			return this.ToSqlString();

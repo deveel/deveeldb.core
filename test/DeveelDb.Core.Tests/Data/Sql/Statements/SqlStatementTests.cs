@@ -94,13 +94,13 @@ namespace Deveel.Data.Sql.Statements {
 
 			public IEnumerable<IRequirement> Requirements { get; set; }
 
-			public Func<IContext, Task> Body { get; set; }
+			public Func<StatementContext, Task> Body { get; set; }
 
 			protected override void Require(IRequirementCollection requirements) {
 				requirements.Append(Requirements);
 			}
 
-			protected override Task ExecuteStatementAsync(IContext context) {
+			protected override Task ExecuteStatementAsync(StatementContext context) {
 				if (Body == null)
 					return Task.CompletedTask;
 
