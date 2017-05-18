@@ -17,15 +17,51 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql.Statements {
-	public sealed class LocationInfo {
+	public sealed class LocationInfo : ISerializable, IEquatable<LocationInfo> {
 		public LocationInfo(int line, int column) {
 			Line = line;
 			Column = column;
 		}
 
+		private LocationInfo(SerializationInfo info) {
+			Line = info.GetInt32("line");
+			Column = info.GetInt32("column");
+		}
+
 		public int Line { get; }
 
 		public int Column { get; }
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("line", Line);
+			info.SetValue("column", Column);
+		}
+
+		public bool Equals(LocationInfo other) {
+			if (ReferenceEquals(null, other))
+				return false;
+			if (ReferenceEquals(this, other))
+				return true;
+
+			return Line == other.Line && Column == other.Column;
+		}
+
+		public override bool Equals(object obj) {
+			if (ReferenceEquals(null, obj))
+				return false;
+			if (ReferenceEquals(this, obj))
+				return true;
+
+			return obj is LocationInfo && Equals((LocationInfo) obj);
+		}
+
+		public override int GetHashCode() {
+			unchecked {
+				return (Line * 397) ^ Column;
+			}
+		}
 	}
 }
