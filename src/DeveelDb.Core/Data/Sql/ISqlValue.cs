@@ -17,11 +17,13 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	/// <summary>
 	/// The value that represents a SQL object value
 	/// </summary>
-	public interface ISqlValue : IComparable, IComparable<ISqlValue> {
+	public interface ISqlValue : IComparable, IComparable<ISqlValue>, ISerializable {
 		/// <summary>
 		/// Checks if the current object is comparable with the given one.
 		/// </summary>

@@ -18,6 +18,8 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlCastExpression : SqlExpression {
 		internal SqlCastExpression(SqlExpression value, SqlType targetType)
@@ -31,6 +33,12 @@ namespace Deveel.Data.Sql.Expressions {
 			TargetType = targetType;
 		}
 
+		private SqlCastExpression(SerializationInfo info)
+			: base(info) {
+			Value = info.GetValue<SqlExpression>("value");
+			TargetType = info.GetValue<SqlType>("targetType");
+		}
+
 		public SqlExpression Value { get; }
 
 		public SqlType TargetType { get; }
@@ -39,6 +47,11 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlType GetSqlType(IContext context) {
 			return TargetType;
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("value", Value);
+			info.SetValue("targetType", TargetType);
 		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {

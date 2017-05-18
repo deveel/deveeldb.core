@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -64,6 +66,20 @@ namespace Deveel.Data.Sql {
 			SqlNumber number;
 			Assert.True(SqlNumber.TryParse(s, out number));
 			Assert.Equal(expectedResult, number);
+		}
+
+		[Theory]
+		[InlineData(98334454)]
+		[InlineData(6785553.89e3)]
+		[InlineData(-435)]
+		[InlineData(Double.PositiveInfinity)]
+		[InlineData(Double.NegativeInfinity)]
+		[InlineData(Double.NaN)]
+		public static void Serialize(double value) {
+			var number = (SqlNumber) value;
+
+			var result = BinarySerializeUtil.Serialize(number);
+			Assert.Equal(number, result);
 		}
 
 		[Theory]

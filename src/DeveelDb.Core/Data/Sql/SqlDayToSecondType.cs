@@ -17,10 +17,16 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlDayToSecondType : SqlType {
 		public SqlDayToSecondType()
 			: base(SqlTypeCode.DayToSecond) {
+		}
+
+		private SqlDayToSecondType(SerializationInfo info)
+			: base(info) {
 		}
 
 		public override ISqlValue Add(ISqlValue a, ISqlValue b) {

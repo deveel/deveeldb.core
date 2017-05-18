@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlBinaryExpression : SqlExpression {
 		internal SqlBinaryExpression(SqlExpressionType expressionType, SqlExpression left, SqlExpression right)
@@ -31,6 +33,12 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Left = left;
 			Right = right;
+		}
+
+		private SqlBinaryExpression(SerializationInfo info)
+			: base(info) {
+			Left = info.GetValue<SqlExpression>("left");
+			Right = info.GetValue<SqlExpression>("right");
 		}
 
 		public SqlExpression Left { get; }
@@ -50,6 +58,11 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitBinary(this);
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("left", Left);
+			info.SetValue("right", Right);
 		}
 
 		private async Task<SqlExpression[]> ReduceSides(IContext context) {

@@ -17,26 +17,28 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 
 using DryIoc;
 
 namespace Deveel.Data.Services {
-	public class ServiceContainer : IScope, IServiceProvider {
+	public class ServiceContainer : IScope {
 		private IContainer container;
 		public ServiceContainer() 
-			: this(null, null) {
+			: this(null, null, false) {
 		}
 
-		private ServiceContainer(ServiceContainer parent, string scopeName) {
+		private ServiceContainer(ServiceContainer parent, string scopeName, bool readOnly) {
 			if (parent != null) {
-				container = parent.container.OpenScope(scopeName)
-					.With(rules => rules.WithDefaultReuseInsteadOfTransient(Reuse.InCurrentNamedScope(scopeName)));
+				container = parent.container.OpenScope(scopeName);
 
 				ScopeName = scopeName;
 			} else {
-				container = new Container(Rules.Default);
+				container = new Container(Rules.Default
+					.WithTrackingDisposableTransients()
+					.WithDefaultReuseInsteadOfTransient(Reuse.Singleton));
 			}
+
+			IsReadOnly = readOnly;
 		}
 
 		~ServiceContainer() {
@@ -63,13 +65,15 @@ namespace Deveel.Data.Services {
 
 		private string ScopeName { get; set; }
 
+		public bool IsReadOnly { get; }
+
 		public void Dispose() {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
 		public IScope OpenScope(string name) {
-			return new ServiceContainer(this, name);
+			return new ServiceContainer(this, name, false);
 		}
 
 		public object Resolve(Type serviceType, object name) {
@@ -101,6 +105,10 @@ namespace Deveel.Data.Services {
 				} catch (NullReferenceException) {
 					// this means that the container is out of sync in the dispose
 					return new object[0];
+				} catch (ServiceResolutionException) {
+					throw;
+				} catch (Exception ex) {
+					throw new ServiceResolutionException(serviceType, "Error resolving all services", ex);
 				}
 			}
 		}
@@ -120,16 +128,13 @@ namespace Deveel.Data.Services {
 					var implementationType = registration.ImplementationType;
 
 					var reuse = Reuse.Singleton;
-					if (!String.IsNullOrEmpty(ScopeName))
-						reuse = Reuse.InCurrentNamedScope(ScopeName);
-
 					if (!String.IsNullOrEmpty(registration.Scope))
 						reuse = Reuse.InCurrentNamedScope(registration.Scope);
 
 					if (service == null) {
-						container.Register(serviceType, implementationType, serviceKey: serviceName, reuse: reuse);
+						container.Register(serviceType, implementationType, serviceKey: serviceName, reuse:reuse);
 					} else {
-						container.RegisterInstance(serviceType, service, serviceKey: serviceName, reuse: reuse);
+						container.RegisterInstance(serviceType, service, serviceKey: serviceName, reuse:reuse);
 					}
 				}
 			} catch(ServiceException) {

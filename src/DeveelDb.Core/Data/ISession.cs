@@ -18,6 +18,7 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Diagnostics;
 using Deveel.Data.Security;
 using Deveel.Data.Transactions;
 
@@ -26,7 +27,7 @@ namespace Deveel.Data {
 	/// An authenticate session to a given database for a given user,
 	/// that wraps a transaction for operations.
 	/// </summary>
-	public interface ISession : IContext {
+	public interface ISession : IContext, IEventSource {
 		/// <summary>
 		/// Gets the name of the current schema of this session.
 		/// </summary>

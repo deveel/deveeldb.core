@@ -122,6 +122,29 @@ namespace Deveel.Data.Sql.Methods {
 			Assert.False(result.HasReturnedValue);
 		}
 
+		[Fact]
+		public async void ExecuteWithOutputArgs() {
+			var name = ObjectName.Parse("a.proc");
+			var info = new SqlMethodInfo(name);
+			info.Parameters.Add(new SqlParameterInfo("a", PrimitiveTypes.Integer()));
+			info.Parameters.Add(new SqlParameterInfo("b", PrimitiveTypes.Integer(), SqlParameterDirection.Out));
+
+			var procedure = new SqlProcedureDelegate(info, ctx => {
+				var a = ctx.Value("a");
+				var b = a.Multiply(SqlObject.Integer(2));
+
+				ctx.SetOutput("b", SqlExpression.Constant(b));
+			});
+
+			Assert.Equal(name, info.MethodName);
+
+			var result = await procedure.ExecuteAsync(context, new InvokeArgument("a", SqlObject.Integer(22)));
+
+			Assert.NotNull(result);
+			Assert.False(result.HasReturnedValue);
+			Assert.NotEmpty(result.Output);
+		}
+
 
 		public void Dispose() {
 			context?.Dispose();

@@ -1,7 +1,25 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
@@ -98,7 +116,7 @@ namespace Deveel.Data.Sql.Methods {
 					}
 				},
 				initialize => {
-					var groupResolver = initialize.ResolveService<IGroupResolver>();
+					var groupResolver = initialize.GetGroupResolver();
 					var groupSize = groupResolver.Size;
 
 					var argRef = (initialize.Input as SqlReferenceExpression)?.ReferenceName;
@@ -140,7 +158,7 @@ namespace Deveel.Data.Sql.Methods {
 						iterate.SetResult(iterate.Current.Add(iterate.Accumulation));
 					}
 				}, merge: merge => {
-					var groupResolver = merge.ResolveService<IGroupResolver>();
+					var groupResolver = merge.GetGroupResolver();
 					var groupSize = groupResolver.Size;
 
 					var final = merge.Accumulated.Divide(SqlObject.BigInt(groupSize));
@@ -150,7 +168,7 @@ namespace Deveel.Data.Sql.Methods {
 
 			// STDEV
 			RegisterAggregate("STDEV", Deterministic("column"), PrimitiveTypes.VarNumeric(), iterate => {
-				var aggregator = iterate.ResolveService<AvgAggregator>();
+				var aggregator = (iterate as IContext).Scope.Resolve<AvgAggregator>();
 				aggregator.Values.Add(iterate.Current);
 
 				if (iterate.IsFirst) {
@@ -159,17 +177,17 @@ namespace Deveel.Data.Sql.Methods {
 					iterate.SetResult(iterate.Current.Add(iterate.Accumulation));
 				}
 			}, initialize => {
-				var groupResolver = initialize.ResolveService<IGroupResolver>();
+				var groupResolver = initialize.GetGroupResolver();
 				var aggregator = new AvgAggregator {
 					Values = new BigList<SqlObject>(groupResolver.Size)
 				};
 
-				initialize.MethodContext.RegisterInstance<AvgAggregator>(aggregator);
+				initialize.OnIterateScope(scope => scope.RegisterInstance<AvgAggregator>(aggregator));
 				return Task.CompletedTask;
 			}, merge => {
-				var groupResolver = merge.ResolveService<IGroupResolver>();
+				var groupResolver = merge.GetGroupResolver();
 				var groupSize = groupResolver.Size;
-				var aggregator = merge.ResolveService<AvgAggregator>();
+				var aggregator = (merge as IContext).Scope.Resolve<AvgAggregator>();
 
 				var avg = merge.Accumulated.Divide(SqlObject.BigInt(groupSize));
 				var sums = aggregator.Values.Select(x => SqlMath.Pow((SqlNumber) x.Subtract(avg).Value, (SqlNumber) 2));
@@ -196,7 +214,7 @@ namespace Deveel.Data.Sql.Methods {
 			// LAST
 			RegisterAggregate("LAST", Deterministic("column"), new SqlDeterministicType(),
 				iterate => {
-					var groupResolver = iterate.ResolveService<IGroupResolver>();
+					var groupResolver = iterate.GetGroupResolver();
 					var groupSize = groupResolver.Size;
 
 					if (iterate.Offset == groupSize - 1) {
@@ -217,7 +235,7 @@ namespace Deveel.Data.Sql.Methods {
 				iterate => {
 					// no-op
 				}, merge: merge => {
-					var groupResolver = merge.ResolveService<IGroupResolver>();
+					var groupResolver = merge.GetGroupResolver();
 					merge.SetOutput(SqlObject.Integer(groupResolver.GroupId));
 					return Task.CompletedTask;
 				});

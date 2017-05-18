@@ -18,7 +18,7 @@
 using System;
 using System.Globalization;
 
-using Deveel.Data.Text;
+using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql {
 	public sealed class SqlCharacterType : SqlType {
@@ -35,6 +35,15 @@ namespace Deveel.Data.Sql {
 
 			MaxSize = maxSize;
 			Locale = locale;
+		}
+
+		private SqlCharacterType(SerializationInfo info)
+			: base(info) {
+			MaxSize = info.GetInt32("maxSize");
+
+			var culture = info.GetString("locale");
+			if (!String.IsNullOrEmpty(culture))
+				Locale = new CultureInfo(culture);
 		}
 
 		/// <summary>
@@ -69,6 +78,11 @@ namespace Deveel.Data.Sql {
 
 		public override bool IsInstanceOf(ISqlValue value) {
 			return value is ISqlString || value is SqlNull;
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("maxSize", MaxSize);
+			info.SetValue("locale", Locale?.Name);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

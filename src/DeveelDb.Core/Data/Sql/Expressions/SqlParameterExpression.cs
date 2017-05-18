@@ -17,10 +17,16 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlParameterExpression : SqlExpression {
 		internal SqlParameterExpression()
 			: base(SqlExpressionType.Parameter) {
+		}
+
+		private SqlParameterExpression(SerializationInfo info)
+			: base(info) {
 		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {

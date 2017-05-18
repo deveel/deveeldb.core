@@ -32,7 +32,7 @@ namespace Deveel.Data.Sql.Methods {
 		public override FunctionType FunctionType => FunctionType.Aggregate;
 
 		public override bool Matches(IContext context, Invoke invoke) {
-			var ignoreCase = context.GetValue("ignoreCase", true);
+			var ignoreCase = context.IgnoreCase();
 
 			if (!MethodInfo.MethodName.Equals(invoke.MethodName, ignoreCase))
 				return false;
@@ -70,11 +70,15 @@ namespace Deveel.Data.Sql.Methods {
 			if (context.ArgumentCount > 0)
 				input = context.Argument(0);
 
+			Action<IScope> iterateScopeInit;
+
 			using (var seed = new InitializeContext(context, input)) {
 				await InitializeAsync(seed);
 
 				if (seed.Result != null)
 					input = seed.Result;
+
+				iterateScopeInit = seed.IterateScopeInit;
 
 				if (!seed.Iterate) {
 					context.SetResult(input);
@@ -85,35 +89,35 @@ namespace Deveel.Data.Sql.Methods {
 
 			SqlObject output = null;
 
-			if (input != null) {
-				if (input is SqlReferenceExpression) {
-					var reference = (SqlReferenceExpression) input;
-					output = await IterateReference(context, reference.ReferenceName, groupResolver);
-				} else {
-					output = await IterateValues(context, input, groupResolver);
+			using (var iterateContext = context.Create($"Iterate_{MethodInfo.MethodName}", iterateScopeInit)) {
+				if (input != null) {
+					if (input is SqlReferenceExpression) {
+						var reference = (SqlReferenceExpression) input;
+						output = await IterateReference(iterateContext, reference.ReferenceName, groupResolver);
+					} else {
+						output = await IterateValues(iterateContext, input, groupResolver);
+					}
 				}
-			}
 
-			using (var aggregate = new MergeContext(context, output)) {
-				await MergeAsync(aggregate);
+				using (var aggregate = new MergeContext(iterateContext, output)) {
+					await MergeAsync(aggregate);
 
-				if (aggregate.Output != null)
-					output = aggregate.Output;
+					if (aggregate.Output != null)
+						output = aggregate.Output;
+				}
 			}
 
 			context.SetResult(output);
 		}
 
-		private async Task<SqlObject> IterateValues(MethodContext context, SqlExpression input, IGroupResolver groupResolver) {
+		private async Task<SqlObject> IterateValues(IContext context, SqlExpression input, IGroupResolver groupResolver) {
 			SqlObject result = null;
 
 			for (int i = 0; i < groupResolver.Size; i++) {
 				SqlObject value;
+				var resolver = groupResolver.GetResolver(i);
 
-				using (var reduce = context.Create("reduce")) {
-					var resolver = groupResolver.GetResolver(i);
-					reduce.RegisterInstance<IReferenceResolver>(resolver);
-
+				using (var reduce = context.Create("reduce", scope => scope.AddReferenceResolver(resolver))) {
 					var reduced = await input.ReduceAsync(reduce);
 					if (reduced.ExpressionType != SqlExpressionType.Constant)
 						throw new InvalidOperationException();
@@ -137,7 +141,7 @@ namespace Deveel.Data.Sql.Methods {
 			return result;
 		}
 
-		private async Task<SqlObject> IterateReference(MethodContext context, ObjectName refName, IGroupResolver groupResolver) {
+		private async Task<SqlObject> IterateReference(IContext context, ObjectName refName, IGroupResolver groupResolver) {
 			SqlObject result = null;
 
 			for (long i = 0; i < groupResolver.Size; i++) {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Security;
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 
 using Moq;
@@ -38,9 +39,12 @@ namespace Deveel.Data.Sql.Statements {
 			var requirements = new RequirementCollection();
 			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Alter);
 
-			var statement = new TestStatement {
-				Requirements = requirements
+			SqlStatement statement = new TestStatement {
+				Requirements = requirements,
+				Location = new LocationInfo(0, 0)
 			};
+
+			statement = statement.Prepare(context);
 
 			await Assert.ThrowsAnyAsync<UnauthorizedAccessException>(() => statement.ExecuteAsync(context));
 		}
@@ -50,11 +54,27 @@ namespace Deveel.Data.Sql.Statements {
 			var requirements = new RequirementCollection();
 			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Insert);
 
-			var statement = new TestStatement {
-				Requirements = requirements
+			SqlStatement statement = new TestStatement {
+				Requirements = requirements,
+				Location = new LocationInfo(0, 0)
 			};
 
+			statement = statement.Prepare(context);
+
 			await statement.ExecuteAsync(context);
+		}
+
+		[Fact]
+		public void SerializeTest() {
+			var statement = new TestStatement {
+				Location = new LocationInfo(0, 0)
+			};
+
+			var result = BinarySerializeUtil.Serialize(statement);
+
+			Assert.NotNull(result.Location);
+			Assert.Equal(statement.Location, result.Location);
+			Assert.Null(result.Body);
 		}
 
 		public void Dispose() {
@@ -64,15 +84,23 @@ namespace Deveel.Data.Sql.Statements {
 		#region TestStatement
 
 		class TestStatement : SqlStatement {
+			public TestStatement() {
+				
+			}
+
+			private TestStatement(SerializationInfo info)
+				: base(info) {
+			}
+
 			public IEnumerable<IRequirement> Requirements { get; set; }
 
-			public Func<IContext, Task> Body { get; set; }
+			public Func<StatementContext, Task> Body { get; set; }
 
 			protected override void Require(IRequirementCollection requirements) {
 				requirements.Append(Requirements);
 			}
 
-			protected override Task ExecuteStatementAsync(IContext context) {
+			protected override Task ExecuteStatementAsync(StatementContext context) {
 				if (Body == null)
 					return Task.CompletedTask;
 

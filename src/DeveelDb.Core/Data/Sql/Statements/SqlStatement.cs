@@ -19,19 +19,56 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Diagnostics;
 using Deveel.Data.Security;
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
-	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement> {
+	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement>, ISerializable {
 		public virtual bool CanPrepare => true;
+
+		protected SqlStatement(SerializationInfo info) {
+			Location = info.GetValue<LocationInfo>("location");
+		}
+
+		protected SqlStatement() {
+		}
+
+		protected virtual string Name {
+			get {
+				var name = GetType().Name;
+				if (name.EndsWith("Statenment", StringComparison.OrdinalIgnoreCase))
+					name = name.Substring(0, name.Length - 10);
+
+				return name;
+			}
+		}
+
+		internal string StatementName => Name;
+
+		public LocationInfo Location { get; set; }
+
+		internal SqlStatement Parent { get; set; }
+
+		protected virtual StatementContext CreateContext(IContext parent) {
+			return new StatementContext(parent, Name, this);
+		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			AppendTo(builder);
 		}
 
 		protected virtual void AppendTo(SqlStringBuilder builder) {
+			
+		}
+
+		internal void CollectMetadata(IDictionary<string, object> data) {
+			GetMetadata(data);
+		}
+
+		protected virtual void GetMetadata(IDictionary<string, object> data) {
 			
 		}
 
@@ -52,46 +89,65 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		public SqlStatement Prepare(IContext context) {
-			var preparers = context.Scope.ResolveAll<ISqlExpressionPreparer>();
-			var result = this;
+			using (var statementContext = CreateContext(context)) {
+				var preparers = context.Scope.ResolveAll<ISqlExpressionPreparer>();
+				var result = this;
 
-			foreach (var preparer in preparers) {
-				result = PrepareExpressions(preparer);
+				foreach (var preparer in preparers) {
+					result = PrepareExpressions(preparer);
+				}
+
+				if (CanPrepare)
+					result = result.PrepareStatement(statementContext);
+
+				return result;
 			}
-
-			if (CanPrepare)
-				result = result.PrepareStatement(context);
-
-			return result;
 		}
 
 		private async Task CheckRequirements(IContext context) {
+			context.Debug(-1, "Collecting security requirements");
+
 			var registry = new RequirementCollection();
 			Require(registry);
 
-			using (var securityContext = context.Create($"Statement{GetType().Name}.Security")) {
-				securityContext.RegisterInstance<IRequirementCollection>(registry);
+			using (var securityContext = context.Create($"Statement{GetType().Name}.Security",
+				scope => scope.RegisterInstance<IRequirementCollection>(registry))) {
+				context.Debug(-1, "Check security requirements");
 
 				await securityContext.CheckRequirementsAsync();
 			}
 		}
 
 		public async Task ExecuteAsync(IContext context) {
-			await CheckRequirements(context);
+			using (var statementContext = CreateContext(context)) {
 
-			try {
-				await ExecuteStatementAsync(context);
-			} catch (SqlStatementException) {
-				throw;
-			} catch (Exception ex) {
-				throw new SqlStatementException("Could not execute the statement because of an error", ex);
+				await CheckRequirements(statementContext);
+
+				try {
+					await ExecuteStatementAsync(statementContext);
+				} catch (SqlStatementException) {
+
+					throw;
+				} catch (Exception ex) {
+					statementContext.Error(-1, "Could not execute the statement", ex);
+					throw new SqlStatementException("Could not execute the statement because of an error", ex);
+				}
 			}
 		}
 
-		protected abstract Task ExecuteStatementAsync(IContext context);
+		protected abstract Task ExecuteStatementAsync(StatementContext context);
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+		protected virtual void GetObjectData(SerializationInfo info) {
+			
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("location", Location);
+			GetObjectData(info);
 		}
 	}
 }

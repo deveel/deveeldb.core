@@ -18,8 +18,10 @@
 using System;
 using System.Collections.Generic;
 
+using Deveel.Data.Configuration;
+
 namespace Deveel.Data.Transactions {
-	public interface ITransaction : IContext {
+	public interface ITransaction : IContext, IConfigurationScope {
 		/// <summary>
 		/// Gets a unique identifier of the transaction
 		/// </summary>

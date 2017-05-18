@@ -17,11 +17,17 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlBooleanType : SqlType {
 		public SqlBooleanType(SqlTypeCode typeCode) 
 			: base(typeCode) {
 			AssertIsBoolean(typeCode);
+		}
+
+		private SqlBooleanType(SerializationInfo info)
+			: base(info) {
 		}
 
 		private static void AssertIsBoolean(SqlTypeCode sqlType) {

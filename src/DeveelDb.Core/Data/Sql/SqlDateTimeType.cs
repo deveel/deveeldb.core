@@ -17,11 +17,17 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlDateTimeType : SqlType {
 		public SqlDateTimeType(SqlTypeCode sqlType)
 			: base(sqlType) {
 			AssertDateType(sqlType);
+		}
+
+		private SqlDateTimeType(SerializationInfo info)
+			: base(info) {
 		}
 
 		private static void AssertDateType(SqlTypeCode sqlType) {

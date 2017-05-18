@@ -19,6 +19,7 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql;
 
 namespace Deveel.Data {
@@ -40,7 +41,7 @@ namespace Deveel.Data {
 	/// </para>
 	/// </remarks>
 	[DebuggerDisplay("{FullName}")]
-	public sealed class ObjectName : IEquatable<ObjectName>, IComparable<ObjectName>, ISqlFormattable {
+	public sealed class ObjectName : IEquatable<ObjectName>, IComparable<ObjectName>, ISqlFormattable, ISerializable {
 		/// <summary>
 		/// The special name used as a wild-card to indicate all the columns of a table
 		/// must be referenced in a given context.
@@ -92,6 +93,11 @@ namespace Deveel.Data {
 			
 			Name = name;
 			Parent = parent;
+		}
+
+		private ObjectName(SerializationInfo info) {
+			Name = info.GetString("name");
+			Parent = info.GetValue<ObjectName>("parent");
 		}
 
 		/// <summary>
@@ -328,6 +334,11 @@ namespace Deveel.Data {
 				code ^= Parent.GetHashCode(ignoreCase);
 
 			return code;
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("name", Name);
+			info.SetValue("parent", Parent);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {

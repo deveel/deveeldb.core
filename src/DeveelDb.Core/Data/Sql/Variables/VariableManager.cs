@@ -16,20 +16,17 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
-using Deveel.Data.Configuration;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Variables {
-	public sealed class VariableManager : IDbObjectManager, IVariableResolver {
+	public sealed class VariableManager : IVariableResolver, IVariableManager {
 		private bool disposed;
-		private Dictionary<ObjectName, Variable> variables;
+		private DbObjectCache<Variable> variables;
 
 		public VariableManager() {
-			variables = new Dictionary<ObjectName, Variable>(ObjectNameComparer.Ordinal);
+			variables = new DbObjectCache<Variable>();
 		}
 
 		~VariableManager() {
@@ -44,7 +41,7 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		public void CreateVariable(VariableInfo variableInfo) {
-			variables.Add(new ObjectName(variableInfo.Name), new Variable(variableInfo));
+			variables.SetObject(new ObjectName(variableInfo.Name), new Variable(variableInfo));
 		}
 
 		Task<bool> IDbObjectManager.RealObjectExistsAsync(ObjectName objName) {
@@ -58,18 +55,20 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		public bool VariableExists(string name) {
-			return variables.ContainsKey(new ObjectName(name));
+			return variables.ContainsObject(new ObjectName(name));
 		}
 
 		Task<IDbObjectInfo> IDbObjectManager.GetObjectInfoAsync(ObjectName objectName) {
-			var variable = GetVariable(objectName.Name);
-			var objInfo = (IDbObjectInfo) variable?.VariableInfo;
-			return Task.FromResult(objInfo);
+			Variable variable;
+			if (!variables.TryGetObject(objectName, out variable))
+				return Task.FromResult<IDbObjectInfo>(null);
+
+			return Task.FromResult<IDbObjectInfo>(variable.VariableInfo);
 		}
 			
 		Task<IDbObject> IDbObjectManager.GetObjectAsync(ObjectName objName) {
 			var result = GetVariable(objName.FullName);
-			return Task.FromResult((IDbObject) result);
+			return Task.FromResult<IDbObject>(result);
 		}
 
 		Task<bool> IDbObjectManager.AlterObjectAsync(IDbObjectInfo objInfo) {
@@ -81,68 +80,60 @@ namespace Deveel.Data.Sql.Variables {
 		}
 
 		Task<ObjectName> IDbObjectManager.ResolveNameAsync(ObjectName objName, bool ignoreCase) {
-			var comparer = ignoreCase ? ObjectNameComparer.IgnoreCase : ObjectNameComparer.Ordinal;
-			var dictionary = new Dictionary<ObjectName, Variable>(variables, comparer);
-			Variable variable;
-			if (!dictionary.TryGetValue(objName, out variable))
-				return Task.FromResult<ObjectName>(null);
+			ObjectName resolved;
+			if (variables.TryResolveName(objName, ignoreCase, out resolved))
+				return Task.FromResult(resolved);
 
-			return Task.FromResult((variable.VariableInfo as IDbObjectInfo).FullName);
+			return Task.FromResult<ObjectName>(null);
 		}
 
 		public Variable ResolveVariable(string name, bool ignoreCase) {
-			var comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-			var dictionary = variables.ToDictionary(x => x.Key.FullName, y => y.Value, comparer);
+			ObjectName resolved;
+			if (!variables.TryResolveName(new ObjectName(name), ignoreCase, out resolved))
+				return null;
+
 			Variable variable;
-			if (!dictionary.TryGetValue(name, out variable))
+			if (!variables.TryGetObject(resolved, out variable))
 				return null;
 
 			return variable;
 		}
 
 		public SqlType ResolveVariableType(string name, bool ignoreCase) {
-			var comparer = ignoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-			var dictionary = variables.ToDictionary(x => x.Key.FullName, y => y.Value, comparer);
 			Variable variable;
-			if (!dictionary.TryGetValue(name, out variable))
+			if (!variables.TryGetObject(new ObjectName(name), out variable))
 				return null;
 
 			return variable.Type;
 		}
 
 		public Variable GetVariable(string name) {
-			var objName = new ObjectName(name);
 			Variable variable;
-			if (variables.TryGetValue(objName, out variable))
-				return variable;
+			if (!variables.TryGetObject(new ObjectName(name), out variable))
+				return null;
 
-			return null;
+			return variable;
 		}
 
 		public SqlExpression AssignVariable(string name, SqlExpression value, IContext context) {
-			var variable = FindVariable(name, context);
-			if (variable == null) {
+			Variable variable;
+			if (!variables.TryGetObject(new ObjectName(name), out variable)) {
 				var type = value.GetSqlType(context);
 				variable = new Variable(name, type);
-				variables.Add(new ObjectName(name),  variable);
+				variables.SetObject(new ObjectName(name), variable);
 			}
 
 			return variable.SetValue(value, context);
 		}
 
 		public bool RemoveVariable(string name) {
-			return variables.Remove(new ObjectName(name));
-		}
-
-		private Variable FindVariable(string name, IContext context) {
-			var ignoreCase = context.GetValue("ignoreCase", false);
-			return ResolveVariable(name, ignoreCase);
+			return variables.RemoveObject(new ObjectName(name));
 		}
 
 		private void Dispose(bool disposing) {
 			if (!disposed) {
 				if (disposing)
-					variables.Clear();
+					variables.Dispose();
 
 				variables = null;
 				disposed = true;

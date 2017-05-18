@@ -22,6 +22,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	/// <summary>
 	/// The most simple implementation of a SQL string with a small size
@@ -83,6 +85,11 @@ namespace Deveel.Data.Sql {
 
 		public SqlString(byte[] bytes)
 			: this(bytes, 0, bytes == null ? 0 : bytes.Length) {
+		}
+
+		private SqlString(SerializationInfo info) {
+			source = info.GetString("source");
+			Length = source?.Length ?? 0;
 		}
 
 		private static char[] GetChars(byte[] bytes, int offset, int length) {
@@ -271,6 +278,10 @@ namespace Deveel.Data.Sql {
 			var outChars = new char[sb.Length];
 			sb.CopyTo(0, outChars, 0, sb.Length);
 			return new SqlString(outChars, outChars.Length);
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("source", source);
 		}
 
 		#region StringEnumerator
