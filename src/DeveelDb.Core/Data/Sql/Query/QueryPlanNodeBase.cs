@@ -67,13 +67,5 @@ namespace Deveel.Data.Sql.Query {
 		IQueryPlanNode[] IQueryPlanNode.ChildNodes => ChildNodes;
 
 		public abstract Task<ITable> ReduceAsync(IContext context);
-
-		protected virtual void GetObjectData(SerializationInfo info) {
-			
-		}
-
-		void ISerializable.GetObjectData(SerializationInfo info) {
-			GetObjectData(info);
-		}
 	}
 }

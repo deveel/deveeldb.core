@@ -37,7 +37,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 		[Fact]
 		public async Task CreateFromSimpleQuery() {
 			var query = new SqlQueryExpression();
-			query.Items.Add(new SqlReferenceExpression(new ObjectName("a")));
+			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
 			query.From.Table(new ObjectName("tab1"));
 
 			var queryFrom = await QueryExpressionFrom.CreateAsync(context, query);

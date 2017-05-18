@@ -12,6 +12,7 @@
     <RepositoryUrl>http://github.com/deveel/deveeldb.core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>deveel core sql db database embedded deveeldb sql-99</PackageTags>
+    <VersionPrefix>2.5.0</VersionPrefix>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
