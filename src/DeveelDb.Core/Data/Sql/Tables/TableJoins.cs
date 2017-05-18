@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Tables {
@@ -62,9 +63,7 @@ namespace Deveel.Data.Sql.Tables {
 				var rowResolver = row.GetResolver();
 				IEnumerable<long> selectedSet;
 
-				using (var rowContext = context.Create($"row_{rowIndex}")) {
-					rowContext.RegisterInstance<IReferenceResolver>(rowResolver);
-
+				using (var rowContext = context.Create($"row_{rowIndex}", scope => scope.ReplaceInstance<IReferenceResolver>(rowResolver))) {
 					// Select all the rows in this table that match the joining condition.
 					selectedSet = await thisTable.SelectRowsAsync(rowContext, binary);
 				}

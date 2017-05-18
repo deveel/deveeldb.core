@@ -17,12 +17,6 @@ namespace Deveel.Data.Sql.Query {
 		private IContext context;
 
 		public SimpleNodeTests() {
-			var mock = new Mock<IContext>();
-			mock.SetupGet(x => x.Scope)
-				.Returns(new ServiceContainer());
-
-			context = mock.Object;
-
 			var tableInfo1 = new TableInfo(new ObjectName("tab1"));
 			tableInfo1.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
 			tableInfo1.Columns.Add(new ColumnInfo("b", PrimitiveTypes.Boolean()));
@@ -54,10 +48,18 @@ namespace Deveel.Data.Sql.Query {
 			tableManager.Setup(x => x.GetObjectAsync(It.Is<ObjectName>(name => name.Name == "tab2")))
 				.Returns<ObjectName>(name => Task.FromResult<IDbObject>(table2));
 
-			context.RegisterInstance<IDbObjectManager>(tableManager.Object);
-			context.RegisterService<ITableCache, InMemoryTableCache>();
+			var scope = new ServiceContainer();
 
-			context.RegisterService<IMethodResolver, SystemFunctionProvider>();
+			scope.RegisterInstance<IDbObjectManager>(tableManager.Object, DbObjectType.Table);
+			scope.Register<ITableCache, InMemoryTableCache>();
+
+			scope.Register<IMethodResolver, SystemFunctionProvider>();
+
+			var mock = new Mock<IContext>();
+			mock.SetupGet(x => x.Scope)
+				.Returns(scope);
+
+			context = mock.Object;
 		}
 
 		[Fact]
@@ -279,7 +281,7 @@ namespace Deveel.Data.Sql.Query {
 
 			var result = await markNode.ReduceAsync(context);
 
-			var cache = context.ResolveService<ITableCache>();
+			var cache = context.Scope.Resolve<ITableCache>();
 			ITable cachedTable;
 			Assert.True(cache.TryGetTable("JOIN", out cachedTable));
 
@@ -305,7 +307,7 @@ namespace Deveel.Data.Sql.Query {
 			var distinctNode = new DistinctNode(fetchNode, new[] { new ObjectName(tableName, "a") });
 
 			var table = await fetchNode.ReduceAsync(context);
-			var cache = context.ResolveService<ITableCache>();
+			var cache = context.Scope.Resolve<ITableCache>();
 			cache.SetTable("JOIN", table);
 
 			var leftOuterNode = new LeftOuterJoinNode(distinctNode, "JOIN");

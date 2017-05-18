@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Sql.Query {
@@ -19,7 +20,7 @@ namespace Deveel.Data.Sql.Query {
 
 		public override async Task<ITable> ReduceAsync(IContext context) {
 			var table = await Child.ReduceAsync(context);
-			var cache = context.ResolveService<ITableCache>();
+			var cache = context.Scope.Resolve<ITableCache>();
 
 			cache.SetTable(MarkerName, table);
 

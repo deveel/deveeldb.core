@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {
@@ -63,6 +64,14 @@ namespace Deveel.Data.Sql.Tables {
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
 			return false;
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			GetObjectData(info);
+		}
+
+		protected virtual void GetObjectData(SerializationInfo info) {
+			throw new NotSupportedException($"The table of type {GetType()} is not serializable");
 		}
 	}
 }

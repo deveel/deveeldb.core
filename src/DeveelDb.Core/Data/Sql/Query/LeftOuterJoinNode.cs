@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Sql.Query {
@@ -13,7 +14,7 @@ namespace Deveel.Data.Sql.Query {
 		public string CacheKey { get; }
 
 		public override async Task<ITable> ReduceAsync(IContext context) {
-			var cache = context.ResolveService<ITableCache>();
+			var cache = context.Scope.Resolve<ITableCache>();
 			if (cache == null)
 				throw new InvalidOperationException("No table cache was registered");
 

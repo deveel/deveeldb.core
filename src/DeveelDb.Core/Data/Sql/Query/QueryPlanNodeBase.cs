@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql;
 using Deveel.Data.Sql.Tables;
 
@@ -51,5 +52,13 @@ namespace Deveel.Data.Sql.Query {
 		IQueryPlanNode[] IQueryPlanNode.ChildNodes => ChildNodes;
 
 		public abstract Task<ITable> ReduceAsync(IContext context);
+
+		protected virtual void GetObjectData(SerializationInfo info) {
+			
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			GetObjectData(info);
+		}
 	}
 }

@@ -22,7 +22,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 			config.SetValue("currentSchema", "sys");
 
 			var container = new ServiceContainer();
-			container.RegisterInstance<IDbObjectManager>(tableManager);
+			container.RegisterInstance<IDbObjectManager>(tableManager, DbObjectType.Table);
 
 			var mock = new Mock<IContext>();
 			mock.SetupGet(x => x.Scope)

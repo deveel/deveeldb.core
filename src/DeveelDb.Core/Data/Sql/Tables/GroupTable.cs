@@ -104,11 +104,14 @@ namespace Deveel.Data.Sql.Tables {
 			groupRows.Add(previousRow);
 		}
 
-		protected override void PrepareRowContext(IContext context, long row) {
+		protected override void PrepareRowContext(IScope scope, long row) {
 			var rowResolver = groupResolver.GetRowResolver(row);
-			context.RegisterInstance<IGroupResolver>(rowResolver);
+			if (scope.IsRegistered<IGroupResolver>())
+				scope.Unregister<IGroupResolver>();
 
-			base.PrepareRowContext(context, row);
+			scope.RegisterInstance<IGroupResolver>(rowResolver, null);
+
+			base.PrepareRowContext(scope, row);
 		}
 
 		public override VirtualTable GroupMax(ObjectName maxColumn) {

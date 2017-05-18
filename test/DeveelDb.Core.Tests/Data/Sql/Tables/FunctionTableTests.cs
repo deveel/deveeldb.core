@@ -26,12 +26,6 @@ namespace Deveel.Data.Sql.Tables {
 
 			left.BuildIndex();
 
-			var mock = new Mock<IContext>();
-			mock.SetupGet(x => x.Scope)
-				.Returns(new ServiceContainer());
-
-			context = mock.Object;
-
 			var group = new List<SqlObject> {
 				SqlObject.Integer(33),
 				SqlObject.Integer(22),
@@ -53,9 +47,16 @@ namespace Deveel.Data.Sql.Tables {
 			resolverMock.Setup(x => x.GetResolver(It.IsAny<long>()))
 				.Returns(refResolver.Object);
 
+			var scope = new ServiceContainer();
 
-			context.RegisterService<IMethodResolver, SystemFunctionProvider>();
-			context.RegisterInstance<IGroupResolver>(resolverMock.Object);
+			scope.Register<IMethodResolver, SystemFunctionProvider>();
+			scope.RegisterInstance<IGroupResolver>(resolverMock.Object, null);
+
+			var mock = new Mock<IContext>();
+			mock.SetupGet(x => x.Scope)
+				.Returns(scope);
+
+			context = mock.Object;
 		}
 
 		[Fact]

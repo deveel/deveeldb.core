@@ -12,7 +12,7 @@ namespace Deveel.Data.Sql.Tables {
 		}
 
 		public static async Task<TableInfo> GetTableInfoAsync(this IContext context, ObjectName tableName) {
-			return (await context.GetObjectInfo(DbObjectType.Table, tableName)) as TableInfo;
+			return (await context.GetObjectInfoAsync(DbObjectType.Table, tableName)) as TableInfo;
 		}
 	}
 }

@@ -235,7 +235,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 					var tableName = context.QualifyName(name);
 
 					if (!await context.TableExistsAsync(tableName))
-						throw new InvalidOperationException(String.Format("Table '{0}' was not found.", tableName));
+						throw new InvalidOperationException($"Table '{tableName}' was not found.");
 
 					ObjectName givenName = null;
 					if (alias != null)
