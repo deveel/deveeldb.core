@@ -193,11 +193,11 @@ namespace Deveel.Data.Sql.Query.Plan {
 			var referenceName = ResolveReference(name);
 			if (referenceName == null) {
 				if (Parent == null)
-					throw new InvalidOperationException(String.Format("Reference '{0}' was not found in context.", name));
+					throw new InvalidOperationException($"Reference '{name}' was not found in context.");
 
-				var queryRef = GlobalResolveReference(1, name);
+				var queryRef = GlobalResolveReference(0, name);
 				if (queryRef == null)
-					throw new InvalidOperationException(String.Format("Reference '{0}' was not found in context.", name));
+					throw new InvalidOperationException($"Reference '{name}' was not found in context.");
 
 				return queryRef;
 			}
@@ -226,7 +226,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 						aliasTableName = new ObjectName(alias);
 
 					// Add to list of sub-query tables to add to command,
-					queryFrom.AddTable(new FromTableSubQuerySource(ignoreCase, uniqueKey, subQuery, subQueryFrom, aliasTableName));
+					queryFrom.AddTable(new FromTableSubQuery(ignoreCase, uniqueKey, subQuery, subQueryFrom, aliasTableName));
 				} else {
 					// Else must be a standard command table,
 					var name = fromTable.TableName;

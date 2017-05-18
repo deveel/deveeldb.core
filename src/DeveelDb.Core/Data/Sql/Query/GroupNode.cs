@@ -35,6 +35,9 @@ namespace Deveel.Data.Sql.Query {
 			// expression is simple or not.
 			for (int i = 0; i < Functions.Length; ++i) {
 				var expr = Functions[i];
+
+				var sqlType = expr.GetSqlType(context);
+
 				// Examine the expression and determine if it is simple or not
 				if (expr.IsConstant() && !expr.HasAggregate(context)) {
 					// If expression is a constant, solve it
@@ -42,11 +45,9 @@ namespace Deveel.Data.Sql.Query {
 					if (result.ExpressionType != SqlExpressionType.Constant)
 						throw new InvalidOperationException();
 
-					var sqlType = expr.GetSqlType(context);
-					columns[i] = new FunctionColumnInfo(expr, FunctionNames[i], sqlType, true);
+					columns[i] = new FunctionColumnInfo(result, FunctionNames[i], sqlType, true);
 				} else {
 					// Otherwise must be dynamic
-					var sqlType = expr.GetSqlType(context);
 					columns[i] = new FunctionColumnInfo(expr, FunctionNames[i], sqlType, false);
 				}
 			}

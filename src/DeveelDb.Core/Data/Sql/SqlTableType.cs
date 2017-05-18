@@ -21,14 +21,48 @@ using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Sql {
 	public sealed class SqlTableType : SqlType {
-		internal SqlTableType()
+		internal SqlTableType(TableInfo tableInfo)
 			: base(SqlTypeCode.Table) {
+			if (tableInfo == null)
+				throw new ArgumentNullException(nameof(tableInfo));
+
+			TableInfo = tableInfo;
 		}
+
+		public TableInfo TableInfo { get; }
 
 		public override bool IsInstanceOf(ISqlValue value) {
 			return value is ITable;
 		}
 
 		public override bool IsIndexable => false;
+
+		public override bool CanCastTo(ISqlValue value, SqlType destType) {
+			if (!(value is ITable))
+				return false;
+			if (TableInfo.Columns.Count != 1)
+				return false;
+
+			var table = (ITable) value;
+			var fieldValue = table.GetValue(0, 0);
+
+			return fieldValue.CanCastTo(destType);
+		}
+
+		public override ISqlValue Cast(ISqlValue value, SqlType destType) {
+			if (!(value is ITable))
+				throw new NotSupportedException();
+
+			var table = (ITable) value;
+
+			if (table.TableInfo.Columns.Count != 1)
+				throw new NotSupportedException();
+
+			var fieldValue = table.GetValue(0, 0);
+			if (!fieldValue.CanCastTo(destType))
+				throw new NotSupportedException();
+
+			return fieldValue.Type.Cast(fieldValue.Value, destType);
+		}
 	}
 }

@@ -17,6 +17,16 @@ namespace Deveel.Data.Sql.Query {
 		private IContext context;
 
 		public SimpleNodeTests() {
+			var scope = new ServiceContainer();
+
+			var mock = new Mock<IContext>();
+			mock.SetupGet(x => x.Scope)
+				.Returns(scope);
+			mock.Setup(x => x.Dispose())
+				.Callback(scope.Dispose);
+
+			context = mock.Object;
+
 			var tableInfo1 = new TableInfo(new ObjectName("tab1"));
 			tableInfo1.Columns.Add(new ColumnInfo("a", PrimitiveTypes.Integer()));
 			tableInfo1.Columns.Add(new ColumnInfo("b", PrimitiveTypes.Boolean()));
@@ -48,18 +58,10 @@ namespace Deveel.Data.Sql.Query {
 			tableManager.Setup(x => x.GetObjectAsync(It.Is<ObjectName>(name => name.Name == "tab2")))
 				.Returns<ObjectName>(name => Task.FromResult<IDbObject>(table2));
 
-			var scope = new ServiceContainer();
-
-			scope.RegisterInstance<IDbObjectManager>(tableManager.Object, DbObjectType.Table);
+			scope.AddObjectManager(tableManager.Object);
 			scope.Register<ITableCache, InMemoryTableCache>();
 
-			scope.Register<IMethodResolver, SystemFunctionProvider>();
-
-			var mock = new Mock<IContext>();
-			mock.SetupGet(x => x.Scope)
-				.Returns(scope);
-
-			context = mock.Object;
+			scope.AddMethodRegistry<SystemFunctionProvider>();
 		}
 
 		[Fact]
@@ -208,20 +210,6 @@ namespace Deveel.Data.Sql.Query {
 
 			Assert.NotNull(result);
 			Assert.Equal(3, result.RowCount);
-		}
-
-		[Fact]
-		public async Task SimplePatternSelect() {
-			var tableName = new ObjectName("tab1");
-			var fetchNode = new FetchTableNode(tableName);
-			var exp = SqlExpression.Equal(SqlExpression.Reference(new ObjectName(tableName, "a")),
-				SqlExpression.Constant(SqlObject.Integer(23)));
-
-			var simplePattern = new SimplePatternSelectNode(fetchNode, exp);
-
-			var result = await simplePattern.ReduceAsync(context);
-
-			Assert.Equal(2, result.RowCount);
 		}
 
 		[Fact]

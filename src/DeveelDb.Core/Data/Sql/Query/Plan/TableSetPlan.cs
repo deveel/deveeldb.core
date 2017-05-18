@@ -416,7 +416,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 					// Set the new table list
 					tables = newTableList;
 				} else if (op == SqlExpressionType.And) {
-					PlanForExpressions(binary);
+					PlanForExpressions(binary.Left, binary.Right);
 				} else {
 					throw new InvalidOperationException($"Expression {op} is not a valid logical operation");
 				}
@@ -546,11 +546,11 @@ namespace Deveel.Data.Sql.Query.Plan {
 
 		}
 
-		public IQueryPlanNode PlanSearchExpression(SqlExpression search_expression) {
+		public IQueryPlanNode PlanSearchExpression(SqlExpression expression) {
 			// First perform all outer tables.
 			PlanAllOuterJoins();
 
-			return LogicalEvaluate(search_expression);
+			return LogicalEvaluate(expression);
 		}
 
 		private void EvaluateMultiples(List<SqlExpression> multiRefs, List<ExpressionPlan> evaluateOrder) {
@@ -606,13 +606,12 @@ namespace Deveel.Data.Sql.Query.Plan {
 				// Is this an easy sub-query?
 				if (expression.ExpressionType.IsQuantify()) {
 					var quantify = (SqlQuantifyExpression) expression;
-					var exps = new[]{quantify.Expression.Left, quantify.Expression.Right};
 					// Check that the left is a simple enough variable reference
-					leftRef = exps[0].AsReference();
+					leftRef = quantify.Expression.Left.AsReference();
 
 					if (leftRef != null) {
 						// Check that the right is a sub-query plan.
-						rightPlan = exps[1].AsQueryPlanNode();
+						rightPlan = quantify.Expression.Right.AsQueryPlanNode();
 						if (rightPlan != null) {
 							// Finally, check if the plan is correlated or not
 							var cv = rightPlan.DiscoverCorrelatedReferences(1);
@@ -651,7 +650,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 						evaluateOrder.Add(new ConstantExpressionPlan(expression));
 					} else {
 						foreach (var cv in allCorrelated) {
-							allRefs.Add(cv.Reference);
+							allRefs.Add(cv.ReferenceName);
 						}
 
 						// An exhaustive expression plan which might require a join or a

@@ -79,7 +79,7 @@ namespace Deveel.Data.Sql.Expressions {
 				case SqlExpressionType.Group:
 					return VisitGroup((SqlGroupExpression) expression);
 				default:
-					throw new SqlExpressionException($"Invalid expression type: {expression.ExpressionType}");
+					return expression.Accept(this);
 			}
 		}
 

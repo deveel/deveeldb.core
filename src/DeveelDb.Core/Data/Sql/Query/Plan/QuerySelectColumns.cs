@@ -4,14 +4,10 @@ using System.Globalization;
 using System.Text;
 
 using Deveel.Data.Sql.Expressions;
+using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Sql.Query.Plan {
 	class QuerySelectColumns {
-		/// <summary>
-		/// The name of the table where functions are defined.
-		/// </summary>
-		private static readonly ObjectName FunctionTableName = new ObjectName("FUNCTIONTABLE");
-
 		/// <summary>
 		/// The tables we are selecting from.
 		/// </summary>
@@ -119,8 +115,8 @@ namespace Deveel.Data.Sql.Query.Plan {
 				newColumn = new SelectColumn {
 					Expression = exp,
 					Alias = alias,
-					InternalName = new ObjectName(FunctionTableName, funcAlias),
-					ResolvedName = new ObjectName(alias)
+					InternalName = new ObjectName(FunctionTable.Name, funcAlias),
+					ResolvedName = ObjectName.Parse(alias)
 				};
 
 				functionColumns.Add(newColumn);

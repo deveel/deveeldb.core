@@ -28,7 +28,7 @@ namespace Deveel.Data.Sql.Query.Plan {
 		#region CorrelatedReferenceDiscovery
 
 		class CorrelatedReferenceDiscovery : SqlExpressionVisitor {
-			private readonly IList<CorrelatedReferenceExpression> expressions;
+			private IList<CorrelatedReferenceExpression> expressions;
 			private readonly int level;
 
 			public CorrelatedReferenceDiscovery(int level, IList<CorrelatedReferenceExpression> expressions) {
@@ -40,12 +40,21 @@ namespace Deveel.Data.Sql.Query.Plan {
 				if (expression is CorrelatedReferenceExpression) {
 					var correlated = (CorrelatedReferenceExpression) expression;
 					if (correlated.QueryLevel == level &&
-					    !expressions.Any(x => x.Reference.Equals(correlated.Reference))) {
+					    !expressions.Any(x => x.ReferenceName.Equals(correlated.ReferenceName))) {
 						expressions.Add(correlated);
 					}
 				}
 
 				return base.Visit(expression);
+			}
+
+			public override SqlExpression VisitConstant(SqlConstantExpression expression) {
+				if (expression.Value.Type is SqlQueryType) {
+					var queryPlan = (IQueryPlanNode) expression.Value.Value;
+					expressions = queryPlan.DiscoverCorrelatedReferences(level + 1, expressions);
+				}
+
+				return base.VisitConstant(expression);
 			}
 		}
 

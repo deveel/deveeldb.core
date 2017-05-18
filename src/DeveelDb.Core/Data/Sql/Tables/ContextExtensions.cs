@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+
+using Deveel.Data.Diagnostics;
 
 namespace Deveel.Data.Sql.Tables {
 	public static class ContextExtensions {

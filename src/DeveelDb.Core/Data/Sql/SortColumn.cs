@@ -1,11 +1,13 @@
-﻿using Deveel.Data.Sql.Expressions;
+﻿using System;
+
+using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
 	/// Object used to represent a column in the <c>ORDER BY</c> clauses 
 	/// of a select statement.
 	/// </summary>
-	public sealed class SortColumn : ISqlExpressionPreparable<SortColumn> {
+	public sealed class SortColumn : ISqlExpressionPreparable<SortColumn>, ISqlFormattable {
 		/// <summary>
 		/// Constructs the <c>BY</c> column reference with the expression
 		/// and the sort order given.
@@ -15,6 +17,9 @@ namespace Deveel.Data.Sql {
 		/// set to <b>true</b>, the column will be used to sort the results of
 		/// a query in ascending order.</param>
 		public SortColumn(SqlExpression expression, bool ascending) {
+			if (expression == null)
+				throw new ArgumentNullException(nameof(expression));
+
 			Expression = expression;
 			Ascending = ascending;
 		}
@@ -25,7 +30,7 @@ namespace Deveel.Data.Sql {
 		/// </summary>
 		/// <param name="expression">The expression of the column reference.</param>
 		public SortColumn(SqlExpression expression)
-			: this(expression, (bool) true) {
+			: this(expression, true) {
 		}
 
 		/// <summary>
@@ -46,6 +51,17 @@ namespace Deveel.Data.Sql {
 			}
 
 			return new SortColumn(exp, Ascending);
+		}
+
+		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
+			Expression.AppendTo(builder);
+			builder.Append(" ");
+
+			if (Ascending) {
+				builder.Append("ASC");
+			} else {
+				builder.Append("DESC");
+			}
 		}
 	}
 }

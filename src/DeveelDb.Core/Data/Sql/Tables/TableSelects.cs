@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
+using Deveel.Data.Indexes;
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 using Deveel.Data.Sql.Indexes;
+using Deveel.Data.Text;
 
 namespace Deveel.Data.Sql.Tables {
 	static class TableSelects {
@@ -96,20 +100,7 @@ namespace Deveel.Data.Sql.Tables {
 
 			IEnumerable<long> rows;
 
-			if (op == SqlExpressionType.Like ||
-			    op == SqlExpressionType.NotLike
-				/* TODO: ||
-			op.IsOfType(BinaryOperatorType.Regex)*/) {
-
-				/*
-			TODO:
-			if (op.IsOfType(BinaryOperatorType.Regex)) {
-				rows = SelectFromRegex(column, op, value);
-			} else {
-			 */
-				rows = await SelectFromPatternAsync(table, column, op, value);
-			} else if (op.IsBinary()) {
-
+			if (op.IsBinary()) {
 				// Is the column we are searching on indexable?
 				var colInfo = table.TableInfo.Columns[column];
 				if (!colInfo.ColumnType.IsIndexable)
@@ -122,6 +113,15 @@ namespace Deveel.Data.Sql.Tables {
 			}
 
 			return new VirtualTable(table, rows.ToArray(), column);
+		}
+
+		public static bool AnyMatchesValue(ITable table, int column, SqlExpressionType op, SqlObject value) {
+			return SelectRows(table, column, op, value).Any();
+		}
+
+		public static bool AllMatchesValue(ITable table, int column, SqlExpressionType op, SqlObject value) {
+			var rows = SelectRows(table, column, op, value).ToBigArray();
+			return rows.Length == table.RowCount;
 		}
 
 		private static IEnumerable<long> SelectRows(ITable table, int column, SqlExpressionType op, SqlObject value) {
@@ -155,8 +155,22 @@ namespace Deveel.Data.Sql.Tables {
 			return index.SelectRange(rangeSet.ToArray());
 		}
 
-		private static Task<IEnumerable<long>> SelectFromPatternAsync(ITable table, int column, SqlExpressionType op, SqlObject value) {
-			throw new NotImplementedException();
+		public static Task<ITable> SearchAsync(IContext context, ITable table, int column, SqlExpressionType op, SqlObject pattern, SqlObject escape) {
+			if (pattern.IsNull)
+				return Task.FromResult(table.EmptySelect());
+
+			var s = ((ISqlString) pattern.Value).ToString();
+			var stringSearch = context.Scope.Resolve<ISqlStringSearch>() ?? new SqlDefaultStringSearch();
+
+			var escapeChar = escape == null ? '\\' : ((ISqlString) escape.Value)[0];
+
+			if (op == SqlExpressionType.Like) {
+				return stringSearch.SearchLikeAsync(table, column, s, escapeChar);
+			} else if (op == SqlExpressionType.NotLike) {
+				return stringSearch.SearchNotLikeAsync(table, column, s, escapeChar);
+			}
+
+			throw new NotSupportedException();
 		}
 
 		public static async Task<ITable> SelectNonCorrelatedAsync(ITable table, ObjectName[] leftColumns, SqlExpressionType op, bool isAll, ITable rightTable) {

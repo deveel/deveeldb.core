@@ -68,11 +68,11 @@ namespace Deveel.Data.Sql.Expressions {
 			var pattern = await Pattern.ReduceAsync(context);
 
 			if (left.ExpressionType != SqlExpressionType.Constant ||
-				!(((SqlConstantExpression)left).Type is SqlCharacterType))
-				throw new SqlExpressionException("The left expression was not reduced to a constant string");
+			    !(((SqlConstantExpression) left).Type is SqlCharacterType))
+				return Constant(SqlObject.Null);
 			if (pattern.ExpressionType != SqlExpressionType.Constant ||
-				!(((SqlConstantExpression)pattern).Type is SqlCharacterType))
-				throw new SqlExpressionException("The pattern expression was not reduced to a constant string");
+			    !(((SqlConstantExpression) pattern).Type is SqlCharacterType))
+				return Constant(SqlObject.Null);
 
 			var escapeChar = PatternSearch.EscapeCharacter;
 			var leftString = (ISqlString) ((SqlConstantExpression) left).Value.Value;
@@ -91,16 +91,8 @@ namespace Deveel.Data.Sql.Expressions {
 				escapeChar = s[0];
 			}
 
+			var result = PatternSearch.PatternMatch(patternString, leftString.ToString(), escapeChar);
 
-			ISqlStringSearch search = null;
-
-			if (context != null)
-				search = context.Scope.GetStringSearch();
-
-			if (search == null)
-				search = new SqlDefaultStringSearch();
-
-			var result = search.Matches(leftString, patternString, escapeChar);
 			if (ExpressionType == SqlExpressionType.NotLike)
 				result = !result;
 

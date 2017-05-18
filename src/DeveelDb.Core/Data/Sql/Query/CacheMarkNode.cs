@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Tables;
+using Deveel.Data.Services;
 
 namespace Deveel.Data.Sql.Query {
 	public sealed class CacheMarkNode : SingleQueryPlanNode {

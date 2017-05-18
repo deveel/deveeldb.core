@@ -75,7 +75,7 @@ namespace Deveel.Data.Sql.Expressions {
 				throw new SqlExpressionException("Could not reduce the query", ex);
 			}
 
-			return Constant(new SqlObject(new SqlTableType(), result));
+			return Constant(new SqlObject(new SqlTableType(result.TableInfo), result));
 		}
 
 		public override SqlType GetSqlType(IContext context) {
