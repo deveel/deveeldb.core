@@ -13,6 +13,8 @@ namespace Deveel.Data.Storage {
 			nameStoreMap = new Dictionary<string, InMemoryStore>();
 		}
 
+		public string SystemId => "memory";
+
 		public Task<bool> StoreExistsAsync(string name, IConfiguration configuration) {
 			lock (this) {
 				return Task.FromResult(nameStoreMap.ContainsKey(name));

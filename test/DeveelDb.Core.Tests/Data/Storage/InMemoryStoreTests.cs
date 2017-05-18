@@ -40,11 +40,11 @@ namespace Deveel.Data.Storage {
 			Assert.NotNull(area);
 			Assert.Equal(1024, area.Length);
 
-			await area.WriteAsync(12);
-			await area.WriteAsync(2L);
-			await area.WriteAsync((byte) 22);
+			area.Write(12);
+			area.Write(2L);
+			area.Write((byte) 22);
 
-			await area.FlushAsync();
+			area.Flush();
 
 			Assert.Equal(13, area.Position);
 
