@@ -3,6 +3,16 @@ using System.Threading.Tasks;
 
 namespace Deveel.Data.Storage {
 	public static class AreaExtensions {
+		public static Task<int> ReadAsync(this IArea area, byte[] buffer) {
+			return area.ReadAsync(buffer, 0, buffer.Length);
+		}
+
+		public static int Read(this IArea area, byte[] buffer, int offset, int count)
+			=> area.ReadAsync(buffer, offset, count).Result;
+
+		public static int Read(this IArea area, byte[] buffer)
+			=> area.Read(buffer, 0, buffer.Length);
+
 		public static async Task<byte> ReadByteAsync(this IArea area) {
 			var bytes = new byte[1];
 			await area.ReadAsync(bytes, 0, 1);
