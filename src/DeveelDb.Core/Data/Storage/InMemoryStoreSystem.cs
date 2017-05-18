@@ -29,11 +29,11 @@ namespace Deveel.Data.Storage {
 			var hashSize = configuration.GetInt32("hashSize", 1024);
 
 			lock (this) {
-				if (nameStoreMap.ContainsKey(storeName))
-					throw new IOException($"A store named '{storeName}' already in the systme");
+				if (nameStoreMap.ContainsKey(name))
+					throw new IOException($"A store named '{name}' already in the systme");
 
-				var store = new InMemoryStore(storeName, hashSize);
-				nameStoreMap[storeName] = store;
+				var store = new InMemoryStore(name, hashSize);
+				nameStoreMap[name] = store;
 				return Task.FromResult(store);
 			}
 		}
@@ -45,8 +45,8 @@ namespace Deveel.Data.Storage {
 		public Task<InMemoryStore> OpenStoreAsync(string name, IConfiguration configuration) {
 			lock (this) {
 				InMemoryStore store;
-				if (!nameStoreMap.TryGetValue(storeName, out store))
-					throw new IOException($"No store with name '{storeName}' was found in the system");
+				if (!nameStoreMap.TryGetValue(name, out store))
+					throw new IOException($"No store with name '{name}' was found in the system");
 
 				return Task.FromResult(store);
 			}

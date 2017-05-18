@@ -392,7 +392,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[Fact]
 		public async void ReduceSubQuery() {
 			var subQuery = new SqlQueryExpression();
-			subQuery.All = true;
+			subQuery.AllItems = true;
 			subQuery.From.Table(new ObjectName("tab1"));
 
 			var query = new SqlQueryExpression();

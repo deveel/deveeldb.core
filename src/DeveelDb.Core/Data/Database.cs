@@ -128,8 +128,8 @@ namespace Deveel.Data {
 
 				// Get the fixed area
 				var fixedArea = dbStateStore.GetArea(-1);
-				await fixedArea.WriteAsync(headP);
-				await fixedArea.FlushAsync();
+				fixedArea.Write(headP);
+				fixedArea.Flush();
 			} finally {
 				dbStateStore.Unlock();
 			}
@@ -202,7 +202,7 @@ namespace Deveel.Data {
 		}
 
 		private Task<bool> StateExistsAsync() {
-			return StoreSystem.StoreExistsAsync(StateStoreName);
+			return StoreSystem.StoreExistsAsync(StateStoreName, Configuration);
 		}
 
 		internal Task<bool> ExistsAsync() {

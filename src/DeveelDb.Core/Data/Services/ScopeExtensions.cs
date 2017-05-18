@@ -94,17 +94,6 @@ namespace Deveel.Data.Services {
 			scope.RegisterInstance(typeof(TService), instance, serviceKey);
 		}
 
-		public static void ReplaceInstance<TService>(this IScope scope, object instance) {
-			ReplaceInstance<TService>(scope, instance, null);
-		}
-
-		public static void ReplaceInstance<TService>(this IScope scope, object instance, object serviceKey) {
-			if (scope.IsRegistered<TService>())
-				scope.Unregister<TService>();
-
-			scope.RegisterInstance<TService>(instance, serviceKey);
-		}
-
 		public static bool Unregister(this IScope scope, Type serviceType) {
 			return scope.Unregister(serviceType, null);
 		}
