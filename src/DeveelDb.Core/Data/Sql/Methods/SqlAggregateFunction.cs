@@ -113,7 +113,7 @@ namespace Deveel.Data.Sql.Methods {
 		private async Task<SqlObject> IterateValues(IContext context, SqlExpression input, IGroupResolver groupResolver) {
 			SqlObject result = null;
 
-			for (long i = 0; i < groupResolver.Size; i++) {
+			for (int i = 0; i < groupResolver.Size; i++) {
 				SqlObject value;
 				var resolver = groupResolver.GetResolver(i);
 

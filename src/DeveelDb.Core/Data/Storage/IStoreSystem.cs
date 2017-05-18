@@ -5,11 +5,12 @@ using Deveel.Data.Configuration;
 
 namespace Deveel.Data.Storage {
 	public interface IStoreSystem : IDisposable {
-		Task<bool> StoreExistsAsync(string storeName);
+		string SystemId { get; }
+		Task<bool> StoreExistsAsync(string name, IConfiguration configuration);
 
-		Task<IStore> CreateStoreAsync(string storeName, IConfiguration configuration);
+		Task<IStore> CreateStoreAsync(string name, IConfiguration configuration);
 
-		Task<IStore> OpenStoreAsync(string storeName);
+		Task<IStore> OpenStoreAsync(string name, IConfiguration configuration);
 
 		Task<bool> CloseStoreAsync(IStore store);
 

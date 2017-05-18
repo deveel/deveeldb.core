@@ -37,7 +37,7 @@ namespace Deveel.Data.Sql.Expressions {
 			switch (ExpressionType) {
 				// Group
 				case SqlExpressionType.Group:
-					return 151;
+					return 155;
 
 				// References
 				case SqlExpressionType.Reference:
@@ -200,6 +200,9 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlBinaryExpression Is(SqlExpression left, SqlExpression rigth)
 			=> Binary(SqlExpressionType.Is, left, rigth);
 
+		public static SqlBinaryExpression IsNot(SqlExpression left, SqlExpression right)
+			=> Binary(SqlExpressionType.IsNot, left, right);
+
 		public static SqlBinaryExpression And(SqlExpression left, SqlExpression right)
 			=> Binary(SqlExpressionType.And, left, right);
 
@@ -213,6 +216,10 @@ namespace Deveel.Data.Sql.Expressions {
 		public static SqlStringMatchExpression StringMatch(SqlExpressionType expressionType, SqlExpression left,
 			SqlExpression pattern, SqlExpression escape) {
 			return new SqlStringMatchExpression(expressionType, left, pattern, escape);
+		}
+
+		public static SqlStringMatchExpression Like(SqlExpression left, SqlExpression pattern) {
+			return Like(left, pattern, null);
 		}
 
 		public static SqlStringMatchExpression Like(SqlExpression left, SqlExpression pattern, SqlExpression escape)

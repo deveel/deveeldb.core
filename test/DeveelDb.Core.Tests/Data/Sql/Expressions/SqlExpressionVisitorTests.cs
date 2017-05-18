@@ -1,6 +1,6 @@
 ﻿using System;
 
-using Deveel.Data.Query;
+using Deveel.Data.Sql.Query;
 using Deveel.Data.Sql.Methods;
 
 using Xunit;

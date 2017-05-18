@@ -19,6 +19,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
+
+using Deveel.Data.Services;
+using Deveel.Data.Sql.Query.Plan;
+using Deveel.Data.Sql.Tables;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlQueryExpression : SqlExpression,ISqlExpressionPreparable<SqlQueryExpression> {
@@ -54,8 +59,27 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public ObjectName GroupMax { get; set; }
 
+		public SqlQueryExpressionComposite NextComposite { get; set; }
+
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
+			var planner = context.Scope.Resolve<IQueryPlanner>();
+			if (planner == null)
+				throw new SqlExpressionException("Cannot reduce a SQL Query without a planner");
+
+			ITable result;
+
+			try {
+				var node = await planner.PlanAsync(context, new QueryInfo(this));
+				result = await node.ReduceAsync(context);
+			} catch (Exception ex) {
+				throw new SqlExpressionException("Could not reduce the query", ex);
+			}
+
+			return Constant(new SqlObject(new SqlTableType(result.TableInfo), result));
+		}
+
 		public override SqlType GetSqlType(IContext context) {
-			throw new NotImplementedException();
+			return new SqlQueryType();
 		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
@@ -91,6 +115,13 @@ namespace Deveel.Data.Sql.Expressions {
 			}
 
 			// TODO: continue
+
+			if (NextComposite != null) {
+				builder.AppendLine();
+				builder.Indent();
+				NextComposite.AppendTo(builder);
+				builder.DeIndent();
+			}
 		}
 
 		SqlQueryExpression ISqlExpressionPreparable<SqlQueryExpression>.Prepare(ISqlExpressionPreparer preparer) {

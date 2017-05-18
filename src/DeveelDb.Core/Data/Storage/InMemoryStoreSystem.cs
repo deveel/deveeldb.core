@@ -13,17 +13,19 @@ namespace Deveel.Data.Storage {
 			nameStoreMap = new Dictionary<string, InMemoryStore>();
 		}
 
-		public Task<bool> StoreExistsAsync(string storeName) {
+		public string SystemId => "memory";
+
+		public Task<bool> StoreExistsAsync(string name, IConfiguration configuration) {
 			lock (this) {
-				return Task.FromResult(nameStoreMap.ContainsKey(storeName));
+				return Task.FromResult(nameStoreMap.ContainsKey(name));
 			}
 		}
 
-		async Task<IStore> IStoreSystem.CreateStoreAsync(string storeName, IConfiguration configuration) {
-			return await CreateStoreAsync(storeName, configuration);
+		async Task<IStore> IStoreSystem.CreateStoreAsync(string name, IConfiguration configuration) {
+			return await CreateStoreAsync(name, configuration);
 		}
 
-		public Task<InMemoryStore> CreateStoreAsync(string storeName, IConfiguration configuration) {
+		public Task<InMemoryStore> CreateStoreAsync(string name, IConfiguration configuration) {
 			var hashSize = configuration.GetInt32("hashSize", 1024);
 
 			lock (this) {
@@ -36,11 +38,11 @@ namespace Deveel.Data.Storage {
 			}
 		}
 
-		async Task<IStore> IStoreSystem.OpenStoreAsync(string storeName) {
-			return await OpenStoreAsync(storeName);
+		async Task<IStore> IStoreSystem.OpenStoreAsync(string name, IConfiguration configuration) {
+			return await OpenStoreAsync(name, configuration);
 		}
 
-		public Task<InMemoryStore> OpenStoreAsync(string storeName) {
+		public Task<InMemoryStore> OpenStoreAsync(string name, IConfiguration configuration) {
 			lock (this) {
 				InMemoryStore store;
 				if (!nameStoreMap.TryGetValue(storeName, out store))

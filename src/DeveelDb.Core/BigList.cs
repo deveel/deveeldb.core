@@ -285,7 +285,7 @@ namespace Deveel {
 					_items[index++] = item;
 				_size += count;
 			} else if (collection is BigList<T>) {
-				var bigList = (BigList<T>)collection;
+				var bigList = (BigList<T>) collection;
 				var count = bigList.Count;
 
 				EnsureCapacity(_size + count);
@@ -294,7 +294,7 @@ namespace Deveel {
 					_items[index++] = item;
 				_size += count;
 			} else if (collection is BigArray<T>) {
-				var array = (BigArray<T>)collection;
+				var array = (BigArray<T>) collection;
 				var count = array.Length;
 				EnsureCapacity(_size + count);
 				var index = _size;
@@ -387,7 +387,7 @@ namespace Deveel {
 		///     if that number is less than a threshold value.
 		/// </summary>
 		public void TrimExcess() {
-			var num = (long)(_items.Length * 0.9);
+			var num = (long) (_items.Length * 0.9);
 			if (_size < num)
 				Capacity = _size;
 		}
@@ -398,8 +398,7 @@ namespace Deveel {
 		/// <param name="newSize">size of new array</param>
 		public void TrimToSize(long newSize) {
 			if (newSize > Count || newSize < 0)
-				throw new ArgumentException("Cannot trim BigList class to value less than 0 or larger than original size",
-					"newSize");
+				throw new ArgumentException("Cannot trim BigList class to value less than 0 or larger than original size", nameof(newSize));
 			_items.Resize(newSize);
 			_size = newSize;
 		}

@@ -57,6 +57,8 @@ namespace Deveel.Data {
 		/// </summary>
 		Column = 11,
 
+		Constrain = 13,
+
 		/// <summary>
 		/// A <c>TRIGGER</c> fired at provided write events (<c>INSERT</c>, <c>UPDATE</c> or
 		/// <c>DELETE</c>) over a table at a given moments (<c>BEFORE</c> or <c>AFTER</c>).

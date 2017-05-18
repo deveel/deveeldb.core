@@ -16,6 +16,10 @@
 
 
 using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+using Deveel.Data.Sql.Query;
 
 using Deveel.Data.Serialization;
 
@@ -36,7 +40,20 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlObject Value { get; }
 
-		public override bool CanReduce => false;
+		public override bool CanReduce => Value.Type is SqlQueryType;
+
+		public override bool IsReference {
+			get {
+				if (Value.Type is SqlArrayType) {
+					var array = (SqlArray) Value.Value;
+					if (array.Any(item => item.IsReference)) {
+						return false;
+					}
+				}
+
+				return false;
+			}
+		}
 
 		public override SqlType GetSqlType(IContext context) {
 			return Value.Type;
@@ -44,6 +61,17 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitConstant(this);
+		}
+
+		public override async Task<SqlExpression> ReduceAsync(IContext context) {
+			if (Value.Type is SqlQueryType) {
+				var queryPlan = (IQueryPlanNode) Value.Value;
+				var table = await queryPlan.ReduceAsync(context);
+
+				return Constant(new SqlObject(new SqlTableType(table.TableInfo), table));
+			}
+
+			return await base.ReduceAsync(context);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

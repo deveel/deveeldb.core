@@ -39,6 +39,13 @@ namespace Deveel.Data.Sql.Methods {
 			}) {
 		}
 
+		public SqlAggregateFunctionDelegate(SqlFunctionInfo functionInfo, Func<IterateContext, SqlObject> iterate)
+			: this(functionInfo, context => {
+				var result = iterate(context);
+				context.SetResult(result);
+			}) {
+		}
+
 		public void Initialize(Func<InitializeContext, Task> prepare) {
 			preparation = prepare;
 		}

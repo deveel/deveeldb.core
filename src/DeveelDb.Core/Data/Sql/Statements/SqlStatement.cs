@@ -28,14 +28,14 @@ using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
 	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement>, ISerializable {
-		protected SqlStatement() {
-		}
+		public virtual bool CanPrepare => true;
 
 		protected SqlStatement(SerializationInfo info) {
 			Location = info.GetValue<LocationInfo>("location");
 		}
 
-		public virtual bool CanPrepare => true;
+		protected SqlStatement() {
+		}
 
 		protected virtual string Name {
 			get {
@@ -47,7 +47,11 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
+		internal string StatementName => Name;
+
 		public LocationInfo Location { get; set; }
+
+		internal SqlStatement Parent { get; set; }
 
 		protected virtual StatementContext CreateContext(IContext parent) {
 			return new StatementContext(parent, Name, this);
@@ -160,7 +164,7 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
-		protected abstract Task ExecuteStatementAsync(IContext context);
+		protected abstract Task ExecuteStatementAsync(StatementContext context);
 
 		public override string ToString() {
 			return this.ToSqlString();

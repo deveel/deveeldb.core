@@ -32,13 +32,22 @@ namespace Deveel.Data.Sql {
 
 		public static void AddReferenceResolver<TResolver>(this IScope scope)
 			where TResolver : class, IReferenceResolver {
+			scope.Unregister<IReferenceResolver>();
 			scope.Register<IReferenceResolver, TResolver>();
 			scope.Register<TResolver>();
 		}
 
 		public static void AddReferenceResolver<TResolver>(this IScope scope, TResolver resolver)
 			where TResolver : class, IReferenceResolver {
+			scope.Unregister<IReferenceResolver>();
 			scope.RegisterInstance<IReferenceResolver>(resolver);
+		}
+
+		public static void AddGroupResolver<TResolver>(this IScope scope, TResolver resolver)
+			where TResolver : class, IGroupResolver {
+			scope.Unregister<IGroupResolver>();
+			scope.RegisterInstance<IGroupResolver>(resolver);
+			scope.Register<TResolver>();
 		}
 	}
 }

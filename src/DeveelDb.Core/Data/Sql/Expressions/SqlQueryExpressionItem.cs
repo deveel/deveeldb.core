@@ -43,6 +43,13 @@ namespace Deveel.Data.Sql.Expressions {
 		public bool IsAll => Expression is SqlReferenceExpression &&
 		                     ((SqlReferenceExpression) Expression).ReferenceName.FullName == ObjectName.Glob.ToString();
 
+		public bool IsGlob => Expression is SqlReferenceExpression &&
+			                      ((SqlReferenceExpression) Expression).ReferenceName.Name == ObjectName.Glob.ToString();
+
+		public ObjectName TableNamePart => IsGlob && !IsAll
+			? ((SqlReferenceExpression) Expression).ReferenceName.Parent
+			: null;
+
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			if (IsAll) {
 				builder.Append("*");

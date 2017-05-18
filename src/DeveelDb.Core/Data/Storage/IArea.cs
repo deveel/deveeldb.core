@@ -57,7 +57,7 @@ namespace Deveel.Data.Storage {
 		/// </summary>
 		/// <param name="destArea">The <see cref="IArea"/> where to write.</param>
 		/// <param name="size">The number of bytes to Write.</param>
-		Task CopyToAsync(IArea destArea, int size);
+		void CopyTo(IArea destArea, int size);
 
 		/// <summary>
 		/// Reads an array of bytes from the underlying <see cref="IArea"/>
@@ -72,7 +72,7 @@ namespace Deveel.Data.Storage {
 		/// <returns>
 		/// Returns the number of bytes actually Read from the <see cref="IArea"/>.
 		/// </returns>
-		Task<int> ReadAsync(byte[] buffer, int offset, int length);
+		int Read(byte[] buffer, int offset, int length);
 
 		/// <summary>
 		/// 
@@ -80,8 +80,8 @@ namespace Deveel.Data.Storage {
 		/// <param name="buffer"></param>
 		/// <param name="offset"></param>
 		/// <param name="length"></param>
-		Task WriteAsync(byte[] buffer, int offset, int length);
+		void Write(byte[] buffer, int offset, int length);
 
-		Task FlushAsync();
+		void Flush();
 	}
 }

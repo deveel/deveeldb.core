@@ -19,7 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Deveel.Data.Query;
+using Deveel.Data.Sql.Query;
 
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlQueryExpressionFrom : ISqlFormattable, ISqlExpressionPreparable<SqlQueryExpressionFrom> {
@@ -39,6 +39,8 @@ namespace Deveel.Data.Sql.Expressions {
 		public bool IsEmpty => sources.Count == 0;
 
 		public bool IsNaturalJoin => sources.Count > 1 && joinParts.Count == 0;
+
+		public int JoinPartCount => joinParts.Count;
 
 		private string NewSourceKey() {
 			return (++sourceKey).ToString();
@@ -66,6 +68,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public void Table(ObjectName tableName, string alias) {
 			Source(new SqlQueryExpressionSource(tableName, alias));
+		}
+
+		public void Query(SqlQueryExpression query) {
+			Query(query, null);
 		}
 
 		public void Query(SqlQueryExpression query, string alias) {
