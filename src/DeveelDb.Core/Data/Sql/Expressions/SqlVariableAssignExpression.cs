@@ -18,6 +18,7 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -36,6 +37,12 @@ namespace Deveel.Data.Sql.Expressions {
 			Value = value;
 		}
 
+		private SqlVariableAssignExpression(SerializationInfo info)
+			: base(info) {
+			VariableName = info.GetString("var");
+			Value = info.GetValue<SqlExpression>("value");
+		}
+
 		public string VariableName { get; }
 
 		public SqlExpression Value { get; }
@@ -48,11 +55,16 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var manager = context.ResolveService<VariableManager>();
+			var manager = context.GetVariableManager<VariableManager>();
 			if (manager == null)
 				throw new SqlExpressionException("No variable manager was found in the context hierarchy");
 
 			return Task.FromResult(manager.AssignVariable(VariableName, Value, context));
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("var", VariableName);
+			info.SetValue("value", Value);
 		}
 
 		public override SqlType GetSqlType(IContext context) {

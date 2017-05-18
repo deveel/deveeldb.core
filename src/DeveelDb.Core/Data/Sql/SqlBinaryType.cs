@@ -18,6 +18,8 @@
 using System;
 using System.Linq;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql {
 	public sealed class SqlBinaryType : SqlType {
 		public const int DefaultMaxSize = Int16.MaxValue;
@@ -32,6 +34,11 @@ namespace Deveel.Data.Sql {
 			AssertIsBinary(typeCode);
 		}
 
+		private SqlBinaryType(SerializationInfo info)
+			: base(info) {
+			MaxSize = info.GetInt32("maxSize");
+		}
+
 		public int MaxSize { get; private set; }
 
 		public override bool IsIndexable {
@@ -41,6 +48,10 @@ namespace Deveel.Data.Sql {
 		private static void AssertIsBinary(SqlTypeCode sqlType) {
 			if (!IsBinaryType(sqlType))
 				throw new ArgumentException(String.Format("The SQL type {0} is not a BINARY", sqlType));
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("maxSize", MaxSize);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

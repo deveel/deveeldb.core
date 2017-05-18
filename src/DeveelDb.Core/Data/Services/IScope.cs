@@ -23,7 +23,17 @@ namespace Deveel.Data.Services {
     /// Provides an isolated scope of the components for the system
     /// registered during the build
     /// </summary>
-	public interface IScope : IDisposable {
+	public interface IScope : IServiceProvider, IDisposable {
+		/// <summary>
+		/// Gets a value indicating if this scope is read-only
+		/// </summary>
+		/// <remarks>
+		/// A read-only scope does not support the registration or
+		/// unregistration of services and throws exceptions whenever
+		/// users try to mutate the registrations.
+		/// </remarks>
+		bool IsReadOnly { get; }
+
 	    /// <summary>
 	    /// Registers a service using the specifications for resolution
 	    /// </summary>
@@ -79,7 +89,7 @@ namespace Deveel.Data.Services {
 		/// Returns an instance of the service for the given <paramref name="serviceType"/>
 		/// that was registered at build.
 		/// </returns>
-		/// <seealso cref="IServiceRegistry.Register"/>
+		/// <seealso cref="Register"/>
 		/// <exception cref="ServiceResolutionException">Thrown if an error occurred
 		/// while resolving the service within this scope</exception>
 		object Resolve(Type serviceType, object serviceKey);
@@ -93,7 +103,7 @@ namespace Deveel.Data.Services {
 		/// Returns an enumeration of instances of all the services of the given
 		/// <paramref name="serviceType"/> contained in this scope
 		/// </returns>
-		/// <seealso cref="IServiceRegistry.Register"/>
+		/// <seealso cref="Register"/>
 		IEnumerable ResolveAll(Type serviceType);
 	}
 }

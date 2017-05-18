@@ -19,6 +19,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql {
@@ -27,6 +28,10 @@ namespace Deveel.Data.Sql {
 
 		public SqlArray(SqlExpression[] expressions) {
 			this.expressions = expressions;
+		}
+
+		private SqlArray(SerializationInfo info) {
+			expressions = info.GetValue<SqlExpression[]>("expressions");
 		}
 
 		public int Length => expressions?.Length ?? 0;
@@ -38,6 +43,10 @@ namespace Deveel.Data.Sql {
 
 				return expressions[index];
 			}
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("expressions", expressions);
 		}
 
 		int IComparable.CompareTo(object obj) {

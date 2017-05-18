@@ -19,9 +19,13 @@ namespace Deveel.Data.Transactions {
 
 			lockable = mock.Object;
 
+			var scope = new ServiceContainer();
+
 			var contextMock = new Mock<IContext>();
 			contextMock.SetupGet(x => x.Scope)
-				.Returns(new ServiceContainer());
+				.Returns(scope);
+			contextMock.Setup(x => x.Dispose())
+				.Callback(scope.Dispose);
 
 			context = contextMock.Object;
 
@@ -106,6 +110,7 @@ namespace Deveel.Data.Transactions {
 
 		public void Dispose() {
 			locker.Dispose();
+			context.Dispose();
 		}
 	}
 }

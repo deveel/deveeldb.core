@@ -2,6 +2,8 @@
 using System.Globalization;
 using System.Linq;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -28,6 +30,24 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(second, date.Second);
 			Assert.Equal(millis, date.Millisecond);
 			Assert.Equal(offset, date.Offset);
+		}
+
+		[Theory]
+		[InlineData(2012, 12, 01, 07, 16, 22, 556, 2, 0)]
+		public static void Serialize(int year,
+			int month,
+			int day,
+			int hour,
+			int minute,
+			int second,
+			int millis,
+			int offsetHour,
+			int offsetMinute) {
+			var offset = new SqlDayToSecond(offsetHour, offsetMinute, 0);
+			var date = new SqlDateTime(year, month, day, hour, minute, second, millis, offset);
+
+			var result = BinarySerializeUtil.Serialize(date);
+			Assert.Equal(date, result);
 		}
 
 		[Theory]
@@ -287,7 +307,7 @@ namespace Deveel.Data.Sql {
 		[InlineData("12:25:01", "13:25:01 +01:00")]
 		public static void AtTimeZoneName(string s, string expected) {
 			var date = SqlDateTime.Parse(s);
-			var timeZoneName = TimeZoneInfo.GetSystemTimeZones().First(x => x.BaseUtcOffset.Hours == 1).StandardName;
+			var timeZoneName = TimeZoneInfo.GetSystemTimeZones().First(x => x.BaseUtcOffset.Hours == 1).Id;
 			var result = date.AtTimeZone(timeZoneName);
 
 			var expectedResult = SqlDateTime.Parse(expected);
@@ -392,6 +412,20 @@ namespace Deveel.Data.Sql {
 		public static void InvalidConvertTo(Type type) {
 			var date = new SqlDateTime(2001, 12, 01);
 			Assert.Throws<InvalidCastException>(() => Convert.ChangeType(date, type));
+		}
+
+		[Fact]
+		public static void ExplicitConvert_DataTimeOffset() {
+			var sqlDate = new SqlDateTime(2017, 12, 11);
+			var date = (DateTimeOffset) sqlDate;
+
+			Assert.Equal(sqlDate.Year, date.Year);
+			Assert.Equal(sqlDate.Month, date.Month);
+			Assert.Equal(sqlDate.Day, date.Day);
+			Assert.Equal(sqlDate.Hour, date.Hour);
+			Assert.Equal(sqlDate.Minute, date.Minute);
+			Assert.Equal(sqlDate.Second, date.Second);
+			Assert.Equal(sqlDate.Millisecond, date.Millisecond);
 		}
 
 		[Fact]

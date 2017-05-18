@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Methods;
 
@@ -45,8 +46,20 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Fact]
+		public void Serialize() {
+			var exp = SqlExpression.Function(ObjectName.Parse("sys.func2"),
+				new[] { new InvokeArgument(SqlExpression.Constant(SqlObject.Bit(false))) });
+
+			var result = BinarySerializeUtil.Serialize(exp);
+
+			Assert.Equal(exp.FunctionName, result.FunctionName);
+			Assert.Equal(exp.Arguments.Length, result.Arguments.Length);
+		}
+
+		[Fact]
 		public void GetSqlType() {
-			var function = SqlExpression.Function(ObjectName.Parse("sys.Func1"), new InvokeArgument("a", SqlObject.String(new SqlString("foo"))));
+			var function = SqlExpression.Function(ObjectName.Parse("sys.Func1"), 
+				new InvokeArgument("a", SqlObject.String(new SqlString("foo"))));
 		
 			Assert.True(function.IsReference);
 			var type = function.GetSqlType(context);

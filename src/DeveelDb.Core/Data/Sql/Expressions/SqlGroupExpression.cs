@@ -17,6 +17,8 @@
 
 using System;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlGroupExpression : SqlExpression {
 		internal SqlGroupExpression(SqlExpression expression)
@@ -27,6 +29,11 @@ namespace Deveel.Data.Sql.Expressions {
 			Expression = expression;
 		}
 
+		private SqlGroupExpression(SerializationInfo info)
+			: base(info) {
+			Expression = info.GetValue<SqlExpression>("exp");
+		}
+
 		public SqlExpression Expression { get; }
 
 		public override SqlType GetSqlType(IContext context) {
@@ -35,6 +42,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitGroup(this);
+		}
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("exp", Expression);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

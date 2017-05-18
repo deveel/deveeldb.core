@@ -17,9 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-
-using Deveel.Data.Configuration;
 
 namespace Deveel.Data.Transactions {
 	public sealed class LockHandle : IDisposable {
@@ -52,7 +49,7 @@ namespace Deveel.Data.Transactions {
 		}
 
 		public void Wait(ILockable lockable, AccessType accessType) {
-			var timeout = locker.context.GetValue<int>("transaction.lock.timeout", 1500);
+			var timeout = locker.context.LockTimeout();
 			Wait(lockable, accessType, timeout);
 		}
 
@@ -79,8 +76,7 @@ namespace Deveel.Data.Transactions {
 		}
 
 		public void WaitAll() {
-			var timeout = locker.context.GetValue<int>("transaction.lock.timeout", 1500);
-			WaitAll(timeout);
+			WaitAll(locker.context.LockTimeout());
 		}
 
 		public void Release() {

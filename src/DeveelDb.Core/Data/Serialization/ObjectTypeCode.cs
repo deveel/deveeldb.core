@@ -17,16 +17,14 @@
 
 using System;
 
-namespace Deveel.Data.Diagnostics {
-	/// <summary>
-	/// A version of <see cref="IEventRegistry"/> that is contained
-	/// in a context that also exposes a <see cref="IEventSource"/>.
-	/// </summary>
-	public interface IContextEventRegistry : IEventRegistry {
-		/// <summary>
-		/// Gets a reference to the <see cref="IEventSource"/> that
-		/// is encapsulated in the parent context
-		/// </summary>
-		IEventSource EventSource { get; }
+namespace Deveel.Data.Serialization {
+	enum ObjectTypeCode {
+		Primitive = 1,
+		Enum,
+		Object,
+		Serializable,
+		Array,
+		List,
+		Dictionary
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -16,6 +18,18 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(obj, exp.Value);
 		}
 
+		[Theory]
+		[InlineData(65775.499)]
+		[InlineData("The quick brown fox")]
+		public static void SerializeConstant(object value) {
+			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
+			var exp = SqlExpression.Constant(obj);
+
+			var result = BinarySerializeUtil.Serialize(exp);
+
+			Assert.Equal(exp.ExpressionType, result.ExpressionType);
+			Assert.Equal(exp.Value, result.Value);
+		}
 
 		[Theory]
 		[InlineData(SqlExpressionType.Equal, 6577.494, 449.004)]
@@ -109,6 +123,20 @@ namespace Deveel.Data.Sql.Expressions {
 			AssertString(SqlExpression.Or, value1, value2, expected);
 		}
 
+		[Theory]
+		[InlineData(SqlExpressionType.Or, true, false)]
+		[InlineData(SqlExpressionType.Add, "the quick", "brown fox")]
+		public static void SerializeBinary(SqlExpressionType type, object value1, object value2) {
+			var binary = SqlExpression.Binary(type, SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value1))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value2))));
+
+			var result = BinarySerializeUtil.Serialize(binary);
+
+			Assert.Equal(binary.ExpressionType, result.ExpressionType);
+			Assert.Equal(binary.Left.ExpressionType, result.Left.ExpressionType);
+			Assert.Equal(binary.Right.ExpressionType, result.Right.ExpressionType);
+		}
+
 		private static SqlBinaryExpression BinaryExpression(Func<SqlExpression, SqlExpression, SqlBinaryExpression> factory,
 			object value1, object value2) {
 			var left = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value1)));
@@ -136,6 +164,19 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(expressionType, exp.ExpressionType);
 			Assert.NotNull(exp.Left);
 			Assert.NotNull(exp.Pattern);
+		}
+
+		[Theory]
+		[InlineData(SqlExpressionType.Like, "antonello", "anto%")]
+		[InlineData(SqlExpressionType.NotLike, "the quick brown fox", "the brown%")]
+		public static void SerializeStringMatch(SqlExpressionType expressionType, string value, string pattern) {
+			var exp = SqlExpression.StringMatch(expressionType,
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(value))),
+				SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(pattern))), null);
+
+			var result = BinarySerializeUtil.Serialize(exp);
+
+			Assert.Equal(exp.ExpressionType, result.ExpressionType);
 		}
 
 		[Theory]
@@ -321,6 +362,20 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
+		[InlineData(SqlExpressionType.UnaryPlus, 22.34)]
+		[InlineData(SqlExpressionType.Negate, 455.43)]
+		[InlineData(SqlExpressionType.Not, true)]
+		public static void SerializeUnary(SqlExpressionType expressionType, object value) {
+			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
+			var operand = SqlExpression.Constant(obj);
+			var exp = SqlExpression.Unary(expressionType, operand);
+
+			var result = BinarySerializeUtil.Serialize(exp);
+
+			Assert.Equal(exp.ExpressionType, result.ExpressionType);
+		}
+
+		[Theory]
 		[InlineData(SqlExpressionType.UnaryPlus, 22.34, 22.34)]
 		[InlineData(SqlExpressionType.Negate, 455.43, -455.43)]
 		[InlineData(SqlExpressionType.Not, true, false)]
@@ -380,6 +435,19 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.NotNull(cast.Value);
 			Assert.NotNull(cast.TargetType);
+		}
+
+		[Theory]
+		[InlineData(5634.99, SqlTypeCode.Double, -1, -1)]
+		public static void SerializeCast(object value, SqlTypeCode destTypeCode, int p, int s) {
+			var targetType = PrimitiveTypes.Type(destTypeCode, new { precision = p, scale = s, maxSize = p, size = p });
+			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
+			var exp = SqlExpression.Constant(obj);
+
+			var cast = SqlExpression.Cast(exp, targetType);
+			var result = BinarySerializeUtil.Serialize(cast);
+
+			Assert.IsType<SqlConstantExpression>(result.Value);
 		}
 
 		[Theory]
@@ -450,6 +518,21 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
+		[InlineData("a.b", true)]
+		public static void SerializeReferenceAssign(string name, object value) {
+			var objName = ObjectName.Parse(name);
+			var obj = SqlObject.New(SqlValueUtil.FromObject(value));
+			var exp = SqlExpression.Constant(obj);
+
+			var refAssign = SqlExpression.ReferenceAssign(objName, exp);
+			var result = BinarySerializeUtil.Serialize(refAssign);
+
+			Assert.Equal(objName, result.ReferenceName);
+			Assert.IsType<SqlConstantExpression>(result.Value);
+		}
+
+
+		[Theory]
 		[InlineData("a.b", true, "a.b = TRUE")]
 		public static void GetReferenceAssignString(string name, object value, string expected) {
 			var objName = ObjectName.Parse(name);
@@ -474,6 +557,22 @@ namespace Deveel.Data.Sql.Expressions {
 			var sql = condition.ToString();
 			Assert.Equal(expected, sql);
 		}
+
+		[Theory]
+		[InlineData(true, 223.21, 11)]
+		public static void SerializeCondition(bool test, object ifTrue, object ifFalse) {
+			var testExp = SqlExpression.Constant(SqlObject.Boolean(test));
+			var ifTrueExp = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(ifTrue)));
+			var ifFalseExp = SqlExpression.Constant(SqlObject.New(SqlValueUtil.FromObject(ifFalse)));
+
+			var condition = SqlExpression.Condition(testExp, ifTrueExp, ifFalseExp);
+			var result = BinarySerializeUtil.Serialize(condition);
+
+			Assert.NotNull(result.Test);
+			Assert.NotNull(result.IfTrue);
+			Assert.NotNull(result.IfFalse);
+		}
+
 
 		[Theory]
 		[InlineData(true, "I am", "You are", "I am")]

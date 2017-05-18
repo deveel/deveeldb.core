@@ -1,9 +1,21 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
 	public static class SqlYearToMonthTests {
+		[Theory]
+		[InlineData(2, 11)]
+		[InlineData(0, 8)]
+		public static void Serialize(int years, int months) {
+			var ytm = new SqlYearToMonth(years, months);
+			var result = BinarySerializeUtil.Serialize(ytm);
+
+			Assert.Equal(result, ytm);
+		}
+
 		[Theory]
 		[InlineData(3, 36)]
 		[InlineData(1, 12)]

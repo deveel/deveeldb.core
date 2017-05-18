@@ -18,10 +18,11 @@
 using System;
 using System.Linq;
 
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql {
-	public sealed class SqlObject : IComparable<SqlObject>, IComparable, ISqlFormattable, IEquatable<SqlObject> {
+	public sealed class SqlObject : IComparable<SqlObject>, IComparable, ISqlFormattable, IEquatable<SqlObject>, ISerializable {
 		public static readonly SqlObject Unknown = new SqlObject(PrimitiveTypes.Boolean(), null);
 		public static readonly SqlObject Null = new SqlObject(PrimitiveTypes.Integer(), null);
 
@@ -36,6 +37,11 @@ namespace Deveel.Data.Sql {
 
 			Type = type;
 			Value = type.NormalizeValue(value);
+		}
+
+		private SqlObject(SerializationInfo info) {
+			Type = info.GetValue<SqlType>("type");
+			Value = info.GetValue<ISqlValue>("value");
 		}
 
 		public ISqlValue Value { get; }
@@ -100,6 +106,11 @@ namespace Deveel.Data.Sql {
 			} else {
 				builder.Append(Type.ToString(Value));
 			}
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("type", Type);
+			info.SetValue("value", Value);
 		}
 
 		public override string ToString() {

@@ -19,6 +19,7 @@ using System;
 using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
+using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Expressions {
@@ -33,6 +34,11 @@ namespace Deveel.Data.Sql.Expressions {
 			VariableName = variableName;
 		}
 
+		private SqlVariableExpression(SerializationInfo info)
+			: base(info) {
+			VariableName = info.GetString("var");
+		}
+
 		public string VariableName { get; }
 
 		public override bool CanReduce => true;
@@ -43,6 +49,10 @@ namespace Deveel.Data.Sql.Expressions {
 			builder.AppendFormat(":{0}", VariableName);
 		}
 
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("var", VariableName);
+		}
+
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitVariable(this);
 		}
@@ -51,7 +61,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var ignoreCase = context.GetValue("ignoreCase", false);
+			var ignoreCase = context.IgnoreCase();
 			var variable = context.ResolveVariable(VariableName, ignoreCase);
 
 			if (variable == null)
@@ -64,7 +74,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var ignoreCase = context.GetValue("ignoreCase", false);
+			var ignoreCase = context.IgnoreCase();
 			var type = context.ResolveVariableType(VariableName, ignoreCase);
 
 			if (type == null)

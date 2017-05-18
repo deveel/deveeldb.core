@@ -18,6 +18,8 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Serialization;
+
 namespace Deveel.Data.Sql.Expressions {
 	public sealed class SqlUnaryExpression : SqlExpression {
 		internal SqlUnaryExpression(SqlExpressionType expressionType, SqlExpression operand)
@@ -28,9 +30,18 @@ namespace Deveel.Data.Sql.Expressions {
 			Operand = operand;
 		}
 
+		private SqlUnaryExpression(SerializationInfo info)
+			: base(info) {
+			Operand = info.GetValue<SqlExpression>("operand");
+		}
+
 		public SqlExpression Operand { get; }
 
 		public override bool CanReduce => true;
+
+		protected override void GetObjectData(SerializationInfo info) {
+			info.SetValue("operand", Operand);
+		}
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitUnary(this);
