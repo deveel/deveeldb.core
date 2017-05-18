@@ -100,13 +100,12 @@ namespace Deveel.Data.Sql.Statements {
 			}
 
 			builder.DeIndent();
-			builder.Append("END LOOP");
+			builder.Append("END LOOP;");
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {
 			AppendLabelTo(builder);
 			AppendBodyTo(builder);
 		}
-
 	}
 }

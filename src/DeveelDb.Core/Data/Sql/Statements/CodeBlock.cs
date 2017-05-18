@@ -45,28 +45,6 @@ namespace Deveel.Data.Sql.Statements {
 			info.SetValue("statements", statements);
 		}
 
-		protected override void AppendTo(SqlStringBuilder builder) {
-			if (!String.IsNullOrWhiteSpace(Label)) {
-				builder.AppendLine($"<<{Label}>>");
-			}
-
-			AppendCodeBlockTo(builder);
-
-			if (Statements.Count > 0) {
-				builder.Indent();
-
-				foreach (var statement in Statements) {
-					statement.AppendTo(builder);
-				}
-
-				builder.DeIndent();
-			}
-		}
-
-		protected virtual void AppendCodeBlockTo(SqlStringBuilder builder) {
-			
-		}
-
 		#region StatementCollection
 
 		class StatementCollection : Collection<SqlStatement> {

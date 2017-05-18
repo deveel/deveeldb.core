@@ -59,5 +59,24 @@ namespace Deveel.Data.Sql.Statements {
 
 			context.ControlLoop(ControlType, Label);
 		}
+
+		protected override void AppendTo(SqlStringBuilder builder) {
+			if (ControlType == LoopControlType.Continue) {
+				builder.Append("CONTINUE");
+			} else {
+				builder.Append("EXIT");
+			}
+
+			if (!String.IsNullOrWhiteSpace(Label)) {
+				builder.AppendFormat(" '{0}'", Label);
+			}
+
+			if (When != null) {
+				builder.Append(" WHEN ");
+				When.AppendTo(builder);
+			}
+
+			builder.Append(";");
+		}
 	}
 }
