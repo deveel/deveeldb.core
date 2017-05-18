@@ -13,24 +13,19 @@ namespace Deveel.Data.Storage {
 			nameStoreMap = new Dictionary<string, InMemoryStore>();
 		}
 
-		string IStoreSystem.SystemId => KnownStorageSystemIds.InMemory;
+		public string SystemId => "memory";
 
-		private static string GetStoreName(IConfiguration configuration) {
-			return configuration.GetString("name");
-		}
-
-		public Task<bool> StoreExistsAsync(IConfiguration configuration) {
+		public Task<bool> StoreExistsAsync(string name, IConfiguration configuration) {
 			lock (this) {
-				return Task.FromResult(nameStoreMap.ContainsKey(GetStoreName(configuration)));
+				return Task.FromResult(nameStoreMap.ContainsKey(name));
 			}
 		}
 
-		async Task<IStore> IStoreSystem.CreateStoreAsync(IConfiguration configuration) {
-			return await CreateStoreAsync(configuration);
+		async Task<IStore> IStoreSystem.CreateStoreAsync(string name, IConfiguration configuration) {
+			return await CreateStoreAsync(name, configuration);
 		}
 
-		public Task<InMemoryStore> CreateStoreAsync(IConfiguration configuration) {
-			var name = GetStoreName(configuration);
+		public Task<InMemoryStore> CreateStoreAsync(string name, IConfiguration configuration) {
 			var hashSize = configuration.GetInt32("hashSize", 1024);
 
 			lock (this) {
@@ -43,13 +38,12 @@ namespace Deveel.Data.Storage {
 			}
 		}
 
-		async Task<IStore> IStoreSystem.OpenStoreAsync(IConfiguration configuration) {
-			return await OpenStoreAsync(configuration);
+		async Task<IStore> IStoreSystem.OpenStoreAsync(string name, IConfiguration configuration) {
+			return await OpenStoreAsync(name, configuration);
 		}
 
-		public Task<InMemoryStore> OpenStoreAsync(IConfiguration configuration) {
+		public Task<InMemoryStore> OpenStoreAsync(string name, IConfiguration configuration) {
 			lock (this) {
-				var name = GetStoreName(configuration);
 				InMemoryStore store;
 				if (!nameStoreMap.TryGetValue(name, out store))
 					throw new IOException($"No store with name '{name}' was found in the system");
