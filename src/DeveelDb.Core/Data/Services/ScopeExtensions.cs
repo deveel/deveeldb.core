@@ -37,7 +37,7 @@ namespace Deveel.Data.Services {
 				throw new ArgumentNullException("serviceType");
 
 			if (serviceType.GetTypeInfo().IsValueType)
-				throw new ArgumentException(String.Format("The service type '{0}' to register is not a class.", serviceType));
+				throw new ArgumentException($"The service type '{serviceType}' to register is not a class.");
 
 			scope.Register(serviceType, serviceType, serviceKey);
 		}

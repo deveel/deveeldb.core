@@ -37,8 +37,9 @@ namespace Deveel.Data.Sql.Statements {
 			var loop = new LoopStatement();
 			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit));
 
-			var executeContext = new StatementContext(context, loop);
-			await loop.ExecuteAsync(executeContext);
+			var result = await loop.ExecuteAsync(context);
+
+			Assert.Null(result);
 		}
 
 		[Fact]
@@ -46,9 +47,10 @@ namespace Deveel.Data.Sql.Statements {
 			var loop = new LoopStatement("l1");
 			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit, "l1"));
 
-			var executeContext = new StatementContext(context, loop);
-			var statement = loop.Prepare(executeContext);
-			await statement.ExecuteAsync(executeContext);
+			var statement = loop.Prepare(context);
+			var result = await statement.ExecuteAsync(context);
+
+			Assert.Null(result);
 		}
 
 		[Fact]
@@ -56,9 +58,8 @@ namespace Deveel.Data.Sql.Statements {
 			var loop = new LoopStatement("l1");
 			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit, "l2"));
 
-			var executeContext = new StatementContext(context, loop);
-			var statement = loop.Prepare(executeContext);
-			await Assert.ThrowsAnyAsync<SqlStatementException>(() => statement.ExecuteAsync(executeContext));
+			var statement = loop.Prepare(context);
+			await Assert.ThrowsAnyAsync<SqlStatementException>(() => statement.ExecuteAsync(context));
 		}
 
 

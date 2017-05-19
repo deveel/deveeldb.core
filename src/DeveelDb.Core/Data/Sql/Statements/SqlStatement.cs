@@ -57,9 +57,14 @@ namespace Deveel.Data.Sql.Statements {
 
 		public SqlStatement Next { get; internal set; }
 
-		protected virtual StatementContext CreateContext(IContext parent) {
-			return new StatementContext(parent, Name, this);
+		protected virtual StatementContext CreateContext(IContext parent, string name) {
+			return new StatementContext(parent, name, this);
 		}
+
+		protected StatementContext CreateContext(IContext parent) {
+			return CreateContext(parent, Name);
+		}
+
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			AppendTo(builder);
@@ -94,8 +99,8 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		public SqlStatement Prepare(IContext context) {
-			using (var statementContext = CreateContext(context)) {
-				var preparers = context.Scope.ResolveAll<ISqlExpressionPreparer>();
+			using (var statementContext = CreateContext(context, $"{Name}_Prepare")) {
+				var preparers = (statementContext as IContext).Scope.ResolveAll<ISqlExpressionPreparer>();
 				var result = this;
 
 				foreach (var preparer in preparers) {
@@ -148,7 +153,7 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
-		public async Task ExecuteAsync(IContext context) {
+		public async Task<IStatementResult> ExecuteAsync(IContext context) {
 			using (var statementContext = CreateContext(context)) {
 				statementContext.Information(201, "Executing statement");
 
@@ -156,6 +161,7 @@ namespace Deveel.Data.Sql.Statements {
 
 				try {
 					await ExecuteStatementAsync(statementContext);
+					return statementContext.Result;
 				} catch (SqlStatementException ex) {
 					statementContext.Error(-670393, "The statement thrown an error", ex);
 					throw;

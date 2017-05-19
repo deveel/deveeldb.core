@@ -44,6 +44,10 @@ namespace Deveel.Data.Sql.Variables {
 			return context.GetObjectManager<TManager>(DbObjectType.Variable);
 		}
 
+		public static VariableManager GetVariableManager(this IContext context) {
+			return context.GetVariableManager<VariableManager>();
+		}
+
 		public static IEnumerable<IVariableResolver> GetVariableResolvers(this IContext context) {
 			return context.Scope.ResolveAll<IVariableResolver>();
 		}

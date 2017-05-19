@@ -20,38 +20,51 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
+using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
 	public class StatementContext : Context, IEventSource {
-		private Dictionary<string, object> metadata;
-
 		public StatementContext(IContext parent, SqlStatement statement) 
-			: this(parent, statement.StatementName, statement) {
+			: this(parent, statement, null) {
+		}
+
+		public StatementContext(IContext parent, SqlStatement statement, Action<IScope> scopeInit) 
+			: this(parent, statement.StatementName, statement, scopeInit) {
 		}
 
 		public StatementContext(IContext parent, string name, SqlStatement statement) 
-			: base(parent, name) {
+			: this(parent, name, statement, null) {
+		}
+
+		public StatementContext(IContext parent, string name, SqlStatement statement, Action<IScope> scopeInit) 
+			: base(parent, name, scopeInit) {
 			if (statement == null)
 				throw new ArgumentNullException(nameof(statement));
 
 			Statement = statement;
-			EnsureMetadata();
+			Metadata = new Dictionary<string, object>();
 		}
 
 		public SqlStatement Statement { get; }
 
-		private void EnsureMetadata() {
-			if (metadata == null) {
-				metadata = new Dictionary<string, object>();
+		private IEnumerable<KeyValuePair<string, object>> BuildMetadata() {
+			var metadata = new Dictionary<string, object>();
 
-				GetMetadata(metadata);
+			GetMetadata(metadata);
+
+			foreach (var pair in Metadata) {
+				metadata[pair.Key] = pair.Value;
 			}
+
+			return metadata;
 		}
 
 		IEventSource IEventSource.ParentSource => ParentContext.GetEventSource();
 
-		IEnumerable<KeyValuePair<string, object>> IEventSource.Metadata => metadata;
+		IEnumerable<KeyValuePair<string, object>> IEventSource.Metadata => BuildMetadata();
+
+		public IDictionary<string, object> Metadata { get; }
 
 		public IStatementResult Result { get; private set; }
 

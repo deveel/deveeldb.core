@@ -13,7 +13,7 @@ namespace Deveel.Data.Sql.Statements {
 			: base(label) {
 		}
 
-		private LoopStatement(SerializationInfo info)
+		internal LoopStatement(SerializationInfo info)
 			: base(info) {
 		}
 
@@ -46,14 +46,14 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		protected override async Task ExecuteStatementAsync(StatementContext context) {
-			bool first = true;
+			await InitializeAsync(context);
 
-			foreach (var statement in Statements) {
-				if (await CanLoopAsync(context)) {
-					if (first) {
-						await BeforeLoopAsync(context);
-						first = false;
-					}
+			while (await CanLoopAsync(context)) {
+				bool stopLoop = false;
+
+				foreach (var statement in Statements) {
+					if (stopLoop)
+						break;
 
 					var block = new StatementContext(context, statement);
 					await statement.ExecuteAsync(block);
@@ -64,10 +64,14 @@ namespace Deveel.Data.Sql.Statements {
 					if (HasControl) {
 						if (ControlType == LoopControlType.Exit)
 							return;
-					}
 
-					await AfterLoopAsync(context);
+						if (ControlType == LoopControlType.Continue) {
+							stopLoop = true;
+						}
+					}
 				}
+
+				await AfterLoopAsync(context);
 			}
 		}
 
@@ -75,7 +79,7 @@ namespace Deveel.Data.Sql.Statements {
 			return Task.FromResult(!HasControl || ControlType != LoopControlType.Exit);
 		}
 
-		protected virtual Task BeforeLoopAsync(StatementContext context) {
+		protected virtual Task InitializeAsync(StatementContext context) {
 			return Task.CompletedTask;
 		}
 
