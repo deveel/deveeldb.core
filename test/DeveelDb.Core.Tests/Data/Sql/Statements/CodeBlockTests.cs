@@ -65,8 +65,7 @@ namespace Deveel.Data.Sql.Statements {
 		[Fact]
 		public async void ExecuteTransfer() {
 			var parentBlock = new TestCodeBlock();
-			var block = new TestCodeBlock();
-			block.Label = "block";
+			var block = new TestCodeBlock("block");
 			block.Statements.Add(new EmptyStatement());
 			parentBlock.Statements.Add(block);
 
@@ -81,9 +80,13 @@ namespace Deveel.Data.Sql.Statements {
 
 		#region TestCodeBlock
 
-		class TestCodeBlock : CodeBlockStatement {
-			public TestCodeBlock() {
-				
+		class TestCodeBlock : CodeBlock {
+			public TestCodeBlock(string label)
+				: base(label) {
+			}
+
+			public TestCodeBlock()
+				: base() {
 			}
 
 			private TestCodeBlock(SerializationInfo info)

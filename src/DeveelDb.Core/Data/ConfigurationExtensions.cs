@@ -17,23 +17,24 @@
 
 using System;
 
-using Deveel.Data.Services;
+using Deveel.Data.Configuration;
 
-namespace Deveel.Data.Configuration {
-	public static class ScopeExtensions {
-		public static void SetConfiguration(this IScope scope, IConfiguration configuration) {
-			var config = scope.Resolve<IConfiguration>();
-			var final = configuration;
-			if (config != null)
-				final = final.MergeWith(configuration);
-
-			scope.Unregister<IConfiguration>();
-			scope.RegisterInstance<IConfiguration>(final);
+namespace Deveel.Data {
+	public static class ConfigurationExtensions {
+		public static string RootPath(this IConfiguration configuration) {
+			return configuration.GetString("rootPath");
 		}
 
-		public static void AddConfigurationFormatter<TFormatter>(this IScope scope, string name)
-			where TFormatter : class, IConfigurationFormatter {
-			scope.Register<TFormatter>(name);
+		public static string ApplicationName(this IConfiguration configuration) {
+			return configuration.GetValue<string>("applicationName");
+		}
+
+		public static string EnvironmentName(this IConfiguration configuration) {
+			return configuration.GetValue<string>("environment");
+		}
+
+		public static string DatabaseName(this IConfiguration configuration) {
+			return configuration.GetString("database");
 		}
 	}
 }

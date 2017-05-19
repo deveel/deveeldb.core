@@ -17,23 +17,18 @@
 
 using System;
 
-using Deveel.Data.Services;
-
 namespace Deveel.Data.Configuration {
-	public static class ScopeExtensions {
-		public static void SetConfiguration(this IScope scope, IConfiguration configuration) {
-			var config = scope.Resolve<IConfiguration>();
-			var final = configuration;
-			if (config != null)
-				final = final.MergeWith(configuration);
+	public struct ConfigurationValue {
+		public ConfigurationValue(string key, object value) {
+			if (String.IsNullOrWhiteSpace(key))
+				throw new ArgumentNullException(nameof(key));
 
-			scope.Unregister<IConfiguration>();
-			scope.RegisterInstance<IConfiguration>(final);
+			Key = key;
+			Value = value;
 		}
 
-		public static void AddConfigurationFormatter<TFormatter>(this IScope scope, string name)
-			where TFormatter : class, IConfigurationFormatter {
-			scope.Register<TFormatter>(name);
-		}
+		public string Key { get; }
+
+		public object Value { get; }
 	}
 }

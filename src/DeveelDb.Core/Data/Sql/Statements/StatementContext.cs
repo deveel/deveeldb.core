@@ -57,7 +57,7 @@ namespace Deveel.Data.Sql.Statements {
 
 		public bool HasResult { get; private set; }
 
-		private bool WasTerminated { get; set; }
+		internal bool WasTerminated { get; set; }
 
 		private void Terminate() {
 			WasTerminated = true;
@@ -117,8 +117,16 @@ namespace Deveel.Data.Sql.Statements {
 			return new StatementContext(this, statement.StatementName, statement);
 		}
 
-		private SqlStatement FindInTree(SqlStatement root, string label) {
-			var statement = root;
+		private SqlStatement FindInTree(SqlStatement reference, string label) {
+			var found = FindInTree(reference, label, true);
+			if (found != null)
+				return found;
+
+			return FindInTree(reference, label, false);
+		}
+
+		private SqlStatement FindInTree(SqlStatement reference, string label, bool forward) {
+			var statement = reference;
 			while (statement != null) {
 				if (statement is ILabeledStatement) {
 					var block = (ILabeledStatement) statement;
@@ -129,18 +137,60 @@ namespace Deveel.Data.Sql.Statements {
 				if (statement is IStatementContainer) {
 					var container = (IStatementContainer)statement;
 					foreach (var child in container.Statements) {
-						var found = FindInTree(child, label);
+						var found = FindInTree(child, label, true);
 						if (found != null)
 							return found;
 					}
 				}
 
-				statement = statement.Parent;
+				statement = forward ? statement.Next : statement.Previous;
 			}
+
+			if (reference.Parent != null && !forward)
+				return FindInTree(reference.Parent, label, false);
 
 			return null;
 		}
 
+		public void ControlLoop(LoopControlType controlType, string label) {
+			ThrowIfTerminated();
+
+			var loop = FindLoopInTree(Statement, label);
+
+			if (loop == null)
+				throw new SqlStatementException("Could not find the loop");
+
+			loop.Control(controlType);
+		}
+
+		private LoopStatement FindLoopInTree(SqlStatement reference, string label) {
+			if (!String.IsNullOrWhiteSpace(label)) {
+				return FindInTree(reference, label, false) as LoopStatement;
+			}
+
+			var statement = reference;
+			while (statement != null) {
+				if (statement is LoopStatement) {
+					return statement as LoopStatement;
+				}
+
+				if (statement is IStatementContainer) {
+					var container = (IStatementContainer) statement;
+					foreach (var child in container.Statements) {
+						var loop = FindLoopInTree(child, null);
+						if (loop != null)
+							return loop;
+					}
+				}
+
+				statement = statement.Previous;
+			}
+
+			if (reference.Parent != null)
+				return FindLoopInTree(reference.Parent, null);
+
+			return null;
+		}
 
 		protected virtual void GetMetadata(IDictionary<string, object> data) {
 			if (Statement.Location != null) {

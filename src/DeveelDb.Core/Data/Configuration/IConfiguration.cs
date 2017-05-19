@@ -31,7 +31,7 @@ namespace Deveel.Data.Configuration {
 	/// node does not define it by itself.
 	/// </para>
 	/// </remarks>
-	public interface IConfiguration : IEnumerable<KeyValuePair<string, object>> {
+	public interface IConfiguration : IEnumerable<ConfigurationValue> {
 		/// <summary>
 		/// Enumerates the keys that can be obtained by the object
 		/// </summary>
