@@ -53,6 +53,10 @@ namespace Deveel.Data.Sql.Statements {
 
 		internal SqlStatement Parent { get; set; }
 
+		public SqlStatement Previous { get; internal set; }
+
+		public SqlStatement Next { get; internal set; }
+
 		protected virtual StatementContext CreateContext(IContext parent) {
 			return new StatementContext(parent, Name, this);
 		}
