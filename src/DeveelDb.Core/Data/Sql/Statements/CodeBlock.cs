@@ -34,6 +34,10 @@ namespace Deveel.Data.Sql.Statements {
 
 		IEnumerable<SqlStatement> IStatementContainer.Statements => Statements;
 
+		protected override StatementContext CreateContext(IContext parent, string name) {
+			return new BlockStatementContext(parent, name, this);
+		}
+
 		protected override void GetObjectData(SerializationInfo info) {
 			info.SetValue("label", Label);
 

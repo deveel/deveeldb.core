@@ -55,10 +55,9 @@ namespace Deveel.Data.Sql.Statements {
 					if (stopLoop)
 						break;
 
-					var block = new StatementContext(context, statement);
-					await statement.ExecuteAsync(block);
+					await statement.ExecuteAsync(context);
 
-					if (block.WasTerminated)
+					if (context.WasTerminated)
 						return;
 
 					if (HasControl) {

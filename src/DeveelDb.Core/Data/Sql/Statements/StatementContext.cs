@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
+using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Statements {
 	public class StatementContext : Context, IEventSource {
@@ -47,6 +48,7 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		public SqlStatement Statement { get; }
+
 
 		private IEnumerable<KeyValuePair<string, object>> BuildMetadata() {
 			var metadata = new Dictionary<string, object>();

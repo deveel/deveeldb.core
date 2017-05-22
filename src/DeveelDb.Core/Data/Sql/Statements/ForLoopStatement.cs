@@ -42,9 +42,6 @@ namespace Deveel.Data.Sql.Statements {
 
 		public bool Reverse { get; }
 
-		protected override StatementContext CreateContext(IContext parent, string name) {
-			return new StatementContext(parent, name, this, scope => scope.Register<VariableManager>());
-		}
 
 		protected override SqlStatement PrepareExpressions(ISqlExpressionPreparer preparer) {
 			var lower = LowerBound.Prepare(preparer);
@@ -69,19 +66,17 @@ namespace Deveel.Data.Sql.Statements {
 			context.Metadata["lowerBound"] = lowerBound;
 			context.Metadata["upperBound"] = upperBound;
 
-			var variableManager = (context as IContext).Scope.Resolve<VariableManager>();
 			if (Reverse) {
-				variableManager.AssignVariable(IndexName, SqlExpression.Constant(upperBound), context);
+				context.AssignVariable(IndexName, SqlExpression.Constant(upperBound));
 			} else {
-				variableManager.AssignVariable(IndexName, SqlExpression.Constant(lowerBound), context);
+				context.AssignVariable(IndexName, SqlExpression.Constant(lowerBound));
 			}
 
 			await base.InitializeAsync(context);
 		}
 
 		protected override async Task<bool> CanLoopAsync(StatementContext context) {
-			var variableManager = (context as IContext).Scope.Resolve<VariableManager>();
-			var variable = variableManager.GetVariable(IndexName);
+			var variable = context.ResolveVariable(IndexName);
 
 			var valueExp = await variable.Evaluate(context);
 			 var value = await valueExp.ReduceToConstantAsync(context);
@@ -100,8 +95,7 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		protected override async Task AfterLoopAsync(StatementContext context) {
-			var variableManager = (context as IContext).Scope.Resolve<VariableManager>();
-			var variable = variableManager.GetVariable(IndexName);
+			var variable = context.ResolveVariable(IndexName);
 
 			var value = await variable.Evaluate(context);
 			if (Reverse) {

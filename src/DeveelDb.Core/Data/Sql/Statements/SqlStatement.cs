@@ -65,7 +65,6 @@ namespace Deveel.Data.Sql.Statements {
 			return CreateContext(parent, Name);
 		}
 
-
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			AppendTo(builder);
 		}
