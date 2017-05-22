@@ -9,10 +9,19 @@ using Deveel.Data.Sql.Variables;
 namespace Deveel.Data.Sql.Statements {
 	public sealed class ForLoopStatement : LoopStatement {
 		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound)
-			: this(indexName, lowerBound, upperBound, false) {
+			: this(indexName, lowerBound, upperBound, null) {
 		}
 
-		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound, bool reverse) {
+		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound, string label)
+			: this(indexName, lowerBound, upperBound, false, label) {
+		}
+
+		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound, bool reverse)
+			: this(indexName, lowerBound, upperBound, reverse, null) {
+		}
+
+		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound, bool reverse, string label)
+			: base(label) {
 			if (String.IsNullOrEmpty(indexName))
 				throw new ArgumentNullException(nameof(indexName));
 			if (lowerBound == null)
@@ -115,6 +124,32 @@ namespace Deveel.Data.Sql.Statements {
 			info.SetValue("reverse", Reverse);
 
 			base.GetObjectData(info);
+		}
+
+		protected override void AppendTo(SqlStringBuilder builder) {
+			if (!String.IsNullOrWhiteSpace(Label)) {
+				builder.AppendFormat("<<{0}>>", Label);
+				builder.AppendLine();
+			}
+
+			builder.AppendFormat("FOR {0} IN ", IndexName);
+			LowerBound.AppendTo(builder);
+			builder.Append("..");
+			UpperBound.AppendTo(builder);
+			builder.AppendLine();
+
+			builder.AppendLine("LOOP");
+
+			builder.Indent();
+
+			foreach (var statement in Statements) {
+				statement.AppendTo(builder);
+				builder.AppendLine();
+			}
+
+			builder.DeIndent();
+
+			builder.Append("END LOOP;");
 		}
 	}
 }

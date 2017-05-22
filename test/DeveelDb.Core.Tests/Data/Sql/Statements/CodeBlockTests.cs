@@ -78,6 +78,29 @@ namespace Deveel.Data.Sql.Statements {
 			Assert.IsType<SqlConstantExpression>(((StatementExpressionResult) executeContext.Result).Value);
 		}
 
+		[Fact]
+		public void AddAndRemoveStatements() {
+			var block = new TestCodeBlock("block");
+			var statement = new EmptyStatement();
+			block.Statements.Add(statement);
+			block.Statements.Add(new EmptyStatement());
+
+			Assert.Null(statement.Previous);
+			Assert.NotNull(statement.Next);
+			var parent = typeof(SqlStatement).GetTypeInfo().GetProperty("Parent", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(statement);
+			Assert.NotNull(parent);
+
+			Assert.Equal(2, block.Statements.Count);
+			block.Statements.Remove(statement);
+
+			Assert.Null(statement.Next);
+
+			Assert.Equal(1, block.Statements.Count);
+
+			block.Statements.Clear();
+			Assert.Equal(0, block.Statements.Count);
+		}
+
 		#region TestCodeBlock
 
 		class TestCodeBlock : CodeBlock {

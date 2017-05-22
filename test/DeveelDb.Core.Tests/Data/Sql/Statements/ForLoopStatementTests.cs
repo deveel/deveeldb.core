@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 using Deveel.Data.Security;
 using Deveel.Data.Serialization;
@@ -15,12 +16,6 @@ namespace Deveel.Data.Sql.Statements {
 
 		public ForLoopStatementTests() {
 			var container = new ServiceContainer();
-			container.Register<IRequirementHandler<DelegatedRequirement>, DelegatedRequirementHandler>();
-
-			var cache = new PrivilegesCache();
-			cache.SetPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), "user1", Privileges.Insert);
-
-			container.RegisterInstance<ISecurityResolver>(cache);
 
 			var mock = new Mock<ISession>();
 			mock.Setup(x => x.Scope)
@@ -73,6 +68,41 @@ namespace Deveel.Data.Sql.Statements {
 			Assert.NotNull(result);
 			Assert.NotNull(result.LowerBound);
 			Assert.NotNull(result.UpperBound);
+		}
+
+		[Fact]
+		public void GetStringWithoutLabel() {
+			var loop = new ForLoopStatement("i",
+				SqlExpression.Constant(SqlObject.BigInt(0)),
+				SqlExpression.Constant(SqlObject.BigInt(5)),
+				true);
+			loop.Statements.Add(new LoopControlStatement(LoopControlType.Continue));
+
+			var sql = new StringBuilder();
+			sql.AppendLine("FOR i IN 0..5");
+			sql.AppendLine("LOOP");
+			sql.AppendLine("  CONTINUE;");
+			sql.Append("END LOOP;");
+
+			Assert.Equal(sql.ToString(), loop.ToString());
+		}
+
+		[Fact]
+		public void GetStringWithLabel() {
+			var loop = new ForLoopStatement("i",
+				SqlExpression.Constant(SqlObject.BigInt(0)),
+				SqlExpression.Constant(SqlObject.BigInt(5)),
+				true, "l1");
+			loop.Statements.Add(new LoopControlStatement(LoopControlType.Continue));
+
+			var sql = new StringBuilder();
+			sql.AppendLine("<<l1>>");
+			sql.AppendLine("FOR i IN 0..5");
+			sql.AppendLine("LOOP");
+			sql.AppendLine("  CONTINUE;");
+			sql.Append("END LOOP;");
+
+			Assert.Equal(sql.ToString(), loop.ToString());
 		}
 
 

@@ -102,6 +102,9 @@ namespace Deveel.Data.Sql.Statements {
 					}
 				}
 
+				item.Next = null;
+				item.Previous = null;
+
 				base.RemoveItem(index);
 			}
 
