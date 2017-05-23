@@ -20,26 +20,16 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
-using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
-using Deveel.Data.Sql.Variables;
 
 namespace Deveel.Data.Sql.Statements {
 	public class StatementContext : Context, IEventSource {
 		public StatementContext(IContext parent, SqlStatement statement) 
-			: this(parent, statement, null) {
-		}
-
-		public StatementContext(IContext parent, SqlStatement statement, Action<IScope> scopeInit) 
-			: this(parent, statement.StatementName, statement, scopeInit) {
+			: this(parent, statement.StatementName, statement) {
 		}
 
 		public StatementContext(IContext parent, string name, SqlStatement statement) 
-			: this(parent, name, statement, null) {
-		}
-
-		public StatementContext(IContext parent, string name, SqlStatement statement, Action<IScope> scopeInit) 
-			: base(parent, name, scopeInit) {
+			: base(parent, name) {
 			if (statement == null)
 				throw new ArgumentNullException(nameof(statement));
 

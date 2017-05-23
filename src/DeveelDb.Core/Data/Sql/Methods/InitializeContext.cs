@@ -35,12 +35,6 @@ namespace Deveel.Data.Sql.Methods {
 
 		internal bool Iterate { get; private set; } = true;
 
-		internal Action<IScope> IterateScopeInit { get; private set; }
-
-		public void OnIterateScope(Action<IScope> scope) {
-			IterateScopeInit = scope;
-		}
-
 		public void SetResult(SqlExpression value, bool iterate = true) {
 			Result = value;
 			Iterate = iterate;
