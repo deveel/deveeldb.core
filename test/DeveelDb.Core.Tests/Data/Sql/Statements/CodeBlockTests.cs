@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 using Deveel.Data.Security;
@@ -37,7 +38,7 @@ namespace Deveel.Data.Sql.Statements {
 
 		[Fact]
 		public void SerializeBlock() {
-			var block = new TestCodeBlock();
+			var block = new CodeBlockStatement();
 
 			Assert.NotNull(block.Statements);
 			Assert.Empty(block.Statements);
@@ -63,24 +64,8 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		[Fact]
-		public async void ExecuteTransfer() {
-			var parentBlock = new TestCodeBlock();
-			var block = new TestCodeBlock("block");
-			block.Statements.Add(new EmptyStatement());
-			parentBlock.Statements.Add(block);
-
-			var executeContext = new StatementContext(context, parentBlock);
-			await executeContext.TransferAsync("block");
-
-			Assert.NotNull(executeContext.Result);
-			Assert.True(executeContext.HasResult);
-			Assert.IsType<StatementExpressionResult>(executeContext.Result);
-			Assert.IsType<SqlConstantExpression>(((StatementExpressionResult) executeContext.Result).Value);
-		}
-
-		[Fact]
 		public void AddAndRemoveStatements() {
-			var block = new TestCodeBlock("block");
+			var block = new CodeBlockStatement("block");
 			var statement = new EmptyStatement();
 			block.Statements.Add(statement);
 			block.Statements.Add(new EmptyStatement());
@@ -101,28 +86,18 @@ namespace Deveel.Data.Sql.Statements {
 			Assert.Equal(0, block.Statements.Count);
 		}
 
-		#region TestCodeBlock
+		[Fact]
+		public void GetString() {
+			var block = new CodeBlockStatement();
+			block.Statements.Add(new NullStatement());
 
-		class TestCodeBlock : CodeBlock {
-			public TestCodeBlock(string label)
-				: base(label) {
-			}
+			var sql = new StringBuilder();
+			sql.AppendLine("BEGIN");
+			sql.AppendLine("  NULL;");
+			sql.Append("END;");
 
-			public TestCodeBlock()
-				: base() {
-			}
-
-			private TestCodeBlock(SerializationInfo info)
-				: base(info) {
-			}
-
-			protected override Task ExecuteStatementAsync(StatementContext context) {
-				context.Return(SqlExpression.Constant(SqlObject.BigInt(22)));
-				return Task.CompletedTask;
-			}
+			Assert.Equal(sql.ToString(), block.ToString());
 		}
-
-		#endregion
 
 		#region EmptyStatement
 

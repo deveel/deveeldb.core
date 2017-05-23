@@ -169,6 +169,14 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		private LoopStatement FindLoopInTree(SqlStatement reference, string label) {
+			var found = FindLoopInTree(reference, label, true);
+			if (found != null)
+				return found;
+
+			return FindLoopInTree(reference, label, false);
+		}
+
+		private LoopStatement FindLoopInTree(SqlStatement reference, string label, bool forward) {
 			if (!String.IsNullOrWhiteSpace(label)) {
 				return FindInTree(reference, label, false) as LoopStatement;
 			}
@@ -182,17 +190,17 @@ namespace Deveel.Data.Sql.Statements {
 				if (statement is IStatementContainer) {
 					var container = (IStatementContainer) statement;
 					foreach (var child in container.Statements) {
-						var loop = FindLoopInTree(child, null);
+						var loop = FindLoopInTree(child, null, true);
 						if (loop != null)
 							return loop;
 					}
 				}
 
-				statement = statement.Previous;
+				statement = forward ? statement.Next : statement.Previous;
 			}
 
-			if (reference.Parent != null)
-				return FindLoopInTree(reference.Parent, null);
+			if (reference.Parent != null && !forward)
+				return FindLoopInTree(reference.Parent, label, false);
 
 			return null;
 		}

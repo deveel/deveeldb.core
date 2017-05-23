@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql.Statements {
-	public class LoopStatement : CodeBlock, IPlSqlStatement {
+	public class LoopStatement : CodeBlockStatement, IPlSqlStatement {
 		public LoopStatement()
 			: this((string) null) {
 		}

@@ -22,7 +22,7 @@ using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
-	public sealed class ConditionalStatement : CodeBlock, IPlSqlStatement {
+	public sealed class ConditionalStatement : CodeBlockStatement, IPlSqlStatement {
 		public ConditionalStatement(SqlExpression condition)
 			: this(condition, (SqlStatement) null) {
 		}
