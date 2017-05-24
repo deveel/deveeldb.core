@@ -14,6 +14,7 @@
 //    limitations under the License.
 //
 
+
 namespace Deveel.Data.Sql {
 	/// <summary>
 	/// Enumerates the kind of group join in a selection query.
