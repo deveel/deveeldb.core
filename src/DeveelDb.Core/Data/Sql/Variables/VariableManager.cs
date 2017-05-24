@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Variables {
-	public sealed class VariableManager : IVariableResolver, IVariableManager {
+	public sealed class VariableManager : IVariableManager {
 		private bool disposed;
 		private DbObjectCache<Variable> variables;
 
@@ -110,7 +110,7 @@ namespace Deveel.Data.Sql.Variables {
 			return variable;
 		}
 
-		public SqlExpression AssignVariable(string name, SqlExpression value, IContext context) {
+		public SqlExpression AssignVariable(IContext context, string name, bool ignoreCase, SqlExpression value) {
 			Variable variable;
 			if (!variables.TryGetObject(new ObjectName(name), out variable)) {
 				var type = value.GetSqlType(context);

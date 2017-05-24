@@ -22,7 +22,7 @@ using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
-	public sealed class ConditionalStatement : CodeBlock, IPlSqlStatement {
+	public sealed class ConditionalStatement : CodeBlockStatement, IPlSqlStatement {
 		public ConditionalStatement(SqlExpression condition)
 			: this(condition, (SqlStatement) null) {
 		}
@@ -64,7 +64,14 @@ namespace Deveel.Data.Sql.Statements {
 
 		protected override SqlStatement PrepareExpressions(ISqlExpressionPreparer preparer) {
 			var test = Condition.Prepare(preparer);
-			return new ConditionalStatement(test, Label, Else);
+
+			var statement = new ConditionalStatement(test, Label, Else);
+
+			foreach (var child in Statements) {
+				statement.Statements.Add(child);
+			}
+
+			return statement;
 		}
 
 		protected override SqlStatement PrepareStatement(IContext context) {
@@ -72,7 +79,14 @@ namespace Deveel.Data.Sql.Statements {
 			if (@else != null)
 				@else = @else.Prepare(context);
 
-			return new ConditionalStatement(Condition, Label, @else);
+			var statement = new ConditionalStatement(Condition, Label, @else);
+
+			foreach (var child in Statements) {
+				var prepared = child.Prepare(context);
+				statement.Statements.Add(prepared);
+			}
+
+			return statement;
 		}
 
 		protected override async Task ExecuteStatementAsync(StatementContext context) {

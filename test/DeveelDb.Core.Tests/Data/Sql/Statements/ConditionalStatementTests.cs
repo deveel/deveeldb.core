@@ -30,6 +30,14 @@ namespace Deveel.Data.Sql.Statements {
 				.Returns(new User("user1"));
 
 			context = mock.Object;
+
+			var mock2 = new Mock<ISqlExpressionPreparer>();
+			mock2.Setup(x => x.Prepare(It.IsAny<SqlExpression>()))
+				.Returns<SqlExpression>(exp => exp);
+			mock2.Setup(x => x.CanPrepare(It.IsAny<SqlExpression>()))
+				.Returns(true);
+
+			container.RegisterInstance<ISqlExpressionPreparer>(mock2.Object);
 		}
 
 		[Fact]
@@ -38,13 +46,12 @@ namespace Deveel.Data.Sql.Statements {
 			var condition = new ConditionalStatement(test);
 			condition.Statements.Add(new ReturnStatement(SqlExpression.Constant(SqlObject.BigInt(33))));
 
-			var executeContext = new StatementContext(context, condition);
 			var statement = condition.Prepare(context);
-			await statement.ExecuteAsync(executeContext);
+			var result = await statement.ExecuteAsync(context);
 
-			Assert.True(executeContext.HasResult);
-			Assert.IsType<StatementExpressionResult>(executeContext.Result);
-			Assert.Equal((SqlNumber)33L, ((SqlConstantExpression) ((StatementExpressionResult)executeContext.Result).Value).Value.Value);
+			Assert.NotNull(result);
+			Assert.IsType<StatementExpressionResult>(result);
+			Assert.Equal((SqlNumber)33L, ((SqlConstantExpression) ((StatementExpressionResult)result).Value).Value.Value);
 		}
 
 		[Fact]
@@ -53,14 +60,13 @@ namespace Deveel.Data.Sql.Statements {
 			var condition = new ConditionalStatement(test, new ReturnStatement(SqlExpression.Constant(SqlObject.BigInt(100))));
 			condition.Statements.Add(new ReturnStatement(SqlExpression.Constant(SqlObject.BigInt(33))));
 
-			var executeContext = new StatementContext(context, condition);
-			var statement = condition.Prepare(executeContext);
+			var statement = condition.Prepare(context);
 
-			await statement.ExecuteAsync(executeContext);
+			var result = await statement.ExecuteAsync(context);
 
-			Assert.True(executeContext.HasResult);
-			Assert.IsType<StatementExpressionResult>(executeContext.Result);
-			Assert.Equal((SqlNumber)100L, ((SqlConstantExpression)((StatementExpressionResult)executeContext.Result).Value).Value.Value);
+			Assert.NotNull(result);
+			Assert.IsType<StatementExpressionResult>(result);
+			Assert.Equal((SqlNumber)100L, ((SqlConstantExpression)((StatementExpressionResult)result).Value).Value.Value);
 		}
 
 		[Fact]

@@ -16,11 +16,26 @@
 
 
 using System;
+using System.Threading.Tasks;
 
-using Deveel.Data.Sql.Expressions;
+using Deveel.Data.Serialization;
 
-namespace Deveel.Data.Sql.Variables {
-	public interface IVariableManager : IDbObjectManager, IVariableResolver {
-		SqlExpression AssignVariable(IContext context, string name, bool ignoreCase, SqlExpression value);
+namespace Deveel.Data.Sql.Statements {
+	public sealed class NullStatement : SqlStatement, IPlSqlStatement {
+		public NullStatement() {
+			
+		}
+
+		private NullStatement(SerializationInfo info)
+			: base(info) {
+		}
+
+		protected override Task ExecuteStatementAsync(StatementContext context) {
+			return Task.CompletedTask;
+		}
+
+		protected override void AppendTo(SqlStringBuilder builder) {
+			builder.Append("NULL;");
+		}
 	}
 }

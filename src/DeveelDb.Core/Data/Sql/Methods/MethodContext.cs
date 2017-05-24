@@ -37,6 +37,8 @@ namespace Deveel.Data.Sql.Methods {
 
 			ResultValue = SqlExpression.Constant(SqlObject.Null);
 			output = new Dictionary<string, SqlExpression>();
+
+			Metadata = new Dictionary<string, object>();
 		}
 
 		public SqlMethod Method { get; }
@@ -49,9 +51,7 @@ namespace Deveel.Data.Sql.Methods {
 
 		public int ArgumentCount => Invoke.Arguments.Count;
 
-		protected override void Configure(IScope scope) {
-			scope.AddVariableResolver(this);
-		}
+		public IDictionary<string, object> Metadata { get; }
 
 		public SqlExpression Argument(string argName) {
 			SqlExpression value;

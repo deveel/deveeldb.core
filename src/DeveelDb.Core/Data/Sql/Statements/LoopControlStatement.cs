@@ -41,7 +41,7 @@ namespace Deveel.Data.Sql.Statements {
 			When = when;
 		}
 
-		private LoopControlStatement(SerializationInfo info)
+		internal LoopControlStatement(SerializationInfo info)
 			: base(info) {
 			ControlType = info.GetValue<LoopControlType>("type");
 			Label = info.GetString("label");
