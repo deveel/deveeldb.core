@@ -1,13 +1,36 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql.Statements {
-	public abstract class CodeBlockStatement : SqlStatement, ILabeledStatement, IStatementContainer {
-		protected CodeBlockStatement() {
+	public class CodeBlockStatement : SqlStatement, ILabeledStatement, IStatementContainer {
+		public CodeBlockStatement() 
+			: this((string)null) {
+		}
+
+		public CodeBlockStatement(string label) {
+			Label = label;
 			Statements = new StatementCollection(this);
 		}
 
@@ -23,11 +46,32 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
-		public string Label { get; set; }
+		public string Label { get; }
 
 		public ICollection<SqlStatement> Statements { get; }
 
 		IEnumerable<SqlStatement> IStatementContainer.Statements => Statements;
+
+		protected override StatementContext CreateContext(IContext parent, string name) {
+			return new BlockStatementContext(parent, name, this);
+		}
+
+		protected override SqlStatement PrepareStatement(IContext context) {
+			var block = new CodeBlockStatement(Label);
+
+			foreach (var statement in Statements) {
+				var prepared = statement.Prepare(context);
+				block.Statements.Add(prepared);
+			}
+
+			return block;
+		}
+
+		protected override async Task ExecuteStatementAsync(StatementContext context) {
+			foreach (var statement in Statements) {
+				await statement.ExecuteAsync(context);
+			}
+		}
 
 		protected override void GetObjectData(SerializationInfo info) {
 			info.SetValue("label", Label);
@@ -42,24 +86,20 @@ namespace Deveel.Data.Sql.Statements {
 
 		protected override void AppendTo(SqlStringBuilder builder) {
 			if (!String.IsNullOrWhiteSpace(Label)) {
-				builder.AppendLine($"<<{Label}>>");
+				builder.AppendFormat("<<{0}>>", Label);
+				builder.AppendLine();
 			}
 
-			AppendCodeBlockTo(builder);
+			builder.AppendLine("BEGIN");
+			builder.Indent();
 
-			if (Statements.Count > 0) {
-				builder.Indent();
-
-				foreach (var statement in Statements) {
-					statement.AppendTo(builder);
-				}
-
-				builder.DeIndent();
+			foreach (var statement in Statements) {
+				statement.AppendTo(builder);
+				builder.AppendLine();
 			}
-		}
 
-		protected virtual void AppendCodeBlockTo(SqlStringBuilder builder) {
-			
+			builder.DeIndent();
+			builder.Append("END;");
 		}
 
 		#region StatementCollection
@@ -74,6 +114,8 @@ namespace Deveel.Data.Sql.Statements {
 			protected override void ClearItems() {
 				foreach (var statement in Items) {
 					statement.Parent = null;
+					statement.Next = null;
+					statement.Previous = null;
 				}
 
 				base.ClearItems();
@@ -81,12 +123,40 @@ namespace Deveel.Data.Sql.Statements {
 
 			protected override void InsertItem(int index, SqlStatement item) {
 				item.Parent = codeBlock;
+
+				if (index > 0) {
+					item.Previous = Items[index - 1];
+					Items[index - 1].Next = item;
+				}
+
+				if (index < Items.Count) {
+					item.Next = Items[index + 1];
+					Items[index + 1].Previous = item;
+				}
+
 				base.InsertItem(index, item);
 			}
 
 			protected override void RemoveItem(int index) {
 				var item = Items[index];
 				item.Parent = null;
+
+				if (index > 0) {
+					if (Items.Count > 2) {
+						Items[index - 1].Next = Items[index + 1];
+					} else {
+						Items[index - 1].Next = null;
+					}
+				}
+
+				if (index < Items.Count) {
+					if (Items.Count > 2) {
+						Items[index + 1].Previous = Items[index - 1];
+					}
+				}
+
+				item.Next = null;
+				item.Previous = null;
 
 				base.RemoveItem(index);
 			}

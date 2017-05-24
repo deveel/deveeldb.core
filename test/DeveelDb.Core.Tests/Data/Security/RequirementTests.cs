@@ -55,26 +55,6 @@ namespace Deveel.Data.Security {
 			Assert.Equal(expected, await context.UserHasPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), privileges));
 		}
 
-		[Fact]
-		public async Task CheckRequirements() {
-			var requirements = new RequirementCollection();
-			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Insert);
-
-			context.Scope.RegisterInstance<IRequirementCollection>(requirements);
-
-			await context.CheckRequirementsAsync();
-		}
-
-		[Fact]
-		public async Task FailedCheckRequirements() {
-			var requirements = new RequirementCollection();
-			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Alter);
-
-			context.Scope.RegisterInstance<IRequirementCollection>(requirements);
-
-			await Assert.ThrowsAnyAsync<UnauthorizedAccessException>(() => context.CheckRequirementsAsync());
-		}
-
 		public void Dispose() {
 			context.Dispose();
 		}

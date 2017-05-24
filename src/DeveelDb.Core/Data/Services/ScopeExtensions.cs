@@ -37,7 +37,7 @@ namespace Deveel.Data.Services {
 				throw new ArgumentNullException("serviceType");
 
 			if (serviceType.GetTypeInfo().IsValueType)
-				throw new ArgumentException(String.Format("The service type '{0}' to register is not a class.", serviceType));
+				throw new ArgumentException($"The service type '{serviceType}' to register is not a class.");
 
 			scope.Register(serviceType, serviceType, serviceKey);
 		}
@@ -122,12 +122,14 @@ namespace Deveel.Data.Services {
 		}
 
 		public static bool Replace(this IScope scope, Type serviceType, Type implementationType, object serviceKey) {
-			if (scope.Unregister(serviceType, serviceKey)) {
-				scope.Register(serviceType, implementationType, serviceKey);
-				return true;
+			bool replaced = false;
+			if (scope.IsRegistered(serviceType, serviceKey)) {
+				scope.Unregister(serviceType, serviceKey);
+				replaced = true;
 			}
 
-			return false;
+			scope.Register(serviceType, implementationType, serviceKey);
+			return replaced;
 		}
 
 		public static bool Replace<TService, TImplementation>(this IScope scope)
@@ -138,6 +140,29 @@ namespace Deveel.Data.Services {
 		public static bool Replace<TService, TImplementation>(this IScope scope, object serviceKey)
 			where TImplementation : class, TService {
 			return scope.Replace(typeof(TService), typeof(TImplementation), serviceKey);
+		}
+
+		public static bool ReplaceInstance(this IScope scope, Type serviceType, object instance) {
+			return ReplaceInstance(scope, serviceType, instance, null);
+		}
+
+		public static bool ReplaceInstance(this IScope scope, Type serviceType, object instance, object serviceKey) {
+			bool replaced = false;
+			if (scope.IsRegistered(serviceType, serviceKey)) {
+				scope.Unregister(serviceType, serviceKey);
+				replaced = true;
+			}
+
+			scope.RegisterInstance(serviceType, instance, serviceKey);
+			return replaced;
+		}
+
+		public static bool ReplaceInstance<TService>(this IScope scope, object instance) {
+			return ReplaceInstance<TService>(scope, instance, null);
+		}
+
+		public static bool ReplaceInstance<TService>(this IScope scope, object instance, object serviceKey) {
+			return scope.ReplaceInstance(typeof(TService), instance, serviceKey);
 		}
 
 		public static bool IsRegistered(this IScope scope, Type serviceType) {

@@ -168,7 +168,7 @@ namespace Deveel.Data.Sql.Methods {
 
 			// STDEV
 			RegisterAggregate("STDEV", Deterministic("column"), PrimitiveTypes.VarNumeric(), iterate => {
-				var aggregator = (iterate as IContext).Scope.Resolve<AvgAggregator>();
+				var aggregator = (AvgAggregator) iterate.MethodContext.Metadata["aggregator"];
 				aggregator.Values.Add(iterate.Current);
 
 				if (iterate.IsFirst) {
@@ -182,12 +182,12 @@ namespace Deveel.Data.Sql.Methods {
 					Values = new BigList<SqlObject>(groupResolver.Size)
 				};
 
-				initialize.OnIterateScope(scope => scope.RegisterInstance<AvgAggregator>(aggregator));
+				initialize.MethodContext.Metadata["aggregator"] = aggregator;
 				return Task.CompletedTask;
 			}, merge => {
 				var groupResolver = merge.GetGroupResolver();
 				var groupSize = groupResolver.Size;
-				var aggregator = (merge as IContext).Scope.Resolve<AvgAggregator>();
+				var aggregator = (AvgAggregator) merge.MethodContext.Metadata["aggregator"];
 
 				var avg = merge.Accumulated.Divide(SqlObject.BigInt(groupSize));
 				var sums = aggregator.Values.Select(x => SqlMath.Pow((SqlNumber) x.Subtract(avg).Value, (SqlNumber) 2));

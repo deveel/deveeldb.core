@@ -30,5 +30,10 @@ namespace Deveel.Data.Configuration {
 			scope.Unregister<IConfiguration>();
 			scope.RegisterInstance<IConfiguration>(final);
 		}
+
+		public static void AddConfigurationFormatter<TFormatter>(this IScope scope, string name)
+			where TFormatter : class, IConfigurationFormatter {
+			scope.Register<TFormatter>(name);
+		}
 	}
 }
