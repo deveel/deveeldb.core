@@ -65,11 +65,7 @@ namespace Deveel.Data.Sql.Statements {
 		protected override SqlStatement PrepareExpressions(ISqlExpressionPreparer preparer) {
 			var test = Condition.Prepare(preparer);
 
-			var @else = Else;
-			if (@else != null)
-				@else = @else.Prepare(preparer);
-
-			var statement = new ConditionalStatement(test, Label, @else);
+			var statement = new ConditionalStatement(test, Label, Else);
 
 			foreach (var child in Statements) {
 				statement.Statements.Add(child);
@@ -79,7 +75,11 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		protected override SqlStatement PrepareStatement(IContext context) {
-			var statement = new ConditionalStatement(Condition, Label, Else);
+			var @else = Else;
+			if (@else != null)
+				@else = @else.Prepare(context);
+
+			var statement = new ConditionalStatement(Condition, Label, @else);
 
 			foreach (var child in Statements) {
 				var prepared = child.Prepare(context);

@@ -81,6 +81,16 @@ namespace Deveel.Data.Sql.Statements {
 			return loop;
 		}
 
+		protected override SqlStatement PrepareStatement(IContext context) {
+			var statement = new ForLoopStatement(IndexName, LowerBound, UpperBound, Reverse);
+			foreach (var child in Statements) {
+				var prepared = child.Prepare(context);
+				statement.Statements.Add(prepared);
+			}
+
+			return statement;
+		}
+
 		internal override LoopStatement CreateNew() {
 			return new ForLoopStatement(IndexName, LowerBound, UpperBound, Reverse);
 		}

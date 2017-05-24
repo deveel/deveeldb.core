@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 
+using Deveel.Data.Diagnostics;
 using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
@@ -48,6 +50,18 @@ namespace Deveel.Data.Sql.Statements {
 			Assert.NotNull(variable);
 			Assert.Equal("a", variable.Name);
 			Assert.IsType<SqlConstantExpression>(variable.Value);
+		}
+
+		[Fact]
+		public void GetMetadata() {
+			var assign = new AssignStatement("a", SqlExpression.Constant(SqlObject.Bit(true)));
+			var statementContext = new StatementContext(context, assign);
+
+			var meta = (statementContext as IEventSource).Metadata.ToDictionary(x => x.Key, y => y.Value);
+			Assert.NotNull(meta);
+			Assert.NotEmpty(meta);
+			Assert.True(meta.ContainsKey("statement.var"));
+			Assert.True(meta.ContainsKey("statement.value"));
 		}
 
 		[Fact]

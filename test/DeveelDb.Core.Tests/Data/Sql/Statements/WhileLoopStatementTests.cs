@@ -39,7 +39,7 @@ namespace Deveel.Data.Sql.Statements {
 		[Fact]
 		public async void WhileTrueExit() {
 			var loop = new WhileLoopStatement(SqlExpression.Constant(SqlObject.Boolean(true)));
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit));
+			loop.Statements.Add(new ExitStatement());
 
 			var statement = loop.Prepare(context);
 
@@ -51,7 +51,7 @@ namespace Deveel.Data.Sql.Statements {
 		[Fact]
 		public void SerializeSimpleLoop() {
 			var loop = new WhileLoopStatement(SqlExpression.Constant(SqlObject.Boolean(true)));
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit));
+			loop.Statements.Add(new ExitStatement());
 
 			var result = BinarySerializeUtil.Serialize(loop);
 
@@ -63,7 +63,7 @@ namespace Deveel.Data.Sql.Statements {
 		[Fact]
 		public void GetStringWithLabel() {
 			var loop = new WhileLoopStatement(SqlExpression.Constant(SqlObject.Boolean(true)), "l1");
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit));
+			loop.Statements.Add(new ExitStatement());
 
 			var sql = new StringBuilder();
 			sql.AppendLine("<<l1>>");
@@ -78,7 +78,7 @@ namespace Deveel.Data.Sql.Statements {
 		[Fact]
 		public void GetStringWithoutLabel() {
 			var loop = new WhileLoopStatement(SqlExpression.Constant(SqlObject.Boolean(true)));
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit));
+			loop.Statements.Add(new ExitStatement());
 
 			var sql = new StringBuilder();
 			sql.AppendLine("WHILE TRUE");

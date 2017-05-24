@@ -28,7 +28,7 @@ namespace Deveel.Data.Sql.Statements {
 			loop.Statements.Add(new GoToStatement("exitLoop"));
 			
 			var exitLoop = new CodeBlockStatement("exitLoop");
-			exitLoop.Statements.Add(new LoopControlStatement(LoopControlType.Exit));
+			exitLoop.Statements.Add(new ExitStatement());
 
 			loop.Statements.Add(exitLoop);
 

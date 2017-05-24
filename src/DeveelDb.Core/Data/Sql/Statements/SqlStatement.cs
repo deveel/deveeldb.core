@@ -74,7 +74,16 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		internal void CollectMetadata(IDictionary<string, object> data) {
-			GetMetadata(data);
+			var meta = new Dictionary<string, object>();
+			GetMetadata(meta);
+
+			foreach (var pair in meta) {
+				var key = pair.Key;
+				if (!key.StartsWith("statement.", StringComparison.OrdinalIgnoreCase))
+					key = $"statement.{key}";
+
+				data[key] = pair.Value;
+			}
 		}
 
 		protected virtual void GetMetadata(IDictionary<string, object> data) {

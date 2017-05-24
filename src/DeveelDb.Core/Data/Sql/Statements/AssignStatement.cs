@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
@@ -67,6 +68,11 @@ namespace Deveel.Data.Sql.Statements {
 			info.SetValue("value", Value);
 
 			base.GetObjectData(info);
+		}
+
+		protected override void GetMetadata(IDictionary<string, object> data) {
+			data["var"] = Variable;
+			data["value"] = Value.ToString();
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

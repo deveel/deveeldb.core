@@ -41,7 +41,7 @@ namespace Deveel.Data.Sql.Statements {
 			var loop = new ForLoopStatement("i",
 				SqlExpression.Constant(SqlObject.BigInt(0)),
 				SqlExpression.Constant(SqlObject.BigInt(5)));
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Continue));
+			loop.Statements.Add(new ContinueStatement());
 
 			var statement = loop.Prepare(context);
 			var result = await statement.ExecuteAsync(context);
@@ -55,7 +55,7 @@ namespace Deveel.Data.Sql.Statements {
 				SqlExpression.Constant(SqlObject.BigInt(0)),
 				SqlExpression.Constant(SqlObject.BigInt(5)),
 				true);
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Continue));
+			loop.Statements.Add(new ContinueStatement());
 
 			var statement = loop.Prepare(context);
 			var result = await statement.ExecuteAsync(context);
@@ -69,7 +69,7 @@ namespace Deveel.Data.Sql.Statements {
 				SqlExpression.Constant(SqlObject.BigInt(0)),
 				SqlExpression.Constant(SqlObject.BigInt(5)),
 				true);
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Continue));
+			loop.Statements.Add(new ContinueStatement());
 
 			var result = BinarySerializeUtil.Serialize(loop);
 
@@ -84,7 +84,7 @@ namespace Deveel.Data.Sql.Statements {
 				SqlExpression.Constant(SqlObject.BigInt(0)),
 				SqlExpression.Constant(SqlObject.BigInt(5)),
 				true);
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Continue));
+			loop.Statements.Add(new ContinueStatement());
 
 			var sql = new StringBuilder();
 			sql.AppendLine("FOR i IN 0..5");
@@ -101,7 +101,7 @@ namespace Deveel.Data.Sql.Statements {
 				SqlExpression.Constant(SqlObject.BigInt(0)),
 				SqlExpression.Constant(SqlObject.BigInt(5)),
 				true, "l1");
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Continue));
+			loop.Statements.Add(new ContinueStatement());
 
 			var sql = new StringBuilder();
 			sql.AppendLine("<<l1>>");
