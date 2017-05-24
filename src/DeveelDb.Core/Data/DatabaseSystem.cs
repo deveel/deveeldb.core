@@ -85,13 +85,18 @@ namespace Deveel.Data {
 			}
 		}
 
+		private string GetDatabaseName(IConfiguration config) {
+			return config.GetString("database.name");
+		}
+
 		public Task StartAsync() {
 			EnsureSystemServices();
 
 			var configs = FindDatabaseConfigs();
 
 			foreach (var config in configs) {
-				var database = OpenDatabase(config);
+				var name = GetDatabaseName(config);
+				var database = OpenDatabase(name, config);
 
 				var databaseName = config.DatabaseName();
 				if (String.IsNullOrWhiteSpace(databaseName))
@@ -107,7 +112,7 @@ namespace Deveel.Data {
 			return databases.Keys;
 		}
 
-		public IDatabase CreateDatabase(IConfiguration configuration) {
+		public IDatabase CreateDatabase(string name, IConfiguration configuration) {
 			throw new NotImplementedException();
 		}
 
@@ -115,7 +120,7 @@ namespace Deveel.Data {
 			throw new NotImplementedException();
 		}
 
-		public IDatabase OpenDatabase(IConfiguration configuration) {
+		public IDatabase OpenDatabase(string name, IConfiguration configuration) {
 			throw new NotImplementedException();
 		}
 

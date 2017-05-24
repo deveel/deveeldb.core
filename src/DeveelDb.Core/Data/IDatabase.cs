@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Diagnostics;
@@ -57,18 +58,20 @@ namespace Deveel.Data {
 		Version Version { get; }
 
 		/// <summary>
-		/// Gets a boolean value indicating if the database exists within the
-		/// context given.
-		/// </summary>
-		bool Exists { get; }
-
-		/// <summary>
 		/// Gets a boolean value that indicates if the database was open.
 		/// </summary>
-		/// <seealso cref="Open"/>
-		/// <seealso cref="Close"/>
+		/// <seealso cref="OpenAsync"/>
+		/// <seealso cref="CloseAsync"/>
 		bool IsOpen { get; }
 
+		/// <summary>
+		/// Verifies if the database exists in the underlying context
+		/// </summary>
+		/// <returns>
+		/// Returns a boolean value indicating if the database
+		/// exists in the underlying context.
+		/// </returns>
+		Task<bool> ExistsAsync();
 
 		/// <summary>
 		/// Opens the database making it ready to be accessed.
@@ -83,7 +86,7 @@ namespace Deveel.Data {
 		/// is changed to <c>true</c>.
 		/// </para>
 		/// </remarks>
-		void Open();
+		Task OpenAsync();
 
 		/// <summary>
 		/// Closes the database making it not accessible to connections.
@@ -94,6 +97,6 @@ namespace Deveel.Data {
 		/// invoke the closure of the database on disposal (<see cref="IDisposable.Dispose"/>.
 		/// </para>
 		/// </remarks>
-		void Close();
+		Task CloseAsync();
 	}
 }

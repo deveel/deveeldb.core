@@ -47,6 +47,7 @@ namespace Deveel.Data {
 		/// Creates a new database with the given configuration
 		/// within this database system.
 		/// </summary>
+		/// <param name="name">The name of the database to create</param>
 		/// <param name="configuration">A configuration specific for the
 		/// database to be created.</param>
 		/// <returns>
@@ -54,16 +55,12 @@ namespace Deveel.Data {
 		/// the state of this system and is administered by the given user.
 		/// </returns>
 		/// <exception cref="ArgumentNullException">
-		/// If the provided <paramref name="configuration"/> object if <c>null</c>.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		/// If the given <paramref name="configuration"/> does not specify any
-		/// database name.
+		/// If the <paramref name="name"/> is <c>null</c> or empty.
 		/// </exception>
 		/// <exception cref="DatabaseSystemException">
 		/// If any error occurred that prohibited the creation of the database.
 		/// </exception>
-		IDatabase CreateDatabase(IConfiguration configuration);
+		IDatabase CreateDatabase(string name, IConfiguration configuration);
 
 		/// <summary>
 		/// Checks if any database with the given name exists 
@@ -85,6 +82,7 @@ namespace Deveel.Data {
 		/// <summary>
 		/// Opens an existing database handled by this system.
 		/// </summary>
+		/// <param name="name">The name of the database to open</param>
 		/// <param name="configuration">The configuration that defines the database
 		/// to open.</param>
 		/// <returns>
@@ -92,7 +90,7 @@ namespace Deveel.Data {
 		/// opened by this system.
 		/// </returns>
 		/// <exception cref="ArgumentNullException">
-		/// If the given <paramref name="configuration"/> is <c>null</c>.
+		/// If the given <paramref name="name"/> is <c>null</c> or empty.
 		/// </exception>
 		/// <exception cref="ArgumentException">
 		/// If the given <paramref name="configuration"/> does not provide any
@@ -101,7 +99,7 @@ namespace Deveel.Data {
 		/// <exception cref="DatabaseSystemException">
 		/// If the database does not exist or if it was not possible to open it.
 		/// </exception>
-		IDatabase OpenDatabase(IConfiguration configuration);
+		IDatabase OpenDatabase(string name, IConfiguration configuration);
 
 		/// <summary>
 		/// Removes a database from the system and deletes it from the underlying
