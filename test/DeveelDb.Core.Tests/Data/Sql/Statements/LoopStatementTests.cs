@@ -30,6 +30,14 @@ namespace Deveel.Data.Sql.Statements {
 				.Returns(new User("user1"));
 
 			context = mock.Object;
+
+			var mock2 = new Mock<ISqlExpressionPreparer>();
+			mock2.Setup(x => x.Prepare(It.IsAny<SqlExpression>()))
+				.Returns<SqlExpression>(exp => exp);
+			mock2.Setup(x => x.CanPrepare(It.IsAny<SqlExpression>()))
+				.Returns(true);
+
+			container.RegisterInstance<ISqlExpressionPreparer>(mock2.Object);
 		}
 
 		[Fact]
@@ -37,7 +45,8 @@ namespace Deveel.Data.Sql.Statements {
 			var loop = new LoopStatement();
 			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit));
 
-			var result = await loop.ExecuteAsync(context);
+			var statement = loop.Prepare(context);
+			var result = await statement.ExecuteAsync(context);
 
 			Assert.Null(result);
 		}

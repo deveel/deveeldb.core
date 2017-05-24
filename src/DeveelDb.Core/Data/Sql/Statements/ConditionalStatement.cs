@@ -64,15 +64,29 @@ namespace Deveel.Data.Sql.Statements {
 
 		protected override SqlStatement PrepareExpressions(ISqlExpressionPreparer preparer) {
 			var test = Condition.Prepare(preparer);
-			return new ConditionalStatement(test, Label, Else);
+
+			var @else = Else;
+			if (@else != null)
+				@else = @else.Prepare(preparer);
+
+			var statement = new ConditionalStatement(test, Label, @else);
+
+			foreach (var child in Statements) {
+				statement.Statements.Add(child);
+			}
+
+			return statement;
 		}
 
 		protected override SqlStatement PrepareStatement(IContext context) {
-			var @else = Else;
-			if (@else != null)
-				@else = @else.Prepare(context);
+			var statement = new ConditionalStatement(Condition, Label, Else);
 
-			return new ConditionalStatement(Condition, Label, @else);
+			foreach (var child in Statements) {
+				var prepared = child.Prepare(context);
+				statement.Statements.Add(prepared);
+			}
+
+			return statement;
 		}
 
 		protected override async Task ExecuteStatementAsync(StatementContext context) {

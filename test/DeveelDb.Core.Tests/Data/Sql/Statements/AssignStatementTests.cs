@@ -24,11 +24,21 @@ namespace Deveel.Data.Sql.Statements {
 				.Returns(new VariableManager());
 
 			context = mock.Object;
+
+			var mock2 = new Mock<ISqlExpressionPreparer>();
+			mock2.Setup(x => x.Prepare(It.IsAny<SqlExpression>()))
+				.Returns<SqlExpression>(exp => exp);
+			mock2.Setup(x => x.CanPrepare(It.IsAny<SqlExpression>()))
+				.Returns(true);
+
+			container.RegisterInstance<ISqlExpressionPreparer>(mock2.Object);
 		}
 
 		[Fact]
 		public async void AssignNewWariable() {
-			var statement = new AssignStatement("a", SqlExpression.Constant(SqlObject.Bit(true)));
+			var assign = new AssignStatement("a", SqlExpression.Constant(SqlObject.Bit(true)));
+
+			var statement = assign.Prepare(context);
 			var result = await statement.ExecuteAsync(context);
 
 			Assert.NotNull(result);

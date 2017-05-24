@@ -17,8 +17,6 @@
 
 using System;
 
-using Deveel.Data.Services;
-
 namespace Deveel.Data.Sql.Methods {
 	public sealed class IterateContext : Context {
 		internal IterateContext(MethodContext parent, long offset, SqlObject accumulation, SqlObject current)
