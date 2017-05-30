@@ -85,18 +85,17 @@ namespace Deveel.Data {
 			}
 		}
 
-		private string GetDatabaseName(IConfiguration config) {
-			return config.GetString("database.name");
-		}
-
-		public Task StartAsync() {
+		public async Task StartAsync() {
 			EnsureSystemServices();
 
 			var configs = FindDatabaseConfigs();
 
 			foreach (var config in configs) {
-				var name = GetDatabaseName(config);
-				var database = OpenDatabase(name, config);
+				var name = config.DatabaseName();
+				if (String.IsNullOrWhiteSpace(name))
+					throw new DatabaseSystemException("Could not open a database: missing name");
+
+				var database = await OpenDatabaseAsync(name, config);
 
 				var databaseName = config.DatabaseName();
 				if (String.IsNullOrWhiteSpace(databaseName))
@@ -104,27 +103,25 @@ namespace Deveel.Data {
 
 				databases[databaseName] = database;
 			}
-
-			return Task.CompletedTask;
 		}
 
 		public IEnumerable<string> GetDatabases() {
 			return databases.Keys;
 		}
 
-		public IDatabase CreateDatabase(string name, IConfiguration configuration) {
+		public Task<IDatabase> CreateDatabaseAsync(string databaseName, IConfiguration configuration) {
 			throw new NotImplementedException();
 		}
 
-		public bool DatabaseExists(string databaseName) {
+		public Task<bool> DatabaseExistsAsync(string databaseName) {
 			throw new NotImplementedException();
 		}
 
-		public IDatabase OpenDatabase(string name, IConfiguration configuration) {
+		public Task<IDatabase> OpenDatabaseAsync(string databaseName, IConfiguration configuration) {
 			throw new NotImplementedException();
 		}
 
-		public bool DeleteDatabase(string databaseName) {
+		public Task<bool> DeleteDatabaseAsync(string databaseName) {
 			throw new NotImplementedException();
 		}
 

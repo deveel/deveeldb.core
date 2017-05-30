@@ -47,7 +47,7 @@ namespace Deveel.Data {
 		/// Creates a new database with the given configuration
 		/// within this database system.
 		/// </summary>
-		/// <param name="name">The name of the database to create</param>
+		/// <param name="databaseName">The name of the database to create</param>
 		/// <param name="configuration">A configuration specific for the
 		/// database to be created.</param>
 		/// <returns>
@@ -55,12 +55,12 @@ namespace Deveel.Data {
 		/// the state of this system and is administered by the given user.
 		/// </returns>
 		/// <exception cref="ArgumentNullException">
-		/// If the <paramref name="name"/> is <c>null</c> or empty.
+		/// If the provided <paramref name="databaseName"/> is <c>null</c> or empty.
 		/// </exception>
 		/// <exception cref="DatabaseSystemException">
 		/// If any error occurred that prohibited the creation of the database.
 		/// </exception>
-		IDatabase CreateDatabase(string name, IConfiguration configuration);
+		Task<IDatabase> CreateDatabaseAsync(string databaseName, IConfiguration configuration);
 
 		/// <summary>
 		/// Checks if any database with the given name exists 
@@ -77,12 +77,12 @@ namespace Deveel.Data {
 		/// Returns <c>true</c> if a database with the given name is handled by
 		/// this system and exists in the underlying storage.
 		/// </returns>
-		bool DatabaseExists(string databaseName);
+		Task<bool> DatabaseExistsAsync(string databaseName);
 
 		/// <summary>
 		/// Opens an existing database handled by this system.
 		/// </summary>
-		/// <param name="name">The name of the database to open</param>
+		/// <param name="databaseName">The name of the database to open</param>
 		/// <param name="configuration">The configuration that defines the database
 		/// to open.</param>
 		/// <returns>
@@ -90,16 +90,12 @@ namespace Deveel.Data {
 		/// opened by this system.
 		/// </returns>
 		/// <exception cref="ArgumentNullException">
-		/// If the given <paramref name="name"/> is <c>null</c> or empty.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		/// If the given <paramref name="configuration"/> does not provide any
-		/// database name.
+		/// If the given <paramref name="databaseName"/> is <c>null</c> or empty.
 		/// </exception>
 		/// <exception cref="DatabaseSystemException">
 		/// If the database does not exist or if it was not possible to open it.
 		/// </exception>
-		IDatabase OpenDatabase(string name, IConfiguration configuration);
+		Task<IDatabase> OpenDatabaseAsync(string databaseName, IConfiguration configuration);
 
 		/// <summary>
 		/// Removes a database from the system and deletes it from the underlying
@@ -114,6 +110,6 @@ namespace Deveel.Data {
 		/// the database with the given name</exception>
 		/// <exception cref="ArgumentNullException">If the specified <paramref name="databaseName"/>
 		/// is <c>null</c> or empty</exception>
-		bool DeleteDatabase(string databaseName);
+		Task<bool> DeleteDatabaseAsync(string databaseName);
 	}
 }
