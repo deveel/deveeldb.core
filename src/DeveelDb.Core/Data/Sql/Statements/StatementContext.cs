@@ -20,25 +20,16 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
-using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
 	public class StatementContext : Context, IEventSource {
 		public StatementContext(IContext parent, SqlStatement statement) 
-			: this(parent, statement, null) {
-		}
-
-		public StatementContext(IContext parent, SqlStatement statement, Action<IScope> scopeInit) 
-			: this(parent, statement.StatementName, statement, scopeInit) {
+			: this(parent, statement.StatementName, statement) {
 		}
 
 		public StatementContext(IContext parent, string name, SqlStatement statement) 
-			: this(parent, name, statement, null) {
-		}
-
-		public StatementContext(IContext parent, string name, SqlStatement statement, Action<IScope> scopeInit) 
-			: base(parent, name, scopeInit) {
+			: base(parent, name) {
 			if (statement == null)
 				throw new ArgumentNullException(nameof(statement));
 
@@ -47,6 +38,7 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		public SqlStatement Statement { get; }
+
 
 		private IEnumerable<KeyValuePair<string, object>> BuildMetadata() {
 			var metadata = new Dictionary<string, object>();
@@ -177,6 +169,14 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		private LoopStatement FindLoopInTree(SqlStatement reference, string label) {
+			var found = FindLoopInTree(reference, label, true);
+			if (found != null)
+				return found;
+
+			return FindLoopInTree(reference, label, false);
+		}
+
+		private LoopStatement FindLoopInTree(SqlStatement reference, string label, bool forward) {
 			if (!String.IsNullOrWhiteSpace(label)) {
 				return FindInTree(reference, label, false) as LoopStatement;
 			}
@@ -190,17 +190,17 @@ namespace Deveel.Data.Sql.Statements {
 				if (statement is IStatementContainer) {
 					var container = (IStatementContainer) statement;
 					foreach (var child in container.Statements) {
-						var loop = FindLoopInTree(child, null);
+						var loop = FindLoopInTree(child, null, true);
 						if (loop != null)
 							return loop;
 					}
 				}
 
-				statement = statement.Previous;
+				statement = forward ? statement.Next : statement.Previous;
 			}
 
-			if (reference.Parent != null)
-				return FindLoopInTree(reference.Parent, null);
+			if (reference.Parent != null && !forward)
+				return FindLoopInTree(reference.Parent, label, false);
 
 			return null;
 		}

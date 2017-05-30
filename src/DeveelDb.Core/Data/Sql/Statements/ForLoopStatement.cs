@@ -1,4 +1,21 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
@@ -9,10 +26,19 @@ using Deveel.Data.Sql.Variables;
 namespace Deveel.Data.Sql.Statements {
 	public sealed class ForLoopStatement : LoopStatement {
 		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound)
-			: this(indexName, lowerBound, upperBound, false) {
+			: this(indexName, lowerBound, upperBound, null) {
 		}
 
-		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound, bool reverse) {
+		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound, string label)
+			: this(indexName, lowerBound, upperBound, false, label) {
+		}
+
+		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound, bool reverse)
+			: this(indexName, lowerBound, upperBound, reverse, null) {
+		}
+
+		public ForLoopStatement(string indexName, SqlExpression lowerBound, SqlExpression upperBound, bool reverse, string label)
+			: base(label) {
 			if (String.IsNullOrEmpty(indexName))
 				throw new ArgumentNullException(nameof(indexName));
 			if (lowerBound == null)
@@ -42,9 +68,6 @@ namespace Deveel.Data.Sql.Statements {
 
 		public bool Reverse { get; }
 
-		protected override StatementContext CreateContext(IContext parent, string name) {
-			return new StatementContext(parent, name, this, scope => scope.Register<VariableManager>());
-		}
 
 		protected override SqlStatement PrepareExpressions(ISqlExpressionPreparer preparer) {
 			var lower = LowerBound.Prepare(preparer);
@@ -58,6 +81,16 @@ namespace Deveel.Data.Sql.Statements {
 			return loop;
 		}
 
+		protected override SqlStatement PrepareStatement(IContext context) {
+			var statement = new ForLoopStatement(IndexName, LowerBound, UpperBound, Reverse);
+			foreach (var child in Statements) {
+				var prepared = child.Prepare(context);
+				statement.Statements.Add(prepared);
+			}
+
+			return statement;
+		}
+
 		internal override LoopStatement CreateNew() {
 			return new ForLoopStatement(IndexName, LowerBound, UpperBound, Reverse);
 		}
@@ -69,19 +102,17 @@ namespace Deveel.Data.Sql.Statements {
 			context.Metadata["lowerBound"] = lowerBound;
 			context.Metadata["upperBound"] = upperBound;
 
-			var variableManager = (context as IContext).Scope.Resolve<VariableManager>();
 			if (Reverse) {
-				variableManager.AssignVariable(IndexName, SqlExpression.Constant(upperBound), context);
+				context.AssignVariable(IndexName, SqlExpression.Constant(upperBound));
 			} else {
-				variableManager.AssignVariable(IndexName, SqlExpression.Constant(lowerBound), context);
+				context.AssignVariable(IndexName, SqlExpression.Constant(lowerBound));
 			}
 
 			await base.InitializeAsync(context);
 		}
 
 		protected override async Task<bool> CanLoopAsync(StatementContext context) {
-			var variableManager = (context as IContext).Scope.Resolve<VariableManager>();
-			var variable = variableManager.GetVariable(IndexName);
+			var variable = context.ResolveVariable(IndexName);
 
 			var valueExp = await variable.Evaluate(context);
 			 var value = await valueExp.ReduceToConstantAsync(context);
@@ -100,8 +131,7 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		protected override async Task AfterLoopAsync(StatementContext context) {
-			var variableManager = (context as IContext).Scope.Resolve<VariableManager>();
-			var variable = variableManager.GetVariable(IndexName);
+			var variable = context.ResolveVariable(IndexName);
 
 			var value = await variable.Evaluate(context);
 			if (Reverse) {
@@ -121,6 +151,32 @@ namespace Deveel.Data.Sql.Statements {
 			info.SetValue("reverse", Reverse);
 
 			base.GetObjectData(info);
+		}
+
+		protected override void AppendTo(SqlStringBuilder builder) {
+			if (!String.IsNullOrWhiteSpace(Label)) {
+				builder.AppendFormat("<<{0}>>", Label);
+				builder.AppendLine();
+			}
+
+			builder.AppendFormat("FOR {0} IN ", IndexName);
+			LowerBound.AppendTo(builder);
+			builder.Append("..");
+			UpperBound.AppendTo(builder);
+			builder.AppendLine();
+
+			builder.AppendLine("LOOP");
+
+			builder.Indent();
+
+			foreach (var statement in Statements) {
+				statement.AppendTo(builder);
+				builder.AppendLine();
+			}
+
+			builder.DeIndent();
+
+			builder.Append("END LOOP;");
 		}
 	}
 }

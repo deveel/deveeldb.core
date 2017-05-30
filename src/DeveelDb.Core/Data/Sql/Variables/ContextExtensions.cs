@@ -16,22 +16,31 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
-using Deveel.Data.Services;
+using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Variables {
 	public static class ContextExtensions {
-		public static Variable ResolveVariable(this IContext context, string name, bool ignoreCase) {
+		public static Variable ResolveVariable(this IContext context, string name) {
+			var ignoreCase = context.IgnoreCase();
+
 			var current = context;
 			while (current != null) {
+				IVariableResolver resolver = null;
+
 				if (current is IVariableScope) {
 					var scope = (IVariableScope) current;
-					var variable = scope.Variables.ResolveVariable(name, ignoreCase);
+					resolver = scope.Variables;
+				} else if (current is IVariableResolver) {
+					resolver = (IVariableResolver) current;
+				}
+
+				if (resolver != null) {
+					var variable = resolver.ResolveVariable(name, ignoreCase);
 					if (variable != null)
 						return variable;
 				}
+
 
 				current = current.ParentContext;
 			}
@@ -44,24 +53,66 @@ namespace Deveel.Data.Sql.Variables {
 			return context.GetObjectManager<TManager>(DbObjectType.Variable);
 		}
 
-		public static IEnumerable<IVariableResolver> GetVariableResolvers(this IContext context) {
-			return context.Scope.ResolveAll<IVariableResolver>();
-		}
+		public static SqlType ResolveVariableType(this IContext context, string name) {
+			var ignoreCase = context.IgnoreCase();
 
-		public static SqlType ResolveVariableType(this IContext context, string name, bool ignoreCase) {
 			var current = context;
 			while (current != null) {
+				IVariableResolver resolver = null;
+
 				if (current is IVariableScope) {
 					var scope = (IVariableScope)current;
-					var type = scope.Variables.ResolveVariableType(name, ignoreCase);
+					resolver = scope.Variables;
+				} else if (current is IVariableResolver) {
+					resolver = (IVariableResolver)current;
+				}
+
+				if (resolver != null) {
+					var type = resolver.ResolveVariableType(name, ignoreCase);
 					if (type != null)
 						return type;
 				}
+
 
 				current = current.ParentContext;
 			}
 
 			return null;
+		}
+
+		public static SqlExpression AssignVariable(this IContext context, string name, SqlExpression value) {
+			var ignoreCase = context.IgnoreCase();
+
+			var current = context;
+			while (current != null) {
+				IVariableResolver resolver = null;
+
+				if (current is IVariableScope) {
+					var scope = (IVariableScope)current;
+					resolver = scope.Variables;
+				} else if (current is IVariableResolver) {
+					resolver = (IVariableResolver)current;
+				}
+
+				if (resolver != null) {
+					var variable = resolver.ResolveVariable(name, ignoreCase);
+					if (variable == null) {
+						if (resolver is IVariableManager) {
+							var manager = (IVariableManager) resolver;
+
+							// here we pass the root context for resolving innermost references
+							return manager.AssignVariable(context, name, ignoreCase, value);
+						}
+					} else {
+						return variable.SetValue(value, context);
+					}
+				}
+
+
+				current = current.ParentContext;
+			}
+
+			throw new SqlExpressionException($"Could not find variable '{name}' in the context hierarchy and no variable manager was found");
 		}
 	}
 }
