@@ -26,9 +26,9 @@ namespace Deveel.Data.Sql.Variables {
 		public static Variable ResolveVariable(this IContext context, string name, bool ignoreCase) {
 			var current = context;
 			while (current != null) {
-				var resolvers = current.GetVariableResolvers();
-				foreach (var resolver in resolvers) {
-					var variable = resolver.ResolveVariable(name, ignoreCase);
+				if (current is IVariableScope) {
+					var scope = (IVariableScope) current;
+					var variable = scope.Variables.ResolveVariable(name, ignoreCase);
 					if (variable != null)
 						return variable;
 				}
@@ -44,21 +44,24 @@ namespace Deveel.Data.Sql.Variables {
 			return context.GetObjectManager<TManager>(DbObjectType.Variable);
 		}
 
-		public static VariableManager GetVariableManager(this IContext context) {
-			return context.GetVariableManager<VariableManager>();
-		}
-
 		public static IEnumerable<IVariableResolver> GetVariableResolvers(this IContext context) {
 			return context.Scope.ResolveAll<IVariableResolver>();
 		}
 
 		public static SqlType ResolveVariableType(this IContext context, string name, bool ignoreCase) {
-			var resolvers = context.GetVariableResolvers();
-			if (resolvers == null)
-				return null;
+			var current = context;
+			while (current != null) {
+				if (current is IVariableScope) {
+					var scope = (IVariableScope)current;
+					var type = scope.Variables.ResolveVariableType(name, ignoreCase);
+					if (type != null)
+						return type;
+				}
 
-			return resolvers.Select(resolver => resolver.ResolveVariableType(name, ignoreCase))
-				.FirstOrDefault(type => type != null);
+				current = current.ParentContext;
+			}
+
+			return null;
 		}
 	}
 }
