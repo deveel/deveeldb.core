@@ -17,8 +17,12 @@
 
 using System;
 
+using Deveel.Data.Sql.Tables.Infrastructure;
+
 namespace Deveel.Data.Sql.Tables {
 	public interface IMutableTable : ITable {
+		ITableEventRegistry Registry { get; }
+
 		RowId AddRow(Row row);
 
 		void UpdateRow(Row row);

@@ -32,7 +32,7 @@ namespace Deveel.Data.Storage {
 
 		public string SystemId => "memory";
 
-		public Task<bool> StoreExistsAsync(string name, IConfiguration configuration) {
+		public Task<bool> StoreExistsAsync(string name) {
 			lock (this) {
 				return Task.FromResult(nameStoreMap.ContainsKey(name));
 			}

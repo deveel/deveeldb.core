@@ -23,7 +23,8 @@ using Deveel.Data.Configuration;
 namespace Deveel.Data.Storage {
 	public interface IStoreSystem : IDisposable {
 		string SystemId { get; }
-		Task<bool> StoreExistsAsync(string name, IConfiguration configuration);
+
+		Task<bool> StoreExistsAsync(string name);
 
 		Task<IStore> CreateStoreAsync(string name, IConfiguration configuration);
 

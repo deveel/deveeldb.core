@@ -20,10 +20,10 @@ namespace Deveel.Data.Storage {
 			Assert.NotNull(store);
 			Assert.IsType<InMemoryStore>(store);
 
-			Assert.True(await storeSystem.StoreExistsAsync("test", new Configuration.Configuration()));
+			Assert.True(await storeSystem.StoreExistsAsync("test"));
 
 			Assert.True(await storeSystem.DeleteStoreAsync(store));
-			Assert.False(await storeSystem.StoreExistsAsync("test", new Configuration.Configuration()));
+			Assert.False(await storeSystem.StoreExistsAsync("test"));
 
 			await Assert.ThrowsAsync<IOException>(() => storeSystem.OpenStoreAsync("test", new Configuration.Configuration()));
 

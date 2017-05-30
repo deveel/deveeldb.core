@@ -16,13 +16,22 @@
 
 
 using System;
+using System.Linq;
 
 using Deveel.Data.Services;
 
 namespace Deveel.Data.Storage {
 	public static class ContextExtensions {
 		public static IStoreSystem GetStoreSystem(this IContext context, string id) {
-			return context.Scope.Resolve<IStoreSystem>(id);
+			if (String.IsNullOrWhiteSpace(id))
+				throw new ArgumentNullException(nameof(id));
+
+			var system = context.Scope.Resolve<IStoreSystem>(id);
+			if (system == null)
+				system = context.Scope.ResolveAll<IStoreSystem>()
+					.FirstOrDefault(x => x.SystemId == id);
+
+			return system;
 		}
 	}
 }
