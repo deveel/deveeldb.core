@@ -261,7 +261,7 @@ namespace Deveel.Data.Sql.Expressions {
 			return new SqlReferenceAssignExpression(referenceName, value);
 		}
 
-		public static SqlConditionExpression Condition(SqlExpression test, SqlExpression ifTrue, SqlExpression ifFalse)
+	    public static SqlConditionExpression Condition(SqlExpression test, SqlExpression ifTrue, SqlExpression ifFalse)
 			=> new SqlConditionExpression(test, ifTrue, ifFalse);
 
 		public static SqlParameterExpression Parameter() => new SqlParameterExpression();
@@ -290,13 +290,9 @@ namespace Deveel.Data.Sql.Expressions {
 
 		#region Parse
 
-		public static Task<SqlExpression[]> ParseAsync(IContext context, string expression) {
-			var parser = context.Scope.Resolve<ISqlExpressionParser>();
-			if (parser == null)
-				throw new NotSupportedException();
-
-			return parser.ParseAsync(expression);
-		}
+	    private static bool TryParse(IContext context, string text, out string[] errors) {
+	        throw new NotImplementedException();
+	    }
 
 		#endregion
 	}

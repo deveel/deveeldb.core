@@ -463,6 +463,11 @@ namespace Deveel.Data.Sql {
 			return Array(array);
 		}
 
+	    public static SqlObject Array(params SqlExpression[] expressions) {
+	        var array = expressions == null ? new SqlArray(new SqlExpression[0]) : new SqlArray(expressions);
+	        return Array(array);
+	    }
+
 		#endregion
 
 		#endregion

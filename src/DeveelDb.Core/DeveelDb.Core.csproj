@@ -26,11 +26,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Antlr4" Version="4.6.1-beta002" />
-    <PackageReference Include="Antlr4.Runtime" Version="4.6.1-beta002" />
+    <PackageReference Include="Antlr4" Version="4.6.1" />
+    <PackageReference Include="Antlr4.Runtime" Version="4.6.1" />
     <PackageReference Include="dmath.core" Version="1.7.0-r00046" />
     <PackageReference Include="DryIoc.dll" Version="2.10.4" />
     <PackageReference Include="System.ComponentModel" Version="4.3.0" />
   </ItemGroup>
-
+  <ItemGroup>
+    <Antlr4 Include="Data\Sql\Parsing\PlSqlLexer.g4">
+      <Generator>MSBuild:Compile</Generator>
+      <CustomToolNamespace>Deveel.Data.Sql.Parsing</CustomToolNamespace>
+      <Visitor>True</Visitor>
+      <Listener>False</Listener>
+    </Antlr4>
+    <Antlr4 Include="Data\Sql\Parsing\PlSqlParser.g4">
+      <Generator>MSBuild:Compile</Generator>
+      <CustomToolNamespace>Deveel.Data.Sql.Parsing</CustomToolNamespace>
+      <Visitor>True</Visitor>
+      <Listener>False</Listener>
+    </Antlr4>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="obj\Debug\netstandard1.3\PlSqlLexer.cs" />
+    <Compile Include="obj\Debug\netstandard1.3\PlSqlParser.cs" />
+    <Compile Include="obj\Debug\netstandard1.3\PlSqlParserBaseVisitor.cs" />
+    <Compile Include="obj\Debug\netstandard1.3\PlSqlParserVisitor.cs" />
+  </ItemGroup>
 </Project>

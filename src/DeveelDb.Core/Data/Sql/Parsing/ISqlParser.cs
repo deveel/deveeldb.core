@@ -5,6 +5,6 @@ namespace Deveel.Data.Sql.Parsing {
 		string Dialect { get; }
 
 
-		Task<SqlParseResult> ParseAsync(string sql);
+		SqlParseResult Parse(string sql);
 	}
 }
