@@ -31,7 +31,22 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(exp.Value, result.Value);
 		}
 
-		[Theory]
+	    [Theory]
+	    [InlineData("'test string'")]
+	    [InlineData("454.92")]
+	    [InlineData("TRUE")]
+	    [InlineData("true")]
+        [InlineData("FALSE")]
+        [InlineData("NULL")]
+        [InlineData("UNKNOWN")]
+	    public static void ParseConstant(string s) {
+	        var exp = SqlExpression.Parse(s);
+
+	        Assert.NotNull(exp);
+	        Assert.IsType<SqlConstantExpression>(exp);
+	    }
+
+	    [Theory]
 		[InlineData(SqlExpressionType.Equal, 6577.494, 449.004)]
 		[InlineData(SqlExpressionType.Add, 323, 12)]
 		public static void CreateBinary(SqlExpressionType expressionType, object value1, object value2) {

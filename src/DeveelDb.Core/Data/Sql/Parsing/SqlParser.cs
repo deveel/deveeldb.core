@@ -7,6 +7,7 @@ using Antlr4.Runtime;
 
 using Deveel.Data.Sql.Expressions;
 using Deveel.Data.Sql.Statements;
+using Deveel.Data.Sql.Types;
 
 namespace Deveel.Data.Sql.Parsing {
     public sealed class SqlParser : ISqlParser {
@@ -58,6 +59,16 @@ namespace Deveel.Data.Sql.Parsing {
 
             return SqlExpressionParseResult.Success(result);
         }
+
+        public SqlTypeResolveInfo ParseType(string s) {
+            SetInput(s);
+
+            //var plSqlParser = MakeParser(s, null);
+            var parseResult = plSqlParser.datatype();
+
+            return  SqlTypeParser.GetResolveInfo(parseResult);
+        }
+
 
 
         private class ErrorHandler : BaseErrorListener {

@@ -423,10 +423,11 @@ constant
     | DATE quoted_string #DateImplicitConvert
     | quoted_string #ConstantString
     | NULL #ConstantNull
+	| UNKNOWN #ConstantUnknown
     | TRUE #ConstantTrue
     | FALSE #ConstantFalse
     | DBTIMEZONE  #ConstantDBTimeZone
-    | SESSIONTIMEZONE #ConstantSessionTimeZone
+    | USERTIMEZONE #ConstantUserTimeZone
     | MINVALUE #ConstantMinValue
     | MAXVALUE #ConstantMaxValue
     ;
@@ -729,7 +730,6 @@ regular_id
     | SERIALIZABLE
 	| SESSION
 	| SESSIONS
-    | SESSIONTIMEZONE
     | SET
     | SETS
     | SETTINGS
@@ -738,7 +738,7 @@ regular_id
     | SHUTDOWN
     | SINGLE
     //| SIZE
-    | SKIP
+    | SQL_SKIP
     | SMALLINT
     | SNAPSHOT
     | SOME
@@ -785,6 +785,7 @@ regular_id
     | UROWID
     | USE
 	| USER
+	| USERTIMEZONE
     //| USING
     | VALUE
     //| VALUES

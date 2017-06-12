@@ -54,7 +54,9 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public ObjectName GroupMax { get; set; }
 
-		public override SqlType GetSqlType(IContext context) {
+	    public SqlQueryExpressionComposite NextComposite { get; set; }
+
+        public override SqlType GetSqlType(IContext context) {
 			throw new NotImplementedException();
 		}
 

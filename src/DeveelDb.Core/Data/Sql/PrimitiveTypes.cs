@@ -69,8 +69,12 @@ namespace Deveel.Data.Sql {
 			return Binary(SqlTypeCode.VarBinary, maxSize);
 		}
 
-		public static SqlBinaryType Blob() {
-			return Binary(SqlTypeCode.Blob, -1);
+	    public static SqlBinaryType Blob() {
+	        return Blob(-1);
+	    }
+
+	    public static SqlBinaryType Blob(int size) {
+			return Binary(SqlTypeCode.Blob, size);
 		}
 
 		#endregion
@@ -161,15 +165,27 @@ namespace Deveel.Data.Sql {
 			return String(SqlTypeCode.Char, size, locale);
 		}
 
-		public static SqlCharacterType Clob() {
-			return String(SqlTypeCode.Clob, -1);
+		public static SqlCharacterType Clob(int size) {
+			return String(SqlTypeCode.Clob, size);
 		}
+
+	    public static SqlCharacterType Clob() {
+	        return Clob(-1);
+	    }
+
+        public static SqlCharacterType LongVarChar() {
+	        return String(SqlTypeCode.LongVarChar, -1);
+	    }
 
 		#endregion
 
 		#region Date Types
 
-		public static SqlDateTimeType DateTime(SqlTypeCode typeCode) {
+	    public static SqlDateTimeType DateTime() {
+	        return DateTime(SqlTypeCode.DateTime);
+	    }
+
+	    public static SqlDateTimeType DateTime(SqlTypeCode typeCode) {
 			return new SqlDateTimeType(typeCode);
 		}
 
@@ -374,20 +390,27 @@ namespace Deveel.Data.Sql {
 					var maxSize = resolveInfo.Properties.GetValue<int?>("MaxSize") ?? -1;
 					var localeString = resolveInfo.Properties.GetValue<string>("Locale");
 					var locale = System.String.IsNullOrEmpty(localeString) ? null : new CultureInfo(localeString);
-					return VarChar(maxSize, locale);
-				}
-				case "LONG VARCHAR":
-				case "LONGVARCHAR":
-				case "LONG CHARACTER VARYING":
-				case "TEXT":
-				case "CLOB": {
-					return Clob();
-				}
+				    var typeCode = System.String.Equals(resolveInfo.TypeName, "STRING", StringComparison.OrdinalIgnoreCase)
+				        ? SqlTypeCode.String
+				        : SqlTypeCode.VarChar;
 
-				// Date-Time
+				    return String(typeCode, maxSize, locale);
+				}
+			    case "LONG VARCHAR":
+			    case "LONGVARCHAR":
+			    case "LONG CHARACTER VARYING":
+			        return LongVarChar();
+			    case "TEXT":
+			    case "CLOB": {
+			        var size = resolveInfo.Properties.GetValue<int?>("Size") ?? -1;
+                    return Clob(size);
+			    }
+
+			    // Date-Time
 				case "DATE":
 					return Date();
 				case "DATETIME":
+				    return DateTime();
 				case "TIMESTAMP":
 					return TimeStamp();
 				case "TIME":
@@ -413,7 +436,8 @@ namespace Deveel.Data.Sql {
 				case "LONG VARBINARY":
 				case "LONG BINARY VARYING":
 				case "BLOB": {
-					return Blob();
+				    var size = resolveInfo.Properties.GetValue<int?>("Size") ?? -1;
+                    return Blob(size);
 				}
 
 				default:

@@ -427,6 +427,9 @@ namespace Deveel.Data.Sql {
 			return new SqlObject(PrimitiveTypes.String(), value);
 		}
 
+	    public static SqlObject String(string value)
+	        => String(new SqlString(value));
+
 		#endregion
 
 		#region Numeric
