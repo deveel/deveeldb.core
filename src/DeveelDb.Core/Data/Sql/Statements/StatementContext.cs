@@ -17,12 +17,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
+using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
 	public class StatementContext : Context, IEventSource {
-		private Dictionary<string, object> metadata;
+		public StatementContext(IContext parent, SqlStatement statement) 
+			: this(parent, statement.StatementName, statement) {
+		}
 
 		public StatementContext(IContext parent, string name, SqlStatement statement) 
 			: base(parent, name) {
@@ -30,24 +34,176 @@ namespace Deveel.Data.Sql.Statements {
 				throw new ArgumentNullException(nameof(statement));
 
 			Statement = statement;
-			EnsureMetadata();
+			Metadata = new Dictionary<string, object>();
 		}
 
 		public SqlStatement Statement { get; }
 
-		private void EnsureMetadata() {
-			if (metadata == null) {
-				metadata = new Dictionary<string, object>();
 
-				GetMetadata(metadata);
+		private IEnumerable<KeyValuePair<string, object>> BuildMetadata() {
+			var metadata = new Dictionary<string, object>();
+
+			GetMetadata(metadata);
+
+			foreach (var pair in Metadata) {
+				metadata[pair.Key] = pair.Value;
+			}
+
+			return metadata;
+		}
+
+		IEventSource IEventSource.ParentSource => ParentContext.GetEventSource();
+
+		IEnumerable<KeyValuePair<string, object>> IEventSource.Metadata => BuildMetadata();
+
+		public IDictionary<string, object> Metadata { get; }
+
+		public IStatementResult Result { get; private set; }
+
+		public bool HasResult { get; private set; }
+
+		internal bool WasTerminated { get; set; }
+
+		private void Terminate() {
+			WasTerminated = true;
+
+			if (ParentContext != null &&
+				ParentContext is StatementContext) {
+				var context = (StatementContext) ParentContext;
+				context.Result = Result;
+				context.HasResult = HasResult;
+				context.Terminate();
 			}
 		}
 
-		IEventSource IEventSource.ParentSource {
-			get { return ParentContext.GetEventSource(); }
+		private void ThrowIfTerminated() {
+			if (WasTerminated)
+				throw new InvalidOperationException("The statement context was terminated");
 		}
 
-		IEnumerable<KeyValuePair<string, object>> IEventSource.Metadata => metadata;
+
+		public void SetResult(IStatementResult result) {
+			ThrowIfTerminated();
+
+			Result = result;
+			HasResult = true;
+		}
+
+		public void SetResult(SqlExpression value)
+			=> SetResult(new StatementExpressionResult(value));
+
+		public void Return(IStatementResult result) {
+			SetResult(result);
+			Terminate();
+		}
+
+		public void Return(SqlExpression value)
+			=> Return(new StatementExpressionResult(value));
+
+		public async Task TransferAsync(string label) {
+			ThrowIfTerminated();
+
+			if (String.IsNullOrEmpty(label))
+				throw new ArgumentNullException(nameof(label));
+
+			var statement = FindInTree(Statement, label);
+			if (statement == null)
+				throw new SqlStatementException($"Could not find any block labeled '{label}' in the execution tree.");
+
+			using (var block = NewBlock(statement)) {
+				await statement.ExecuteAsync(block);
+
+				if (block.HasResult && !WasTerminated)
+					SetResult(block.Result);
+			}
+		}
+
+		private StatementContext NewBlock(SqlStatement statement) {
+			return new StatementContext(this, statement.StatementName, statement);
+		}
+
+		private SqlStatement FindInTree(SqlStatement reference, string label) {
+			var found = FindInTree(reference, label, true);
+			if (found != null)
+				return found;
+
+			return FindInTree(reference, label, false);
+		}
+
+		private SqlStatement FindInTree(SqlStatement reference, string label, bool forward) {
+			var statement = reference;
+			while (statement != null) {
+				if (statement is ILabeledStatement) {
+					var block = (ILabeledStatement) statement;
+					if (String.Equals(label, block.Label, StringComparison.Ordinal))
+						return statement;
+				}
+
+				if (statement is IStatementContainer) {
+					var container = (IStatementContainer)statement;
+					foreach (var child in container.Statements) {
+						var found = FindInTree(child, label, true);
+						if (found != null)
+							return found;
+					}
+				}
+
+				statement = forward ? statement.Next : statement.Previous;
+			}
+
+			if (reference.Parent != null && !forward)
+				return FindInTree(reference.Parent, label, false);
+
+			return null;
+		}
+
+		public void ControlLoop(LoopControlType controlType, string label) {
+			ThrowIfTerminated();
+
+			var loop = FindLoopInTree(Statement, label);
+
+			if (loop == null)
+				throw new SqlStatementException("Could not find the loop");
+
+			loop.Control(controlType);
+		}
+
+		private LoopStatement FindLoopInTree(SqlStatement reference, string label) {
+			var found = FindLoopInTree(reference, label, true);
+			if (found != null)
+				return found;
+
+			return FindLoopInTree(reference, label, false);
+		}
+
+		private LoopStatement FindLoopInTree(SqlStatement reference, string label, bool forward) {
+			if (!String.IsNullOrWhiteSpace(label)) {
+				return FindInTree(reference, label, false) as LoopStatement;
+			}
+
+			var statement = reference;
+			while (statement != null) {
+				if (statement is LoopStatement) {
+					return statement as LoopStatement;
+				}
+
+				if (statement is IStatementContainer) {
+					var container = (IStatementContainer) statement;
+					foreach (var child in container.Statements) {
+						var loop = FindLoopInTree(child, null, true);
+						if (loop != null)
+							return loop;
+					}
+				}
+
+				statement = forward ? statement.Next : statement.Previous;
+			}
+
+			if (reference.Parent != null && !forward)
+				return FindLoopInTree(reference.Parent, label, false);
+
+			return null;
+		}
 
 		protected virtual void GetMetadata(IDictionary<string, object> data) {
 			if (Statement.Location != null) {

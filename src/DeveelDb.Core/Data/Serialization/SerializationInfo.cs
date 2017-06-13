@@ -124,8 +124,13 @@ namespace Deveel.Data.Serialization {
 			return value;
 		}
 
-		public T GetValue<T>(string memberName)
-			=> (T) GetValue(memberName, typeof(T));
+		public T GetValue<T>(string memberName) {
+			var value = GetValue(memberName, typeof(T));
+			if (value == null)
+				return default(T);
+
+			return (T)value;
+		}
 
 		public byte GetByte(string memberName)
 			=> GetValue<byte>(memberName);

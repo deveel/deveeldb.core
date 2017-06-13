@@ -20,9 +20,7 @@ using System;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Variables {
-	public interface IVariableManager : IDbObjectManager {
-		bool VariableExists(string variableName);
-
-		SqlExpression AssignVariable(string variableName, SqlExpression value, IContext context);
+	public interface IVariableManager : IDbObjectManager, IVariableResolver {
+		SqlExpression AssignVariable(IContext context, string name, bool ignoreCase, SqlExpression value);
 	}
 }

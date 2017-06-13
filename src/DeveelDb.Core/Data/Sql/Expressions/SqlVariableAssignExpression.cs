@@ -55,11 +55,17 @@ namespace Deveel.Data.Sql.Expressions {
 			if (context == null)
 				throw new SqlExpressionException("A context is required to reduce a variable expression");
 
-			var manager = context.GetVariableManager<VariableManager>();
-			if (manager == null)
-				throw new SqlExpressionException("No variable manager was found in the context hierarchy");
+			SqlExpression result;
 
-			return Task.FromResult(manager.AssignVariable(VariableName, Value, context));
+			try {
+				result = context.AssignVariable(VariableName, Value);
+			} catch (SqlExpressionException) {
+				throw;
+			} catch (Exception ex) {
+				throw new SqlExpressionException($"Could not assign variable '{VariableName}' because of an error", ex);
+			}
+
+			return Task.FromResult(result);
 		}
 
 		protected override void GetObjectData(SerializationInfo info) {

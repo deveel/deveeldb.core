@@ -1,4 +1,21 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -13,24 +30,19 @@ namespace Deveel.Data.Storage {
 			nameStoreMap = new Dictionary<string, InMemoryStore>();
 		}
 
-		string IStoreSystem.SystemId => KnownStorageSystemIds.InMemory;
+		public string SystemId => "memory";
 
-		private static string GetStoreName(IConfiguration configuration) {
-			return configuration.GetString("name");
-		}
-
-		public Task<bool> StoreExistsAsync(IConfiguration configuration) {
+		public Task<bool> StoreExistsAsync(string name) {
 			lock (this) {
-				return Task.FromResult(nameStoreMap.ContainsKey(GetStoreName(configuration)));
+				return Task.FromResult(nameStoreMap.ContainsKey(name));
 			}
 		}
 
-		async Task<IStore> IStoreSystem.CreateStoreAsync(IConfiguration configuration) {
-			return await CreateStoreAsync(configuration);
+		async Task<IStore> IStoreSystem.CreateStoreAsync(string name, IConfiguration configuration) {
+			return await CreateStoreAsync(name, configuration);
 		}
 
-		public Task<InMemoryStore> CreateStoreAsync(IConfiguration configuration) {
-			var name = GetStoreName(configuration);
+		public Task<InMemoryStore> CreateStoreAsync(string name, IConfiguration configuration) {
 			var hashSize = configuration.GetInt32("hashSize", 1024);
 
 			lock (this) {
@@ -43,13 +55,12 @@ namespace Deveel.Data.Storage {
 			}
 		}
 
-		async Task<IStore> IStoreSystem.OpenStoreAsync(IConfiguration configuration) {
-			return await OpenStoreAsync(configuration);
+		async Task<IStore> IStoreSystem.OpenStoreAsync(string name, IConfiguration configuration) {
+			return await OpenStoreAsync(name, configuration);
 		}
 
-		public Task<InMemoryStore> OpenStoreAsync(IConfiguration configuration) {
+		public Task<InMemoryStore> OpenStoreAsync(string name, IConfiguration configuration) {
 			lock (this) {
-				var name = GetStoreName(configuration);
 				InMemoryStore store;
 				if (!nameStoreMap.TryGetValue(name, out store))
 					throw new IOException($"No store with name '{name}' was found in the system");

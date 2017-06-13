@@ -17,16 +17,25 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Deveel.Data.Diagnostics;
 using Deveel.Data.Security;
+using Deveel.Data.Serialization;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
-	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement> {
+	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement>, ISerializable {
 		public virtual bool CanPrepare => true;
+
+		protected SqlStatement(SerializationInfo info) {
+			Location = info.GetValue<LocationInfo>("location");
+		}
+
+		protected SqlStatement() {
+		}
 
 		protected virtual string Name {
 			get {
@@ -38,10 +47,22 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
+		internal string StatementName => Name;
+
 		public LocationInfo Location { get; set; }
 
-		protected virtual StatementContext CreateContext(IContext parent) {
-			return new StatementContext(parent, Name, this);
+		internal SqlStatement Parent { get; set; }
+
+		public SqlStatement Previous { get; internal set; }
+
+		public SqlStatement Next { get; internal set; }
+
+		protected virtual StatementContext CreateContext(IContext parent, string name) {
+			return new StatementContext(parent, name, this);
+		}
+
+		protected StatementContext CreateContext(IContext parent) {
+			return CreateContext(parent, Name);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
@@ -53,7 +74,16 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		internal void CollectMetadata(IDictionary<string, object> data) {
-			GetMetadata(data);
+			var meta = new Dictionary<string, object>();
+			GetMetadata(meta);
+
+			foreach (var pair in meta) {
+				var key = pair.Key;
+				if (!key.StartsWith("statement.", StringComparison.OrdinalIgnoreCase))
+					key = $"statement.{key}";
+
+				data[key] = pair.Value;
+			}
 		}
 
 		protected virtual void GetMetadata(IDictionary<string, object> data) {
@@ -77,8 +107,8 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		public SqlStatement Prepare(IContext context) {
-			using (var statementContext = CreateContext(context)) {
-				var preparers = context.Scope.ResolveAll<ISqlExpressionPreparer>();
+			using (var statementContext = CreateContext(context, $"{Name}_Prepare")) {
+				var preparers = (statementContext as IContext).Scope.ResolveAll<ISqlExpressionPreparer>();
 				var result = this;
 
 				foreach (var preparer in preparers) {
@@ -92,41 +122,79 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
+		private static Task HandleRequirement(IContext context, Type handlerType, object handler, Type reqType, IRequirement requirement) {
+			var method = handlerType.GetRuntimeMethod("HandleRequirementAsync", new[] { typeof(IContext), reqType });
+			if (method == null)
+				throw new InvalidOperationException();
+
+			try {
+				return (Task)method.Invoke(handler, new object[] { context, requirement });
+			} catch (TargetInvocationException e) {
+				throw e.InnerException;
+			}
+		}
+
 		private async Task CheckRequirements(IContext context) {
 			context.Debug(-1, "Collecting security requirements");
 
 			var registry = new RequirementCollection();
 			Require(registry);
 
-			using (var securityContext = context.Create($"Statement{GetType().Name}.Security",
-				scope => scope.RegisterInstance<IRequirementCollection>(registry))) {
-				context.Debug(-1, "Check security requirements");
+			context.Debug(-1, "Check security requirements");
 
-				await securityContext.CheckRequirementsAsync();
+			try {
+				foreach (var requirement in registry) {
+					var reqType = requirement.GetType();
+					var handlerType = typeof(IRequirementHandler<>).MakeGenericType(reqType);
+
+					var handlers = context.Scope.ResolveAll(handlerType);
+					foreach (var handler in handlers) {
+						await HandleRequirement(context, handlerType, handler, reqType, requirement);
+					}
+				}
+			} catch (UnauthorizedAccessException ex) {
+				context.Error(-93884, $"User {context.User().Name} has not enough rights to execute", ex);
+				throw;
+			} catch (Exception ex) {
+				context.Error(-83993, "Unknown error while checking requirements", ex);
+				throw;
 			}
 		}
 
-		public async Task ExecuteAsync(IContext context) {
+		public async Task<IStatementResult> ExecuteAsync(IContext context) {
 			using (var statementContext = CreateContext(context)) {
+				statementContext.Information(201, "Executing statement");
 
 				await CheckRequirements(statementContext);
 
 				try {
 					await ExecuteStatementAsync(statementContext);
-				} catch (SqlStatementException) {
-
+					return statementContext.Result;
+				} catch (SqlStatementException ex) {
+					statementContext.Error(-670393, "The statement thrown an error", ex);
 					throw;
 				} catch (Exception ex) {
 					statementContext.Error(-1, "Could not execute the statement", ex);
 					throw new SqlStatementException("Could not execute the statement because of an error", ex);
+				} finally {
+					statementContext.Information(202, "The statement was executed");
 				}
 			}
 		}
 
-		protected abstract Task ExecuteStatementAsync(IContext context);
+		protected abstract Task ExecuteStatementAsync(StatementContext context);
 
 		public override string ToString() {
 			return this.ToSqlString();
+		}
+
+		protected virtual void GetObjectData(SerializationInfo info) {
+			
+		}
+
+		void ISerializable.GetObjectData(SerializationInfo info) {
+			info.SetValue("location", Location);
+			GetObjectData(info);
 		}
 	}
 }
