@@ -97,6 +97,32 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(sql, function.ToString());
 		}
 
+		[Theory]
+		[InlineData("sys.Func1(a => 56)", "sys.Func1", "a", 56)]
+		public static void ParseStringWithNamedParameter(string s, string funcName, string paramName, object paramValue) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.Equal(SqlExpressionType.Function, exp.ExpressionType);
+			Assert.IsType<SqlFunctionExpression>(exp);
+
+			var function = (SqlFunctionExpression) exp;
+
+			Assert.Equal(ObjectName.Parse(funcName), function.FunctionName);
+			Assert.NotEmpty(function.Arguments);
+			Assert.Equal(1, function.Arguments.Length);
+
+			var param = function.Arguments[0];
+
+			Assert.NotNull(param);
+			Assert.True(param.IsNamed);
+			Assert.Equal(paramName, param.ParameterName);
+			Assert.IsType<SqlConstantExpression>(param.Value);
+
+			var value = SqlObject.New(SqlValueUtil.FromObject(paramValue));
+
+			Assert.Equal(value, ((SqlConstantExpression) param.Value).Value);
+		}
 
 		public void Dispose() {
 			context?.Dispose();

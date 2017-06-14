@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp1.0</TargetFramework>
     <RootNamespace>Deveel</RootNamespace>
     <AssemblyName>deveeldb.core</AssemblyName>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -45,11 +45,5 @@
       <Visitor>True</Visitor>
       <Listener>False</Listener>
     </Antlr4>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="obj\Debug\netcoreapp1.1\PlSqlLexer.cs" />
-    <Compile Include="obj\Debug\netcoreapp1.1\PlSqlParser.cs" />
-    <Compile Include="obj\Debug\netcoreapp1.1\PlSqlParserBaseVisitor.cs" />
-    <Compile Include="obj\Debug\netcoreapp1.1\PlSqlParserVisitor.cs" />
   </ItemGroup>
 </Project>
