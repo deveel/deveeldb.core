@@ -28,7 +28,11 @@ namespace Deveel {
 		}
 
 		public static T GetValue<T>(this IEnumerable<KeyValuePair<string, object>> pairs, string key, IFormatProvider provider) {
-			return pairs.ToDictionary(x => x.Key, y => y.Value).GetValue<T>(key, provider);
+			IDictionary<string, object> dictionary = pairs as IDictionary<string, object>;
+			if (dictionary == null)
+				dictionary = pairs.ToDictionary(x => x.Key, y => y.Value);
+
+			return dictionary.GetValue<T>(key, provider);
 		}
 
 		public static T GetValue<T>(this IDictionary<string, object> dictionary, string key) {
@@ -37,7 +41,7 @@ namespace Deveel {
 
 		public static T GetValue<T>(this IDictionary<string, object> dictionary, string key, IFormatProvider provider) {
 			if (String.IsNullOrEmpty(key))
-				throw new ArgumentNullException("key");
+				throw new ArgumentNullException(nameof(key));
 
 			if (dictionary == null)
 				return default(T);

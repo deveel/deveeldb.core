@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Deveel.Data.Configuration;
 using Deveel.Data.Diagnostics;
@@ -27,6 +28,11 @@ namespace Deveel.Data {
 	/// access to them
 	/// </summary>
 	public interface IDatabaseSystem : IContext, IConfigurationScope, IEventSource {
+		/// <summary>
+		/// Starts the system making it possible to interact with it
+		/// </summary>
+		Task StartAsync();
+
 		/// <summary>
 		/// Gets a list of the names of all the databases handled
 		/// by this system.

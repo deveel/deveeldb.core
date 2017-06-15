@@ -29,11 +29,6 @@ namespace Deveel.Data {
 	/// </summary>
 	public interface ISession : IContext, IEventSource {
 		/// <summary>
-		/// Gets the name of the current schema of this session.
-		/// </summary>
-		string CurrentSchema { get; }
-
-		/// <summary>
 		/// Gets the reference to the user owning the session
 		/// </summary>
 		User User { get; }

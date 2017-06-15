@@ -14,26 +14,19 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlVariableExpressionTests() {
 			var scope = new ServiceContainer();
-			scope.AddVariableManager<VariableManager>();
+
+			var manager = new VariableManager();
+			manager.CreateVariable(new VariableInfo("a", PrimitiveTypes.Boolean(), false, SqlExpression.Constant(SqlObject.Boolean(false))));
+			manager.CreateVariable(new VariableInfo("b", PrimitiveTypes.VarChar(150), false, null));
 
 			var mock = new Mock<IContext>();
 			mock.SetupGet(x => x.Scope)
 				.Returns(scope);
+			mock.As<IVariableScope>()
+				.SetupGet(x => x.Variables)
+				.Returns(manager);
+
 			context = mock.Object;
-
-			var value = SqlExpression.Constant(SqlObject.New(new SqlBoolean(false)));
-			var variable = new Variable("a", PrimitiveTypes.Boolean(), false, value);
-
-			var resolver = new Mock<IVariableResolver>();
-			resolver.Setup(x => x.ResolveVariable(It.Is<string>(s => s == "a"), It.IsAny<bool>()))
-				.Returns<string, bool>((name, ignoreCase) => variable);
-			resolver.Setup(x => x.ResolveVariableType(It.Is<string>(s => s == "a"), It.IsAny<bool>()))
-				.Returns<string, bool>((name, ignoreCase) => PrimitiveTypes.Boolean());
-
-			var manager = context.GetVariableManager<VariableManager>();
-			manager.CreateVariable(new VariableInfo("b", PrimitiveTypes.VarChar(150), false, null));
-
-			scope.AddVariableResolver(resolver.Object);
 		}
 
 		[Theory]
@@ -95,7 +88,7 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
-		[InlineData("b")]
+		[InlineData("c")]
 		public async Task ReduceNotFoundVariable(string name) {
 			var varRef = SqlExpression.Variable(name);
 

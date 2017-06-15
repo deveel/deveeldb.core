@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
 
@@ -42,6 +43,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public override SqlExpression Accept(SqlExpressionVisitor visitor) {
 			return visitor.VisitGroup(this);
+		}
+
+		public override Task<SqlExpression> ReduceAsync(IContext context) {
+			return Expression.ReduceAsync(context);
 		}
 
 		protected override void GetObjectData(SerializationInfo info) {

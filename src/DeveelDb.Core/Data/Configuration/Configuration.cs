@@ -36,8 +36,8 @@ namespace Deveel.Data.Configuration {
 		/// Constructs the <see cref="Configuration"/>.
 		/// </summary>
 		public Configuration() {
-			values = new Dictionary<string, object>();
-			childConfigurations = new Dictionary<string, IConfiguration>();
+			values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+			childConfigurations = new Dictionary<string, IConfiguration>(StringComparer.OrdinalIgnoreCase);
 		}
 
 		/// <inheritdoc/>
@@ -49,8 +49,8 @@ namespace Deveel.Data.Configuration {
 		}
 
 		/// <inheritdoc/>
-		public IEnumerator<KeyValuePair<string, object>> GetEnumerator() {
-			return values.GetEnumerator();
+		public IEnumerator<ConfigurationValue> GetEnumerator() {
+			return values.Select(x => new ConfigurationValue(x.Key, x.Value)).GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() {

@@ -17,16 +17,16 @@
 
 using System;
 
-using Deveel.Data.Services;
-
 namespace Deveel.Data.Sql.Methods {
 	public sealed class IterateContext : Context {
-		internal IterateContext(IContext parent, long offset, SqlObject accumulation, SqlObject current)
+		internal IterateContext(MethodContext parent, long offset, SqlObject accumulation, SqlObject current)
 			: base(parent, $"Iterate({offset})") {
 			Result = Accumulation = accumulation;
 			Offset = offset;
 			Current = current;
 		}
+
+		public MethodContext MethodContext => (MethodContext) ParentContext;
 
 		public long Offset { get; }
 
