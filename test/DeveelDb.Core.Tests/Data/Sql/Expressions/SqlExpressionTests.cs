@@ -182,6 +182,22 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
+		[InlineData("a LIKE 'tes%'", SqlExpressionType.Like)]
+		[InlineData("a NOT LIKE '%hell%'", SqlExpressionType.NotLike)]
+		public static void ParseStringMatch(string s, SqlExpressionType expressionType) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.Equal(expressionType, exp.ExpressionType);
+			Assert.IsType<SqlStringMatchExpression>(exp);
+
+			var stringMatch = (SqlStringMatchExpression) exp;
+
+			Assert.IsType<SqlConstantExpression>(stringMatch.Pattern);
+			Assert.IsType<SqlReferenceExpression>(stringMatch.Left);
+		}
+
+		[Theory]
 		[InlineData(SqlExpressionType.Like, "antonello", "anto%")]
 		[InlineData(SqlExpressionType.NotLike, "the quick brown fox", "the brown%")]
 		public static void SerializeStringMatch(SqlExpressionType expressionType, string value, string pattern) {
@@ -361,6 +377,28 @@ namespace Deveel.Data.Sql.Expressions {
 			var wider = obj1.Type.Wider(obj2.Type);
 
 			Assert.Equal(wider, sqltType);
+		}
+
+		[Theory]
+		[InlineData("a * 2", SqlExpressionType.Multiply)]
+		[InlineData("a + (b * 3)", SqlExpressionType.Add)]
+		[InlineData("63-902", SqlExpressionType.Subtract)]
+		[InlineData("045 / 11", SqlExpressionType.Divide)]
+		[InlineData("12 % 11", SqlExpressionType.Modulo)]
+		[InlineData("a = 56", SqlExpressionType.Equal)]
+		[InlineData("67 <> 11", SqlExpressionType.NotEqual)]
+		[InlineData("90 > 1", SqlExpressionType.GreaterThan)]
+		[InlineData("a < 22", SqlExpressionType.LessThan)]
+		[InlineData("63 <= 15", SqlExpressionType.LessThanOrEqual)]
+		[InlineData("b >= a", SqlExpressionType.GreaterThanOrEqual)]
+		[InlineData("a IS NULL", SqlExpressionType.Is)]
+		[InlineData("b IS NOT NULL", SqlExpressionType.IsNot)]
+		public static void ParseBinary(string s, SqlExpressionType expressionType) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.Equal(expressionType, exp.ExpressionType);
+			Assert.IsType<SqlBinaryExpression>(exp);
 		}
 
 		[Theory]

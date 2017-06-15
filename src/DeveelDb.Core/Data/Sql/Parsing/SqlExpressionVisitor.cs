@@ -263,7 +263,9 @@ namespace Deveel.Data.Sql.Parsing {
             } else if (context.NAN().Length > 0) {
                 value = SqlObject.Double(double.NaN);
             } else if (context.NULL().Length > 0) {
-                value = null;
+		        value = SqlObject.Null;
+	        } else if (context.UNKNOWN().Length > 0) {
+	            value = SqlObject.Unknown;
             } else if (context.OF().Length > 0) {
                 // TODO: return TYPEOF function
                 throw new NotImplementedException();
@@ -383,9 +385,17 @@ namespace Deveel.Data.Sql.Parsing {
                 NumberDecimalSeparator = "."
             };
 
-            var dValue = Double.Parse(value, formatInfo);
+	        var number = SqlNumber.Parse(value, formatInfo);
+	        SqlObject obj;
+	        if (number.CanBeInt32) {
+		        obj = SqlObject.Integer((int) number);
+	        } else if (number.CanBeInt64) {
+		        obj = SqlObject.BigInt((long) number);
+	        } else {
+		        obj = SqlObject.Numeric(number);
+	        }
 
-            return SqlExpression.Constant(SqlObject.Numeric(new SqlNumber(dValue)));
+            return SqlExpression.Constant(obj);
         }
 
         public override SqlExpression VisitConstantString(PlSqlParser.ConstantStringContext context) {
@@ -422,7 +432,8 @@ namespace Deveel.Data.Sql.Parsing {
             if (context.LIKE() != null) {
                 var right = Visit(context.likeExp);
                 var op = isNot ? SqlExpressionType.NotLike : SqlExpressionType.Like;
-                return SqlExpression.Binary(op, left, right);
+				// TODO: ESCAPE
+                return SqlExpression.StringMatch(op, left, right, null);
             }
 
             if (context.BETWEEN() != null) {

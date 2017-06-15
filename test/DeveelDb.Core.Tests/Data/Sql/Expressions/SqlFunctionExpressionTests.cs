@@ -98,8 +98,9 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
-		[InlineData("sys.Func1(a => 56)", "sys.Func1", "a", 56)]
-		public static void ParseStringWithNamedParameter(string s, string funcName, string paramName, object paramValue) {
+		[InlineData("sys.Func1(a => 56)", "sys.Func1", "a", "INT", 56)]
+		[InlineData("fun2(a => 'test')", "fun2", "a", "STRING", "test")]
+		public static void ParseStringWithNamedParameter(string s, string funcName, string paramName, string paramType, object paramValue) {
 			var exp = SqlExpression.Parse(s);
 
 			Assert.NotNull(exp);
@@ -119,10 +120,49 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(paramName, param.ParameterName);
 			Assert.IsType<SqlConstantExpression>(param.Value);
 
-			var value = SqlObject.New(SqlValueUtil.FromObject(paramValue));
+			var type = SqlType.Parse(paramType);
+			var value = new SqlObject(type, SqlValueUtil.FromObject(paramValue));
 
 			Assert.Equal(value, ((SqlConstantExpression) param.Value).Value);
 		}
+
+		[Theory]
+		[InlineData("sys.Func1(56, 'test1')", "sys.Func1", "INT", 56, "STRING", "test1")]
+		public static void ParseStringWithAnonParameter(string s, string funcName, string param1Type, object paramValue1, string param2Type, object paramValue2) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.Equal(SqlExpressionType.Function, exp.ExpressionType);
+			Assert.IsType<SqlFunctionExpression>(exp);
+
+			var function = (SqlFunctionExpression)exp;
+
+			Assert.Equal(ObjectName.Parse(funcName), function.FunctionName);
+			Assert.NotEmpty(function.Arguments);
+			Assert.Equal(2, function.Arguments.Length);
+
+			var param1 = function.Arguments[0];
+			var param2 = function.Arguments[1];
+
+			Assert.NotNull(param1);
+			Assert.NotNull(param2);
+
+			Assert.False(param1.IsNamed);
+			Assert.False(param2.IsNamed);
+
+			Assert.IsType<SqlConstantExpression>(param1.Value);
+			Assert.IsType<SqlConstantExpression>(param2.Value);
+
+			var pType1 = SqlType.Parse(param1Type);
+			var pType2 = SqlType.Parse(param2Type);
+
+			var value1 = new SqlObject(pType1, SqlValueUtil.FromObject(paramValue1));
+			var value2 = new SqlObject(pType2, SqlValueUtil.FromObject(paramValue2));
+
+			Assert.Equal(value1, ((SqlConstantExpression)param1.Value).Value);
+			Assert.Equal(value2, ((SqlConstantExpression)param2.Value).Value);
+		}
+
 
 		public void Dispose() {
 			context?.Dispose();

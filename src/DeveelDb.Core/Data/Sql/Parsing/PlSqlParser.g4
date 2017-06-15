@@ -39,7 +39,7 @@ negatedExpression
     ;
 
 equalityExpression
-    : relationalExpression (IS NOT? ( NULL | NAN | EMPTY | OF TYPE? '(' datatype ')') )*
+    : relationalExpression (IS NOT? ( NULL | NAN | EMPTY | UNKNOWN | OF TYPE? '(' datatype ')') )*
     ;
 
 relationalExpression
@@ -91,7 +91,7 @@ multiplyExpression
     ;
 
 multiplyOperator
-    : ( '*' | '/' )
+    : ( '*' | '/' | '%' )
 	;
 
 unaryExpression
