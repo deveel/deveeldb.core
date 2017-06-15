@@ -123,6 +123,20 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(expected, sql);
 		}
 
+		[Theory]
+		[InlineData("(445 + 90)", SqlExpressionType.Add)]
+		[InlineData("((67))", SqlExpressionType.Group)]
+		public static void ParseString(string s, SqlExpressionType innerType) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlGroupExpression>(exp);
+
+			var group = (SqlGroupExpression) exp;
+			Assert.NotNull(group.Expression);
+			Assert.Equal(innerType, group.Expression.ExpressionType);
+		}
+
 		[Fact]
 		public static void SerializeGroup() {
 			var exp = SqlExpression.Binary(SqlExpressionType.Equal,

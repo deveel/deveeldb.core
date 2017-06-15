@@ -505,12 +505,9 @@ namespace Deveel.Data.Sql.Parsing {
                 throw new NotImplementedException();
 
             var destType = SqlTypeParser.Parse(context.datatype());
-            var destTypeString = destType.ToString();
-
             var value = Visit(context.concatenationWrapper());
 
-            return SqlExpression.Function("SQL_CAST",
-                new[] {value, SqlExpression.Constant(SqlObject.String(destTypeString))});
+            return SqlExpression.Cast(value, destType);
         }
 
         public override SqlExpression VisitInvokedFunction(PlSqlParser.InvokedFunctionContext context) {
