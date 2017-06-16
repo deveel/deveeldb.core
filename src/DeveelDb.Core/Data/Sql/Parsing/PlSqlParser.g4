@@ -603,7 +603,7 @@ regular_id
     // | IN
     | INCREMENT
     //| INDEX
-    | INNER
+    // | INNER
     | INOUT
     //| INSERT
     | INSTANTIABLE
@@ -757,7 +757,7 @@ regular_id
     //| THE
     //| THEN
     | TIME
-    | TIMESTAMP
+    // | TIMESTAMP
     | TIMEZONE_ABBR
     | TIMEZONE_HOUR
     | TIMEZONE_MINUTE

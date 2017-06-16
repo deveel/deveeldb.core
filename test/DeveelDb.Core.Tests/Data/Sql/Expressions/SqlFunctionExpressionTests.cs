@@ -163,6 +163,65 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(value2, ((SqlConstantExpression)param2.Value).Value);
 		}
 
+		[Theory]
+		[InlineData("TRIM (LEADING ' ' FROM '  test')")]
+		[InlineData("TRIM(BOTH ' ' FROM ' test ')")]
+		[InlineData("TRIM(' test')")]
+		[InlineData("TRIM(TRAILING ' ' FROM 'test ')")]
+		public static void ParseSqlTrimFunction(string s) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlFunctionExpression>(exp);
+
+			var func = (SqlFunctionExpression) exp;
+			Assert.Equal("SQL_TRIM", func.FunctionName.FullName);
+			Assert.NotEmpty(func.Arguments);
+			Assert.Equal(3, func.Arguments.Length);
+		}
+
+		[Theory]
+		[InlineData("EXTRACT(DAY FROM '1980-06-04')")]
+		[InlineData("EXTRACT(YEAR FROM birth_date)")]
+		public static void ParseSqlExtractFunction(string s) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlFunctionExpression>(exp);
+
+			var func = (SqlFunctionExpression)exp;
+			Assert.Equal("SQL_EXTRACT", func.FunctionName.FullName);
+			Assert.NotEmpty(func.Arguments);
+			Assert.Equal(2, func.Arguments.Length);
+		}
+
+		[Theory]
+		[InlineData("CURRENT_TIME", "TIME")]
+		[InlineData("CURRENT_TIMESTAMP", "TIMESTAMP")]
+		[InlineData("CURRENT_DATE", "DATE")]
+		public static void ParseCurrentTimeFunction(string s, string functionName) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlFunctionExpression>(exp);
+
+			var func = (SqlFunctionExpression)exp;
+			Assert.Equal(functionName, func.FunctionName.FullName);
+		}
+
+		[Theory]
+		[InlineData("TIMESTAMP '1980-04-06'")]
+		public static void ParseTimeStampFunction(string s) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlFunctionExpression>(exp);
+
+			var func = (SqlFunctionExpression)exp;
+			Assert.Equal("TOTIMESTAMP", func.FunctionName.FullName);
+			Assert.NotEmpty(func.Arguments);
+			Assert.Equal(1, func.Arguments.Length);
+		}
 
 		public void Dispose() {
 			context?.Dispose();
