@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <RootNamespace>Deveel</RootNamespace>
     <AssemblyName>deveeldb.core</AssemblyName>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -30,6 +30,8 @@
     <PackageReference Include="Antlr4.Runtime" Version="4.6.1" />
     <PackageReference Include="dmath.core" Version="1.7.0-r00046" />
     <PackageReference Include="DryIoc.dll" Version="2.10.4" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="15.1.1012" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.1.1012" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" />
     <PackageReference Include="System.ComponentModel" Version="4.3.0" />
   </ItemGroup>
