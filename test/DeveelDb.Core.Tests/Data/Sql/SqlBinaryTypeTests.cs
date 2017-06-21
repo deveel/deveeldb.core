@@ -98,6 +98,8 @@ namespace Deveel.Data.Sql {
 	    [InlineData("BINARY(2048)", SqlTypeCode.Binary, 2048)]
 	    [InlineData("BLOB", SqlTypeCode.Blob, -1)]
 	    [InlineData("BLOB(45644)", SqlTypeCode.Blob, 45644)]
+	    [InlineData("BINARY(MAX)", SqlTypeCode.Binary, SqlBinaryType.DefaultMaxSize)]
+	    [InlineData("LONG BINARY VARYING", SqlTypeCode.LongVarBinary, -1)]
 	    public static void ParseString(string sql, SqlTypeCode typeCode, int size) {
 	        var type = SqlType.Parse(sql);
 

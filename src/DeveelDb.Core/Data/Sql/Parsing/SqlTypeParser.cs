@@ -53,15 +53,15 @@ namespace Deveel.Data.Sql.Parsing {
 
             public override SqlTypeResolveInfo VisitUserDataType(PlSqlParser.UserDataTypeContext context) {
                 var name = SqlParseName.Object(context.objectName());
-                var args = context.type_argument();
-                if (args != null && args.type_argument_spec().Length > 0) {
+                var args = context.typeArgument();
+                if (args != null && args.typeArgumentSpec().Length > 0) {
                     throw new NotSupportedException("Arguments to user-defined type are not supported yet.");
                 }
 
                 return new SqlTypeResolveInfo(name.FullName);
             }
 
-            public override SqlTypeResolveInfo VisitInteger_type(PlSqlParser.Integer_typeContext context) {
+            public override SqlTypeResolveInfo VisitIntegerType(PlSqlParser.IntegerTypeContext context) {
                 var size = SqlParseNumber.PositiveInteger(context.numeric()) ?? -1;
                 SqlTypeCode typeCode;
                 if (context.BIGINT() != null) {
@@ -81,7 +81,7 @@ namespace Deveel.Data.Sql.Parsing {
                     new Dictionary<string, object> {{"MaxSize", size}});
             }
 
-            public override SqlTypeResolveInfo VisitNumeric_type(PlSqlParser.Numeric_typeContext context) {
+            public override SqlTypeResolveInfo VisitNumericType(PlSqlParser.NumericTypeContext context) {
                 var precision = SqlParseNumber.PositiveInteger(context.precision) ?? -1;
                 var scale = SqlParseNumber.PositiveInteger(context.scale) ?? -1;
 
@@ -114,7 +114,7 @@ namespace Deveel.Data.Sql.Parsing {
                 return new SqlTypeResolveInfo(typeCode.ToString().ToUpperInvariant(), meta);
             }
 
-            public override SqlTypeResolveInfo VisitString_type(PlSqlParser.String_typeContext context) {
+            public override SqlTypeResolveInfo VisitStringType(PlSqlParser.StringTypeContext context) {
                 int? size = null;
                 if (context.numeric() != null) {
                     size = SqlParseNumber.PositiveInteger(context.numeric());
@@ -131,15 +131,11 @@ namespace Deveel.Data.Sql.Parsing {
                     typeCode = SqlTypeCode.String;
                 } else if (context.CLOB() != null) {
                     typeCode = SqlTypeCode.Clob;
-                } else if (!context.long_varchar().IsEmpty) {
+                } else if (!context.longVarchar().IsEmpty) {
                     typeCode = SqlTypeCode.LongVarChar;
                 } else {
                     throw new ParseCanceledException("Invalid string type");
                 }
-
-                string encoding = null;
-                if (context.ENCODING() != null)
-                    encoding = SqlParseInputString.AsNotQuoted(context.encoding.Text);
 
                 string locale = null;
                 if (context.LOCALE() != null)
@@ -152,13 +148,11 @@ namespace Deveel.Data.Sql.Parsing {
                 }
                 if (locale != null)
                     meta.Add("Locale", locale);
-                if (encoding != null)
-                    meta.Add("Encoding", encoding);
 
                 return new SqlTypeResolveInfo(typeCode.ToString().ToUpperInvariant(), meta);
             }
 
-            public override SqlTypeResolveInfo VisitBinary_type(PlSqlParser.Binary_typeContext context) {
+            public override SqlTypeResolveInfo VisitBinaryType(PlSqlParser.BinaryTypeContext context) {
                 int? maxSize = null;
                 if (context.MAX() != null) {
                     maxSize = SqlBinaryType.DefaultMaxSize;
@@ -174,7 +168,7 @@ namespace Deveel.Data.Sql.Parsing {
                     typeCode = SqlTypeCode.VarBinary;
                 } else if (context.BLOB() != null) {
                     typeCode = SqlTypeCode.Blob;
-                } else if (!context.long_varbinary().IsEmpty) {
+                } else if (!context.longVarbinary().IsEmpty) {
                     typeCode = SqlTypeCode.LongVarBinary;
                 } else {
                     throw new ParseCanceledException("Invalid binary type.");
@@ -184,7 +178,7 @@ namespace Deveel.Data.Sql.Parsing {
                     new Dictionary<string, object> {{"MaxSize", maxSize}, {"Size", maxSize}});
             }
 
-            public override SqlTypeResolveInfo VisitBoolean_type(PlSqlParser.Boolean_typeContext context) {
+            public override SqlTypeResolveInfo VisitBooleanType(PlSqlParser.BooleanTypeContext context) {
                 SqlTypeCode typeCode;
                 if (context.BIT() != null) {
                     typeCode = SqlTypeCode.Bit;
@@ -197,7 +191,7 @@ namespace Deveel.Data.Sql.Parsing {
                 return new SqlTypeResolveInfo(typeCode.ToString().ToUpperInvariant());
             }
 
-            public override SqlTypeResolveInfo VisitTime_type(PlSqlParser.Time_typeContext context) {
+            public override SqlTypeResolveInfo VisitTimeType(PlSqlParser.TimeTypeContext context) {
                 SqlTypeCode typeCode;
                 if (context.DATETIME() != null) {
                     typeCode = SqlTypeCode.DateTime;

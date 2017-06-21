@@ -96,7 +96,6 @@ ELSE:                         E L S E;
 ELSIF:                        E L S I F;
 EMPTY:                        E M P T Y;
 ENABLE:                       E N A B L E;
-ENCODING:                     E N C O D I N G;
 END:                          E N D;
 ESCAPE:                       E S C A P E;
 EVALNAME:                     E V A L N A M E;

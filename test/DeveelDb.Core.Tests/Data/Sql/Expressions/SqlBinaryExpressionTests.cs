@@ -211,6 +211,7 @@ namespace Deveel.Data.Sql.Expressions {
 		[InlineData("11 % 3", SqlExpressionType.Modulo)]
 		[InlineData("a  IS NOT NULL", SqlExpressionType.IsNot)]
 		[InlineData("a IS UNKNOWN", SqlExpressionType.Is)]
+		//TODO: [InlineData("a IS OF TYPE VARCHAR(3)", SqlExpressionType.Is)]
 		[InlineData("c > 22", SqlExpressionType.GreaterThan)]
 		[InlineData("178.999 >= 902", SqlExpressionType.GreaterThanOrEqual)]
 		[InlineData("a < -1", SqlExpressionType.LessThan)]
@@ -218,7 +219,9 @@ namespace Deveel.Data.Sql.Expressions {
 		[InlineData("a = b", SqlExpressionType.Equal)]
 		[InlineData("a <> c", SqlExpressionType.NotEqual)]
 		[InlineData("TRUE OR FALSE", SqlExpressionType.Or)]
+		[InlineData("a AND b", SqlExpressionType.And)]
 		//TODO: [InlineData("674 XOR 90", SqlExpressionType.XOr)]
+		[InlineData("a BETWEEN 56 AND 98", SqlExpressionType.And)]
 		public static void ParseString(string s, SqlExpressionType expressionType) {
 			var exp = SqlExpression.Parse(s);
 			

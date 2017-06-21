@@ -199,7 +199,9 @@ namespace Deveel.Data.Sql.Expressions {
 		[InlineData("CURRENT_TIME", "TIME")]
 		[InlineData("CURRENT_TIMESTAMP", "TIMESTAMP")]
 		[InlineData("CURRENT_DATE", "DATE")]
-		public static void ParseCurrentTimeFunction(string s, string functionName) {
+		[InlineData("DBTIMEZONE", "DBTIMEZONE")]
+		[InlineData("USERTIMEZONE", "UserTimeZone")]
+        public static void ParseSqlSystemFunction(string s, string functionName) {
 			var exp = SqlExpression.Parse(s);
 
 			Assert.NotNull(exp);
@@ -209,8 +211,10 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(functionName, func.FunctionName.FullName);
 		}
 
+	    
 		[Theory]
 		[InlineData("TIMESTAMP '1980-04-06'")]
+		[InlineData("TIMESTAMP :a")]
 		public static void ParseTimeStampFunction(string s) {
 			var exp = SqlExpression.Parse(s);
 
@@ -223,7 +227,37 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.Equal(1, func.Arguments.Length);
 		}
 
-		public void Dispose() {
+	    [Theory]
+        [InlineData("TIMESTAMP '2017-02-01T09:12:02.4533' AT TIME ZONE 'CET'")]
+        private static void ParseAdvancedTimeStampFunction(string s) {
+	        var exp = SqlExpression.Parse(s);
+
+	        Assert.NotNull(exp);
+	        Assert.IsType<SqlFunctionExpression>(exp);
+
+	        var func = (SqlFunctionExpression)exp;
+	        Assert.Equal("TOTIMESTAMP", func.FunctionName.FullName);
+	        Assert.NotEmpty(func.Arguments);
+	        Assert.Equal(2, func.Arguments.Length);
+        }
+
+        [Theory]
+        [InlineData("DATE '1980-04-06'")]
+        public static void ParseDateFunction(string s)
+        {
+            var exp = SqlExpression.Parse(s);
+
+            Assert.NotNull(exp);
+            Assert.IsType<SqlFunctionExpression>(exp);
+
+            var func = (SqlFunctionExpression)exp;
+            Assert.Equal("CAST", func.FunctionName.FullName);
+            Assert.NotEmpty(func.Arguments);
+            Assert.Equal(2, func.Arguments.Length);
+        }
+
+
+        public void Dispose() {
 			context?.Dispose();
 		}
 	}

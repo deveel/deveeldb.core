@@ -40,18 +40,18 @@ namespace Deveel.Data.Sql.Parsing {
 			return AsNotQuoted(context.GetText());
 		}
 
-		public static string AsNotQuoted(IToken token) {
-			if (token == null)
-				return null;
+		//public static string AsNotQuoted(IToken token) {
+		//	if (token == null)
+		//		return null;
 
-			return AsNotQuoted(token.Text);
-		}
+		//	return AsNotQuoted(token.Text);
+		//}
 
-		public static string AsNotQuoted(ITerminalNode node) {
-			if (node == null)
-				return null;
+		//public static string AsNotQuoted(ITerminalNode node) {
+		//	if (node == null)
+		//		return null;
 
-			return AsNotQuoted(node.GetText());
-		}
+		//	return AsNotQuoted(node.GetText());
+		//}
 	}
 }

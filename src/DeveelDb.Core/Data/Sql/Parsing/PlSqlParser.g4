@@ -313,56 +313,56 @@ general_element
 // $<Data Types
 
 datatype
-    : primitive_type #PrimitiveDataType
+    : primitiveType #PrimitiveDataType
     | INTERVAL (top=YEAR | top=DAY) ('(' expressionWrapper ')')? TO (bottom=MONTH | bottom=SECOND) ('(' expressionWrapper ')')? #IntervalType
-	| objectName type_argument? #UserDataType
+	| objectName typeArgument? #UserDataType
 	| rowRefType #RowType
 	| columnRefType #ColumnType
     ;
 
-type_argument
-    : '(' type_argument_spec (',' type_argument_spec)* ')'
+typeArgument
+    : '(' typeArgumentSpec (',' typeArgumentSpec)* ')'
 	;
 
-type_argument_spec
+typeArgumentSpec
     : ( id '=' )? (numeric | quoted_string )
 	;
 
-primitive_type
-    : (integer_type | numeric_type | boolean_type | string_type | binary_type | time_type)
+primitiveType
+    : (integerType | numericType | booleanType | stringType | binaryType | timeType)
 	;
 
-integer_type
+integerType
     : (TINYINT | SMALLINT | BIGINT | INT | INTEGER) ('(' numeric ')')?
 	;
 
-numeric_type
+numericType
     : (FLOAT | REAL | DOUBLE | NUMERIC | DECIMAL) ( '(' precision=numeric (',' scale=numeric)? ')' )?
 	;
 
-boolean_type
+booleanType
     : (BOOLEAN | BIT)
 	;
 
-binary_type
-    : (BLOB | BINARY | VARBINARY | long_varbinary) ( '(' (numeric | MAX) ')' )?
+binaryType
+    : (BLOB | BINARY | VARBINARY | longVarbinary) ( '(' (numeric | MAX) ')' )?
 	;
 
-string_type
-    : (CLOB | VARCHAR | CHAR | long_varchar | STRING) ( '(' (numeric | MAX) ')' )? 
-	     (LOCALE locale=CHAR_STRING)? (ENCODING encoding=CHAR_STRING)? 
+stringType
+    : (CLOB | VARCHAR | CHAR | longVarchar | STRING) ( '(' (numeric | MAX) ')' )? 
+	     (LOCALE locale=CHAR_STRING)?
 	;
 
 
-long_varchar
+longVarchar
     : LONG CHARACTER VARYING
 	;
 
-long_varbinary
+longVarbinary
     : LONG BINARY VARYING
 	;
 
-time_type
+timeType
     : (DATE | TIMESTAMP | TIME | DATETIME ) (WITH local=LOCAL? TIME ZONE)?
 	;
 
@@ -562,7 +562,6 @@ regular_id
     //| ELSIF
     | EMPTY
     | ENABLE
-    | ENCODING
     //| END
     | ESCAPE
     | EVALNAME

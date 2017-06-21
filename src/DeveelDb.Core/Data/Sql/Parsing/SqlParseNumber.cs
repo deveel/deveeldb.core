@@ -36,30 +36,30 @@ namespace Deveel.Data.Sql.Parsing {
 			return value;
 		}
 
-		public static int? PositiveInteger(ITerminalNode node) {
-			if (node == null)
-				return null;
+		//public static int? PositiveInteger(ITerminalNode node) {
+		//	if (node == null)
+		//		return null;
 
-			var text = node.GetText();
-			int value;
-			if (!Int32.TryParse(text, out value))
-				throw new ParseCanceledException(String.Format("Numeric '{0}' is not an integer.", text));
-			if (value < 0)
-				throw new ParseCanceledException(String.Format("Integer '{0}' is not positive.", text));
+		//	var text = node.GetText();
+		//	int value;
+		//	if (!Int32.TryParse(text, out value))
+		//		throw new ParseCanceledException(String.Format("Numeric '{0}' is not an integer.", text));
+		//	if (value < 0)
+		//		throw new ParseCanceledException(String.Format("Integer '{0}' is not positive.", text));
 
-			return value;
-		}
+		//	return value;
+		//}
 
-		public static int? Integer(PlSqlParser.NumericContext context) {
-			if (context == null)
-				return null;
+		//public static int? Integer(PlSqlParser.NumericContext context) {
+		//	if (context == null)
+		//		return null;
 
-			var text = context.GetText();
-			int value;
-			if (!Int32.TryParse(text, out value))
-				throw new ParseCanceledException(String.Format("Numeric '{0}' is not an integer.", text));
+		//	var text = context.GetText();
+		//	int value;
+		//	if (!Int32.TryParse(text, out value))
+		//		throw new ParseCanceledException(String.Format("Numeric '{0}' is not an integer.", text));
 
-			return value;
-		}
+		//	return value;
+		//}
 	}
 }

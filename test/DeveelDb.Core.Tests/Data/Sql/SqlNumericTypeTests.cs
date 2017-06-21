@@ -143,7 +143,9 @@ namespace Deveel.Data.Sql {
 	    [InlineData("TINYINT", SqlTypeCode.TinyInt, 3, 0)]
 	    [InlineData("DOUBLE", SqlTypeCode.Double, 16, -1)]
 	    [InlineData("FLOAT", SqlTypeCode.Float, 8, -1)]
-	    [InlineData("NUMERIC(22, 13)", SqlTypeCode.Numeric, 22, 13)]
+	    [InlineData("REAL", SqlTypeCode.Float, 8, -1)]
+	    [InlineData("DECIMAL", SqlTypeCode.Decimal, 24, -1)]
+        [InlineData("NUMERIC(22, 13)", SqlTypeCode.Numeric, 22, 13)]
 	    public static void ParseString(string sql, SqlTypeCode typeCode, int precision, int scale) {
 	        var type = SqlType.Parse(sql);
 

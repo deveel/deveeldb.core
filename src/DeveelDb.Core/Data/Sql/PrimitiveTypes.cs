@@ -77,6 +77,9 @@ namespace Deveel.Data.Sql {
 			return Binary(SqlTypeCode.Blob, size);
 		}
 
+	    public static SqlBinaryType LongVarBinary()
+	        => Binary(SqlTypeCode.LongVarBinary, -1);
+
 		#endregion
 
 		#region Numeric Types
@@ -432,9 +435,10 @@ namespace Deveel.Data.Sql {
 					var size = resolveInfo.Properties.GetValue<int?>("MaxSize") ?? -1;
 					return VarBinary(size);
 				}
-				case "LONGVARBINARY":
-				case "LONG VARBINARY":
-				case "LONG BINARY VARYING":
+			    case "LONGVARBINARY":
+			    case "LONG VARBINARY":
+			    case "LONG BINARY VARYING":
+			        return LongVarBinary();
 				case "BLOB": {
 				    var size = resolveInfo.Properties.GetValue<int?>("Size") ?? -1;
                     return Blob(size);

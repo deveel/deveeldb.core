@@ -49,6 +49,7 @@ namespace Deveel.Data.Sql {
 	    [InlineData("CHAR(11)", SqlTypeCode.Char, 11)]
 	    [InlineData("LONG CHARACTER VARYING", SqlTypeCode.LongVarChar, -1)]
 	    [InlineData("CLOB(30221)", SqlTypeCode.Clob, 30221)]
+	    [InlineData("VARCHAR(MAX)", SqlTypeCode.VarChar, SqlCharacterType.DefaultMaxSize)]
 	    public static void ParseString(string sql, SqlTypeCode typeCode, int size) {
 	        var type = SqlType.Parse(sql);
 

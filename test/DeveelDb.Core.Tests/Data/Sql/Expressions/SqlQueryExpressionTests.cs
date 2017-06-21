@@ -91,7 +91,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		[Fact]
 		public static void ParseSimpleQuery() {
-			const string sql = "SELECT * FROM app.a WHERE a.id > 4";
+			const string sql = "SELECT * FROM app.a a_table WHERE a.id > 4";
 
 			var exp = SqlExpression.Parse(sql);
 
@@ -183,7 +183,7 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Fact]
-		public static void ParseSelectInQuery() {
+		public static void ParseSelectInArray() {
 			const string sql = "SELECT * FROM a WHERE a.b IN (45, 893, 001)";
 
 			var exp = SqlExpression.Parse(sql);
@@ -195,5 +195,47 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.NotEmpty(query.Items);
 			Assert.Equal(1, query.Items.Count);
 		}
-	}
+
+        [Fact]
+        public static void ParseSelectInQuery() {
+            const string sql = "SELECT * FROM a WHERE a.b IN (SELECT a FROM b)";
+
+            var exp = SqlExpression.Parse(sql);
+
+            Assert.NotNull(exp);
+            Assert.IsType<SqlQueryExpression>(exp);
+
+            var query = (SqlQueryExpression)exp;
+            Assert.NotEmpty(query.Items);
+            Assert.Equal(1, query.Items.Count);
+        }
+
+        [Fact]
+        public static void ParseSelectInVariable() {
+            const string sql = "SELECT * FROM a WHERE a.b IN :b";
+
+            var exp = SqlExpression.Parse(sql);
+
+            Assert.NotNull(exp);
+            Assert.IsType<SqlQueryExpression>(exp);
+
+            var query = (SqlQueryExpression)exp;
+            Assert.NotEmpty(query.Items);
+            Assert.Equal(1, query.Items.Count);
+        }
+
+        [Fact]
+	    public static void ParseSelectInto() {
+	        const string sql = "SELECT * INTO :a1 FROM a WHERE a.id = 22";
+
+            var exp = SqlExpression.Parse(sql);
+
+	        Assert.NotNull(exp);
+	        Assert.IsType<SqlQueryExpression>(exp);
+
+	        var query = (SqlQueryExpression)exp;
+	        Assert.NotEmpty(query.Items);
+	        Assert.Equal(1, query.Items.Count);
+        }
+    }
 }

@@ -145,7 +145,9 @@ namespace Deveel.Data.Sql.Parsing {
 				}
 			}
 
-			return query;
+		    //TODO: in case of a SELECT INTO cause create a statement
+
+            return query;
 		}
 
 		#region FromClauseBuilder
