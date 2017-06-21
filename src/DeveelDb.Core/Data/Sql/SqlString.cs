@@ -107,11 +107,9 @@ namespace Deveel.Data.Sql {
 			return CompareTo((ISqlString) other);
 		}
 
-		public string Value {
-			get { return source; }
-		}
+		public string Value => source;
 
-		public char this[long index] {
+	    public char this[long index] {
 			get {
 				if (index > Int32.MaxValue)
 					throw new ArgumentOutOfRangeException(nameof(index));
@@ -124,6 +122,8 @@ namespace Deveel.Data.Sql {
 				return source[(int) index];
 			}
 		}
+
+        public static readonly SqlString Empty = new SqlString(String.Empty);
 
 		bool ISqlValue.IsComparableTo(ISqlValue other) {
 			return other is ISqlString;

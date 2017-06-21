@@ -16,10 +16,13 @@
 
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Methods;
+using Deveel.Data.Services;
+using Deveel.Data.Sql.Parsing;
 
 namespace Deveel.Data.Sql.Expressions {
 	public abstract class SqlExpression : ISqlFormattable, ISerializable {
@@ -260,7 +263,11 @@ namespace Deveel.Data.Sql.Expressions {
 			return new SqlReferenceAssignExpression(referenceName, value);
 		}
 
-		public static SqlConditionExpression Condition(SqlExpression test, SqlExpression ifTrue, SqlExpression ifFalse)
+	    public static SqlConditionExpression Condition(SqlExpression test, SqlExpression ifTrue) {
+	        return Condition(test, ifTrue, null);
+	    }
+
+	    public static SqlConditionExpression Condition(SqlExpression test, SqlExpression ifTrue, SqlExpression ifFalse)
 			=> new SqlConditionExpression(test, ifTrue, ifFalse);
 
 		public static SqlParameterExpression Parameter() => new SqlParameterExpression();
@@ -285,6 +292,73 @@ namespace Deveel.Data.Sql.Expressions {
 			return new SqlFunctionExpression(functionName, args);
 		}
 
+	    public static SqlFunctionExpression Function(string functionName, params InvokeArgument[] args)
+	        => Function(ObjectName.Parse(functionName), args);
+
+	    public static SqlFunctionExpression Function(ObjectName functionName, params SqlExpression[] args)
+	        => Function(functionName, args == null ? new InvokeArgument[0] : args.Select(x => new InvokeArgument(x)).ToArray());
+
+	    public static SqlFunctionExpression Function(string functionName, params SqlExpression[] args)
+	        => Function(ObjectName.Parse(functionName), args);
+
+	    public static SqlFunctionExpression Function(ObjectName functionName)
+	        => Function(functionName, new InvokeArgument[0]);
+
+	    public static SqlFunctionExpression Function(string functionName)
+	        => Function(ObjectName.Parse(functionName));
+
 		#endregion
-	}
+
+		#region Parse
+
+	    private static bool TryParse(IContext context, string text, out SqlExpression expression, out string[] errors) {
+	        ISqlExpressionParser parser = null;
+	        if (context != null)
+	            parser = context.Scope.Resolve<ISqlExpressionParser>();
+	        if (parser == null)
+                parser = new DefaultSqlExpressionParser();
+
+	        var result = parser.Parse(text);
+	        expression = result.Expression;
+	        errors = result.Errors;
+	        return result.Valid;
+	    }
+
+	    public static bool TryParse(string text, out SqlExpression expression) {
+	        return TryParse(null, text, out expression);
+	    }
+
+	    public static bool TryParse(IContext context, string text, out SqlExpression expression) {
+	        string[] errors;
+	        return TryParse(context, text, out expression, out errors);
+	    }
+
+	    public static SqlExpression Parse(string text) {
+	        return Parse(null, text);
+	    }
+
+	    public static SqlExpression Parse(IContext context, string text) {
+	        string[] errors;
+	        SqlExpression result;
+	        if (!TryParse(context, text, out result, out errors))
+	            throw new AggregateException(errors.Select(x => new SqlExpressionException(x)));
+
+	        return result;
+	    }
+
+        #endregion
+
+        #region SqlDefaultExpressionParser
+
+	    class DefaultSqlExpressionParser : ISqlExpressionParser
+	    {
+	        public SqlExpressionParseResult Parse(string expression)
+	        {
+	            var parser = new SqlParser();
+	            return parser.ParseExpression(expression);
+	        }
+	    }
+
+        #endregion
+    }
 }

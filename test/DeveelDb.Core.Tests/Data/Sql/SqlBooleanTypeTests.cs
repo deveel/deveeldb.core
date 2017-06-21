@@ -232,6 +232,17 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(expected, s);
 		}
 
+        [Theory]
+        [InlineData("BOOLEAN", SqlTypeCode.Boolean)]
+        [InlineData("BIT", SqlTypeCode.Bit)]
+	    public static void ParseString(string s, SqlTypeCode typeCode) {
+            var type = SqlType.Parse(s);
+
+            Assert.NotNull(type);
+            Assert.Equal(typeCode, type.TypeCode);
+            Assert.IsType<SqlBooleanType>(type);
+        }
+
 		[Theory]
 		[InlineData(SqlTypeCode.Bit, SqlTypeCode.Bit, true)]
 		[InlineData(SqlTypeCode.Boolean, SqlTypeCode.Boolean, true)]

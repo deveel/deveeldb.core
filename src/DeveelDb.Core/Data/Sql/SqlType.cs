@@ -19,6 +19,9 @@ using System;
 using System.Collections.Generic;
 
 using Deveel.Data.Serialization;
+using Deveel.Data.Services;
+using Deveel.Data.Sql.Parsing;
+using Deveel.Data.Sql.Types;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
@@ -419,5 +422,47 @@ namespace Deveel.Data.Sql {
 		public static bool IsPrimitiveType(SqlTypeCode typeCode) {
 			return PrimitiveTypes.IsPrimitive(typeCode);
 		}
-	}
+
+	    #region Parse
+
+	    public static SqlType Parse(IContext context, string sql) {
+	        ISqlTypeParser parser = null;
+	        if (context != null)
+	            parser = context.Scope.Resolve<ISqlTypeParser>();
+
+            if (parser == null)
+                parser = new SqlDefaultTypeParser();
+
+	        return parser.Parse(context, sql);
+	    }
+
+	    public static SqlType Parse(string sql)
+	        => Parse(null, sql);
+
+        #endregion
+
+	    #region SqlDefaultTypeParser
+
+	    class SqlDefaultTypeParser : ISqlTypeParser {
+	        public SqlType Parse(IContext context, string s) {
+	            var parser = new SqlParser();
+	            var typeInfo = parser.ParseType(s);
+
+	            if (PrimitiveTypes.IsPrimitive(typeInfo.TypeName))
+	                return PrimitiveTypes.Resolver.Resolve(typeInfo);
+
+                if (context == null)
+                    throw new Exception($"Type {typeInfo.TypeName} is not primitive and no context is provided");
+
+	            var resolver = context.Scope.Resolve<ISqlTypeResolver>();
+
+                if (resolver == null)
+                    throw new InvalidOperationException($"The type {typeInfo.TypeName} is not primitive and no resolver was found in context");
+
+	            return resolver.Resolve(typeInfo);
+	        }
+	    }
+
+	    #endregion
+    }
 }
