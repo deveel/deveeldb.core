@@ -6,10 +6,10 @@ matrix:
       dist: trusty
       sudo: required
       mono: none
-      dotnet: 1.1.0
+      dotnet: 1.0.4
     - os: osx
       osx_image: xcode8
-      dotnet: 1.1.0
+      dotnet: 1.0.4
 
 branches:
   only:
