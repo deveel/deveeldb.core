@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 
 using Xunit;
 
@@ -79,5 +80,5 @@ namespace Deveel.Data.Sql {
 		public static void GetInvalidBoolean() {
 			Assert.Throws<ArgumentException>(() => PrimitiveTypes.Boolean(SqlTypeCode.Blob));
 		}
-	}
+    }
 }

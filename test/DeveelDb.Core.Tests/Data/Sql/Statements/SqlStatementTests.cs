@@ -102,7 +102,7 @@ namespace Deveel.Data.Sql.Statements {
 
 			protected override Task ExecuteStatementAsync(StatementContext context) {
 				if (Body == null)
-					return Task.CompletedTask;
+					return Task.FromResult<SqlStatementResult>(null);
 
 				return Body(context);
 			}

@@ -28,8 +28,6 @@ namespace Deveel.Data.Sql.Expressions {
 				throw new ArgumentNullException(nameof(test));
 			if (ifTrue == null)
 				throw new ArgumentNullException(nameof(ifTrue));
-			if (ifFalse == null)
-				throw new ArgumentNullException(nameof(ifFalse));
 
 			Test = test;
 			IfTrue = ifTrue;
@@ -86,10 +84,14 @@ namespace Deveel.Data.Sql.Expressions {
 
 			if (value.IsTrue)
 				return await IfTrue.ReduceAsync(context);
-			if (value.IsFalse)
-				return await IfFalse.ReduceAsync(context);
+		    if (value.IsFalse) {
+                if (IfFalse != null)
+		            return await IfFalse.ReduceAsync(context);
 
-			return await base.ReduceAsync(context);
+		        return Constant(SqlObject.Unknown);
+		    }
+
+		    return await base.ReduceAsync(context);
 		}
 
 		protected override void AppendTo(SqlStringBuilder builder) {

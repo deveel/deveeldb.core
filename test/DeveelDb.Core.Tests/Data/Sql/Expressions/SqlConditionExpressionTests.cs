@@ -21,6 +21,24 @@ namespace Deveel.Data.Sql.Expressions {
 		}
 
 		[Theory]
+		[InlineData("CASE a WHEN 1 THEN TRUE ELSE FALSE END")]
+		[InlineData("CASE WHEN a = 1 THEN TRUE ELSE FALSE END")]
+		[InlineData("CASE a WHEN 1 THEN TRUE WHEN 2 THEN TRUE ELSE FALSE END")]
+		[InlineData("CASE WHEN a = 1 THEN TRUE WHEN b = 2 THEN FALSE END")]
+		public static void ParseSipleCaseString(string s) {
+			var exp = SqlExpression.Parse(s);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlConditionExpression>(exp);
+
+			var condition = (SqlConditionExpression) exp;
+
+			Assert.NotNull(condition.Test);
+			Assert.NotNull(condition.IfTrue);
+			Assert.NotNull(condition.IfFalse);
+		}
+
+		[Theory]
 		[InlineData(true, 223.21, 11)]
 		public static void SerializeCondition(bool test, object ifTrue, object ifFalse) {
 			var testExp = SqlExpression.Constant(SqlObject.Boolean(test));

@@ -18,7 +18,7 @@
 using System;
 
 namespace Deveel.Util {
-	public static class ArrayUtil {
+	static class ArrayUtil {
 		public static object[] Merge(object[] left, object[] right) {
 			object[] array;
 			if (right == null) {
