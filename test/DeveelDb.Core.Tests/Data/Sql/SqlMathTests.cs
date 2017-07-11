@@ -121,7 +121,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(02993011.338, -0.30406969855465432)]
+		[InlineData(02993011.338, -0.3040696985546543)]
 		public static void Function_Sin(double value, double expected) {
 			var number = (SqlNumber)value;
 			var result = SqlMath.Sin(number);
