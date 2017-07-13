@@ -70,7 +70,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(559604.003100, 23.62526523010079)]
+		[InlineData(559604.003100, 23.62526523010039)]
 		public static void Function_Tan(double value, double expected) {
 			var number =(SqlNumber)value;
 			var result = SqlMath.Tan(number);
@@ -121,16 +121,16 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(02993011.338, -0.3040696985546543)]
+		[InlineData(02993011.338, -0.3040696985546506)]
 		public static void Function_Sin(double value, double expected) {
 			var number = (SqlNumber)value;
 			var result = SqlMath.Sin(number);
 
 			Assert.NotNull(result);
 
-			var doubleResult = (double)result;
+			var expectedResult = (SqlNumber)expected;
 
-			Assert.Equal(expected, doubleResult);
+			Assert.Equal(expectedResult, result);
 		}
 	}
 }
