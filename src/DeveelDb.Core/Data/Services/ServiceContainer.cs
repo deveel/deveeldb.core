@@ -126,7 +126,7 @@ namespace Deveel.Data.Services {
 					var serviceName = registration.ServiceKey;
 					var implementationType = registration.ImplementationType;
 
-					var reuse = Reuse.Transient;
+					var reuse = Reuse.Singleton;
 					if (!String.IsNullOrWhiteSpace(ScopeName))
 						reuse = Reuse.InCurrentNamedScope(ScopeName);
 					if (!String.IsNullOrEmpty(registration.Scope))

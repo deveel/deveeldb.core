@@ -30,6 +30,12 @@ namespace Deveel {
 			Allocate(length);
 		}
 
+		private BigArray(BigArray<T> other) {
+			this.items = (T[][]) other.items.Clone();
+			BlockSize = other.BlockSize;
+			Length = other.Length;
+		}
+
 		public long Length { get; private set; }
 
 		public long BlockSize { get; private set; }
@@ -72,20 +78,20 @@ namespace Deveel {
 			if (newSize == Length)
 				return;
 
-			int blockCount = (int)(newSize / BlockSize);
+			int blockCount = (int) (newSize / BlockSize);
 			if (newSize > (blockCount * BlockSize))
 				blockCount++;
 
 			int previousBlockCount = items.Length;
 
-			int lastBlockSize = (int)(newSize - ((blockCount - 1) * BlockSize));
-			int previousLastBlockSize = (int)(Length - ((blockCount - 1) * BlockSize));
+			int lastBlockSize = (int) (newSize - ((blockCount - 1) * BlockSize));
+			int previousLastBlockSize = (int) (Length - ((blockCount - 1) * BlockSize));
 
 			if (previousBlockCount != blockCount) {
 				if (previousBlockCount < blockCount) //  Increasing size, make more.
 				{
 					if (previousLastBlockSize != BlockSize) {
-						Array.Resize<T>(ref items[previousBlockCount - 1], (int)BlockSize);
+						Array.Resize<T>(ref items[previousBlockCount - 1], (int) BlockSize);
 					}
 
 					Array.Resize<T[]>(ref items, blockCount);
@@ -180,6 +186,7 @@ namespace Deveel {
 			if (destinationArray == null) {
 				throw new ArgumentNullException(nameof(destinationArray));
 			}
+
 			if ((index < 0) || (index > this.Length)) {
 				throw new ArgumentOutOfRangeException(nameof(index));
 			}
@@ -256,6 +263,10 @@ namespace Deveel {
 
 		public static void QuickSort(BigArray<T> array) {
 			QuickSort(array, 0, array.Length - 1);
+		}
+
+		public BigArray<T> Clone() {
+			return new BigArray<T>(this);
 		}
 	}
 }

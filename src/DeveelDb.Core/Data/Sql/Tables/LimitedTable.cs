@@ -20,6 +20,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql;
+
 namespace Deveel.Data.Sql.Tables {
 	public class LimitedTable : FilterTable {
 		private readonly long offset;

@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql;
+
 namespace Deveel.Data.Sql.Tables {
 	public class SubsetTable : FilterTable, IRootTable {
 		private readonly int[] columns;

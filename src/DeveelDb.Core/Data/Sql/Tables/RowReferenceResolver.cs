@@ -18,6 +18,8 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql;
+
 namespace Deveel.Data.Sql.Tables {
 	public class RowReferenceResolver : IReferenceResolver {
 		private readonly ITable table;

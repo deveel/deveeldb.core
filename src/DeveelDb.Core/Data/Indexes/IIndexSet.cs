@@ -16,6 +16,7 @@
 
 
 using System;
+using System.Collections.Generic;
 
 namespace Deveel.Data.Indexes {
 	/// <summary>
@@ -25,7 +26,7 @@ namespace Deveel.Data.Indexes {
 	/// This will often expose an isolated snapshot of a set of indices 
 	/// for a table.
 	/// </remarks>
-	public interface IIndexSet<TKey, TValue> : IDisposable {
+	public interface IIndexSet<TKey, TValue> : IEnumerable<IIndex<TKey, TValue>>, IDisposable {
 		/// <summary>
 		/// Gets a mutable implementation of <see cref="IIndex{TKey,TValue}"/>
 		/// for the given index number in this set of indices.

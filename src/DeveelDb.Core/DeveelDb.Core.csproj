@@ -47,7 +47,4 @@
       <Listener>False</Listener>
     </Antlr4>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Data\Tables\" />
-  </ItemGroup>
 </Project>
