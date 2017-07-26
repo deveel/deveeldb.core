@@ -271,5 +271,16 @@ namespace Deveel.Data.Sql {
 			var result = BinarySerializeUtil.Serialize(type);
 			Assert.Equal(type, result);
 		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.Boolean)]
+		[InlineData(SqlTypeCode.Bit)]
+		public void SerializeExplicit(SqlTypeCode typeCode) {
+			var type = new SqlBooleanType(typeCode);
+
+			var result = SqlTypeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
 	}
 }

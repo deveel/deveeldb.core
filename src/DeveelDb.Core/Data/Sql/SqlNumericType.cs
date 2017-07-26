@@ -137,7 +137,7 @@ namespace Deveel.Data.Sql {
 				throw new ArgumentException($"The precision {value} is invalid for type {TypeCode}");
 		}
 
-		private static bool IsNumericType(SqlTypeCode typeCode) {
+		internal static bool IsNumericType(SqlTypeCode typeCode) {
 			return typeCode == SqlTypeCode.TinyInt ||
 			       typeCode == SqlTypeCode.SmallInt ||
 			       typeCode == SqlTypeCode.Integer ||

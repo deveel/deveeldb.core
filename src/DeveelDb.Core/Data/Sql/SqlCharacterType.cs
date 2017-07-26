@@ -68,7 +68,7 @@ namespace Deveel.Data.Sql {
 				throw new ArgumentException(String.Format("The type {0} is not a valid STRING type.", sqlType), "sqlType");
 		}
 
-		private static bool IsStringType(SqlTypeCode typeCode) {
+		internal static bool IsStringType(SqlTypeCode typeCode) {
 			return typeCode == SqlTypeCode.String ||
 			       typeCode == SqlTypeCode.VarChar ||
 			       typeCode == SqlTypeCode.Char ||
