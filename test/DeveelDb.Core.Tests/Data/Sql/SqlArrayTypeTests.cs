@@ -28,6 +28,17 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData(67)]
+		[InlineData(1024)]
+		[InlineData(65740000)]
+		public static void SerializeExplicit(int value) {
+			var type = PrimitiveTypes.Array(value);
+			var result = SqlTypeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
+		[Theory]
 		[InlineData(564, 564, true)]
 		[InlineData(1024, 1025, false)]
 		public static void TypesEqual(int length1, int length2, bool expected) {
