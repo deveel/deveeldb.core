@@ -23,6 +23,8 @@ namespace Deveel.Data.Storage {
 		/// Creates a new large object from the underlying
 		/// database of the session.
 		/// </summary>
+		/// <param name="storeId">The identifier of the LOB store that will handle 
+		/// the object created</param>
 		/// <param name="maxSize">The max size of the object.</param>
 		/// <param name="compressed">A flag indicating if the content of the
 		/// object will be compressed.</param>
@@ -38,7 +40,7 @@ namespace Deveel.Data.Storage {
 		/// </returns>
 		/// <seealso cref="GetLargeObject"/>
 		/// <seealso cref="ILargeObject"/>
-		ILargeObject CreateLargeObject(long maxSize, bool compressed);
+		ILargeObject CreateLargeObject(int storeId, long maxSize, bool compressed);
 
 		/// <summary>
 		/// Gets a large object identified by the given unique identifier.

@@ -17,6 +17,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
 
 using Deveel.Data.Serialization;
 using Deveel.Data.Services;
@@ -439,11 +442,74 @@ namespace Deveel.Data.Sql {
 	    public static SqlType Parse(string sql)
 	        => Parse(null, sql);
 
-        #endregion
+		#endregion
 
-	    #region SqlDefaultTypeParser
+		#region Serialization
 
-	    class SqlDefaultTypeParser : ISqlTypeParser {
+		public static SqlType Deserialize(Stream stream, ISqlTypeResolver typeResolver) {
+			return Deserialize(new BinaryReader(stream, Encoding.Unicode), typeResolver);
+		}
+
+		public static SqlType Deserialize(BinaryReader reader, ISqlTypeResolver typeResolver) {
+			var typeCode = (SqlTypeCode)reader.ReadByte();
+
+			if (SqlBooleanType.IsBooleanType(typeCode))
+				return PrimitiveTypes.Boolean(typeCode);
+			if (SqlDateTimeType.IsDateType(typeCode))
+				return PrimitiveTypes.DateTime(typeCode);
+
+			if (SqlCharacterType.IsStringType(typeCode)) {
+				var maxSize = reader.ReadInt32();
+
+				CultureInfo locale = null;
+				var hasLocale = reader.ReadByte() == 1;
+				if (hasLocale) {
+					var name = reader.ReadString();
+					locale = new CultureInfo(name);
+				}
+
+				return PrimitiveTypes.String(typeCode, maxSize, locale);
+			}
+
+			if (SqlNumericType.IsNumericType(typeCode)) {
+				var size = reader.ReadInt32();
+				var scale = reader.ReadInt32();
+
+				return PrimitiveTypes.Numeric(typeCode, size, scale);
+			}
+
+			if (SqlBinaryType.IsBinaryType(typeCode)) {
+				var size = reader.ReadInt32();
+				return PrimitiveTypes.Binary(typeCode, size);
+			}
+
+			if (typeCode == SqlTypeCode.Type) {
+				// TODO: support type's arguments
+				var typeName = reader.ReadString();
+				return typeResolver.Resolve(new SqlTypeResolveInfo(typeName));
+			}
+
+			if (typeCode == SqlTypeCode.QueryPlan)
+				return new SqlQueryType();
+
+			if (typeCode == SqlTypeCode.Array) {
+				var size = reader.ReadInt32();
+				return new SqlArrayType(size);
+			}
+
+			if (typeCode == SqlTypeCode.DayToSecond)
+				return PrimitiveTypes.DayToSecond();
+			if (typeCode == SqlTypeCode.YearToMonth)
+				return PrimitiveTypes.YearToMonth();
+
+			throw new NotSupportedException();
+		}
+
+		#endregion
+
+		#region SqlDefaultTypeParser
+
+		class SqlDefaultTypeParser : ISqlTypeParser {
 	        public SqlType Parse(IContext context, string s) {
 	            var parser = new SqlParser();
 	            var typeInfo = parser.ParseType(s);

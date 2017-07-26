@@ -33,5 +33,9 @@ namespace Deveel.Data.Sql.Tables {
 		long GetNextUniqueId();
 
 		IMutableTable CreateTableAtCommit(ITransaction transaction);
+
+		RecordState WriteRecordState(long rowNumber, RecordState recordState);
+
+		RecordState ReadRecordState(long rowNumber);
 	}
 }
