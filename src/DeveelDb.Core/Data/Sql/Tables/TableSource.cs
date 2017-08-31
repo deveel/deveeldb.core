@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using Deveel.Data.Diagnostics;
 using Deveel.Data.Indexes;
 using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
+using Deveel.Data.Sql.Indexes;
 using Deveel.Data.Sql.Types;
 using Deveel.Data.Storage;
 using Deveel.Data.Transactions;
@@ -297,7 +299,7 @@ namespace Deveel.Data.Sql.Tables {
 				OnDeleteRow(rowNumber);
 
 				// Update stats
-				SystemContext.RegisterEvent(new CounterEvent(DeleteCounterKey));
+				SystemContext.Increment(DeleteCounterKey);
 			}
 		}
 
@@ -481,6 +483,60 @@ namespace Deveel.Data.Sql.Tables {
 				headerArea.Position = 0;
 				headerArea.Flush();
 			}
+		}
+
+		public TableIndexSetInfo IndexSetInfo { get; private set; }
+
+		private TableIndexSetInfo ReadIndexSetInfo(Stream stream) {
+			var reader = new BinaryReader(stream, Encoding.Unicode);
+
+			var version = reader.ReadInt32();
+			if (version != 2)
+				throw new FormatException("Invalid version number of the Index-Set Info");
+
+			var catName = reader.ReadString();
+			var schemaName = reader.ReadString();
+			var tableName = reader.ReadString();
+
+			ObjectName objSchemaName;
+			if (String.IsNullOrEmpty(catName)) {
+				objSchemaName = new ObjectName(schemaName);
+			} else {
+				objSchemaName = new ObjectName(new ObjectName(catName), schemaName);
+			}
+
+			var objTableName = new ObjectName(objSchemaName, tableName);
+
+			var indexCount = reader.ReadInt32();
+
+			var indices = new List<TableIndexInfo>();
+			for (int i = 0; i < indexCount; i++) {
+				var indexInfo = ReadIndexInfo(stream);
+				indices.Add(indexInfo);
+			}
+
+			return new TableIndexSetInfo(objTableName, indices.ToArray(), false);
+		}
+
+		private TableIndexInfo ReadIndexInfo(Stream stream) {
+			var reader = new BinaryReader(stream, Encoding.Unicode);
+
+			var version = reader.ReadInt32();
+			if (version != 3)
+				throw new FormatException("Invalid version number for Index-Info");
+
+			var indexName = reader.ReadString();
+			var offset = reader.ReadInt32();
+
+			var colCount = reader.ReadInt32();
+
+			var columnNames = new string[colCount];
+			for (int i = 0; i < colCount; i++) {
+				var columnName = reader.ReadString();
+				columnNames[i] = columnName;
+			}
+
+			return new TableIndexInfo(ObjectName.Parse(indexName), offset);
 		}
 
 		private TableInfo ReadTableInfo(Stream stream, ISqlTypeResolver typeResolver) {
