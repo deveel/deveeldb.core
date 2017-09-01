@@ -18,6 +18,10 @@
 using System;
 
 namespace Deveel.Data.Sql.Statements {
+	/// <summary>
+	/// The contract for every results produced by the execution
+	/// of a statement
+	/// </summary>
 	public interface IStatementResult {
 	}
 }

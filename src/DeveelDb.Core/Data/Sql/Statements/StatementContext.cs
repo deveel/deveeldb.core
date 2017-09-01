@@ -89,7 +89,7 @@ namespace Deveel.Data.Sql.Statements {
 			HasResult = true;
 		}
 
-		public void SetResult(SqlExpression value)
+		public void SetResult(SqlObject value)
 			=> SetResult(new StatementExpressionResult(value));
 
 		public void Return(IStatementResult result) {
@@ -97,7 +97,7 @@ namespace Deveel.Data.Sql.Statements {
 			Terminate();
 		}
 
-		public void Return(SqlExpression value)
+		public void Return(SqlObject value)
 			=> Return(new StatementExpressionResult(value));
 
 		public async Task TransferAsync(string label) {

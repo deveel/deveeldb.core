@@ -46,9 +46,10 @@ namespace Deveel.Data.Sql.Statements {
 			return new ReturnStatement(value);
 		}
 
-		protected override Task ExecuteStatementAsync(StatementContext context) {
-			context.Return(Value);
-			return Task.CompletedTask;
+		protected override async Task ExecuteStatementAsync(StatementContext context) {
+			var result = await Value.ReduceToConstantAsync(context);
+
+			context.Return(result);
 		}
 
 		protected override void GetObjectData(SerializationInfo info) {

@@ -44,6 +44,13 @@ namespace Deveel.Data.Sql.Parsing {
 		/// </summary>
 		public ICollection<SqlStatement> Statements { get; }
 
+		/// <summary>
+		/// Gets a boolean value indicating if the parse failed.
+		/// </summary>
+		/// <remarks>
+		/// A parse failed if all objects in <see cref="Messages"/> are
+		/// of <see cref="SqlParseMessageLevel.Error"/>.
+		/// </remarks>
 		public bool Failed => Messages.Any(x => x.Level == SqlParseMessageLevel.Error);
 
 		public bool Succeeded => Messages.All(x => x.Level != SqlParseMessageLevel.Error);

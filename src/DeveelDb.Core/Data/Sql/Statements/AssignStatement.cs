@@ -50,17 +50,16 @@ namespace Deveel.Data.Sql.Statements {
 			return new AssignStatement(Variable, value);
 		}
 
-		protected override Task ExecuteStatementAsync(StatementContext context) {
+		protected override async Task ExecuteStatementAsync(StatementContext context) {
 			try {
-				var value = context.AssignVariable(Variable, Value);
+				var value = await context.AssignVariable(Variable, Value).ReduceToConstantAsync(context);
+
 				context.SetResult(value);
 			} catch (SqlExpressionException ex) {
 				throw new SqlStatementException($"Could not assign the variable '{Variable}' because of an error", ex);
 			} catch (Exception ex) {
 				throw new SqlStatementException($"Could not assign the variable '{Variable}' because of an error", ex);
 			}
-
-			return Task.CompletedTask;
 		}
 
 		protected override void GetObjectData(SerializationInfo info) {
