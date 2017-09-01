@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
@@ -14,6 +16,24 @@ namespace Deveel.Data.Sql {
 
             Assert.IsType<SqlYearToMonthType>(type);
         }
+
+		[Fact]
+		public static void Serialize() {
+			var type = PrimitiveTypes.YearToMonth();
+
+			var result = BinarySerializeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
+		[Fact]
+		public static void SerializeExplicit() {
+			var type = PrimitiveTypes.YearToMonth();
+
+			var result = SqlTypeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
 
 		[Theory]
 		[InlineData("1.13", "2", "2.3")]

@@ -28,6 +28,7 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(dts, result);
 		}
 
+
 		[Theory]
 		[InlineData(0, 32, 21, 14, 778)]
 		public static void GetBinary(int days, int hours, int minutes, int seconds, int millis) {

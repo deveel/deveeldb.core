@@ -76,6 +76,21 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData(SqlTypeCode.VarChar, -1, null)]
+		[InlineData(SqlTypeCode.VarChar, 255, "en-US")]
+		[InlineData(SqlTypeCode.String, -1, "nb-NO")]
+		[InlineData(SqlTypeCode.Char, 2, null)]
+		[InlineData(SqlTypeCode.LongVarChar, -1, null)]
+		public static void SerializeExplicit(SqlTypeCode typeCode, int maxSize, string locale) {
+			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
+			var type = new SqlCharacterType(typeCode, maxSize, culture);
+
+			var result = SqlTypeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
+		[Theory]
 		[InlineData("the quick brown fox", "the brown quick fox", 15)]
 		[InlineData("ab12334", "kj12345", -10)]
 		public static void CompareSimpleStrings(string s1, string s2, int expected) {

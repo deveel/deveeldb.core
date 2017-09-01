@@ -58,6 +58,18 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData(SqlTypeCode.Time)]
+		[InlineData(SqlTypeCode.TimeStamp)]
+		[InlineData(SqlTypeCode.DateTime)]
+		[InlineData(SqlTypeCode.Date)]
+		public static void SerializeExplicit(SqlTypeCode typeCode) {
+			var type = new SqlDateTimeType(typeCode);
+			var result = SqlTypeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
+		[Theory]
 		[InlineData("2019-01-04T02:00:30.221", SqlTypeCode.Time, "02:00:30.221")]
 		[InlineData("2019-01-04T02:00:30.221", SqlTypeCode.TimeStamp, "2019-01-04T02:00:30.221")]
 		[InlineData("2019-01-04T02:00:30.221", SqlTypeCode.Date, "2019-01-04")]

@@ -40,6 +40,19 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
+		[InlineData(SqlTypeCode.Integer, 10, 0)]
+		[InlineData(SqlTypeCode.Numeric, 20, 15)]
+		[InlineData(SqlTypeCode.BigInt, 19, 0)]
+		[InlineData(SqlTypeCode.Numeric, 21, 10)]
+		[InlineData(SqlTypeCode.VarNumeric, -1, -1)]
+		public static void SerializeExplicit(SqlTypeCode typeCode, int precision, int scale) {
+			var type = new SqlNumericType(typeCode, precision, scale);
+			var result = SqlTypeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
+		[Theory]
 		[InlineData(4553.0944, 4553.0944, true)]
 		[InlineData(322, 321, false)]
 		public static void Equal(double value1, double value2, bool expected) {
