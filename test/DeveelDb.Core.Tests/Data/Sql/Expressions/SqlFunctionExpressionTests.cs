@@ -117,7 +117,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.NotNull(param);
 			Assert.True(param.IsNamed);
-			Assert.Equal(paramName, param.ParameterName);
+			Assert.Equal(paramName, param.Name);
 			Assert.IsType<SqlConstantExpression>(param.Value);
 
 			var type = SqlType.Parse(paramType);

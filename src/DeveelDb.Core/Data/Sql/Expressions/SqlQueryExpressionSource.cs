@@ -27,7 +27,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		public SqlQueryExpressionSource(ObjectName tableName, string alias)
 			: this(tableName, null, alias) {
-			if (tableName == null)
+			if (ObjectName.IsNullOrEmpty(tableName))
 				throw new ArgumentException(nameof(tableName));
 		}
 

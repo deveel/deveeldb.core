@@ -18,8 +18,19 @@
 using System;
 
 namespace Deveel.Data.Sql.Methods {
+	/// <summary>
+	/// The types of function results
+	/// </summary>
 	public enum FunctionType {
+		/// <summary>
+		/// Defines a function that returns a single static value
+		/// </summary>
 		Scalar = 1,
+
+		/// <summary>
+		/// An aggregate function that is computed against
+		/// a definite set of data in a query context
+		/// </summary>
 		Aggregate = 2
 	}
 }

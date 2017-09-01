@@ -20,6 +20,24 @@ using System;
 using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql.Expressions {
+	/// <summary>
+	/// An expression that holds a constant value
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Constant expressions cannot be reduced, since they represent the
+	/// simplest kind of expression in SQL language: other expressions
+	/// (eg. <see cref="SqlBinaryExpression"/>, <see cref="SqlFunctionExpression"/>)
+	/// can reduce to a <see cref="SqlConstantExpression"/> as result.
+	/// </para>
+	/// <para>
+	/// Invoking <see cref="SqlExpression.ReduceAsync"/> on a constant
+	/// expression will return itself
+	/// </para>
+	/// </remarks>
+	/// <seealso cref="SqlExpression.Constant"/>
+	/// <seealso cref="SqlObject"/>
+	/// <seealso cref="SqlExpressionType.Constant"/>
 	public sealed class SqlConstantExpression : SqlExpression {
 		internal SqlConstantExpression(SqlObject value) 
 			: base(SqlExpressionType.Constant) {
@@ -34,6 +52,9 @@ namespace Deveel.Data.Sql.Expressions {
 			Value = info.GetValue<SqlObject>("value");
 		}
 
+		/// <summary>
+		/// Gets the constant value hold by this expression
+		/// </summary>
 		public SqlObject Value { get; }
 
 		public override bool CanReduce => false;

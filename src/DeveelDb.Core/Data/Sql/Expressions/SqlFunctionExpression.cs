@@ -31,7 +31,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 		internal SqlFunctionExpression(ObjectName functionName, InvokeArgument[] arguments)
 			: base(SqlExpressionType.Function) {
-			if (functionName == null)
+			if (ObjectName.IsNullOrEmpty(functionName))
 				throw new ArgumentNullException(nameof(functionName));
 
 			if (arguments == null)

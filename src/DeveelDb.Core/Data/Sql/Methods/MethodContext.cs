@@ -93,7 +93,7 @@ namespace Deveel.Data.Sql.Methods {
 			var result = new Dictionary<string, SqlExpression>();
 
 			if (invoke.IsNamed) {
-				var invokeArgs = invoke.Arguments.ToDictionary(x => x.ParameterName, y => y.Value);
+				var invokeArgs = invoke.Arguments.ToDictionary(x => x.Name, y => y.Value);
 				var methodParams = methodInfo.Parameters.ToDictionary(x => x.Name, y => y);
 
 				foreach (var invokeArg in invokeArgs) {
