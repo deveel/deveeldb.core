@@ -570,7 +570,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (parser == null)
 				parser = new DefaultSqlExpressionParser();
 
-			var result = parser.Parse(text);
+			var result = parser.Parse(context, text);
 			expression = result.Expression;
 			errors = result.Errors;
 			return result.Valid;
@@ -633,9 +633,9 @@ namespace Deveel.Data.Sql.Expressions {
 		#region SqlDefaultExpressionParser
 
 		class DefaultSqlExpressionParser : ISqlExpressionParser {
-			public SqlExpressionParseResult Parse(string expression) {
+			public SqlExpressionParseResult Parse(IContext context, string expression) {
 				var parser = new SqlParser();
-				return parser.ParseExpression(expression);
+				return parser.ParseExpression(context, expression);
 			}
 		}
 

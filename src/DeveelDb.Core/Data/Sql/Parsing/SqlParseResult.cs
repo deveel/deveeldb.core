@@ -22,14 +22,26 @@ using System.Linq;
 using Deveel.Data.Sql.Statements;
 
 namespace Deveel.Data.Sql.Parsing {
+	/// <summary>
+	/// Contains the informations and results of the parsing
+	/// operation from <see cref="ISqlParser"/>.
+	/// </summary>
 	public sealed class SqlParseResult {
 		public SqlParseResult() {
 			Messages = new List<SqlParseMessage>();
 			Statements = new List<SqlStatement>();
 		}
 
+		/// <summary>
+		/// Gets a mutable collection of messages to output during the
+		/// parsing operation.
+		/// </summary>
 		public ICollection<SqlParseMessage> Messages { get; }
 
+		/// <summary>
+		/// Gets a mutable collection of statements resulted from the parse
+		/// of a valid input SQL text.
+		/// </summary>
 		public ICollection<SqlStatement> Statements { get; }
 
 		public bool Failed => Messages.Any(x => x.Level == SqlParseMessageLevel.Error);

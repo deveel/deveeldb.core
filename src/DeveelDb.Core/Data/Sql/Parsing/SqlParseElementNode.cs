@@ -25,12 +25,12 @@ namespace Deveel.Data.Sql.Parsing {
 
 		public SqlParseFunctionArgument[] Argument { get; set; }
 
-		public static SqlParseElementNode Form(PlSqlParser.General_elementContext context) {
-			var id = SqlParseName.Object(context.objectName());
-			var arg = context.function_argument();
+		public static SqlParseElementNode Form(IContext context, PlSqlParser.General_elementContext element) {
+			var id = SqlParseName.Object(element.objectName());
+			var arg = element.function_argument();
 			IEnumerable<SqlParseFunctionArgument> argNodes = null;
 			if (arg != null) {
-				argNodes = arg.argument().Select(SqlParseFunctionArgument.Form);
+				argNodes = arg.argument().Select(x => SqlParseFunctionArgument.Form(context, x));
 			}
 
 			return new SqlParseElementNode {

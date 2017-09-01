@@ -52,7 +52,7 @@ namespace Deveel.Data.Sql.Parsing {
             }
         }
 
-        public SqlParseResult Parse(string sql) {
+        public SqlParseResult Parse(IContext context, string sql) {
             throw new NotImplementedException();
         }
 
@@ -61,13 +61,13 @@ namespace Deveel.Data.Sql.Parsing {
             messages.Clear();
         }
 
-        public SqlExpressionParseResult ParseExpression(string text) {
+        public SqlExpressionParseResult ParseExpression(IContext context, string text) {
             SetInput(text);
 
             //var plSqlParser = MakeParser(text, null);
             var parseResult = plSqlParser.expressionUnit();
 
-            var visitor = new SqlExpressionVisitor();
+            var visitor = new SqlExpressionVisitor(context);
             var result = visitor.Visit(parseResult);
 
             var errors = messages.Where(x => x.Level == SqlParseMessageLevel.Error).Select(x => x.Message).ToArray();

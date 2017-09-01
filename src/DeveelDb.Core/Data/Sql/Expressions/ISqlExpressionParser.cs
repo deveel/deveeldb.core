@@ -20,6 +20,6 @@ using System.Threading.Tasks;
 
 namespace Deveel.Data.Sql.Expressions {
 	public interface ISqlExpressionParser {
-		SqlExpressionParseResult Parse(string expression);
+		SqlExpressionParseResult Parse(IContext context, string expression);
 	}
 }

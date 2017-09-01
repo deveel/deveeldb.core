@@ -23,8 +23,8 @@ using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Parsing {
 	static class SqlParseExpression {
-		public static SqlExpression Build(IParseTree tree) {
-			return new SqlExpressionVisitor().Visit(tree);
+		public static SqlExpression Build(IContext context, IParseTree tree) {
+			return new SqlExpressionVisitor(context).Visit(tree);
 		}
 	}
 }

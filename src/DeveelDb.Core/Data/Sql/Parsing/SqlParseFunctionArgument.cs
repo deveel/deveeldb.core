@@ -25,12 +25,12 @@ namespace Deveel.Data.Sql.Parsing {
 
 		public SqlExpression Expression { get; set; }
 
-		public static SqlParseFunctionArgument Form(PlSqlParser.ArgumentContext context) {
-			if (context == null)
+		public static SqlParseFunctionArgument Form(IContext context, PlSqlParser.ArgumentContext argument) {
+			if (argument == null)
 				return null;
 
-			var id = SqlParseName.Simple(context.id());
-			var exp = Parsing.SqlParseExpression.Build(context.expressionWrapper());
+			var id = SqlParseName.Simple(argument.id());
+			var exp = Parsing.SqlParseExpression.Build(context, argument.expressionWrapper());
 
 			return new SqlParseFunctionArgument {
 				Id = id,

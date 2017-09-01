@@ -28,8 +28,11 @@ using Deveel.Data.Sql.Methods;
 
 namespace Deveel.Data.Sql.Parsing {
     class SqlExpressionVisitor : PlSqlParserBaseVisitor<SqlExpression> {
+	    public SqlExpressionVisitor(IContext context) {
+		    Context = context;
+	    }
 
-        private IContext Context { get; }
+	    private IContext Context { get; }
 
         public override SqlExpression VisitAtom(PlSqlParser.AtomContext context) {
             var subquery = context.subquery();
@@ -214,7 +217,7 @@ namespace Deveel.Data.Sql.Parsing {
         #endregion
 
         public override SqlExpression VisitSubquery(PlSqlParser.SubqueryContext context) {
-            return SqlParseSubquery.Form(context);
+            return SqlParseSubquery.Form(Context, context);
         }
 
         public override SqlExpression VisitQuantifiedExpression(PlSqlParser.QuantifiedExpressionContext context) {
@@ -430,7 +433,7 @@ namespace Deveel.Data.Sql.Parsing {
         }
 
         public override SqlExpression VisitGeneral_element(PlSqlParser.General_elementContext context) {
-            var element = SqlParseElementNode.Form(context);
+            var element = SqlParseElementNode.Form(Context, context);
             var name = element.Id;
 
             if (element.Argument == null ||
@@ -532,7 +535,7 @@ namespace Deveel.Data.Sql.Parsing {
             InvokeArgument[] args = null;
 
             if (context.argument() != null) {
-                args = context.argument().Select(SqlParseFunctionArgument.Form)
+                args = context.argument().Select(x => SqlParseFunctionArgument.Form(Context, x))
                     .Select(x => new InvokeArgument(x.Id, x.Expression)).ToArray();
             }
 
@@ -602,7 +605,7 @@ namespace Deveel.Data.Sql.Parsing {
         }
 
         public override SqlExpression VisitTrimFunction(PlSqlParser.TrimFunctionContext context) {
-            var arg1 = SqlParseExpression.Build(context.concatenationWrapper());
+            var arg1 = SqlParseExpression.Build(Context, context.concatenationWrapper());
             var part = "both";
             if (context.LEADING() != null) {
                 part = "leading";

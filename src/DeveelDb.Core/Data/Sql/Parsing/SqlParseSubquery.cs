@@ -25,15 +25,15 @@ using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Parsing {
 	static class SqlParseSubquery {
-		public static SqlQueryExpression Form(PlSqlParser.SubqueryContext context) {
+		public static SqlQueryExpression Form(IContext context, PlSqlParser.SubqueryContext subquery) {
 			SqlParseIntoClause into;
-			return Form(context, out into);
+			return Form(context, subquery, out into);
 		}
 
-		public static SqlQueryExpression Form(PlSqlParser.SubqueryContext context, out SqlParseIntoClause into) {
-			var query = Form(context.subqueryBasicElements(), out into);
+		public static SqlQueryExpression Form(IContext context, PlSqlParser.SubqueryContext subquery, out SqlParseIntoClause into) {
+			var query = Form(context, subquery.subqueryBasicElements(), out into);
 
-			var opPart = context.subquery_operation_part();
+			var opPart = subquery.subquery_operation_part();
 
 			if (opPart.Length > 0) {
 				if (into != null)
@@ -53,7 +53,7 @@ namespace Deveel.Data.Sql.Parsing {
 
 					bool isAll = part.ALL() != null;
 
-					var next = Form(part.subqueryBasicElements());
+					var next = Form(context, part.subqueryBasicElements());
 					var prev = query.NextComposite;
 
 					if (prev == null) {
@@ -69,28 +69,28 @@ namespace Deveel.Data.Sql.Parsing {
 			return query;
 		}
 
-		private static SqlQueryExpression Form(PlSqlParser.SubqueryBasicElementsContext context) {
+		private static SqlQueryExpression Form(IContext context, PlSqlParser.SubqueryBasicElementsContext basicElements) {
 			SqlParseIntoClause into;
-			return Form(context, out into);
+			return Form(context, basicElements, out into);
 		}
 
-		private static SqlQueryExpression Form(PlSqlParser.SubqueryBasicElementsContext context, out SqlParseIntoClause into) {
-			var sub = context.subquery();
+		private static SqlQueryExpression Form(IContext context, PlSqlParser.SubqueryBasicElementsContext basicElements, out SqlParseIntoClause into) {
+			var sub = basicElements.subquery();
 			if (sub != null && !sub.IsEmpty)
-				return Form(sub, out into);
+				return Form(context, sub, out into);
 
-			return Form(context.queryBlock(), out into);
+			return Form(context, basicElements.queryBlock(), out into);
 		}
 
-		private static SqlQueryExpression Form(PlSqlParser.QueryBlockContext context, out SqlParseIntoClause into) {
-			var fromClause = FromClauseBuilder.Build(context.fromClause());
+		private static SqlQueryExpression Form(IContext context, PlSqlParser.QueryBlockContext queryBlock, out SqlParseIntoClause into) {
+			var fromClause = FromClauseBuilder.Build(context, queryBlock.fromClause());
 
 			SqlQueryExpressionItem[] columns;
 
-			if (context.all != null) {
+			if (queryBlock.all != null) {
 				columns = new[] {new SqlQueryExpressionItem(SqlExpression.Reference(new ObjectName("*")))};
 			} else {
-				columns = context.selectedElement().Select(SelectElement.BuildColumn).ToArray();
+				columns = queryBlock.selectedElement().Select(x => SelectElement.BuildColumn(context, x)).ToArray();
 			}
 
 		    var query = new SqlQueryExpression();
@@ -101,11 +101,11 @@ namespace Deveel.Data.Sql.Parsing {
 
 			into = null;
 
-			if (context.DISTINCT() != null ||
-				context.UNIQUE() != null)
+			if (queryBlock.DISTINCT() != null ||
+				queryBlock.UNIQUE() != null)
 				query.Distinct = true;
 
-			var intoClause = context.into_clause();
+			var intoClause = queryBlock.into_clause();
 			if (intoClause != null) {
 				into = new SqlParseIntoClause();
 
@@ -119,29 +119,29 @@ namespace Deveel.Data.Sql.Parsing {
 			if (fromClause != null)
 				query.From = fromClause;
 
-			var groupBy = context.groupByClause();
+			var groupBy = queryBlock.groupByClause();
 			if (groupBy != null && !groupBy.IsEmpty) {
-				query.GroupBy = groupBy.groupByElements().expression().Select(x => new SqlExpressionVisitor().Visit(x)).ToList();
+				query.GroupBy = groupBy.groupByElements().expression().Select(x => new SqlExpressionVisitor(context).Visit(x)).ToList();
 
 				var having = groupBy.havingClause();
 				if (having != null)
-					query.Having = new SqlExpressionVisitor().Visit(having.condition());
+					query.Having = new SqlExpressionVisitor(context).Visit(having.condition());
 			}
 
-			var groupMax = context.groupMaxClause();
+			var groupMax = queryBlock.groupMaxClause();
 			if (groupMax != null && !groupMax.IsEmpty) {
 				var maxColumn = SqlParseName.Object(groupMax.objectName());
 				query.GroupMax = maxColumn;
 			}
 
-			var whereClause = context.whereClause();
+			var whereClause = queryBlock.whereClause();
 			if (whereClause != null && !whereClause.IsEmpty) {
 				var currentOf = whereClause.current_of_clause();
 				if (currentOf != null && !currentOf.IsEmpty) {
 					var cursorName = SqlParseName.Simple(currentOf.cursor_name());
 					throw new NotImplementedException();
 				} else {
-					query.Where = new SqlExpressionVisitor().Visit(whereClause.conditionWrapper());
+					query.Where = new SqlExpressionVisitor(context).Visit(whereClause.conditionWrapper());
 				}
 			}
 
@@ -153,17 +153,17 @@ namespace Deveel.Data.Sql.Parsing {
 		#region FromClauseBuilder
 
 		static class FromClauseBuilder {
-			public static SqlQueryExpressionFrom Build(PlSqlParser.FromClauseContext context) {
-				if (context == null)
+			public static SqlQueryExpressionFrom Build(IContext context, PlSqlParser.FromClauseContext fromClause) {
+				if (fromClause == null)
 					return null;
 
 				var clause = new SqlQueryExpressionFrom();
 
-				var list = context.tableRefList();
+				var list = fromClause.tableRefList();
 				if (list.IsEmpty)
 					throw new ParseCanceledException("No source set in FROM clause");
 
-				var tableRefs = list.tableRef().Select(FormTableRef);
+				var tableRefs = list.tableRef().Select(x => FormTableRef(context, x));
 
 				bool joinSeen = false;
 				bool first = true;
@@ -202,20 +202,20 @@ namespace Deveel.Data.Sql.Parsing {
 				return clause;
 			}
 
-			private static FromSource FormSource(PlSqlParser.QueryExpressionClauseContext context) {
-				var tableName = SqlParseName.Object(context.objectName());
-				var query = context.subquery();
+			private static FromSource FormSource(IContext context, PlSqlParser.QueryExpressionClauseContext clause) {
+				var tableName = SqlParseName.Object(clause.objectName());
+				var query = clause.subquery();
 
 				var source = new FromSource();
 
 				if (tableName != null) {
 					source.TableName = ObjectName.Parse(tableName.ToString());
 				} else if (!query.IsEmpty) {
-					source.SubQuery = Form(query);
+					source.SubQuery = Form(context, query);
 				}
 
-				if (context.alias != null && !context.alias.IsEmpty) {
-					source.Alias = context.alias.GetText();
+				if (clause.alias != null && !clause.alias.IsEmpty) {
+					source.Alias = clause.alias.GetText();
 				}
 
 				return source;
@@ -233,16 +233,16 @@ namespace Deveel.Data.Sql.Parsing {
 
 			#endregion
 
-			private static JoinNode FormJoinNode(PlSqlParser.JoinClauseContext context) {
+			private static JoinNode FormJoinNode(IContext context, PlSqlParser.JoinClauseContext joinClause) {
 				JoinType joinType;
-				if (context.INNER() != null) {
+				if (joinClause.INNER() != null) {
 					joinType = JoinType.Inner;
-				} else if (context.outerJoinType() != null) {
-					if (context.outerJoinType().FULL() != null) {
+				} else if (joinClause.outerJoinType() != null) {
+					if (joinClause.outerJoinType().FULL() != null) {
 						joinType = JoinType.Full;
-					} else if (context.outerJoinType().LEFT() != null) {
+					} else if (joinClause.outerJoinType().LEFT() != null) {
 						joinType = JoinType.Left;
-					} else if (context.outerJoinType().RIGHT() != null) {
+					} else if (joinClause.outerJoinType().RIGHT() != null) {
 						joinType = JoinType.Right;
 					} else {
 						throw new ParseCanceledException("Invalid outer join type");
@@ -251,12 +251,12 @@ namespace Deveel.Data.Sql.Parsing {
 					throw new ParseCanceledException("Invalid join type");
 				}
 
-				var onPart = context.joinOnPart();
+				var onPart = joinClause.joinOnPart();
 				if (onPart.IsEmpty)
 					throw new ParseCanceledException("None ON expression found in JOIN clause");
 
-				var onExp = new SqlExpressionVisitor().Visit(onPart.condition());
-				var source = FormSource(context.queryExpressionClause());
+				var onExp = new SqlExpressionVisitor(context).Visit(onPart.condition());
+				var source = FormSource(context, joinClause.queryExpressionClause());
 
 				return new JoinNode {
 					JoinType = joinType,
@@ -265,9 +265,9 @@ namespace Deveel.Data.Sql.Parsing {
 				};
 			}
 
-			private static TableRef FormTableRef(PlSqlParser.TableRefContext context) {
-				var source = FormSource(context.queryExpressionClause());
-				var joinNodes = context.joinClause().Select(FormJoinNode);
+			private static TableRef FormTableRef(IContext context, PlSqlParser.TableRefContext tableRef) {
+				var source = FormSource(context, tableRef.queryExpressionClause());
+				var joinNodes = tableRef.joinClause().Select(x => FormJoinNode(context, x));
 
 				return new TableRef {
 					Source = source,
@@ -303,21 +303,21 @@ namespace Deveel.Data.Sql.Parsing {
 		#region SelectColumnBuilder
 
 		static class SelectElement {
-			public static SqlQueryExpressionItem BuildColumn(PlSqlParser.SelectedElementContext context) {
+			public static SqlQueryExpressionItem BuildColumn(IContext context, PlSqlParser.SelectedElementContext selectedElement) {
 				string alias = null;
-				if (context.column_alias() != null &&
-					!context.column_alias().IsEmpty) {
-					alias = SqlParseName.Simple(context.column_alias());
+				if (selectedElement.column_alias() != null &&
+					!selectedElement.column_alias().IsEmpty) {
+					alias = SqlParseName.Simple(selectedElement.column_alias());
 				}
 
 			    SqlQueryExpressionItem column;
-				if (context.expression() != null &&
-					!context.expression().IsEmpty) {
-					column = new SqlQueryExpressionItem(SqlParseExpression.Build(context.expression()), alias);
-				} else if (context.selectedColumn() != null && 
-					!context.selectedColumn().IsEmpty) {
-					bool glob = context.selectedColumn().glob != null;
-					ObjectName name = SqlParseName.Select(context.selectedColumn().objectName(), glob);
+				if (selectedElement.expression() != null &&
+					!selectedElement.expression().IsEmpty) {
+					column = new SqlQueryExpressionItem(SqlParseExpression.Build(context, selectedElement.expression()), alias);
+				} else if (selectedElement.selectedColumn() != null && 
+					!selectedElement.selectedColumn().IsEmpty) {
+					bool glob = selectedElement.selectedColumn().glob != null;
+					ObjectName name = SqlParseName.Select(selectedElement.selectedColumn().objectName(), glob);
 
 					var exp = SqlExpression.Reference(name);
 					column = new SqlQueryExpressionItem(exp, alias);
