@@ -233,9 +233,23 @@ namespace Deveel.Data.Sql.Expressions {
 	        Assert.NotNull(exp);
 	        Assert.IsType<SqlQueryExpression>(exp);
 
-	        var query = (SqlQueryExpression)exp;
-	        Assert.NotEmpty(query.Items);
-	        Assert.Equal(1, query.Items.Count);
-        }
-    }
+			var query = (SqlQueryExpression)exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+		}
+
+		[Fact]
+		public static void ParseSelectInSubQuery() {
+			const string sql = "SELECT * FROM a WHERE a.b IN (SELECT n FROM b)";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression)exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+		}
+	}
 }
