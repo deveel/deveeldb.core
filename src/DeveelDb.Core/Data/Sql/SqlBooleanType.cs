@@ -35,7 +35,7 @@ namespace Deveel.Data.Sql {
 				throw new ArgumentException(String.Format("The SQL type {0} is not BOOLEAN.", sqlType));
 		}
 
-		private static bool IsBooleanType(SqlTypeCode sqlType) {
+		internal static bool IsBooleanType(SqlTypeCode sqlType) {
 			return (sqlType == SqlTypeCode.Bit ||
 			        sqlType == SqlTypeCode.Boolean);
 		}

@@ -1,9 +1,40 @@
 ﻿using System;
 
+using Deveel.Data.Serialization;
+
 using Xunit;
 
 namespace Deveel.Data.Sql {
 	public static class SqlYearToMonthTypeTests {
+        [Theory]
+        [InlineData("INTERVAL YEAR TO MONTH", SqlTypeCode.YearToMonth)]
+	    public static void ParseSring(string s, SqlTypeCode typeCode) {
+            var type = SqlType.Parse(s);
+
+            Assert.NotNull(type);
+            Assert.Equal(typeCode, type.TypeCode);
+
+            Assert.IsType<SqlYearToMonthType>(type);
+        }
+
+		[Fact]
+		public static void Serialize() {
+			var type = PrimitiveTypes.YearToMonth();
+
+			var result = BinarySerializeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
+		[Fact]
+		public static void SerializeExplicit() {
+			var type = PrimitiveTypes.YearToMonth();
+
+			var result = SqlTypeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
 		[Theory]
 		[InlineData("1.13", "2", "2.3")]
 		[InlineData("22", "1", "1.11")]

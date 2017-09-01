@@ -35,7 +35,7 @@ namespace Deveel.Data.Sql {
 				throw new ArgumentException($"The SQL type {sqlType} is not a valid DATETIME", nameof(sqlType));
 		}
 
-		private static bool IsDateType(SqlTypeCode sqlType) {
+		internal static bool IsDateType(SqlTypeCode sqlType) {
 			return sqlType == SqlTypeCode.Date ||
 			       sqlType == SqlTypeCode.Time ||
 			       sqlType == SqlTypeCode.TimeStamp ||

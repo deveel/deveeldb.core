@@ -21,36 +21,92 @@ using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Methods {
+	/// <summary>
+	/// Defines the properties of a single argument of an invocation to
+	/// a method in a system.
+	/// </summary>
+	/// <seealso cref="Invoke"/>
 	public sealed class InvokeArgument : ISqlFormattable, ISerializable {
+		/// <summary>
+		/// Constructs an instance of <see cref="InvokeArgument"/> that is unnamed
+		/// and defines a given value for the argument
+		/// </summary>
+		/// <param name="value">The value of the argument</param>
+		/// <exception cref="ArgumentNullException">If the given <paramref name="value"/>
+		/// is <c>null</c></exception>
 		public InvokeArgument(SqlExpression value) 
 			: this(null, value) {
 		}
 
-		public InvokeArgument(string parameterName, SqlExpression value) {
+		/// <summary>
+		/// Constructs an instance of a named <see cref="InvokeArgument"/>
+		/// and defines a given value for the argument
+		/// </summary>
+		/// <param name="name">The name of the argument, to associate
+		/// the value of the argument to the parameter of the method invoked. If 
+		/// <c>null</c> is passed this argument will be considered unnamed.</param>
+		/// <param name="value">The value of the argument</param>
+		/// <exception cref="ArgumentNullException">If the given <paramref name="value"/>
+		/// is <c>null</c></exception>
+		public InvokeArgument(string name, SqlExpression value) {
 			if (value == null)
 				throw new ArgumentNullException(nameof(value));
 
-			ParameterName = parameterName;
+			Name = name;
 			Value = value;
 		}
 
+		/// <summary>
+		/// Constructs an instance of <see cref="InvokeArgument"/> that is unnamed
+		/// and defines a constant value for the argument.
+		/// </summary>
+		/// <param name="value">The value of the argument</param>
+		/// <remarks>
+		/// This method is a shortcut to the creation of a <see cref="SqlConstantExpression"/>
+		/// to pass as argument of <see cref="InvokeArgument(SqlExpression)"/>.
+		/// </remarks>
 		public InvokeArgument(SqlObject value)
 			: this(null, value) {
 		}
 
-		public InvokeArgument(string parameterName, SqlObject value)
-			: this(parameterName, SqlExpression.Constant(value)) {
+		/// <summary>
+		/// Constructs a named instance of <see cref="InvokeArgument"/> and
+		/// defines a constant value for the argument.
+		/// </summary>
+		/// <param name="name">The name of the argument, to associate
+		/// the value of the argument to the parameter of the method invoked. If 
+		/// <c>null</c> is passed this argument will be considered unnamed.</param>
+		/// <param name="value">The value of the argument</param>
+		/// <remarks>
+		/// This method is a shortcut to the creation of a <see cref="SqlConstantExpression"/>
+		/// to pass as argument of <see cref="InvokeArgument(string, SqlExpression)"/>.
+		/// </remarks>
+		public InvokeArgument(string name, SqlObject value)
+			: this(name, SqlExpression.Constant(value)) {
 		}
 
 		private InvokeArgument(SerializationInfo info) {
-			ParameterName = info.GetString("name");
+			Name = info.GetString("name");
 			Value = info.GetValue<SqlExpression>("value");
 		}
 
-		public string ParameterName { get; }
+		/// <summary>
+		/// Gets the name of the argument, if any is specified.
+		/// </summary>
+		/// <remarks>
+		/// Named arguments are associated with parameters of the
+		/// method invoked that have the same name.
+		/// </remarks>
+		public string Name { get; }
 
-		public bool IsNamed => !String.IsNullOrEmpty(ParameterName);
+		/// <summary>
+		/// Gets a boolean value indicating whether this argument is named or not.
+		/// </summary>
+		public bool IsNamed => !String.IsNullOrEmpty(Name);
 
+		/// <summary>
+		/// Gets the value of the argument to be passed to the method.
+		/// </summary>
 		public SqlExpression Value { get; }
 
 		public override string ToString() {
@@ -58,13 +114,13 @@ namespace Deveel.Data.Sql.Methods {
 		}
 
 		void ISerializable.GetObjectData(SerializationInfo info) {
-			info.SetValue("name", ParameterName);
+			info.SetValue("name", Name);
 			info.SetValue("value", Value);
 		}
 
 		void ISqlFormattable.AppendTo(SqlStringBuilder builder) {
 			if (IsNamed)
-				builder.AppendFormat("{0} => ", ParameterName);
+				builder.AppendFormat("{0} => ", Name);
 
 			Value.AppendTo(builder);
 		}

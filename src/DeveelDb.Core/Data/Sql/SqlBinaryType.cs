@@ -131,7 +131,7 @@ namespace Deveel.Data.Sql {
 			return destType.NormalizeValue(s);
 		}
 
-		private static bool IsBinaryType(SqlTypeCode sqlType) {
+		internal static bool IsBinaryType(SqlTypeCode sqlType) {
 			return sqlType == SqlTypeCode.Binary ||
 			       sqlType == SqlTypeCode.VarBinary ||
 			       sqlType == SqlTypeCode.LongVarBinary ||

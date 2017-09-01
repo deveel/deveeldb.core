@@ -23,6 +23,9 @@ using System.Threading.Tasks;
 using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql.Expressions {
+	/// <summary>
+	/// A SQL expression that evaluates two expressions against a given operator
+	/// </summary>
 	public sealed class SqlBinaryExpression : SqlExpression {
 		internal SqlBinaryExpression(SqlExpressionType expressionType, SqlExpression left, SqlExpression right)
 			: base(expressionType) {
@@ -41,8 +44,14 @@ namespace Deveel.Data.Sql.Expressions {
 			Right = info.GetValue<SqlExpression>("right");
 		}
 
+		/// <summary>
+		/// Gets the left as side of the expression
+		/// </summary>
 		public SqlExpression Left { get; }
 
+		/// <summary>
+		/// Gets the right as side of the expression
+		/// </summary>
 		public SqlExpression Right { get; }
 
 		public override bool CanReduce => true;

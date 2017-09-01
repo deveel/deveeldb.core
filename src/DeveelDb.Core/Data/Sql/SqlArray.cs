@@ -23,9 +23,29 @@ using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql {
+	/// <summary>
+	/// An object that represents a fixed list of SQL expressions
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// An array is a read-only list that is immutable once it is instantiated:
+	/// the expressions contained can be accessed at a given index or in a
+	/// sequential order, but they cannot be removed or nulled.
+	/// </para>
+	/// <para>
+	/// SQL Arrays are created implicitly within the language when specifying
+	/// a sequence of expressions wrapped in parenthesis.
+	/// </para>
+	/// </remarks>
 	public sealed class SqlArray : ISqlValue, ISqlFormattable, IList, IEnumerable<SqlExpression> {
 		private readonly SqlExpression[] expressions;
 
+		/// <summary>
+		/// Constructs a new instance of <see cref="SqlArray"/> that
+		/// encapsulates the given list of <see cref="SqlExpression"/>.
+		/// </summary>
+		/// <param name="expressions">The list of expressions encapsulated by 
+		/// the array to be created</param>
 		public SqlArray(SqlExpression[] expressions) {
 			this.expressions = expressions;
 		}
@@ -34,8 +54,21 @@ namespace Deveel.Data.Sql {
 			expressions = info.GetValue<SqlExpression[]>("expressions");
 		}
 
+		/// <summary>
+		/// Gets the length of the array
+		/// </summary>
 		public int Length => expressions?.Length ?? 0;
 
+		/// <summary>
+		/// Gets the SQL expression at the given index within the array
+		/// </summary>
+		/// <param name="index">The zero-based index of the expression within the array</param>
+		/// <returns>
+		/// Returns the instance of <see cref="SqlExpression"/> at the given index
+		/// within the array.
+		/// </returns>
+		/// <exception cref="ArgumentOutOfRangeException">If the given <paramref name="index"/>
+		/// is smaller than 0 or greater than the length of the array</exception>
 		public SqlExpression this[int index] {
 			get {
 				if (index < 0 || index >= Length)

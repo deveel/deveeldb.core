@@ -18,7 +18,22 @@
 using System;
 
 namespace Deveel.Data.Sql.Methods {
+	/// <summary>
+	/// Provides an interface for resolving methods defined in a system
+	/// </summary>
 	public interface IMethodResolver {
+		/// <summary>
+		/// Attempts to resolve a method defined in the underlying system
+		/// from the specified invoke information.
+		/// </summary>
+		/// <param name="context">The context used to resolve the method</param>
+		/// <param name="invoke">The information of the invocation to the method
+		/// (the name of the method and the arguments).</param>
+		/// <returns>
+		/// Returns an instance of <see cref="SqlMethod"/> that corresponds to the
+		/// given information in the context given, or <c>null</c> if it was not
+		/// possible to resovle any method for the provided information.
+		/// </returns>
 		SqlMethod ResolveMethod(IContext context, Invoke invoke);
 	}
 }

@@ -376,6 +376,10 @@ namespace Deveel.Data.Sql {
 		}
 
 
+		public SqlNumber Precise(int scale, int precision) {
+			return new SqlNumber(innerValue, scale, precision);
+		}
+
 		public byte[] ToByteArray() {
 			if (state != NumericState.None)
 				return new byte[0];

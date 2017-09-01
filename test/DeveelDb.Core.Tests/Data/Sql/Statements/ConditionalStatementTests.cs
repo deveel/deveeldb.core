@@ -51,7 +51,7 @@ namespace Deveel.Data.Sql.Statements {
 
 			Assert.NotNull(result);
 			Assert.IsType<StatementExpressionResult>(result);
-			Assert.Equal((SqlNumber)33L, ((SqlConstantExpression) ((StatementExpressionResult)result).Value).Value.Value);
+			Assert.Equal((SqlNumber)33L, ((StatementExpressionResult)result).Value.Value);
 		}
 
 		[Fact]
@@ -66,7 +66,7 @@ namespace Deveel.Data.Sql.Statements {
 
 			Assert.NotNull(result);
 			Assert.IsType<StatementExpressionResult>(result);
-			Assert.Equal((SqlNumber)100L, ((SqlConstantExpression)((StatementExpressionResult)result).Value).Value.Value);
+			Assert.Equal((SqlNumber)100L, ((StatementExpressionResult)result).Value.Value);
 		}
 
 		[Fact]

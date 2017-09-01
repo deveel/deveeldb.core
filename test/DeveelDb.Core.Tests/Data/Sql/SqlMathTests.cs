@@ -70,7 +70,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		[Theory]
-		[InlineData(559604.003100, 23.625265230100385593914324999786913394927978515625)]
+		[InlineData(559604.003100, 23.62526523010039)]
 		public static void Function_Tan(double value, double expected) {
 			var number =(SqlNumber)value;
 			var result = SqlMath.Tan(number);
@@ -128,9 +128,9 @@ namespace Deveel.Data.Sql {
 
 			Assert.NotNull(result);
 
-			var doubleResult = (double)result;
+			var expectedResult = (SqlNumber)expected;
 
-			Assert.Equal(expected, doubleResult);
+			Assert.Equal(expectedResult, result);
 		}
 	}
 }

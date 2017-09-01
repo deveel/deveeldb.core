@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+
+using Deveel.Data.Sql.Types;
 
 namespace Deveel.Data.Sql {
 	public static class SqlTypeUtil {
@@ -47,6 +50,14 @@ namespace Deveel.Data.Sql {
 				return PrimitiveTypes.String();
 
 			throw new NotSupportedException();
+		}
+
+		public static SqlType Serialize(SqlType type, ISqlTypeResolver typeResolver = null) {
+			var bytes = SqlType.Serialize(type);
+
+			using (var stream = new MemoryStream(bytes)) {
+				return SqlType.Deserialize(stream, typeResolver);
+			}
 		}
 	}
 }

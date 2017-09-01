@@ -102,7 +102,7 @@ namespace Deveel.Data.Sql.Methods {
 
 				SqlParameterInfo paramInfo;
 				if (arg.IsNamed) {
-					if (!TryGetParameter(arg.ParameterName, ignoreCase, out paramInfo))
+					if (!TryGetParameter(arg.Name, ignoreCase, out paramInfo))
 						return null;
 				} else {
 					paramInfo = Parameters[i];

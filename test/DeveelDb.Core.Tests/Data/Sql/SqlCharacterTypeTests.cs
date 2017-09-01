@@ -41,7 +41,27 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(expected, sql);
 		}
 
-		[Theory]
+	    [Theory]
+	    [InlineData("STRING", SqlTypeCode.String, -1)]
+	    [InlineData("STRING(200)", SqlTypeCode.String, 200)]
+	    [InlineData("VARCHAR", SqlTypeCode.VarChar, -1)]
+	    [InlineData("VARCHAR(233)", SqlTypeCode.VarChar, 233)]
+	    [InlineData("CHAR(11)", SqlTypeCode.Char, 11)]
+	    [InlineData("LONG CHARACTER VARYING", SqlTypeCode.LongVarChar, -1)]
+	    [InlineData("CLOB(30221)", SqlTypeCode.Clob, 30221)]
+	    [InlineData("VARCHAR(MAX)", SqlTypeCode.VarChar, SqlCharacterType.DefaultMaxSize)]
+	    public static void ParseString(string sql, SqlTypeCode typeCode, int size) {
+	        var type = SqlType.Parse(sql);
+
+	        Assert.NotNull(type);
+	        Assert.Equal(typeCode, type.TypeCode);
+	        Assert.IsType<SqlCharacterType>(type);
+
+	        var charType = (SqlCharacterType) type;
+	        Assert.Equal(size, charType.MaxSize);
+	    }
+
+	    [Theory]
 		[InlineData(SqlTypeCode.VarChar, -1, null)]
 		[InlineData(SqlTypeCode.VarChar, 255, "en-US")]
 		[InlineData(SqlTypeCode.String, -1, "nb-NO")]
@@ -52,6 +72,21 @@ namespace Deveel.Data.Sql {
 			var type = new SqlCharacterType(typeCode, maxSize, culture);
 
 			var result = BinarySerializeUtil.Serialize(type);
+			Assert.Equal(type, result);
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.VarChar, -1, null)]
+		[InlineData(SqlTypeCode.VarChar, 255, "en-US")]
+		[InlineData(SqlTypeCode.String, -1, "nb-NO")]
+		[InlineData(SqlTypeCode.Char, 2, null)]
+		[InlineData(SqlTypeCode.LongVarChar, -1, null)]
+		public static void SerializeExplicit(SqlTypeCode typeCode, int maxSize, string locale) {
+			var culture = String.IsNullOrEmpty(locale) ? null : new CultureInfo(locale);
+			var type = new SqlCharacterType(typeCode, maxSize, culture);
+
+			var result = SqlTypeUtil.Serialize(type);
+
 			Assert.Equal(type, result);
 		}
 

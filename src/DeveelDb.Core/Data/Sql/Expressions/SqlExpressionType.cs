@@ -28,8 +28,20 @@ namespace Deveel.Data.Sql.Expressions {
 		/// <seealso cref="SqlConstantExpression"/>
 		Constant,
 
+		/// <summary>
+		/// A reference to a function defined by the system
+		/// </summary>
 		Function,
+
+		/// <summary>
+		/// The special function for casting values to given types
+		/// </summary>
 		Cast,
+
+		/// <summary>
+		/// A condition that returns as result a value if <c>TRUE</c> or
+		/// another value if <c>FALSE</c>.
+		/// </summary>
 		Condition,
 
 		// Logical / Conditional Binary
@@ -75,6 +87,9 @@ namespace Deveel.Data.Sql.Expressions {
 		/// </summary>
 		Variable,
 
+		/// <summary>
+		/// References a parameter in an expression
+		/// </summary>
 		Parameter,
 
 		/// <summary>
@@ -84,6 +99,10 @@ namespace Deveel.Data.Sql.Expressions {
 
 		ReferenceAssign,
 
+		/// <summary>
+		/// A group of expressions that is evaluated with a higher
+		/// precedence than other expressions in the same context
+		/// </summary>
 		Group,
 
 		/// <summary>

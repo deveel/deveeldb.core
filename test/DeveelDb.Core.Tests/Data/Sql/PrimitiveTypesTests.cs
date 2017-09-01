@@ -79,5 +79,5 @@ namespace Deveel.Data.Sql {
 		public static void GetInvalidBoolean() {
 			Assert.Throws<ArgumentException>(() => PrimitiveTypes.Boolean(SqlTypeCode.Blob));
 		}
-	}
+    }
 }

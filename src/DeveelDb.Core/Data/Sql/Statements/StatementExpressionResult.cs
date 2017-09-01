@@ -17,17 +17,27 @@
 
 using System;
 
-using Deveel.Data.Sql.Expressions;
-
 namespace Deveel.Data.Sql.Statements {
+	/// <summary>
+	/// The result of the execution of a statement that
+	/// encapsulates a static value.
+	/// </summary>
 	public sealed class StatementExpressionResult : IStatementResult {
-		public StatementExpressionResult(SqlExpression value) {
+		/// <summary>
+		/// Constructs the result with the given value.
+		/// </summary>
+		/// <param name="value"></param>
+		public StatementExpressionResult(SqlObject value) {
 			if (value == null)
 				throw new ArgumentNullException(nameof(value));
 
 			Value = value;
 		}
 
-		public SqlExpression Value { get; }
+		/// <summary>
+		/// Gets the expression that represents the result
+		/// of the execution of a statement
+		/// </summary>
+		public SqlObject Value { get; }
 	}
 }

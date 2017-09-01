@@ -27,9 +27,17 @@ using Deveel.Data.Services;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
+	/// <summary>
+	/// The base class for the definition of SQL statements that are
+	/// interpreted by the system
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// SQL statements are the single tasks that are executed against
+	/// a system and they are composed by expressions and references.
+	/// </para>
+	/// </remarks>
 	public abstract class SqlStatement : ISqlFormattable, ISqlExpressionPreparable<SqlStatement>, ISerializable {
-		public virtual bool CanPrepare => true;
-
 		protected SqlStatement(SerializationInfo info) {
 			Location = info.GetValue<LocationInfo>("location");
 		}
@@ -37,6 +45,16 @@ namespace Deveel.Data.Sql.Statements {
 		protected SqlStatement() {
 		}
 
+		/// <summary>
+		/// Gets a boolean value indicating if this statement is preparable
+		/// for execution.
+		/// </summary>
+		/// <seealso cref="Prepare(IContext)"/>
+		public virtual bool CanPrepare => true;
+
+		/// <summary>
+		/// Gets a descriptive name of the SQL statement
+		/// </summary>
 		protected virtual string Name {
 			get {
 				var name = GetType().Name;
@@ -49,14 +67,45 @@ namespace Deveel.Data.Sql.Statements {
 
 		internal string StatementName => Name;
 
+		/// <summary>
+		/// Gets the location of the statement within a context
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// Complex execution contexts, such as blocks, functions and procedures,
+		/// are composed by multiple statements: the location is relative to the 
+		/// textual occurrence of the beginning of the statement within that
+		/// context, identified by the starting line and starting column.
+		/// </para>
+		/// </remarks>
+		/// <seealso cref="LocationInfo"/>
 		public LocationInfo Location { get; set; }
 
 		internal SqlStatement Parent { get; set; }
 
+		/// <summary>
+		/// Gets the previous statement in an execution context
+		/// </summary>
+		/// <seealso cref="Next"/>
 		public SqlStatement Previous { get; internal set; }
 
+		/// <summary>
+		/// Gets the next statement in an execution context
+		/// </summary>
+		/// <seealso cref="Previous"/>
 		public SqlStatement Next { get; internal set; }
 
+		/// <summary>
+		/// Creates a context that can be used to execute the statement
+		/// against the underlying system
+		/// </summary>
+		/// <param name="parent">The parent context of the execution</param>
+		/// <param name="name">The name of the context to be created</param>
+		/// <returns>
+		/// Returns an instance of <see cref="StatementContext"/> that represents
+		/// the context used for the execution of the statement, inheriting from
+		/// a given parent.
+		/// </returns>
 		protected virtual StatementContext CreateContext(IContext parent, string name) {
 			return new StatementContext(parent, name, this);
 		}
@@ -86,6 +135,12 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
+		/// <summary>
+		/// Collects metadata about the statement that are useful for
+		/// diagnostics and reporting
+		/// </summary>
+		/// <param name="data">The key/value dictionary that holds the metadata for
+		/// this statement.</param>
 		protected virtual void GetMetadata(IDictionary<string, object> data) {
 			
 		}
@@ -106,6 +161,34 @@ namespace Deveel.Data.Sql.Statements {
 			
 		}
 
+		/// <summary>
+		/// Prepares the statement for execution against a given context
+		/// </summary>
+		/// <param name="context">The context used to prepare the statement</param>
+		/// <remarks>
+		/// <para>
+		/// When SQL statements are defined they are still in an unresolved mode:
+		/// this means that any reference to resources is not resolved, expressions
+		/// are not reduced or projected. Invoking this method would create an
+		/// instance of <see cref="SqlStatement"/> that is optimal for execution.
+		/// </para>
+		/// <para>
+		/// In the context of storing a method (function or procedure), this method
+		/// is invoked before the storage, to optimize the execution to subsequent 
+		/// calls to the stoed method.
+		/// </para>
+		/// <para>
+		/// <strong>Note:</strong> It is not assured that the result instance of <see cref="SqlStatement"/>
+		/// returned from this method will be of the same type of statement invoked.
+		/// </para>
+		/// </remarks>
+		/// <returns>
+		/// Returns an instance of <see cref="SqlStatement"/> that is ready to be executed
+		/// by the system.
+		/// </returns>
+		/// <exception cref="SqlStatementException">If an error occurred while preparing
+		/// the statement.</exception>
+		/// <seealso cref="CanPrepare"/>
 		public SqlStatement Prepare(IContext context) {
 			using (var statementContext = CreateContext(context, $"{Name}_Prepare")) {
 				var preparers = (statementContext as IContext).Scope.ResolveAll<ISqlExpressionPreparer>();
@@ -161,6 +244,43 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
+		/// <summary>
+		/// Executes the statement against the given context
+		/// </summary>
+		/// <param name="context">The context used by the statement to operate
+		/// against the underlying system.</param>
+		/// <remarks>
+		/// <para>
+		/// A statement is a task that must be executed for its effects to take
+		/// effect against the underlying system.
+		/// </para>
+		/// <para>
+		/// Before proceeding to the execution of the statement, this method
+		/// assesses the privileges of the invoking user, throwing an exception
+		/// if unhauthorized to execute this statement, child statements or to
+		/// access any referenced resource in the tree. For example, a user can
+		/// be authorized to execute a <c>SELECT</c> statement from a given set
+		/// of tables but not from other tables in the statement, and this will 
+		/// trigger an exception. 
+		/// </para>
+		/// <para>
+		/// The result of this method is polimorphic depending on the kind
+		/// of statement executed: for example executing a query statement will 
+		/// return a reference to the cursor opened, while the selection of
+		/// single value (from a table, a function or a variable) will return
+		/// a constant result.
+		/// </para>
+		/// </remarks>
+		/// <returns>
+		/// Returns an instance of <see cref="IStatementResult"/> that describes the
+		/// result of the exeuction of the statement.
+		/// </returns>
+		/// <exception cref="SqlStatementException">If an unhandled error occurred
+		/// while executing the statement.</exception>
+		/// <exception cref="UnauthorizedAccessException">If the user owner of the
+		/// context is not authorized to execute the statement, or if has not the
+		/// rights to access any referenced resource.</exception>
+		/// <seealso cref="ExecuteStatementAsync"/>
 		public async Task<IStatementResult> ExecuteAsync(IContext context) {
 			using (var statementContext = CreateContext(context)) {
 				statementContext.Information(201, "Executing statement");
@@ -182,6 +302,24 @@ namespace Deveel.Data.Sql.Statements {
 			}
 		}
 
+		/// <summary>
+		/// When overridden by an inheriting class, executes the body
+		/// of the statement against the given context.
+		/// </summary>
+		/// <param name="context">The context used by the statement to operate
+		/// against the underlying system.</param>
+		/// <remarks>
+		/// <para>
+		/// This method represents the core execution of the statement,
+		/// after the assessments of the authorizations of the user
+		/// executing have been done.
+		/// </para>
+		/// <para>
+		/// Any exception thrown by this method will be catch on upper level
+		/// by <see cref="ExecuteAsync"/>.
+		/// </para>
+		/// </remarks>
+		/// <returns></returns>
 		protected abstract Task ExecuteStatementAsync(StatementContext context);
 
 		public override string ToString() {
