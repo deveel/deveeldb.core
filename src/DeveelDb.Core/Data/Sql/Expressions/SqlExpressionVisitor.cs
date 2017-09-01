@@ -115,7 +115,7 @@ namespace Deveel.Data.Sql.Expressions {
 			if (value != null)
 				value = Visit(value);
 
-			return new InvokeArgument(argument.ParameterName, value);
+			return new InvokeArgument(argument.Name, value);
 		}
 
 		public virtual SqlExpression VisitFunction(SqlFunctionExpression expression) {

@@ -85,6 +85,7 @@ namespace Deveel.Data {
 		/// <summary>
 		/// Opens an existing database handled by this system.
 		/// </summary>
+		/// <param name="databaseName">The name of the database to open</param>
 		/// <param name="configuration">The configuration that defines the database
 		/// to open.</param>
 		/// <returns>
@@ -92,11 +93,7 @@ namespace Deveel.Data {
 		/// opened by this system.
 		/// </returns>
 		/// <exception cref="ArgumentNullException">
-		/// If the given <paramref name="configuration"/> is <c>null</c>.
-		/// </exception>
-		/// <exception cref="ArgumentException">
-		/// If the given <paramref name="configuration"/> does not provide any
-		/// database name.
+		/// If the given <paramref name="databaseName"/> is <c>null</c> or empty.
 		/// </exception>
 		/// <exception cref="DatabaseSystemException">
 		/// If the database does not exist or if it was not possible to open it.

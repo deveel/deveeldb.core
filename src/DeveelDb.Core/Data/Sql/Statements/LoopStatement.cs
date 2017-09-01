@@ -1,10 +1,27 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql.Statements {
-	public class LoopStatement : CodeBlock, IPlSqlStatement {
+	public class LoopStatement : CodeBlockStatement, IPlSqlStatement {
 		public LoopStatement()
 			: this((string) null) {
 		}
@@ -13,7 +30,7 @@ namespace Deveel.Data.Sql.Statements {
 			: base(label) {
 		}
 
-		private LoopStatement(SerializationInfo info)
+		internal LoopStatement(SerializationInfo info)
 			: base(info) {
 		}
 
@@ -46,28 +63,31 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		protected override async Task ExecuteStatementAsync(StatementContext context) {
-			bool first = true;
+			await InitializeAsync(context);
 
-			foreach (var statement in Statements) {
-				if (await CanLoopAsync(context)) {
-					if (first) {
-						await BeforeLoopAsync(context);
-						first = false;
-					}
+			while (await CanLoopAsync(context)) {
+				bool stopLoop = false;
 
-					var block = new StatementContext(context, statement);
-					await statement.ExecuteAsync(block);
+				foreach (var statement in Statements) {
+					if (stopLoop)
+						break;
 
-					if (block.WasTerminated)
+					await statement.ExecuteAsync(context);
+
+					if (context.WasTerminated)
 						return;
 
 					if (HasControl) {
 						if (ControlType == LoopControlType.Exit)
 							return;
-					}
 
-					await AfterLoopAsync(context);
+						if (ControlType == LoopControlType.Continue) {
+							stopLoop = true;
+						}
+					}
 				}
+
+				await AfterLoopAsync(context);
 			}
 		}
 
@@ -75,7 +95,7 @@ namespace Deveel.Data.Sql.Statements {
 			return Task.FromResult(!HasControl || ControlType != LoopControlType.Exit);
 		}
 
-		protected virtual Task BeforeLoopAsync(StatementContext context) {
+		protected virtual Task InitializeAsync(StatementContext context) {
 			return Task.CompletedTask;
 		}
 

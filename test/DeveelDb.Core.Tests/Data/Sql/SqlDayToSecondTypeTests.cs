@@ -14,6 +14,15 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(type, result);
 		}
 
+		[Fact]
+		public static void SerializeExplicit() {
+			var type = new SqlDayToSecondType();
+			var result = SqlTypeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
+
 		[Theory]
 		[InlineData("22:19:34", "2.00:00:20.444", "2.22:19:54.444")]
 		public static void AddDayToSecond(string value1, string value2, string expected) {
@@ -76,5 +85,16 @@ namespace Deveel.Data.Sql {
 
 			Assert.Equal(exp, result);
 		}
-	}
+
+        [Theory]
+        [InlineData("INTERVAL DAY TO SECOND", SqlTypeCode.DayToSecond)]
+	    public static void ParseString(string s, SqlTypeCode typeCode) {
+            var type = SqlType.Parse(s);
+
+            Assert.NotNull(type);
+            Assert.Equal(typeCode, type.TypeCode);
+
+            Assert.IsType<SqlDayToSecondType>(type);
+        }
+    }
 }

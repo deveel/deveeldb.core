@@ -363,5 +363,21 @@ namespace Deveel.Data {
 			       name.IndexOfAny(InvalidNameChars) < 0 &&
 				   name.IndexOf(' ') < 0;
 		}
+
+		public static bool IsNullOrEmpty(ObjectName name) {
+			if (name == null)
+				return true;
+
+			bool isNull = String.IsNullOrEmpty(name.Name);
+
+			ObjectName parent = name.Parent;
+			while (parent != null) {
+				isNull |= IsNullOrEmpty(parent);
+				parent = parent.Parent;
+			}
+
+			return isNull;
+		}
+
 	}
 }

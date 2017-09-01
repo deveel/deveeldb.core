@@ -30,6 +30,14 @@ namespace Deveel.Data.Sql.Statements {
 				.Returns(new User("user1"));
 
 			context = mock.Object;
+
+			var mock2 = new Mock<ISqlExpressionPreparer>();
+			mock2.Setup(x => x.Prepare(It.IsAny<SqlExpression>()))
+				.Returns<SqlExpression>(exp => exp);
+			mock2.Setup(x => x.CanPrepare(It.IsAny<SqlExpression>()))
+				.Returns(true);
+
+			container.RegisterInstance<ISqlExpressionPreparer>(mock2.Object);
 		}
 
 		[Fact]
@@ -37,8 +45,10 @@ namespace Deveel.Data.Sql.Statements {
 			var loop = new LoopStatement();
 			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit));
 
-			var executeContext = new StatementContext(context, loop);
-			await loop.ExecuteAsync(executeContext);
+			var statement = loop.Prepare(context);
+			var result = await statement.ExecuteAsync(context);
+
+			Assert.Null(result);
 		}
 
 		[Fact]
@@ -46,9 +56,10 @@ namespace Deveel.Data.Sql.Statements {
 			var loop = new LoopStatement("l1");
 			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit, "l1"));
 
-			var executeContext = new StatementContext(context, loop);
-			var statement = loop.Prepare(executeContext);
-			await statement.ExecuteAsync(executeContext);
+			var statement = loop.Prepare(context);
+			var result = await statement.ExecuteAsync(context);
+
+			Assert.Null(result);
 		}
 
 		[Fact]
@@ -56,9 +67,8 @@ namespace Deveel.Data.Sql.Statements {
 			var loop = new LoopStatement("l1");
 			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit, "l2"));
 
-			var executeContext = new StatementContext(context, loop);
-			var statement = loop.Prepare(executeContext);
-			await Assert.ThrowsAnyAsync<SqlStatementException>(() => statement.ExecuteAsync(executeContext));
+			var statement = loop.Prepare(context);
+			await Assert.ThrowsAnyAsync<SqlStatementException>(() => statement.ExecuteAsync(context));
 		}
 
 
@@ -88,10 +98,36 @@ namespace Deveel.Data.Sql.Statements {
 			Assert.Equal(expected, sql);
 		}
 
+		[Theory]
+		[InlineData("l1", true, "EXIT 'l1' WHEN TRUE;")]
+		[InlineData(null, null, "EXIT;")]
+		[InlineData(null, false, "EXIT WHEN FALSE;")]
+		public void GetExitString(string label, bool? when, string expected) {
+			var whenExp = when == null ? null : SqlExpression.Constant(SqlObject.Boolean(when.Value));
+			var statement = new ExitStatement(label, whenExp);
+
+			var sql = statement.ToString();
+			Assert.Equal(expected, sql);
+		}
+
+		[Theory]
+		[InlineData("l1", true, "CONTINUE 'l1' WHEN TRUE;")]
+		[InlineData(null, null, "CONTINUE;")]
+		[InlineData(null, false, "CONTINUE WHEN FALSE;")]
+		public void GetContinueString(string label, bool? when, string expected)
+		{
+			var whenExp = when == null ? null : SqlExpression.Constant(SqlObject.Boolean(when.Value));
+			var statement = new ContinueStatement(label, whenExp);
+
+			var sql = statement.ToString();
+			Assert.Equal(expected, sql);
+		}
+
+
 		[Fact]
 		public void GetLoopString() {
 			var loop = new LoopStatement("l1");
-			loop.Statements.Add(new LoopControlStatement(LoopControlType.Exit, SqlExpression.Constant(SqlObject.Boolean(true))));
+			loop.Statements.Add(new ExitStatement(SqlExpression.Constant(SqlObject.Boolean(true))));
 
 			var expected = new StringBuilder();
 			expected.AppendLine("<<l1>>");

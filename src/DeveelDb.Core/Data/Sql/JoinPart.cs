@@ -28,8 +28,8 @@ namespace Deveel.Data.Sql {
 		}
 
 		internal JoinPart(JoinType joinType, ObjectName tableName, SqlExpression onExpression)
-			: this(joinType, tableName, (SqlQueryExpression) null, onExpression) {
-			if (tableName == null)
+			: this(joinType, tableName, null, onExpression) {
+			if (ObjectName.IsNullOrEmpty(tableName))
 				throw new ArgumentNullException(nameof(tableName));
 		}
 

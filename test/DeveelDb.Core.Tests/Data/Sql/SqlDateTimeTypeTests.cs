@@ -32,6 +32,19 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(expected, s);
 		}
 
+        [Theory]
+        [InlineData("TIME", SqlTypeCode.Time)]
+        [InlineData("TIMESTAMP", SqlTypeCode.TimeStamp)]
+        [InlineData("DATE", SqlTypeCode.Date)]
+        [InlineData("DATETIME", SqlTypeCode.DateTime)]
+	    public static void ParseString(string s, SqlTypeCode typeCode) {
+            var type = SqlType.Parse(s);
+
+            Assert.NotNull(type);
+            Assert.Equal(typeCode, type.TypeCode);
+            Assert.IsType<SqlDateTimeType>(type);
+        }
+
 		[Theory]
 		[InlineData(SqlTypeCode.Time)]
 		[InlineData(SqlTypeCode.TimeStamp)]
@@ -40,6 +53,18 @@ namespace Deveel.Data.Sql {
 		public static void Serialize(SqlTypeCode typeCode) {
 			var type = new SqlDateTimeType(typeCode);
 			var result = BinarySerializeUtil.Serialize(type);
+
+			Assert.Equal(type, result);
+		}
+
+		[Theory]
+		[InlineData(SqlTypeCode.Time)]
+		[InlineData(SqlTypeCode.TimeStamp)]
+		[InlineData(SqlTypeCode.DateTime)]
+		[InlineData(SqlTypeCode.Date)]
+		public static void SerializeExplicit(SqlTypeCode typeCode) {
+			var type = new SqlDateTimeType(typeCode);
+			var result = SqlTypeUtil.Serialize(type);
 
 			Assert.Equal(type, result);
 		}

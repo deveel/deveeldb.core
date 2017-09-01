@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 using Deveel.Data.Security;
@@ -33,11 +34,18 @@ namespace Deveel.Data.Sql.Statements {
 
 			context = mock.Object;
 
+			var mock2 = new Mock<ISqlExpressionPreparer>();
+			mock2.Setup(x => x.Prepare(It.IsAny<SqlExpression>()))
+				.Returns<SqlExpression>(exp => exp);
+			mock2.Setup(x => x.CanPrepare(It.IsAny<SqlExpression>()))
+				.Returns(true);
+
+			container.RegisterInstance<ISqlExpressionPreparer>(mock2.Object);
 		}
 
 		[Fact]
 		public void SerializeBlock() {
-			var block = new TestCodeBlock();
+			var block = new CodeBlockStatement();
 
 			Assert.NotNull(block.Statements);
 			Assert.Empty(block.Statements);
@@ -63,43 +71,40 @@ namespace Deveel.Data.Sql.Statements {
 		}
 
 		[Fact]
-		public async void ExecuteTransfer() {
-			var parentBlock = new TestCodeBlock();
-			var block = new TestCodeBlock("block");
+		public void AddAndRemoveStatements() {
+			var block = new CodeBlockStatement("block");
+			var statement = new EmptyStatement();
+			block.Statements.Add(statement);
 			block.Statements.Add(new EmptyStatement());
-			parentBlock.Statements.Add(block);
 
-			var executeContext = new StatementContext(context, parentBlock);
-			await executeContext.TransferAsync("block");
+			Assert.Null(statement.Previous);
+			Assert.NotNull(statement.Next);
+			var parent = typeof(SqlStatement).GetTypeInfo().GetProperty("Parent", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(statement);
+			Assert.NotNull(parent);
 
-			Assert.NotNull(executeContext.Result);
-			Assert.True(executeContext.HasResult);
-			Assert.IsType<StatementExpressionResult>(executeContext.Result);
-			Assert.IsType<SqlConstantExpression>(((StatementExpressionResult) executeContext.Result).Value);
+			Assert.Equal(2, block.Statements.Count);
+			block.Statements.Remove(statement);
+
+			Assert.Null(statement.Next);
+
+			Assert.Equal(1, block.Statements.Count);
+
+			block.Statements.Clear();
+			Assert.Equal(0, block.Statements.Count);
 		}
 
-		#region TestCodeBlock
+		[Fact]
+		public void GetString() {
+			var block = new CodeBlockStatement();
+			block.Statements.Add(new NullStatement());
 
-		class TestCodeBlock : CodeBlock {
-			public TestCodeBlock(string label)
-				: base(label) {
-			}
+			var sql = new StringBuilder();
+			sql.AppendLine("BEGIN");
+			sql.AppendLine("  NULL;");
+			sql.Append("END;");
 
-			public TestCodeBlock()
-				: base() {
-			}
-
-			private TestCodeBlock(SerializationInfo info)
-				: base(info) {
-			}
-
-			protected override Task ExecuteStatementAsync(StatementContext context) {
-				context.Return(SqlExpression.Constant(SqlObject.BigInt(22)));
-				return Task.CompletedTask;
-			}
+			Assert.Equal(sql.ToString(), block.ToString());
 		}
-
-		#endregion
 
 		#region EmptyStatement
 

@@ -430,10 +430,13 @@ namespace Deveel.Data.Sql {
 			return new SqlObject(PrimitiveTypes.String(), value);
 		}
 
-		public static SqlObject Char(SqlString value) {
+	    public static SqlObject String(string value)
+	        => String(new SqlString(value));
+
+		public static SqlObject Char(SqlString value)
+		{
 			return new SqlObject(PrimitiveTypes.Char((int)value.Length), value);
 		}
-
 		#endregion
 
 		#region Numeric
@@ -469,6 +472,11 @@ namespace Deveel.Data.Sql {
 
 			return Array(array);
 		}
+
+	    public static SqlObject Array(params SqlExpression[] expressions) {
+	        var array = expressions == null ? new SqlArray(new SqlExpression[0]) : new SqlArray(expressions);
+	        return Array(array);
+	    }
 
 		#endregion
 

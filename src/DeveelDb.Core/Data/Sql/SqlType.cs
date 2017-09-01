@@ -17,8 +17,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
 
 using Deveel.Data.Serialization;
+using Deveel.Data.Services;
+using Deveel.Data.Sql.Parsing;
+using Deveel.Data.Sql.Types;
 
 namespace Deveel.Data.Sql {
 	/// <summary>
@@ -419,5 +425,177 @@ namespace Deveel.Data.Sql {
 		public static bool IsPrimitiveType(SqlTypeCode typeCode) {
 			return PrimitiveTypes.IsPrimitive(typeCode);
 		}
-	}
+
+		#region Serialization
+
+		public static byte[] Serialize(SqlType type) {
+			using (var stream = new MemoryStream()) {
+				using (var writer = new BinaryWriter(stream)) {
+					Serialize(type, writer);
+					stream.Flush();
+
+					return stream.ToArray();
+				}
+			}
+		}
+
+		public static void Serialize(SqlType type, BinaryWriter writer) {
+			writer.Write((byte)type.TypeCode);
+
+			if (type.IsPrimitive) {
+				if (type is SqlNumericType) {
+					var numericType = (SqlNumericType) type;
+					writer.Write(numericType.Precision);
+					writer.Write(numericType.Scale);
+				} else if (type is SqlCharacterType) {
+					var stringType = (SqlCharacterType) type;
+					writer.Write(stringType.MaxSize);
+
+					if (stringType.Locale != null) {
+						writer.Write((byte) 1);
+						writer.Write(stringType.Locale.Name);
+					} else {
+						writer.Write((byte) 0);
+					}
+				} else if (type is SqlBinaryType) {
+					var binaryType = (SqlBinaryType) type;
+
+					writer.Write(binaryType.MaxSize);
+				} else if (type is SqlArrayType) {
+					var arrayType = (SqlArrayType) type;
+					writer.Write(arrayType.Length);
+
+				} else if (type is SqlBooleanType ||
+				           type is SqlYearToMonthType ||
+				           type is SqlDayToSecondType ||
+				           type is SqlDateTimeType) {
+					// nothing to add to the SQL Type Code
+				} else {
+					throw new NotSupportedException($"The type '{type}' cannot be serialized.");
+				}
+			}
+			/*
+			TODO:
+			else if (type is SqlUserType) {
+				var userType = (SqlUserType)type;
+				writer.Write((byte)1); // The code of custom type
+				writer.Write(userType.FullName.FullName);
+			} else if (type is SqlQueryType) {
+			}
+			*/
+			else {
+				throw new NotSupportedException($"Type {type} cannot be serialized.");
+			}
+		}
+
+		public static SqlType Deserialize(Stream input, ISqlTypeResolver typeResolver) {
+			var reader = new BinaryReader(input);
+			return Deserialize(reader, typeResolver);
+		}
+
+		public static SqlType Deserialize(BinaryReader reader, ISqlTypeResolver typeResolver) {
+			var typeCode = (SqlTypeCode)reader.ReadByte();
+
+			if (SqlBooleanType.IsBooleanType(typeCode))
+				return PrimitiveTypes.Boolean(typeCode);
+			if (SqlDateTimeType.IsDateType(typeCode))
+				return PrimitiveTypes.DateTime(typeCode);
+
+			if (typeCode == SqlTypeCode.DayToSecond)
+				return PrimitiveTypes.DayToSecond();
+			if (typeCode == SqlTypeCode.YearToMonth)
+				return PrimitiveTypes.YearToMonth();
+
+			if (SqlCharacterType.IsStringType(typeCode)) {
+				var maxSize = reader.ReadInt32();
+
+				CultureInfo locale = null;
+				var hasLocale = reader.ReadByte() == 1;
+				if (hasLocale) {
+					var name = reader.ReadString();
+					locale = new CultureInfo(name);
+				}
+
+				return PrimitiveTypes.String(typeCode, maxSize, locale);
+			}
+
+			if (SqlNumericType.IsNumericType(typeCode)) {
+				var size = reader.ReadInt32();
+				var scale = reader.ReadInt32();
+
+				return PrimitiveTypes.Numeric(typeCode, size, scale);
+			}
+
+			if (SqlBinaryType.IsBinaryType(typeCode)) {
+				var size = reader.ReadInt32();
+				return PrimitiveTypes.Binary(typeCode, size);
+			}
+
+			if (typeCode == SqlTypeCode.Type) {
+				if (typeResolver == null)
+					throw new NotSupportedException("User-Defined types require a resolver context.");
+
+				// TODO: support type arguments
+				var typeName = reader.ReadString();
+				return typeResolver.Resolve(new SqlTypeResolveInfo(typeName));
+			}
+
+			/*
+			TODO:
+			if (typeCode == SqlTypeCode.QueryPlan)
+				return new SqlQueryType();
+			*/
+
+			if (typeCode == SqlTypeCode.Array) {
+				var size = reader.ReadInt32();
+				return new SqlArrayType(size);
+			}
+
+			throw new NotSupportedException($"The type code '{typeCode}' does not support deserialization");
+		}
+
+		#endregion
+
+		#region Parse
+
+		public static SqlType Parse(IContext context, string sql) {
+	        ISqlTypeParser parser = null;
+	        if (context != null)
+	            parser = context.Scope.Resolve<ISqlTypeParser>();
+
+            if (parser == null)
+                parser = new SqlDefaultTypeParser();
+
+	        return parser.Parse(context, sql);
+	    }
+
+	    public static SqlType Parse(string sql)
+	        => Parse(null, sql);
+
+        #endregion
+
+	    #region SqlDefaultTypeParser
+
+	    class SqlDefaultTypeParser : ISqlTypeParser {
+	        public SqlType Parse(IContext context, string s) {
+	            var parser = new SqlParser();
+	            var typeInfo = parser.ParseType(s);
+
+	            if (PrimitiveTypes.IsPrimitive(typeInfo.TypeName))
+	                return PrimitiveTypes.Resolver.Resolve(typeInfo);
+
+                if (context == null)
+                    throw new Exception($"Type {typeInfo.TypeName} is not primitive and no context is provided");
+
+	            var resolver = context.Scope.Resolve<ISqlTypeResolver>();
+
+                if (resolver == null)
+                    throw new InvalidOperationException($"The type {typeInfo.TypeName} is not primitive and no resolver was found in context");
+
+	            return resolver.Resolve(typeInfo);
+	        }
+	    }
+
+	    #endregion
+    }
 }

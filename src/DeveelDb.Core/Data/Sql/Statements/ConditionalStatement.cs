@@ -1,11 +1,28 @@
-﻿using System;
+﻿// 
+//  Copyright 2010-2017 Deveel
+// 
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+// 
+//        http://www.apache.org/licenses/LICENSE-2.0
+// 
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
+
+using System;
 using System.Threading.Tasks;
 
 using Deveel.Data.Serialization;
 using Deveel.Data.Sql.Expressions;
 
 namespace Deveel.Data.Sql.Statements {
-	public sealed class ConditionalStatement : CodeBlock, IPlSqlStatement {
+	public sealed class ConditionalStatement : CodeBlockStatement, IPlSqlStatement {
 		public ConditionalStatement(SqlExpression condition)
 			: this(condition, (SqlStatement) null) {
 		}
@@ -47,7 +64,14 @@ namespace Deveel.Data.Sql.Statements {
 
 		protected override SqlStatement PrepareExpressions(ISqlExpressionPreparer preparer) {
 			var test = Condition.Prepare(preparer);
-			return new ConditionalStatement(test, Label, Else);
+
+			var statement = new ConditionalStatement(test, Label, Else);
+
+			foreach (var child in Statements) {
+				statement.Statements.Add(child);
+			}
+
+			return statement;
 		}
 
 		protected override SqlStatement PrepareStatement(IContext context) {
@@ -55,7 +79,14 @@ namespace Deveel.Data.Sql.Statements {
 			if (@else != null)
 				@else = @else.Prepare(context);
 
-			return new ConditionalStatement(Condition, Label, @else);
+			var statement = new ConditionalStatement(Condition, Label, @else);
+
+			foreach (var child in Statements) {
+				var prepared = child.Prepare(context);
+				statement.Statements.Add(prepared);
+			}
+
+			return statement;
 		}
 
 		protected override async Task ExecuteStatementAsync(StatementContext context) {
