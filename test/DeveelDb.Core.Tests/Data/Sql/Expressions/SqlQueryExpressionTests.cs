@@ -37,7 +37,7 @@ namespace Deveel.Data.Sql.Expressions {
 
 			tableManager.CreateTableAsync(tableInfo2).Wait();
 
-			var table2 = (TemporaryTable)tableManager.GetTableAsync(tableInfo2.TableName).Result;
+			var table2 = (TemporaryTable) tableManager.GetTableAsync(tableInfo2.TableName).Result;
 			table2.NewRow();
 			table2.SetValue(0, 0, SqlObject.Integer(22));
 			table2.NewRow();
@@ -85,7 +85,7 @@ namespace Deveel.Data.Sql.Expressions {
 			query.All = true;
 			query.From.Table(fromTable);
 			var source = new SqlQueryExpressionSource(query, "a");
-			
+
 			Assert.True(source.IsQuery);
 			Assert.False(source.IsTable);
 			Assert.True(source.IsAliased);
@@ -180,9 +180,9 @@ namespace Deveel.Data.Sql.Expressions {
 
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(1, table.RowCount);
@@ -198,14 +198,14 @@ namespace Deveel.Data.Sql.Expressions {
 			query.From.Table(ObjectName.Parse("tab1"));
 			query.Where = SqlExpression.Quantify(SqlExpressionType.Any,
 				SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")),
-					SqlExpression.Constant(SqlObject.Array(new[] { SqlObject.Integer(3), SqlObject.Integer(56) }))));
+					SqlExpression.Constant(SqlObject.Array(new[] {SqlObject.Integer(3), SqlObject.Integer(56)}))));
 
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(0, table.RowCount);
@@ -226,9 +226,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(1, table.RowCount);
@@ -250,9 +250,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(2, table.RowCount);
@@ -267,7 +267,8 @@ namespace Deveel.Data.Sql.Expressions {
 			subQuery.Items.Add(SqlExpression.Function(new ObjectName("AVG"),
 				new InvokeArgument(SqlExpression.Reference(new ObjectName("b")))));
 			subQuery.From.Table(new ObjectName("tab2"));
-			subQuery.Where = SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")), SqlExpression.Constant(SqlObject.Integer(45)));
+			subQuery.Where = SqlExpression.Equal(SqlExpression.Reference(new ObjectName("a")),
+				SqlExpression.Constant(SqlObject.Integer(45)));
 
 			var query = new SqlQueryExpression();
 			query.Items.Add(SqlExpression.Reference(new ObjectName("a")));
@@ -277,9 +278,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(1, table.RowCount);
@@ -298,9 +299,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(1, table.RowCount);
@@ -320,9 +321,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 		}
@@ -339,9 +340,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(2, table.RowCount);
@@ -362,9 +363,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(1, table.RowCount);
@@ -379,9 +380,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(1, table.RowCount);
@@ -403,9 +404,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(2, table.RowCount);
@@ -422,9 +423,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 		}
@@ -442,9 +443,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 		}
@@ -463,9 +464,9 @@ namespace Deveel.Data.Sql.Expressions {
 			var result = await query.ReduceAsync(context);
 			Assert.NotNull(result);
 			Assert.IsType<SqlConstantExpression>(result);
-			Assert.IsType<SqlTableType>(((SqlConstantExpression)result).Value.Type);
+			Assert.IsType<SqlTableType>(((SqlConstantExpression) result).Value.Type);
 
-			var table = (ITable)((SqlConstantExpression)result).Value.Value;
+			var table = (ITable) ((SqlConstantExpression) result).Value.Value;
 
 			Assert.NotNull(table);
 			Assert.Equal(2, table.RowCount);
@@ -476,164 +477,155 @@ namespace Deveel.Data.Sql.Expressions {
 			var rows = table.SelectAllRows().ToBigArray();
 			Assert.Equal(2, rows.Length);
 		}
+
+
+		[Fact]
+		public static void ParseSimpleQuery() {
+			const string sql = "SELECT * FROM app.a a_table WHERE a.id > 4";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.NotNull(query.Where);
+			Assert.NotNull(query.From);
+			Assert.NotEmpty(query.From.Sources);
+		}
+
+		[Fact]
+		public static void ParseJoinedQuery() {
+			const string sql = "SELECT a.id, b.* FROM a INNER JOIN b ON a.id = b.a_id WHERE b.level >= 3";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(2, query.Items.Count);
+			Assert.NotNull(query.Where);
+			Assert.NotNull(query.From);
+			Assert.NotEmpty(query.From.Sources);
+			Assert.Equal(2, query.From.Sources.Count());
+		}
+
+		[Fact]
+		public static void ParseSubquery() {
+			const string sql = "SELECT * FROM (SELECT a FROM b) q WHERE q.a > 5";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+			Assert.NotNull(query.Where);
+			Assert.NotNull(query.From);
+			Assert.NotEmpty(query.From.Sources);
+			Assert.Equal(1, query.From.Sources.Count());
+			Assert.IsType<SqlQueryExpressionSource>(query.From.Sources.First());
+		}
+
+		[Fact]
+		public static void ParseGroupByQuery() {
+			const string sql = "SELECT COUNT(*) FROM a GROUP BY a.b";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+			Assert.Null(query.Where);
+			Assert.NotNull(query.GroupBy);
+			Assert.NotEmpty(query.GroupBy);
+			Assert.Equal(1, query.GroupBy.Count);
+			Assert.NotNull(query.From);
+			Assert.NotEmpty(query.From.Sources);
+			Assert.Equal(1, query.From.Sources.Count());
+		}
+
+		[Fact]
+		public static void ParseGroupMaxQuery() {
+			const string sql = "SELECT COUNT(*) FROM a GROUP MAX a.b";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+			Assert.Null(query.Where);
+			Assert.NotNull(query.GroupMax);
+			Assert.NotNull(query.From);
+			Assert.NotEmpty(query.From.Sources);
+			Assert.Equal(1, query.From.Sources.Count());
+		}
+
+		[Fact]
+		public static void ParseSelectInArray() {
+			const string sql = "SELECT * FROM a WHERE a.b IN (45, 893, 001)";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+		}
+
+		[Fact]
+		public static void ParseSelectInQuery() {
+			const string sql = "SELECT * FROM a WHERE a.b IN (SELECT a FROM b)";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+		}
+
+		[Fact]
+		public static void ParseSelectInVariable() {
+			const string sql = "SELECT * FROM a WHERE a.b IN :b";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+		}
+
+		[Fact]
+		public static void ParseSelectInto() {
+			const string sql = "SELECT * INTO :a1 FROM a WHERE a.id = 22";
+
+			var exp = SqlExpression.Parse(sql);
+
+			Assert.NotNull(exp);
+			Assert.IsType<SqlQueryExpression>(exp);
+
+			var query = (SqlQueryExpression) exp;
+			Assert.NotEmpty(query.Items);
+			Assert.Equal(1, query.Items.Count);
+		}
 	}
-
-	[Fact]
-	public static void ParseSimpleQuery()
-	{
-		const string sql = "SELECT * FROM app.a a_table WHERE a.id > 4";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.NotNull(query.Where);
-		Assert.NotNull(query.From);
-		Assert.NotEmpty(query.From.Sources);
-	}
-
-	[Fact]
-	public static void ParseJoinedQuery()
-	{
-		const string sql = "SELECT a.id, b.* FROM a INNER JOIN b ON a.id = b.a_id WHERE b.level >= 3";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.Equal(2, query.Items.Count);
-		Assert.NotNull(query.Where);
-		Assert.NotNull(query.From);
-		Assert.NotEmpty(query.From.Sources);
-		Assert.Equal(2, query.From.Sources.Count());
-	}
-
-	[Fact]
-	public static void ParseSubquery()
-	{
-		const string sql = "SELECT * FROM (SELECT a FROM b) q WHERE q.a > 5";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.Equal(1, query.Items.Count);
-		Assert.NotNull(query.Where);
-		Assert.NotNull(query.From);
-		Assert.NotEmpty(query.From.Sources);
-		Assert.Equal(1, query.From.Sources.Count());
-		Assert.IsType<SqlQueryExpressionSource>(query.From.Sources.First());
-	}
-
-	[Fact]
-	public static void ParseGroupByQuery()
-	{
-		const string sql = "SELECT COUNT(*) FROM a GROUP BY a.b";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.Equal(1, query.Items.Count);
-		Assert.Null(query.Where);
-		Assert.NotNull(query.GroupBy);
-		Assert.NotEmpty(query.GroupBy);
-		Assert.Equal(1, query.GroupBy.Count);
-		Assert.NotNull(query.From);
-		Assert.NotEmpty(query.From.Sources);
-		Assert.Equal(1, query.From.Sources.Count());
-	}
-
-	[Fact]
-	public static void ParseGroupMaxQuery()
-	{
-		const string sql = "SELECT COUNT(*) FROM a GROUP MAX a.b";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.Equal(1, query.Items.Count);
-		Assert.Null(query.Where);
-		Assert.NotNull(query.GroupMax);
-		Assert.NotNull(query.From);
-		Assert.NotEmpty(query.From.Sources);
-		Assert.Equal(1, query.From.Sources.Count());
-	}
-
-	[Fact]
-	public static void ParseSelectInArray()
-	{
-		const string sql = "SELECT * FROM a WHERE a.b IN (45, 893, 001)";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.Equal(1, query.Items.Count);
-	}
-
-	[Fact]
-	public static void ParseSelectInQuery()
-	{
-		const string sql = "SELECT * FROM a WHERE a.b IN (SELECT a FROM b)";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.Equal(1, query.Items.Count);
-	}
-
-	[Fact]
-	public static void ParseSelectInVariable()
-	{
-		const string sql = "SELECT * FROM a WHERE a.b IN :b";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.Equal(1, query.Items.Count);
-	}
-
-	[Fact]
-	public static void ParseSelectInto()
-	{
-		const string sql = "SELECT * INTO :a1 FROM a WHERE a.id = 22";
-
-		var exp = SqlExpression.Parse(sql);
-
-		Assert.NotNull(exp);
-		Assert.IsType<SqlQueryExpression>(exp);
-
-		var query = (SqlQueryExpression)exp;
-		Assert.NotEmpty(query.Items);
-		Assert.Equal(1, query.Items.Count);
-	}
-}
 }

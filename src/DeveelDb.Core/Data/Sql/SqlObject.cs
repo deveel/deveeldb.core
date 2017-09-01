@@ -430,6 +430,8 @@ namespace Deveel.Data.Sql {
 			return new SqlObject(PrimitiveTypes.String(), value);
 		}
 
+		public static SqlObject String(string value)
+			=> String(new SqlString(value));
 
 		public static SqlObject Char(SqlString value) {
 			return new SqlObject(PrimitiveTypes.Char((int)value.Length), value);
