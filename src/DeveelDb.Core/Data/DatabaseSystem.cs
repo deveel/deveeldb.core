@@ -97,11 +97,7 @@ namespace Deveel.Data {
 			var configs = FindDatabaseConfigs();
 
 			foreach (var config in configs) {
-				var name = config.DatabaseName();
-				if (String.IsNullOrWhiteSpace(name))
-					throw new DatabaseSystemException("Could not open a database: missing name");
-
-				var database = await OpenDatabaseAsync(name, config);
+				var database = await OpenDatabaseAsync(config);
 
 				var databaseName = config.DatabaseName();
 				if (String.IsNullOrWhiteSpace(databaseName))
