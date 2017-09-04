@@ -600,6 +600,39 @@ namespace Deveel.Data.Indexes {
 			return true;
 		}
 
+		public bool UniqueInsertSort(TValue value) {
+			CheckImmutable();
+
+			int blockIndex = FindLastBlock(value);
+
+			if (blockIndex < 0) {
+				// Not found a block,
+				// The block to insert the value,
+				blockIndex = (-(blockIndex + 1)) - 1;
+				if (blockIndex < 0) {
+					blockIndex = 0;
+				}
+			}
+
+			// We got a block, so find out if it's in the block or not.
+			var block = Blocks[blockIndex];
+
+			// The point to insert in the block,
+			var i = block.SearchLast(value);
+			if (i < 0) {
+				i = -(i + 1);
+			} else {
+				// This means we found the value in the given block, so return false.
+				return false;
+			}
+
+			// Insert value into the block,
+			InsertIntoBlock(value, blockIndex, block, i);
+
+			// Value inserted so return true.
+			return true;
+		}
+
 		public bool RemoveSort(TValue value) {
 			CheckImmutable();
 

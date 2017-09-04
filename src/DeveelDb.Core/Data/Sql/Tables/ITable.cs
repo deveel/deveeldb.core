@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql;
 using Deveel.Data.Sql.Indexes;
 
 namespace Deveel.Data.Sql.Tables {

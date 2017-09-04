@@ -58,6 +58,12 @@ namespace Deveel.Data.Diagnostics {
 			}
 		}
 
+		public static void Count(this IContext context, string counterName, long value)
+			=> context.RegisterEvent<CounterEvent>(counterName, value);
+
+		public static void Increment(this IContext context, string counterName)
+			=> context.RegisterEvent<CounterEvent>(counterName);
+
 		private static IEnumerable<IEventRegistry<TEvent>> FindRegistries<TEvent>(this IContext context)
 			where TEvent : class, IEvent {
 			return context.Scope.ResolveAll<IEventRegistry<TEvent>>();

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql;
 using Deveel.Data.Sql.Expressions;
 
 using Xunit;

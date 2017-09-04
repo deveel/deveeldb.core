@@ -15,12 +15,27 @@
 //
 
 
-using Deveel.Data.Diagnostics;
+using System;
 
-namespace Deveel.Data.Sql.Tables.Infrastructure {
-	public class TableGCEvent : TableEvent {
-		public TableGCEvent(IEventSource source, int eventId, long commitId, int tableId, ObjectName tableName) 
-			: base(source, eventId, commitId, tableId, tableName) {
-		}
+using Deveel.Data.Transactions;
+
+namespace Deveel.Data.Sql.Tables {
+	public interface ITableSource : IDisposable {
+		int TableId { get; }
+
+		TableInfo TableInfo { get; }
+
+
+		long GetCurrentUniqueId();
+
+		void SetUniqueId(long value);
+
+		long GetNextUniqueId();
+
+		IMutableTable CreateTableAtCommit(ITransaction transaction);
+
+		RecordState WriteRecordState(long rowNumber, RecordState recordState);
+
+		RecordState ReadRecordState(long rowNumber);
 	}
 }

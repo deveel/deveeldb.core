@@ -572,11 +572,11 @@ namespace Deveel.Data.Sql {
 	    public static SqlType Parse(string sql)
 	        => Parse(null, sql);
 
-        #endregion
+		#endregion
 
-	    #region SqlDefaultTypeParser
+		#region SqlDefaultTypeParser
 
-	    class SqlDefaultTypeParser : ISqlTypeParser {
+		class SqlDefaultTypeParser : ISqlTypeParser {
 	        public SqlType Parse(IContext context, string s) {
 	            var parser = new SqlParser();
 	            var typeInfo = parser.ParseType(s);

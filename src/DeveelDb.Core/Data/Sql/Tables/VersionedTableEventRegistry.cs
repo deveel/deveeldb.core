@@ -1,26 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace Deveel.Data.Sql.Tables.Infrastructure {
+namespace Deveel.Data.Sql.Tables {
 	class VersionedTableEventRegistry : IDisposable {
-		private List<TableEventRegistry> eventRegistries;
+		private List<ITableEventRegistry> eventRegistries;
 
 		public VersionedTableEventRegistry(TableSource tableSource) {
 			TableSource = tableSource;
 
-			eventRegistries = new List<TableEventRegistry>();
-		}
-
-		~VersionedTableEventRegistry() {
-			Dispose(false);
+			eventRegistries = new List<ITableEventRegistry>();
 		}
 
 		public TableSource TableSource { get; private set; }
 
-		public void Dispose() {
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
+		public bool HasChanges => eventRegistries.Any();
 
 		private void Dispose(bool disposing) {
 			if (disposing) {
@@ -32,7 +26,12 @@ namespace Deveel.Data.Sql.Tables.Infrastructure {
 			TableSource = null;
 		}
 
-		public void AddRegistry(TableEventRegistry registry) {
+		public void Dispose() {
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		public void AddRegistry(ITableEventRegistry registry) {
 			eventRegistries.Add(registry);
 		}
 
@@ -51,6 +50,10 @@ namespace Deveel.Data.Sql.Tables.Infrastructure {
 			}
 
 			return true;
+		}
+
+		public IEnumerable<ITableEventRegistry> FindSinceCommit(long commitId) {
+			return eventRegistries.Where(x => x.CommitId >= commitId);
 		}
 	}
 }

@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 
 using Deveel.Data.Indexes;
 using Deveel.Data.Services;
+using Deveel.Data.Sql;
 using Deveel.Data.Sql.Expressions;
 using Deveel.Data.Sql.Indexes;
 using Deveel.Data.Text;

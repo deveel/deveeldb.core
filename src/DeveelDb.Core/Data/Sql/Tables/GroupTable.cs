@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Deveel.Data.Services;
+using Deveel.Data.Sql;
 
 namespace Deveel.Data.Sql.Tables {
 	public sealed class GroupTable : FunctionTable {

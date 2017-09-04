@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql;
+
 using Xunit;
 
 namespace Deveel.Data.Sql.Tables {

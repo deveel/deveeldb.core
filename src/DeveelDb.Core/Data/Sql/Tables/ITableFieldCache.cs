@@ -17,9 +17,11 @@
 
 using System;
 
+using Deveel.Data.Sql;
+
 namespace Deveel.Data.Sql.Tables {
 	public interface ITableFieldCache : IDisposable {
-		bool TryGetValue(FieldId fieldId, out SqlObject value);
+		bool TryGetValue(FieldId key, out SqlObject value);
 
 		void SetValue(FieldId fieldId, SqlObject value);
 

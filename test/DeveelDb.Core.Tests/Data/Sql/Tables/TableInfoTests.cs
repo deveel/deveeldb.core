@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Text;
 
+using Deveel.Data.Sql;
+
 using Xunit;
 
 namespace Deveel.Data.Sql.Tables {

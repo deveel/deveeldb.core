@@ -58,6 +58,8 @@ namespace Deveel.Data.Sql.Expressions {
 			mock.As<IConfigurationScope>()
 				.Setup(x => x.Configuration)
 				.Returns(config);
+			mock.Setup(x => x.Dispose())
+				.Callback(container.Dispose);
 
 			context = mock.Object;
 
@@ -488,7 +490,7 @@ namespace Deveel.Data.Sql.Expressions {
 			Assert.NotNull(exp);
 			Assert.IsType<SqlQueryExpression>(exp);
 
-			var query = (SqlQueryExpression) exp;
+			var query = (SqlQueryExpression)exp;
 			Assert.NotEmpty(query.Items);
 			Assert.NotNull(query.Where);
 			Assert.NotNull(query.From);

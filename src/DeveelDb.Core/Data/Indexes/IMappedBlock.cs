@@ -15,14 +15,24 @@
 //
 
 
-namespace Deveel.Data.Sql.Tables.Infrastructure {
-	class TableSourceGC {
-		private ITableSource source;
-		private IContext context;
+using System;
 
-		public TableSourceGC(IContext context, ITableSource source) {
-			this.context = context;
-			this.source = source;
-		}
+using Deveel.Data.Sql;
+using Deveel.Data.Storage;
+
+namespace Deveel.Data.Indexes {
+	public interface IMappedBlock : IIndexBlock<SqlObject, long> {
+		long FirstEntry { get; }
+
+		long LastEntry { get; }
+
+		long BlockPointer { get; }
+
+		byte CompactType { get; }
+
+
+		long CopyTo(IStore destStore);
+
+		long Flush();
 	}
 }

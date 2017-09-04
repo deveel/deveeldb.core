@@ -18,6 +18,8 @@
 using System;
 using System.Threading.Tasks;
 
+using Deveel.Data.Sql;
+
 namespace Deveel.Data.Sql.Tables {
 	public sealed class Field {
 		private readonly Row row;
