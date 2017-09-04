@@ -19,7 +19,13 @@ using System;
 using System.Threading.Tasks;
 
 namespace Deveel.Data.Security {
-	public interface ISecurityResolver {
-		Task<bool> HasPrivilegesAsync(string grantee, DbObjectType objType, ObjectName objName, Privilege privilege);
+	public interface IPrivilegeManager : IPrivilegeResolver {
+		Task<bool> HasPrivilegeAsync(string name);
+
+		Task<bool> CreatePrivilegeAsync(string name);
+
+		Task<bool> DeletePrivilegeAsync(string name);
+
+		Task<string[]> ListPrivilegesAsync();
 	}
 }

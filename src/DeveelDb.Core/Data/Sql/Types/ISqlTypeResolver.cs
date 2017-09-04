@@ -18,7 +18,30 @@
 using System;
 
 namespace Deveel.Data.Sql.Types {
+	/// <summary>
+	/// A container that is used to resolve the types
+	/// matching the information specified
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// The interface exposes the functionality of resolving
+	/// types defined at design time (eg. <see cref="PrimitiveTypes">primitive
+	/// types</see>) or at runtime, like the User-Defined types.
+	/// </para>
+	/// <para>
+	/// Components extending the core library can register instances
+	/// of this library for exposing types defined by the external
+	/// libraries (eg. <c>GEOMETRY</c>, <c>XML</c>, etc.)
+	/// </para>
+	/// </remarks>
 	public interface ISqlTypeResolver {
+		/// <summary>
+		/// Resolves the given information into the given
+		/// SQL type corresponding.
+		/// </summary>
+		/// <param name="resolveInfo">The information used to
+		/// resolve the SQL type.</param>
+		/// <returns></returns>
 		SqlType Resolve(SqlTypeResolveInfo resolveInfo);
 	}
 }

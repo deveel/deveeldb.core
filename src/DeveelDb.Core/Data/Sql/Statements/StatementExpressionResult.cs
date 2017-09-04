@@ -26,7 +26,9 @@ namespace Deveel.Data.Sql.Statements {
 		/// <summary>
 		/// Constructs the result with the given value.
 		/// </summary>
-		/// <param name="value"></param>
+		/// <param name="value">The value to be returned from the result</param>
+		/// <exception cref="ArgumentNullException">If the given <paramref name="value"/>
+		/// is <c>null</c>.</exception>
 		public StatementExpressionResult(SqlObject value) {
 			if (value == null)
 				throw new ArgumentNullException(nameof(value));

@@ -21,24 +21,23 @@ using System.Threading.Tasks;
 
 namespace Deveel.Data.Security {
 	public sealed class PrivilegesCache : ISecurityResolver, IDisposable {
-		private Dictionary<Key, Privileges> cache;
+		private Dictionary<Key, Privilege> cache;
 
 		~PrivilegesCache() {
 			Dispose(false);
 		}
 
-		async Task<bool> ISecurityResolver.HasPrivilegesAsync(string grantee, DbObjectType objectType, ObjectName objectName, Privileges privileges) {
-			Privileges userPrivileges;
+		async Task<bool> ISecurityResolver.HasPrivilegesAsync(string grantee, DbObjectType objectType, ObjectName objectName, Privilege privileges) {
+			Privilege userPrivileges;
 			if (!TryGetPrivileges(objectType, objectName, grantee, out userPrivileges))
 				return false;
 
-			return (privileges & userPrivileges) != 0;
+			return privileges.Permits(userPrivileges);
 		}
 
-		public bool TryGetPrivileges(DbObjectType objectType, ObjectName objectName, string grantee,
-			out Privileges privileges) {
+		public bool TryGetPrivileges(DbObjectType objectType, ObjectName objectName, string grantee, out Privilege privileges) {
 			if (cache == null) {
-				privileges = Privileges.None;
+				privileges = Privilege.None;
 				return false;
 			}
 
@@ -46,11 +45,11 @@ namespace Deveel.Data.Security {
 			return cache.TryGetValue(key, out privileges);
 		}
 
-		public void SetPrivileges(DbObjectType objectType, ObjectName objectName, string grantee, Privileges privileges) {
+		public void SetPrivileges(DbObjectType objectType, ObjectName objectName, string grantee, Privilege privileges) {
 			var key = new Key(objectType, objectName, grantee);
 			
 			if (cache == null)
-				cache = new Dictionary<Key, Privileges>();
+				cache = new Dictionary<Key, Privilege>();
 
 			cache[key] = privileges;
 		}

@@ -26,6 +26,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\Security\Privileges.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Antlr4" Version="4.6.3" />
     <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.3" />
     <PackageReference Include="Antlr4.Runtime" Version="4.6.3" />

@@ -18,7 +18,31 @@
 using System;
 
 namespace Deveel.Data.Sql.Types {
+	/// <summary>
+	/// The component used to parse a string into instances
+	/// of SQL types
+	/// </summary>
     public interface ISqlTypeParser {
+		/// <summary>
+		/// Reads the input string and turns into an instance
+		/// of <see cref="SqlType"/> having the properties defined
+		/// in the string.
+		/// </summary>
+		/// <param name="context">The optional system context used to resolve 
+		/// the type</param>
+		/// <param name="s">The input string to parse</param>
+		/// <remarks>
+		/// <para>
+		/// The <paramref name="context"/> is not required if the input string is
+		/// known to be a primitive type (<see cref="PrimitiveTypes.IsPrimitive(string)"/>).
+		/// </para>
+		/// </remarks>
+		/// <returns>
+		/// Returns an instance of <see cref="SqlType"/> that is resolved
+		/// from the context and having the specified attributes
+		/// </returns>
+		/// <seealso cref="ISqlTypeResolver"/>
+		/// <seealso cref="PrimitiveTypes"/>
         SqlType Parse(IContext context, string s);
     }
 }

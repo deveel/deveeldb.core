@@ -16,11 +16,14 @@
 
 
 using System;
-using System.Globalization;
 
 using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql {
+	/// <summary>
+	/// The value of a SQL <c>DAY TO SECOND</c>, representing a span of
+	/// time expressed in days, hours, minutes, seconds and milliseconds
+	/// </summary>
 	public struct SqlDayToSecond : ISqlValue, IComparable<SqlDayToSecond>, IEquatable<SqlDayToSecond>, ISqlFormattable {
 		private readonly TimeSpan value;
 

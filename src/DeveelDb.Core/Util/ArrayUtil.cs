@@ -37,12 +37,12 @@ namespace Deveel.Util {
 			return Merge(new object[] {obj}, array);
 		}
 
-		public static object[] Introduce(object obj1, object obj2, object[] array) {
-			return Merge(new[] {obj1, obj2}, array);
-		}
+		//public static object[] Introduce(object obj1, object obj2, object[] array) {
+		//	return Merge(new[] {obj1, obj2}, array);
+		//}
 
-		public static object[] Introduce(object obj1, object obj2, object obj3, object[] array) {
-			return Merge(new[] {obj1, obj2, obj3}, array);
-		}
+		//public static object[] Introduce(object obj1, object obj2, object obj3, object[] array) {
+		//	return Merge(new[] {obj1, obj2, obj3}, array);
+		//}
 	}
 }
