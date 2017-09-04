@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Deveel.Data.Services;
+using Deveel.Data.Sql.Methods;
 
 using Moq;
 
@@ -18,7 +19,7 @@ namespace Deveel.Data.Security {
 			container.Register<IRequirementHandler<DelegatedRequirement>, DelegatedRequirementHandler>();
 
 			var cache = new PrivilegesCache();
-			cache.SetPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), "user1", Privileges.Insert);
+			cache.SetPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), "user1", SqlPrivileges.Insert);
 
 			container.RegisterInstance<ISecurityResolver>(cache);
 
@@ -34,7 +35,7 @@ namespace Deveel.Data.Security {
 		[Fact]
 		public void AddRequirements() {
 			var requirements = new RequirementCollection();
-			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), Privileges.Alter);
+			requirements.RequirePrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), SqlPrivileges.Alter);
 
 			Assert.NotEmpty(requirements);
 			Assert.Equal(1, requirements.Count());
@@ -48,11 +49,11 @@ namespace Deveel.Data.Security {
 		}
 
 		[Theory]
-		[InlineData(Privileges.Insert, true)]
-		[InlineData(Privileges.Compact, false)]
-		[InlineData(Privileges.Insert | Privileges.Alter, true)]
-		public async Task AssertUserHasPrivileges(Privileges privileges, bool expected) {
-			Assert.Equal(expected, await context.UserHasPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), privileges));
+		[InlineData("Insert", true)]
+		[InlineData("Insert, Alter", true)]
+		public async Task AssertUserHasPrivileges(string privilegeString, bool expected) {
+			var privilege = SqlPrivileges.Resolver.ResolvePrivilege(privilegeString);
+			Assert.Equal(expected, await context.UserHasPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), privilege));
 		}
 
 		public void Dispose() {

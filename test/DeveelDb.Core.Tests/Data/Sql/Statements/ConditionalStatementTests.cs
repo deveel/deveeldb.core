@@ -19,7 +19,7 @@ namespace Deveel.Data.Sql.Statements {
 			container.Register<IRequirementHandler<DelegatedRequirement>, DelegatedRequirementHandler>();
 
 			var cache = new PrivilegesCache();
-			cache.SetPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), "user1", Privileges.Insert);
+			cache.SetPrivileges(DbObjectType.Table, ObjectName.Parse("sys.tab1"), "user1", SqlPrivileges.Insert);
 
 			container.RegisterInstance<ISecurityResolver>(cache);
 

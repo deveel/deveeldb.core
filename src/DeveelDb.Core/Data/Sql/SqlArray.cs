@@ -111,6 +111,7 @@ namespace Deveel.Data.Sql {
 			builder.Append(")");
 		}
 
+		/// <inheritdoc/>
 		public void CopyTo(Array array, int index) {
 			if (array == null)
 				throw new ArgumentNullException(nameof(array));
@@ -126,17 +127,11 @@ namespace Deveel.Data.Sql {
 			Array.Copy(expressions, 0, array, index, Length);
 		}
 
-		int ICollection.Count {
-			get { return Length; }
-		}
+		int ICollection.Count => Length;
 
-		bool ICollection.IsSynchronized {
-			get { return false; }
-		}
+		bool ICollection.IsSynchronized => false;
 
-		object ICollection.SyncRoot {
-			get { return this; }
-		}
+		object ICollection.SyncRoot => this;
 
 		int IList.Add(object value) {
 			throw new NotSupportedException();
@@ -166,23 +161,20 @@ namespace Deveel.Data.Sql {
 			throw new NotSupportedException();
 		}
 
-		bool IList.IsFixedSize {
-			get { return true; }
-		}
+		bool IList.IsFixedSize => true;
 
-		bool IList.IsReadOnly {
-			get { return true; }
-		}
+		bool IList.IsReadOnly => true;
 
 		object IList.this[int index] {
-			get { return this[index]; }
-			set { throw new NotSupportedException(); }
+			get => this[index];
+			set => throw new NotSupportedException();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator() {
-			throw new NotImplementedException();
+			return GetEnumerator();
 		}
 
+		/// <inheritdoc/>
 		public IEnumerator<SqlExpression> GetEnumerator() {
 			return new ArrayEnumerator(this);
 		}
@@ -210,9 +202,7 @@ namespace Deveel.Data.Sql {
 
 			public SqlExpression Current => array[offset];
 
-			object IEnumerator.Current {
-				get { return Current; }
-			}
+			object IEnumerator.Current => Current;
 
 			public void Dispose() {
 			}

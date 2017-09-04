@@ -25,9 +25,9 @@ namespace Deveel.Data.Security {
 
 		Task<bool> DropRoleAsync(string role);
 
-		Task<bool> GrantToRoleAsync(string role, ObjectName objName, Privileges privileges);
+		Task<bool> GrantToRoleAsync(string role, ObjectName objName, Privilege privilege);
 
-		Task<bool> RevokeFromRoleAsync(string role, ObjectName objName, Privileges privileges);
+		Task<bool> RevokeFromRoleAsync(string role, ObjectName objName, Privilege privilege);
 
 		Task<bool> CreateUserAsync(string user);
 
@@ -39,8 +39,8 @@ namespace Deveel.Data.Security {
 
 		Task<IEnumerable<Role>> GetUserRolesAsync(string user);
 
-		Task<bool> GrantToUserAsync(string user, ObjectName objName, Privileges privileges);
+		Task<bool> GrantToUserAsync(string user, ObjectName objName, Privilege privileges);
 
-		Task<bool> RevokeFromUserAsync(string user, ObjectName objName, Privileges privileges);
+		Task<bool> RevokeFromUserAsync(string user, ObjectName objName, Privilege privileges);
 	}
 }

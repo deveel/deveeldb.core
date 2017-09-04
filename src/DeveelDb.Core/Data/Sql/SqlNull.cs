@@ -21,7 +21,13 @@ using System.Reflection;
 using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql {
+	/// <summary>
+	/// A value object that represents the absence of value (<c>NULL</c>).
+	/// </summary>
 	public struct SqlNull : ISqlValue, IConvertible, ISqlFormattable {
+		/// <summary>
+		/// The default instance of a <c>NULL</c> value.
+		/// </summary>
 		public static readonly SqlNull Value = new SqlNull();
 
 		private SqlNull(SerializationInfo info) {

@@ -19,7 +19,18 @@ using System;
 using System.Collections.Generic;
 
 namespace Deveel.Data.Sql.Types {
+	/// <summary>
+	/// Contains the information used to resolve a SQL type.
+	/// </summary>
 	public sealed class SqlTypeResolveInfo {
+		/// <summary>
+		/// Constructs an instance of <see cref="SqlTypeResolveInfo"/> with the
+		/// given name of the type and an optional set of properties
+		/// </summary>
+		/// <param name="typeName">The name of the type to resolve</param>
+		/// <param name="properties">An optional set of properties for the type.</param>
+		/// <exception cref="ArgumentNullException">If the given <paramref name="typeName"/>
+		/// is <c>null</c> or an empty string.</exception>
 		public SqlTypeResolveInfo(string typeName, IDictionary<string, object> properties) {
 			if (String.IsNullOrEmpty(typeName))
 				throw new ArgumentNullException(nameof(typeName));
@@ -31,12 +42,25 @@ namespace Deveel.Data.Sql.Types {
 			Properties = properties;
 		}
 
+		/// <summary>
+		/// Constructs an instance of <see cref="SqlTypeResolveInfo"/> with the
+		/// given name of the type.
+		/// </summary>
+		/// <param name="typeName">The name of the type to resolve</param>
+		/// <exception cref="ArgumentNullException">If the given <paramref name="typeName"/>
+		/// is <c>null</c> or an empty string.</exception>
 		public SqlTypeResolveInfo(string typeName)
 			: this(typeName, new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)) {
 		}
 
+		/// <summary>
+		/// Gets the name of the type to resolve
+		/// </summary>
 		public string TypeName { get; }
 
+		/// <summary>
+		/// Gets a set of properties of the type to resolve.
+		/// </summary>
 		public IDictionary<string, object> Properties { get; }
 	}
 }

@@ -22,7 +22,21 @@ namespace Deveel.Data.Sql {
 	/// Provides a contact for representing an element into
 	/// a proper SQL string
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Implementations of this interface provide an efficient
+	/// way to construct complex representations of SQL statements
+	/// and queries, expressions and other objects, by appending
+	/// to a builder.
+	/// </para>
+	/// </remarks>
 	public interface ISqlFormattable {
+		/// <summary>
+		/// Appends the string representation of the object
+		/// into the builder.
+		/// </summary>
+		/// <param name="builder">The SQL string builder where to append
+		/// the string representation of this object.</param>
 		void AppendTo(SqlStringBuilder builder);
 	}
 }

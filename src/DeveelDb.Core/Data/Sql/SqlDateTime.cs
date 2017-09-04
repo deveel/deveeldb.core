@@ -17,12 +17,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 
 using Deveel.Data.Serialization;
 
 namespace Deveel.Data.Sql {
+	/// <summary>
+	/// Represents a SQL date and time with or without timezone
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// This value has a variable handling of precision and it's not
+	/// by itself bound to certain limits, that are instead defined
+	/// by <see cref="SqlDateTimeType"/>.
+	/// </para>
+	/// </remarks>
 	public struct SqlDateTime : ISqlValue, IEquatable<SqlDateTime>, IComparable<SqlDateTime>, IFormattable, IConvertible {
 		private readonly DateTimeOffset value;
 
@@ -30,11 +39,23 @@ namespace Deveel.Data.Sql {
 		private const int TimeStampSize = 11;
 		private const int FullTimeStampSize = 13;
 
+		/// <summary>
+		/// The list of valid formats handled during a parse of a date (excluding time)
+		/// </summary>
+		/// <seealso cref="Parse"/>
+		/// <seealso cref="TryParse"/>
+		/// <seealso cref="TryParseDate"/>
 		public static readonly string[] SqlDateFormats = new[] {
 			"yyyy-MM-dd",
 			"yyyy MM dd"
 		};
 
+		/// <summary>
+		/// The list of valid formats handled during a parse of a full timestamp
+		/// </summary>
+		/// <seealso cref="Parse"/>
+		/// <seealso cref="TryParse"/>
+		/// <seealso cref="TryParseTimeStamp(string,out SqlDateTime)"/>
 		public static readonly string[] SqlTimeStampFormats = new[] {
 			"yyyy-MM-dd HH:mm:ss.fff",
 			"yyyy-MM-dd HH:mm:ss.fff z",
@@ -55,6 +76,12 @@ namespace Deveel.Data.Sql {
 			"yyyy-MM-ddTHH:mm:ss zzz",
 		};
 
+		/// <summary>
+		/// The list of valid formats handled during a parse of times (excluding the date part)
+		/// </summary>
+		/// <seealso cref="Parse"/>
+		/// <seealso cref="TryParse"/>
+		/// <seealso cref="TryParseTime"/>
 		public static readonly string[] SqlTimeFormats = new[] {
 			"HH:mm:ss.fff z",
 			"HH:mm:ss.fff zz",
@@ -66,46 +93,107 @@ namespace Deveel.Data.Sql {
 			"HH:mm:ss"
 		};
 
+		/// <summary>
+		/// The format that a SQL Time is represented as string by default
+		/// </summary>
+		/// <seealso cref="ToString()"/>
+		/// <seealso cref="ToString(string)"/>
 		public const string TimeStringFormat = "HH:mm:ss.fff zzz";
+
+		/// <summary>
+		/// The format that a full SQL TimeStamp is represented as string by default
+		/// </summary>
+		/// <seealso cref="ToString()"/>
+		/// <seealso cref="ToString(string)"/>
 		public const string TimeStampStringFormat = "yyyy-MM-ddTHH:mm:ss.fff zzz";
+
+		/// <summary>
+		/// The format that a SQL Date is represented as string by default
+		/// </summary>
+		/// <seealso cref="ToString()"/>
+		/// <seealso cref="ToString(string)"/>
 		public const string DateStringFormat = "yyyy-MM-dd";
 
+		/// <summary>
+		/// The maximum date-time that can be handled by system
+		/// </summary>
 		public static readonly SqlDateTime MaxDate = new SqlDateTime(9999, 12, 31, 23, 59, 59, 999);
+
+		/// <summary>
+		/// The minimum date-time that can be handled by the system
+		/// </summary>
 		public static readonly SqlDateTime MinDate = new SqlDateTime(1, 1, 1, 0, 0, 0, 0);
 
 		private static readonly Dictionary<string, string> tsAbbreviations;
 
+		/// <summary>
+		/// Constructs a new SQL date
+		/// </summary>
+		/// <param name="year">The year part of the date (must between 0 and 9999)</param>
+		/// <param name="month">The month part of the date (must be between 1 and 12)</param>
+		/// <param name="day">The day part of the date (must be between 1 and 31)</param>
+		/// <exception cref="ArgumentOutOfRangeException">If either one of the arguments
+		/// is not in a valid range of values</exception>
 		public SqlDateTime(int year, int month, int day)
 			: this(year, month, day, 0, 0, 0, 0, SqlDayToSecond.Zero) {
 		}
 
+		/// <summary>
+		/// Constructs a new UTC SQL date-time
+		/// </summary>
+		/// <param name="year">The year part of the date (must between 0 and 9999)</param>
+		/// <param name="month">The month part of the date (must be between 1 and 12)</param>
+		/// <param name="day">The day part of the date (must be between 1 and 31)</param>
+		/// <param name="hour">The hour part of the time (must be between 0 and 23)</param>
+		/// <param name="minute">The minute part of the time (must be between 0 and 59)</param>
+		/// <param name="second">The second part of the time (must be between 0 and 59)</param>
+		/// <param name="millisecond">The milliseconds part of the time (must be between 0 and 999)</param>
+		/// <exception cref="ArgumentOutOfRangeException">If either one of the arguments
+		/// is not in a valid range of values</exception>
 		public SqlDateTime(int year, int month, int day, int hour, int minute, int second, int millisecond)
 			: this(year, month, day, hour, minute, second, millisecond, SqlDayToSecond.Zero) {
 		}
 
+		/// <summary>
+		/// Constructs a new SQL date-time with full information
+		/// </summary>
+		/// <param name="year">The year part of the date (must between 0 and 9999)</param>
+		/// <param name="month">The month part of the date (must be between 1 and 12)</param>
+		/// <param name="day">The day part of the date (must be between 1 and 31)</param>
+		/// <param name="hour">The hour part of the time (must be between 0 and 23)</param>
+		/// <param name="minute">The minute part of the time (must be between 0 and 59)</param>
+		/// <param name="second">The second part of the time (must be between 0 and 59)</param>
+		/// <param name="millisecond">The milliseconds part of the time (must be between 0 and 999)</param>
+		/// <param name="offset">The offset of the date from the UTC</param>
+		/// <exception cref="ArgumentOutOfRangeException">If either one of the arguments
+		/// is not in a valid range of values</exception>
 		public SqlDateTime(int year, int month, int day, int hour, int minute, int second, int millisecond,
 			SqlDayToSecond offset)
 			: this() {
 			if (year <= 0 || year > 9999)
-				throw new ArgumentOutOfRangeException("year");
+				throw new ArgumentOutOfRangeException(nameof(year));
 			if (month <= 0 || month > 12)
-				throw new ArgumentOutOfRangeException("month");
+				throw new ArgumentOutOfRangeException(nameof(month));
 			if (day <= 0 || day > 31)
-				throw new ArgumentOutOfRangeException("day");
+				throw new ArgumentOutOfRangeException(nameof(day));
 
 			if (hour < 0 || hour > 23)
-				throw new ArgumentOutOfRangeException("hour");
+				throw new ArgumentOutOfRangeException(nameof(hour));
 			if (minute < 0 || minute > 59)
-				throw new ArgumentOutOfRangeException("minute");
+				throw new ArgumentOutOfRangeException(nameof(minute));
 			if (second < 0 || second > 59)
-				throw new ArgumentOutOfRangeException("second");
+				throw new ArgumentOutOfRangeException(nameof(second));
 			if (millisecond < 0 || millisecond > 999)
-				throw new ArgumentOutOfRangeException("millisecond");
+				throw new ArgumentOutOfRangeException(nameof(millisecond));
 
 			var tsOffset = new TimeSpan(0, offset.Hours, offset.Minutes, 0, 0);
 			value = new DateTimeOffset(year, month, day, hour, minute, second, millisecond, tsOffset);
 		}
 
+		/// <summary>
+		/// Constructs a new SQL date-time from the given ticks
+		/// </summary>
+		/// <param name="ticks"></param>
 		public SqlDateTime(long ticks)
 			: this(ticks, SqlDayToSecond.Zero) {
 		}
@@ -116,6 +204,17 @@ namespace Deveel.Data.Sql {
 			value = new DateTimeOffset(ticks, tsOffset);
 		}
 
+		/// <summary>
+		/// Constructs a new SQL date-time from its binary representation
+		/// </summary>
+		/// <param name="bytes">The binary representation of the date-time to construct</param>
+		/// <remarks>
+		/// <para>
+		/// The valid length of the provided array can be of 7-bytes for dates (no time information),
+		/// 11-bytes for timestamps without UTC-offset or 13-bytes for a full form that
+		/// includes the offset from UTC.
+		/// </para>
+		/// </remarks>
 		public SqlDateTime(byte[] bytes)
 			: this() {
 			var year = ((bytes[0] - 100) * 100) + (bytes[1] - 100);
@@ -168,10 +267,19 @@ namespace Deveel.Data.Sql {
 			};
 		}
 
+		/// <summary>
+		/// Gets the year part of the date
+		/// </summary>
 		public int Year => value.Year;
 
+		/// <summary>
+		/// Gets the month part of the date
+		/// </summary>
 		public int Month => value.Month;
 
+		/// <summary>
+		/// Gets the day part of the date
+		/// </summary>
 		public int Day => value.Day;
 
 		public int Hour => value.Hour;

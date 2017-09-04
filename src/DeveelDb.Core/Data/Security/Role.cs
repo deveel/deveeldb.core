@@ -18,7 +18,21 @@
 using System;
 
 namespace Deveel.Data.Security {
+	/// <summary>
+	/// Represents a role of a system that can be granted with
+	/// privileges and assigned to users.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// When users are assigned with one or more roles, they
+	/// inherit the privileges of the role.
+	/// </para>
+	/// </remarks>
 	public sealed class Role : IPriviledged {
+		/// <summary>
+		/// Constructs a <see cref="Role"/> identified by the given name.
+		/// </summary>
+		/// <param name="name">The name of the role.</param>
 		public Role(string name) {
 			if (String.IsNullOrWhiteSpace(name))
 				throw new ArgumentNullException(nameof(name));
@@ -26,6 +40,9 @@ namespace Deveel.Data.Security {
 			Name = name;
 		}
 
+		/// <summary>
+		/// Gets the name of the role.
+		/// </summary>
 		public string Name { get; }
 	}
 }

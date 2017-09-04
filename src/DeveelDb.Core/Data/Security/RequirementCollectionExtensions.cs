@@ -35,8 +35,8 @@ namespace Deveel.Data.Security {
 		}
 
 		public static void RequirePrivileges(this IRequirementCollection requirements,
-			DbObjectType objectType, ObjectName objName, Privileges privileges) {
-			requirements.AddRequirement(context => context.UserHasPrivileges(objectType, objName, privileges));
+			DbObjectType objectType, ObjectName objName, Privilege privilege) {
+			requirements.AddRequirement(context => context.UserHasPrivileges(objectType, objName, privilege));
 		}
 
 		public static void RequireCreateInSchema(this IRequirementCollection collection, string schemaName)
