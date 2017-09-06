@@ -17,6 +17,7 @@
 
 using System;
 
+using Deveel.Data.Indexes;
 using Deveel.Data.Transactions;
 
 namespace Deveel.Data.Sql.Tables {
@@ -30,6 +31,8 @@ namespace Deveel.Data.Sql.Tables {
 
 		void SetUniqueId(long value);
 
+		IIndexSet<SqlObject,long> CreateIndexSet();
+
 		long GetNextUniqueId();
 
 		IMutableTable CreateTableAtCommit(ITransaction transaction);
@@ -37,5 +40,7 @@ namespace Deveel.Data.Sql.Tables {
 		RecordState WriteRecordState(long rowNumber, RecordState recordState);
 
 		RecordState ReadRecordState(long rowNumber);
+
+		void BuildIndexes();
 	}
 }

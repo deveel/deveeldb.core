@@ -31,5 +31,9 @@ namespace Deveel.Data.Sql.Sequences {
 
 			return false;
 		}
+
+		public static async Task CreateNativeSequenceAsync(this IContext context, ObjectName tableName) {
+			throw new NotImplementedException();
+		}
 	}
 }

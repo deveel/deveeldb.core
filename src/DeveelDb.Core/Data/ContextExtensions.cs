@@ -97,6 +97,18 @@ namespace Deveel.Data {
 			return await manager.GetObjectInfoAsync(objectName);
 		}
 
+		public static async Task<IDbObject> CreateObjectAsync(this IContext context, IDbObjectInfo objectInfo) {
+			if (objectInfo == null) throw new ArgumentNullException(nameof(objectInfo));
+
+			var manager = context.GetObjectManager(objectInfo.ObjectType);
+			if (manager == null)
+				throw new InvalidOperationException($"No manager for type {objectInfo.ObjectType} was defined in the context");
+
+			await manager.CreateObjectAsync(objectInfo);
+
+			return await context.GetObjectAsync(objectInfo.ObjectType, objectInfo.FullName);
+		}
+
 		public static ObjectName QualifyName(this IContext context, ObjectName objectName) {
 			if (objectName.Parent == null) {
 				var currentSchema = context.CurrentSchema();

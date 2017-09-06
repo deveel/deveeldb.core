@@ -56,6 +56,8 @@ namespace Deveel.Data.Sql.Tables {
 
 		public string Type { get; }
 
+		public bool Temporary { get; set; }
+
 		public virtual IColumnList Columns { get; }
 
 		public static TableInfo ReadOnly(TableInfo tableInfo) {

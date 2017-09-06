@@ -20,7 +20,7 @@ using System;
 using Deveel.Data.Transactions;
 
 namespace Deveel.Data.Sql.Tables {
-	public interface IMutableTable : ITable, ILockable {
+	public interface IMutableTable : ITable, IDisposable, ILockable {
 		/// <summary>
 		/// Persists a new row to the table.
 		/// </summary>
