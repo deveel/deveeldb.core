@@ -203,5 +203,47 @@ namespace Deveel.Data.Sql {
 
 			Assert.Equal(number, back);
 		}
+
+		[Theory]
+		[InlineData(null)]
+		[InlineData(587.0447774)]
+		public static void SerializeNumericValue(double? value) {
+			ISqlValue number = value == null ? (ISqlValue)SqlNull.Value : (SqlNumber)value.Value;
+
+			var type = SqlNull.Value == number
+				? PrimitiveTypes.Numeric(57, 12)
+				: PrimitiveTypes.Numeric(((SqlNumber) number).Precision, ((SqlNumber) number).Scale);
+			
+
+
+			var stream = new MemoryStream();
+			type.Serialize(stream, number);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
+			var result = type.Deserialize(stream);
+
+			Assert.Equal(number, result);
+		}
+
+		[Theory]
+		[InlineData(null)]
+		[InlineData(587)]
+		[InlineData(697887522)]
+		public static void SerializeIntegerValue(long? value) {
+			ISqlValue number = value == null ? (ISqlValue)SqlNull.Value : (SqlNumber)value.Value;
+
+			var type = PrimitiveTypes.BigInt();
+
+			var stream = new MemoryStream();
+			type.Serialize(stream, number);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
+			var result = type.Deserialize(stream);
+
+			Assert.Equal(number, result);
+
+		}
 	}
 }

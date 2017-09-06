@@ -84,8 +84,9 @@ namespace Deveel.Data.Sql {
 			return GetEnumerator();
 		}
 
-		/// <inheritdoc/>
-		public long Length => bytes?.Length ?? 0L;
+		public int Length => bytes?.Length ?? 0;
+
+		long ISqlBinary.Length => Length;
 
 		/// <inheritdoc/>
 		public Stream GetInput() {

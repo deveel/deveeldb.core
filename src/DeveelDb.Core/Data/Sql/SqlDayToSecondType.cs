@@ -16,6 +16,7 @@
 
 
 using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -55,6 +56,10 @@ namespace Deveel.Data.Sql {
 			return base.Subtract(a, b);
 		}
 
+		public override bool IsInstanceOf(ISqlValue value) {
+			return value is SqlDayToSecond || value is SqlNull;
+		}
+
 		public override bool CanCastTo(ISqlValue value, SqlType destType) {
 			return destType is SqlCharacterType || destType is SqlBinaryType;
 		}
@@ -82,6 +87,20 @@ namespace Deveel.Data.Sql {
 			var bytes = dts.ToByArray();
 			var binary = new SqlBinary(bytes);
 			return destType.NormalizeValue(binary);
+		}
+
+		protected override void SerializeValue(IContext context, BinaryWriter writer, ISqlValue value) {
+			var dts = (SqlDayToSecond) value;
+			var bytes = dts.ToByArray();
+			writer.Write(bytes.Length);
+			writer.Write(bytes);
+		}
+
+		protected override ISqlValue DeserializeValue(IContext context, BinaryReader reader) {
+			var length = reader.ReadInt32();
+			var bytes = reader.ReadBytes(length);
+
+			return new SqlDayToSecond(bytes);
 		}
 	}
 }

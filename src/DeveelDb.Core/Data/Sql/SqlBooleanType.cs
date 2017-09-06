@@ -16,6 +16,7 @@
 
 
 using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -181,6 +182,16 @@ namespace Deveel.Data.Sql {
 				default:
 					return b == true ? "TRUE" : "FALSE";
 			}
+		}
+
+		protected override void SerializeValue(IContext context, BinaryWriter writer, ISqlValue value) {
+			var b = (SqlBoolean) value;
+			writer.Write(b ? (byte)1 : (byte)0);
+		}
+
+		protected override ISqlValue DeserializeValue(IContext context, BinaryReader reader) {
+			var b = reader.ReadByte();
+			return new SqlBoolean(b);
 		}
 	}
 }

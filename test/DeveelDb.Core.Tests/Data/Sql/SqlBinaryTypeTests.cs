@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -139,6 +140,21 @@ namespace Deveel.Data.Sql {
 			var type2 = new SqlBooleanType(SqlTypeCode.Bit);
 
 			Assert.False(type1.Equals(type2));
+		}
+
+		[Fact]
+		public static void SerializeValue() {
+			var type = PrimitiveTypes.Binary(500);
+			var value = new SqlBinary(new byte[] {25, 87, 0, 156, 77});
+
+			var stream = new MemoryStream();
+			type.Serialize(stream, value);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
+			var value2 = type.Deserialize(stream);
+
+			Assert.Equal(value, value2);
 		}
 	}
 }

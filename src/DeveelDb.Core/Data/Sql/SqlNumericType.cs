@@ -16,6 +16,7 @@
 
 
 using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 using Deveel.Math;
@@ -511,6 +512,26 @@ namespace Deveel.Data.Sql {
 					builder.Append(")");
 				}
 			}
+		}
+
+		protected override void SerializeValue(IContext context, BinaryWriter writer, ISqlValue value) {
+			var number = (SqlNumber) value;
+			var unscaled = number.ToUnscaledByteArray();
+			
+			writer.Write(number.Precision);
+			writer.Write(number.Scale);
+			writer.Write(unscaled.Length);
+			writer.Write(unscaled);
+		}
+
+		protected override ISqlValue DeserializeValue(IContext context, BinaryReader reader) {
+			var precision = reader.ReadInt32();
+			var scale = reader.ReadInt32();
+
+			var unscaledLength = reader.ReadInt32();
+			var unscaled = reader.ReadBytes(unscaledLength);
+
+			return new SqlNumber(new BigInteger(unscaled), scale, precision);
 		}
 	}
 }

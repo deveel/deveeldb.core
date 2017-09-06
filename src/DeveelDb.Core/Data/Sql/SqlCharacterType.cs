@@ -17,6 +17,7 @@
 
 using System;
 using System.Globalization;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -250,6 +251,35 @@ namespace Deveel.Data.Sql {
 				return SqlNull.Value;
 
 			return ytm;
+		}
+
+		protected override void SerializeValue(IContext context, BinaryWriter writer, ISqlValue value) {
+			if (value is SqlString) {
+				writer.Write((byte)1);
+
+				var s = (SqlString) value;
+				var chars = s.ToCharArray();
+
+				writer.Write(s.Length);
+				writer.Write(chars);
+			} else {
+				throw new NotImplementedException("Long strings not supported yet");
+			}
+		}
+
+		protected override ISqlValue DeserializeValue(IContext context, BinaryReader reader) {
+			var type = reader.ReadByte();
+
+			if (type == 1) {
+				var length = reader.ReadInt32();
+				var chars = reader.ReadChars(length);
+
+				return new SqlString(chars);
+			}
+			if (type == 2)
+				throw new NotImplementedException("Long strings not supported yet");
+
+			throw new InvalidOperationException("Invalid serialization");
 		}
 	}
 }

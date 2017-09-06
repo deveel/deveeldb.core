@@ -16,6 +16,7 @@
 
 
 using System;
+using System.IO;
 using System.Linq;
 
 using Deveel.Data.Serialization;
@@ -41,9 +42,7 @@ namespace Deveel.Data.Sql {
 
 		public int MaxSize { get; private set; }
 
-		public override bool IsIndexable {
-			get { return false; }
-		}
+		public override bool IsIndexable => false;
 
 		private static void AssertIsBinary(SqlTypeCode sqlType) {
 			if (!IsBinaryType(sqlType))
@@ -149,6 +148,34 @@ namespace Deveel.Data.Sql {
 
 			return TypeCode == binType.TypeCode &&
 			       MaxSize == binType.MaxSize;
+		}
+
+		protected override void SerializeValue(IContext context, BinaryWriter writer, ISqlValue value) {
+			if (value is SqlBinary) {
+				var binary = (SqlBinary) value;
+
+				writer.Write((byte)1);
+
+				writer.Write((int)binary.Length);
+				writer.Write(binary.ToByteArray());
+			} else {
+				throw new NotImplementedException("Long binary not supported yet");
+			}
+		}
+
+		protected override ISqlValue DeserializeValue(IContext context, BinaryReader reader) {
+			var type = reader.ReadByte();
+			if (type == 1) {
+				var length = reader.ReadInt32();
+				var bytes = reader.ReadBytes(length);
+				return new SqlBinary(bytes, length);
+			}
+
+			if (type == 2) {
+				throw new NotImplementedException("Long binary not supported yet");
+			}
+
+			throw new InvalidOperationException("Invalid serialization sequence");
 		}
 	}
 }
