@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -102,6 +103,24 @@ namespace Deveel.Data.Sql {
 			var exp = SqlYearToMonth.Parse(expected);
 
 			Assert.Equal(exp, result);
+		}
+
+		[Theory]
+		[InlineData("22")]
+		[InlineData("1.21")]
+		[InlineData("-6")]
+		public static void SerializeValue(string input) {
+			var type = PrimitiveTypes.YearToMonth();
+			var ytm = SqlYearToMonth.Parse(input);
+
+			var stream = new MemoryStream();
+			type.Serialize(stream, ytm);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
+			var result = type.Deserialize(stream);
+
+			Assert.Equal(ytm, result);
 		}
 	}
 }

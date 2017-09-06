@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Http.Headers;
 
 using Deveel.Data.Serialization;
@@ -281,6 +282,24 @@ namespace Deveel.Data.Sql {
 			var result = SqlTypeUtil.Serialize(type);
 
 			Assert.Equal(type, result);
+		}
+
+		[Theory]
+		[InlineData(null)]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void SerializeValue(bool? value) {
+			var type = PrimitiveTypes.Boolean();
+			ISqlValue b = value == null ? (ISqlValue) SqlNull.Value : (SqlBoolean)value.Value;
+
+			var stream = new MemoryStream();
+			type.Serialize(stream, b);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
+			var result = type.Deserialize(stream);
+
+			Assert.Equal(b, result);
 		}
 	}
 }

@@ -16,6 +16,7 @@
 
 
 using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -221,6 +222,21 @@ namespace Deveel.Data.Sql {
 				default:
 					return date.ToString();
 			}
+		}
+
+		protected override void SerializeValue(IContext context, BinaryWriter writer, ISqlValue value) {
+			var dateTime = (SqlDateTime) value;
+			var binary = dateTime.ToByteArray(true);
+
+			writer.Write(binary.Length);
+			writer.Write(binary);
+		}
+
+		protected override ISqlValue DeserializeValue(IContext context, BinaryReader reader) {
+			var length = reader.ReadInt32();
+			var binary = reader.ReadBytes(length);
+
+			return new SqlDateTime(binary);
 		}
 	}
 }

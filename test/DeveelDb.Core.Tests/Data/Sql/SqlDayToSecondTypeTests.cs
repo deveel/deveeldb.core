@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -96,5 +97,21 @@ namespace Deveel.Data.Sql {
 
             Assert.IsType<SqlDayToSecondType>(type);
         }
-    }
+
+		[Theory]
+		[InlineData("17:09:45.223")]
+		public static void SerializeValue(string s) {
+			var dts = SqlDayToSecond.Parse(s);
+			var type = new SqlDayToSecondType();
+
+			var stream = new MemoryStream();
+			type.Serialize(stream, dts);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
+			var result = type.Deserialize(stream);
+
+			Assert.Equal(dts, result);
+		}
+	}
 }

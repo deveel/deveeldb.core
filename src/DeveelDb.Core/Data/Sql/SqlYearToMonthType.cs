@@ -16,6 +16,7 @@
 
 
 using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -30,7 +31,7 @@ namespace Deveel.Data.Sql {
 		}
 
 		public override bool IsInstanceOf(ISqlValue value) {
-			return value is SqlYearToMonth;
+			return value is SqlYearToMonth || value is SqlNull;
 		}
 
 		public override ISqlValue Add(ISqlValue a, ISqlValue b) {
@@ -67,6 +68,16 @@ namespace Deveel.Data.Sql {
 			}
 
 			return base.Add(a, b);
+		}
+
+		protected override void SerializeValue(IContext context, BinaryWriter writer, ISqlValue value) {
+			var ytm = (SqlYearToMonth) value;
+			writer.Write(ytm.TotalMonths);
+		}
+
+		protected override ISqlValue DeserializeValue(IContext context, BinaryReader reader) {
+			var months = reader.ReadInt32();
+			return new SqlYearToMonth(months);
 		}
 	}
 }

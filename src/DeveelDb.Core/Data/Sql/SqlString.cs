@@ -149,7 +149,9 @@ namespace Deveel.Data.Sql {
 			return GetEnumerator();
 		}
 
-		public long Length { get; }
+		public int Length { get; }
+
+		long ISqlString.Length => Length;
 
 		public TextReader GetInput() {
 			return new StringReader(source);

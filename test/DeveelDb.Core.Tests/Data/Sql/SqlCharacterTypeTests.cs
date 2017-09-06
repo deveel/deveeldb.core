@@ -311,5 +311,22 @@ namespace Deveel.Data.Sql {
 			var exp = new SqlYearToMonth(expected);
 			Cast(s, SqlTypeCode.YearToMonth, -1, -1, exp);
 		}
+
+		[Theory]
+		[InlineData("The quick brown fox")]
+		[InlineData(null)]
+		public static void SerializeValue(string s) {
+			ISqlValue value = String.IsNullOrEmpty(s) ? (ISqlValue) SqlNull.Value : new SqlString(s);
+			var type = PrimitiveTypes.String();
+
+			var stream = new MemoryStream();
+			type.Serialize(stream, value);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
+			var result = type.Deserialize(stream);
+
+			Assert.Equal(value, result);
+		}
 	}
 }

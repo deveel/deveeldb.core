@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 using Deveel.Data.Serialization;
 
@@ -246,5 +247,21 @@ namespace Deveel.Data.Sql {
 			Assert.Equal(expectedResult, result);
 		}
 
+		[Theory]
+		[InlineData("2013-12-01T09:11:25.893")]
+		[InlineData("2013-12-01T09:11:25.893 +02:15")]
+		public static void SerializeValue(string date) {
+			var type = PrimitiveTypes.TimeStamp();
+			var sqlDate = SqlDateTime.Parse(date);
+
+			var stream = new MemoryStream();
+			type.Serialize(stream, sqlDate);
+
+			stream.Seek(0, SeekOrigin.Begin);
+
+			var result = type.Deserialize(stream);
+
+			Assert.Equal(sqlDate, result);
+		}
 	}
 }

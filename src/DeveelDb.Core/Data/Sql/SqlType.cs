@@ -554,6 +554,68 @@ namespace Deveel.Data.Sql {
 			throw new NotSupportedException($"The type code '{typeCode}' does not support deserialization");
 		}
 
+		public void Serialize(Stream output, ISqlValue value) {
+			Serialize(null, output, value);
+		}
+
+		public void Serialize(IContext context, Stream output, ISqlValue value) {
+			var writer = new BinaryWriter(output);
+			Serialize(context, writer, value);
+		}
+
+		public void Serialize(BinaryWriter writer, ISqlValue value) {
+			Serialize(null, writer, value);
+		}
+
+		public void Serialize(IContext context, BinaryWriter writer, ISqlValue value) {
+			if (!IsInstanceOf(value))
+				throw new ArgumentException($"The value is not an instance of {ToString()}", nameof(value));
+
+			if (value is SqlNull) {
+				writer.Write((byte) 1);
+				return;
+			}
+
+			writer.Write((byte) 0);
+
+			SerializeValue(context, writer, value);
+		}
+
+		protected virtual void SerializeValue(IContext context, BinaryWriter writer, ISqlValue value) {
+			throw new NotSupportedException($"Type {ToString()} does not support value serialization");
+		}
+
+		public ISqlValue Deserialize(Stream input) {
+			return Deserialize(null, input);
+		}
+
+		public ISqlValue Deserialize(IContext context, Stream input) {
+			var reader = new BinaryReader(input);
+			return Deserialize(context, reader);
+		}
+
+		public ISqlValue Deserialize(BinaryReader reader) {
+			return Deserialize(null, reader);
+		}
+
+		public ISqlValue Deserialize(IContext context, BinaryReader reader) {
+			var nullFlag = reader.ReadByte();
+
+			if (nullFlag == 1)
+				return SqlNull.Value;
+
+			var value = DeserializeValue(context, reader);
+
+			if (!IsInstanceOf(value))
+				throw new InvalidOperationException($"The returned value is not of type {ToString()}");
+
+			return value;
+		}
+
+		protected virtual ISqlValue DeserializeValue(IContext context, BinaryReader reader) {
+			throw new NotSupportedException($"Type {ToString()} does not support value deserialization");
+		}
+
 		#endregion
 
 		#region Parse
