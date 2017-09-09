@@ -76,6 +76,8 @@ namespace Deveel.Data.Sql.Tables {
 
 		private ITableFieldCache FieldCache { get; }
 
+		private bool FieldCaching => FieldCache != null;
+
 		private string InsertCounterKey { get; set; }
 
 		private string UpdateCounterKey { get; set; }
@@ -720,7 +722,7 @@ namespace Deveel.Data.Sql.Tables {
 			return columnInfo;
 		}
 
-		public SqlObject GetValue(long rowIndex, int columnOffset) {
+		public async Task<SqlObject> GetValueAsync(long rowIndex, int columnOffset) {
 			// NOTES:
 			// This is called *A LOT*.  It's a key part of the 20% of the program
 			// that's run 80% of the time.
@@ -737,10 +739,10 @@ namespace Deveel.Data.Sql.Tables {
 			// revise the low level data storage so only sectors can be compressed.
 
 			// First check if this is within the cache before we continue.
-			SqlObject cell;
-			if (CellCaching) {
-				if (CellCache.TryGetValue(Database.Name, TableId, rowIndex, columnOffset, out cell))
-					return cell;
+			SqlObject obj;
+			if (FieldCaching) {
+				if (FieldCache.TryGetValue(new FieldId(new RowId(TableId, rowIndex), columnOffset), out obj))
+					return obj;
 			}
 
 			// We maintain a cache of byte[] arrays that contain the rows Read input
@@ -788,10 +790,10 @@ namespace Deveel.Data.Sql.Tables {
 					// NOTE: It's possible this call may need optimizing?
 					var type = TableInfo.Columns[columnOffset].ColumnType;
 
-					ISqlValue ob;
+					ISqlValue value;
 					if (cellType == 1) {
 						// If standard object type
-						ob = type.DeserializeObject(stream);
+						value = type.Deserialize(SystemContext, stream);
 					} else if (cellType == 2) {
 						// If reference to a blob input the BlobStore
 						int fType = reader.ReadInt32();
@@ -800,10 +802,12 @@ namespace Deveel.Data.Sql.Tables {
 
 						if (fType == 0) {
 							// Resolve the reference
-							var objRef = ObjectStore.GetObject(refId);
-							ob = type.CreateFromLargeObject(objRef);
+							//TODO:
+							// var objRef = SystemContext.GetLargeObject(TableId, refId);
+							// ob = type.CreateLargeObject(objRef);
+							throw new NotSupportedException("Large objects not supported yet");
 						} else if (fType == 1) {
-							ob = null;
+							value = SqlNull.Value;
 						} else {
 							throw new Exception("Unknown blob type.");
 						}
@@ -812,7 +816,7 @@ namespace Deveel.Data.Sql.Tables {
 					}
 
 					// Wrap it around a TObject
-					cell = new SqlObject(type, ob);
+					obj = new SqlObject(type, value);
 
 					// And close the reader.
 					reader.Dispose();
@@ -823,11 +827,11 @@ namespace Deveel.Data.Sql.Tables {
 			}
 
 			// And write input the cache and return it.
-			if (CellCaching) {
-				CellCache.Set(Database.Name, TableId, rowIndex, columnOffset, cell);
+			if (FieldCaching) {
+				FieldCache.SetValue(new FieldId(new RowId(TableId, rowIndex), columnOffset), obj);
 			}
 
-			return cell;
+			return obj;
 		}
 
 		#region MinimalTable
@@ -911,7 +915,7 @@ namespace Deveel.Data.Sql.Tables {
 			}
 
 			public Task<SqlObject> GetValueAsync(long rowNumber, int columnOffset) {
-				return source.GetValue(rowNumber, columnOffset);
+				return source.GetValueAsync(rowNumber, columnOffset);
 			}
 
 			public Index GetColumnIndex(int column) {
